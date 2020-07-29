@@ -1,0 +1,15 @@
+*
+!*/
+!*.js
+!*.mjs
+!*.sol
+!*.slb
+!*.yml
+!*.md
+!*.html
+!package.json
+!yarn.lock
+!Dockerfile
+!LICENSE
+node_modules/
+build/

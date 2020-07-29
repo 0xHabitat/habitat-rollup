@@ -1,0 +1,22 @@
+{
+  "name": "habitat",
+  "version": "0.1.0",
+  "author": "NutBerry",
+  "license": "MPL-2.0",
+  "type": "module",
+  "scripts": {
+    "compile": "for x in src/*/scripts/codegen.js; do $x; done && node_modules/@NutBerry/rollup-bricks/scripts/compile.js src/*/**/*.sol src/*/**/**/*.sol",
+    "geth": "RPC_PORT=8222 ACCOUNTS=1 node_modules/@NutBerry/rollup-bricks/scripts/geth.js",
+    "test": "yarn _test \"src/*/**/*.test.js\"",
+    "_test": "yarn compile && yarn geth && RPC_PORT=$(printenv RPC_PORT || printf 8222) mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@"
+  },
+  "devDependencies": {
+    "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks.git#master",
+    "ethers": "=5.0.4",
+    "mocha": "=7.1.1",
+    "noble-ripemd160": "=0.1.1",
+    "noble-secp256k1": "=1.0.3",
+    "rustbn.js": "=0.2.0",
+    "solc": "=0.6.11"
+  }
+}
