@@ -317,10 +317,19 @@ async function withdraw () {
   log({ receipt });
 }
 
+async function eventTest () {
+  ctx.bridgeL2.on(ctx.bridgeL2.filters.ProcessProposal(),
+    function (proposalIndex, applicant, memberAddress) {
+      log({ proposalIndex, applicant, memberAddress });
+    }
+  );
+  ctx.bridgeL2.provider.resetEventsBlock(1);
+}
+
 // start
 const container = document.querySelector('.container');
 
-for (const v of [setup, initMoloch, submitProposal, submitVote, abort, processProposal, updateDelegateKey, deposit, ragequit, withdraw, memberCheck]) {
+for (const v of [setup, initMoloch, submitProposal, submitVote, abort, processProposal, updateDelegateKey, deposit, ragequit, withdraw, memberCheck, eventTest]) {
   const btn = document.createElement('button');
   btn.innerText = v.toString().split('{')[0];
   btn.onclick = v;

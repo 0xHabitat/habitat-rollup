@@ -4951,6 +4951,7 @@ class Block$1 extends Block {
     const bytes = arrayify(rawStringOrArray);
     const tx = bridge.transactionBuilder.decode(bytes);
 
+    tx.to = bridge.rootBridge.protocolAddress;
     tx.nonce = this.nonces[tx.from] || BIG_ZERO$6;
 
     return tx;
