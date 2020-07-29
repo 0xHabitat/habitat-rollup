@@ -7,9 +7,9 @@ const { GovBrick, TestERC20 } = Artifacts;
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
-async function createTransaction (primaryType, message, signer) {
-  if (message.nonce === undefined) {
-    message.nonce = await signer.getTransactionCount('pending');
+async function createTransaction (primaryType, message, signer, bridge) {
+  if (message.nonce === undefined && builder.fieldNames[primaryType][0].name === 'nonce') {
+    message.nonce = (await bridge.nonces(signer.address)).toHexString();
   }
 
   const tx = {
@@ -94,7 +94,7 @@ describe('GovBrick', async function () {
           processingReward: 0,
         };
 
-        const rawTx = '0x' + await createTransaction('InitMoloch', args, alice);
+        const rawTx = '0x' + await createTransaction('InitMoloch', args, alice, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -124,7 +124,7 @@ describe('GovBrick', async function () {
           details: 'Hello World',
         };
 
-        const rawTx = '0x' + await createTransaction('SubmitProposal', args, alice);
+        const rawTx = '0x' + await createTransaction('SubmitProposal', args, alice, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -151,7 +151,7 @@ describe('GovBrick', async function () {
           uintVote: 1,
         };
 
-        const rawTx = '0x' + await createTransaction('SubmitVote', args, alice);
+        const rawTx = '0x' + await createTransaction('SubmitVote', args, alice, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -165,7 +165,7 @@ describe('GovBrick', async function () {
         };
         subShares++;
 
-        const rawTx = '0x' + await createTransaction('SubmitVote', args, bob);
+        const rawTx = '0x' + await createTransaction('SubmitVote', args, bob, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -178,7 +178,7 @@ describe('GovBrick', async function () {
             proposalIndex,
           };
 
-          const rawTx = '0x' + await createTransaction('Abort', args, alice);
+          const rawTx = '0x' + await createTransaction('Abort', args, alice, bridge);
           const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
           const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -191,7 +191,7 @@ describe('GovBrick', async function () {
           proposalIndex,
         };
 
-        const rawTx = '0x' + await createTransaction('ProcessProposal', args, alice);
+        const rawTx = '0x' + await createTransaction('ProcessProposal', args, alice, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -203,7 +203,7 @@ describe('GovBrick', async function () {
           newDelegateKey: await charlie.getAddress(),
         };
 
-        const rawTx = '0x' + await createTransaction('UpdateDelegateKey', args, alice);
+        const rawTx = '0x' + await createTransaction('UpdateDelegateKey', args, alice, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -214,7 +214,7 @@ describe('GovBrick', async function () {
         const args = {
           sharesToBurn: 1,
         };
-        const rawTx = '0x' + await createTransaction('Ragequit', args, alice);
+        const rawTx = '0x' + await createTransaction('Ragequit', args, alice, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -229,7 +229,7 @@ describe('GovBrick', async function () {
           details: 'Hello World',
         };
 
-        const rawTx = '0x' + await createTransaction('SubmitProposal', args, charlie);
+        const rawTx = '0x' + await createTransaction('SubmitProposal', args, charlie, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -243,7 +243,7 @@ describe('GovBrick', async function () {
           proposalIndex,
         };
 
-        const rawTx = '0x' + await createTransaction('ProcessProposal', args, charlie);
+        const rawTx = '0x' + await createTransaction('ProcessProposal', args, charlie, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
@@ -255,7 +255,7 @@ describe('GovBrick', async function () {
           newDelegateKey: await alice.getAddress(),
         };
 
-        const rawTx = '0x' + await createTransaction('UpdateDelegateKey', args, alice);
+        const rawTx = '0x' + await createTransaction('UpdateDelegateKey', args, alice, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 

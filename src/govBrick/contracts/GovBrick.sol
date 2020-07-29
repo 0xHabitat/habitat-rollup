@@ -13,6 +13,9 @@ contract GovBrick is TokenBridgeBrick, GovBrickChallenge, UtilityBrick, Moloch {
   mapping (address => uint256) public nonces;
 
   function _checkUpdateNonce (address msgSender, uint256 nonce) internal {
+    require(nonce == nonces[msgSender], 'nonce');
+
+    nonces[msgSender] = nonce + 1;
   }
 
   /// @dev State transition when a user deposits a token.
@@ -57,6 +60,7 @@ contract GovBrick is TokenBridgeBrick, GovBrickChallenge, UtilityBrick, Moloch {
   ) external {
     require(msg.sender == address(this));
 
+    _checkUpdateNonce(msgSender, nonce);
     Moloch.initMoloch(
       summoner,
       approvedToken,
