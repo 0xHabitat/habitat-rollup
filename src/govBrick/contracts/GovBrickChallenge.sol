@@ -24,17 +24,17 @@ function _parseTransaction (o) -> success, offset {
   switch primaryType
 
 // start of InitMoloch
-// typeHash: 0xd90c7d168cc92e584f978fce317123aa3c01f803e6800d27b8d9be3ad18e4b14
-// function: onInitMoloch(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)
+// typeHash: 0x2dfdcad7468aaf00f76b0ff8234ab2862ce6a33a8ed6eab59a319453887ef142
+// function: onInitMoloch(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)
 case 0 {
-  let headSize := 352
+  let headSize := 384
   let typeLen := 0
-  let txPtr := 768
-  let endOfSlot := add(txPtr, 352)
+  let txPtr := 832
+  let endOfSlot := add(txPtr, 384)
 
-  txPtr := 800
+  txPtr := 864
   // typeHash of InitMoloch
-  mstore(0, 0xd90c7d168cc92e584f978fce317123aa3c01f803e6800d27b8d9be3ad18e4b14)
+  mstore(0, 0x2dfdcad7468aaf00f76b0ff8234ab2862ce6a33a8ed6eab59a319453887ef142)
   // uint256 InitMoloch.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -125,8 +125,17 @@ case 0 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
+  // uint256 InitMoloch.summoningTime
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  mstore(txPtr, 0)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(352, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
   // typeHash
-  let structHash := keccak256(0, 352)
+  let structHash := keccak256(0, 384)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -140,26 +149,26 @@ case 0 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(736, 0x4e134977)
-  mstore(768, mload(128))
+  mstore(800, 0xf47cdbc1)
+  mstore(832, mload(128))
 
-  success := call(gas(), address(), 0, 764, sub(endOfSlot, 764), 0, 0)
+  success := call(gas(), address(), 0, 828, sub(endOfSlot, 828), 0, 0)
   success := or(success, returndatasize())
 }
 // end of InitMoloch
 
 // start of SubmitProposal
-// typeHash: 0xf1c75a1d9d32372bda4345bde5504f74b150a3925fcadf33a06d469c31e556c5
-// function: onSubmitProposal(address,uint256,address,uint256,uint256,string)
+// typeHash: 0xfd87472e121f06cd8d7e56ec374113119a190c33c0f2083752f976644930fecd
+// function: onSubmitProposal(address,uint256,uint256,string)
 case 1 {
-  let headSize := 192
+  let headSize := 128
   let typeLen := 0
-  let txPtr := 448
-  let endOfSlot := add(txPtr, 192)
+  let txPtr := 320
+  let endOfSlot := add(txPtr, 128)
 
-  txPtr := 480
+  txPtr := 352
   // typeHash of SubmitProposal
-  mstore(0, 0xf1c75a1d9d32372bda4345bde5504f74b150a3925fcadf33a06d469c31e556c5)
+  mstore(0, 0xfd87472e121f06cd8d7e56ec374113119a190c33c0f2083752f976644930fecd)
   // uint256 SubmitProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -169,30 +178,12 @@ case 1 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // address SubmitProposal.applicant
+  // uint256 SubmitProposal.startingPeriod
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(64, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // uint256 SubmitProposal.tokenTribute
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  mstore(txPtr, 0)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(96, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // uint256 SubmitProposal.sharesRequested
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  mstore(txPtr, 0)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(128, mload(txPtr))
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
@@ -205,12 +196,12 @@ case 1 {
   mstore(endOfSlot, typeLen)
   endOfSlot := add(endOfSlot, 32)
   calldatacopy(endOfSlot, offset, typeLen)
-  mstore(160, keccak256(endOfSlot, typeLen))
+  mstore(96, keccak256(endOfSlot, typeLen))
   endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
   offset := add(offset, typeLen)
 
   // typeHash
-  let structHash := keccak256(0, 192)
+  let structHash := keccak256(0, 128)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -224,10 +215,10 @@ case 1 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(416, 0x0c82eb51)
-  mstore(448, mload(128))
+  mstore(288, 0xcfe3a4de)
+  mstore(320, mload(128))
 
-  success := call(gas(), address(), 0, 444, sub(endOfSlot, 444), 0, 0)
+  success := call(gas(), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
   success := or(success, returndatasize())
 }
 // end of SubmitProposal

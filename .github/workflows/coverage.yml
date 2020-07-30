@@ -23,6 +23,11 @@ jobs:
       with:
         token: ${{ secrets.PAT }}
 
+    - name: Setup git credentials
+      env:
+        PAT: ${{ secrets.PAT }}
+      run: printf "https://x:"$PAT"@github.com\n" > ~/.git-credentials && git config --global credential.helper store
+
     - name: Install
       run: yarn install
 

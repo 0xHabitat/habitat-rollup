@@ -1,23 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity ^0.6.2;
 
-import '@NutBerry/rollup-bricks/src/tsm/contracts/TokenBridgeBrick.sol';
-import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
-
 import './GovBrickChallenge.sol';
 import './Moloch.sol';
 
 /// @dev A contract that uses rollup bricks.
-contract GovBrick is TokenBridgeBrick, GovBrickChallenge, UtilityBrick, Moloch {
-  // nonces
-  mapping (address => uint256) public nonces;
-
-  function _checkUpdateNonce (address msgSender, uint256 nonce) internal {
-    require(nonce == nonces[msgSender], 'nonce');
-
-    nonces[msgSender] = nonce + 1;
-  }
-
+contract GovBrick is GovBrickChallenge, Moloch {
   /// @dev State transition when a user deposits a token.
   function onDeposit (address token, address owner, uint256 value) external {
     // all power the core protocol
@@ -56,7 +44,8 @@ contract GovBrick is TokenBridgeBrick, GovBrickChallenge, UtilityBrick, Moloch {
     uint256 abortWindow,
     uint256 proposalDeposit,
     uint256 dilutionBound,
-    uint256 processingReward
+    uint256 processingReward,
+    uint256 summoningTime
   ) external {
     require(msg.sender == address(this));
 
@@ -70,23 +59,22 @@ contract GovBrick is TokenBridgeBrick, GovBrickChallenge, UtilityBrick, Moloch {
       abortWindow,
       proposalDeposit,
       dilutionBound,
-      processingReward
+      processingReward,
+      summoningTime
     );
   }
 
   function onSubmitProposal (
     address msgSender,
     uint256 nonce,
-    address applicant,
-    uint256 tokenTribute,
-    uint256 sharesRequested,
+    uint256 startingPeriod,
     string memory details
   ) external {
     // all power the core protocol
     require(msg.sender == address(this));
 
     _checkUpdateNonce(msgSender, nonce);
-    Moloch.submitProposal(msgSender, applicant, tokenTribute, sharesRequested, details);
+    Moloch.submitProposal(msgSender, startingPeriod, details);
   }
 
   function onSubmitVote (address msgSender, uint256 proposalIndex, uint8 uintVote) external {

@@ -17,12 +17,11 @@ export default {
       { name: 'proposalDeposit', type: 'uint256' },
       { name: 'dilutionBound', type: 'uint256' },
       { name: 'processingReward', type: 'uint256' },
+      { name: 'summoningTime', type: 'uint256' },
     ],
     SubmitProposal: [
       { name: 'nonce', type: 'uint256' },
-      { name: 'applicant', type: 'address' },
-      { name: 'tokenTribute', type: 'uint256' },
-      { name: 'sharesRequested', type: 'uint256' },
+      { name: 'startingPeriod', type: 'uint256' },
       { name: 'details', type: 'string' },
     ],
     SubmitVote: [
