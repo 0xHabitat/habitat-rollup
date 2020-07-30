@@ -1,0 +1,36 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+    - master
+    - release/*
+
+  pull_request_review_comment:
+    types: [created, edited]
+
+jobs:
+  coverage:
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event.comment.body == '/COVERAGE'
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    container: node:14-alpine
+    steps:
+    - name: Setup
+      run: apk add --no-cache git geth bash curl
+
+    - uses: actions/checkout@v2
+
+    - name: Install
+      run: yarn install
+
+    - name: Coverage
+      run: yarn coverage
+
+    - name: Upload Coverage
+      if: success()
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage-report.json
+        fail_ci_if_error: true
