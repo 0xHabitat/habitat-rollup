@@ -19,12 +19,12 @@ jobs:
     - name: Setup
       run: apk add --no-cache git geth bash curl
 
+    - uses: actions/checkout@v2
+
     - name: Setup Personal Access Token
       env:
         PAT: ${{ secrets.PAT }}
       run: printf "https://x:$PAT@github.com\n" > ~/.git-credentials && git config --global credential.helper store
-
-    - uses: actions/checkout@v2
 
     - name: Install
       run: yarn install
