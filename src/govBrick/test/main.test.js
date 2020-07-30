@@ -52,12 +52,31 @@ describe('GovBrick', async function () {
     bridge = govBrick.connect(myNode);
   });
 
+  const VOTING_PERIOD = 2;
+  const GRACE_PERIOD = 1;
+  const ABORT_WINDOW = 1;
   let alreadyInitialized = false;
   let round = 0;
-  let subShares = 0;
+  let sharesBurntAlice = 0;
 
   function _doRound (abortProposal = false) {
     const depositAmount = '0xffffffff';
+
+    function doSleep (untilEnd) {
+      it(`wait for period`, async () => {
+        let target = (await bridge.proposalQueue(proposalIndex)).startingPeriod;
+
+        if (untilEnd) {
+          target = target.add(VOTING_PERIOD + GRACE_PERIOD).toString();
+        } else {
+          target = target.toString();
+        }
+
+        while ((await bridge.getCurrentPeriod()).toString() !== target) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      });
+    }
 
     describe('Moloch round', async () => {
       async function doDeposit (signer) {
@@ -86,12 +105,13 @@ describe('GovBrick', async function () {
           summoner: await alice.getAddress(),
           approvedToken: erc20.address,
           periodDuration: 1,
-          votingPeriod: 10,
-          gracePeriod: 1,
-          abortWindow: 1,
+          votingPeriod: VOTING_PERIOD,
+          gracePeriod: GRACE_PERIOD,
+          abortWindow: ABORT_WINDOW,
           proposalDeposit: 0,
           dilutionBound: 1,
           processingReward: 0,
+          summoningTime: ~~(Date.now() / 1000),
         };
 
         const rawTx = '0x' + await createTransaction('InitMoloch', args, alice, bridge);
@@ -118,9 +138,7 @@ describe('GovBrick', async function () {
 
       it('submitProposal: alice', async () => {
         const args = {
-          applicant: await alice.getAddress(),
-          tokenTribute: 0,
-          sharesRequested: 0,
+          startingPeriod: (await bridge.getCurrentPeriod()).add(2),
           details: 'Hello World',
         };
 
@@ -141,9 +159,11 @@ describe('GovBrick', async function () {
         const mAlice = await bridge.members(await alice.getAddress());
         const mBob = await bridge.members(await bob.getAddress());
 
-        assert.equal(mAlice.shares.toString(), ((depositAmount * round) - subShares).toString());
+        assert.equal(mAlice.shares.toString(), ((depositAmount * round) - sharesBurntAlice).toString());
         assert.equal(mBob.shares.toString(), ((depositAmount * round)).toString());
       });
+
+      doSleep();
 
       it('submitVote: alice', async () => {
         const args = {
@@ -163,7 +183,6 @@ describe('GovBrick', async function () {
           proposalIndex,
           uintVote: 2,
         };
-        subShares++;
 
         const rawTx = '0x' + await createTransaction('SubmitVote', args, bob, bridge);
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
@@ -185,6 +204,8 @@ describe('GovBrick', async function () {
           assert.equal(receipt.status, '0x1', 'receipt.status');
         });
       }
+
+      doSleep(true);
 
       it('ProcessProposal: alice', async () => {
         const args = {
@@ -218,14 +239,14 @@ describe('GovBrick', async function () {
         const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
         const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
 
+        sharesBurntAlice++;
+
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
 
       it('submitProposal: charlie', async () => {
         const args = {
-          applicant: await charlie.getAddress(),
-          tokenTribute: 0,
-          sharesRequested: 0,
+          startingPeriod: (await bridge.getCurrentPeriod()).add(2),
           details: 'Hello World',
         };
 
@@ -237,6 +258,8 @@ describe('GovBrick', async function () {
 
         proposalIndex = bridge.interface.parseLog(receipt.logs[0]).args.proposalIndex;
       });
+
+      doSleep(true);
 
       it('ProcessProposal: charlie', async () => {
         const args = {

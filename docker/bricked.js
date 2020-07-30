@@ -4760,6 +4760,10 @@ class BrickedRuntime extends EVMRuntime {
     return runState;
   }
 
+  async TIMESTAMP (runState) {
+    runState.stack.push(this.timestamp);
+  }
+
   async CHAINID (runState) {
     runState.stack.push(BigInt(runState.bridge.CHAIN_ID));
   }
@@ -5006,6 +5010,12 @@ class Block$1 extends Block {
     this.inventory.rootStorage = this.inventory.storage;
   }
 
+  async rebase (block, bridge) {
+    this._isPending = true;
+
+    return super.rebase(block, bridge);
+  }
+
   async executeTx (tx, bridge, dry, deposit) {
     // copy the environment
     const customEnvironment = this.inventory.clone();
@@ -5026,15 +5036,20 @@ class Block$1 extends Block {
     }
 
     const address = bridge.rootBridge.protocolAddress.replace('0x', '');
-    const origin = address;
-    const caller = origin;
+    const caller = address;
     const code = arrayify(await bridge.getCode(bridge.rootBridge.protocolAddress));
     const runtime = new BrickedRuntime();
+
+    if (this._isPending) {
+      runtime.timestamp = BigInt(~~(Date.now() / 1000));
+    } else {
+      runtime.timestamp = BigInt(this.timestamp);
+    }
 
     // the maximum allowed steps the call can make; this is merely to avoid infinite execution
     // TODO: estimate gas for the call on the root-chain
     runtime.stepCount = 0x1fffff;
-    const state = await runtime.run({ address, origin, caller, code, data, customEnvironment, bridge });
+    const state = await runtime.run({ address, caller, code, data, customEnvironment, bridge });
 
     // no errors and not in dry-mode = use new state
     if (state.errno === 0 && !dry) {
