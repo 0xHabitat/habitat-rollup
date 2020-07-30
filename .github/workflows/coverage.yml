@@ -24,7 +24,7 @@ jobs:
     - name: Install
       env:
         PAT: ${{ secrets.PAT }}
-      run: printf "https://x:"$PAT"@github.com\n" > ~/.git-credentials && cp ~/.git-credentials /__w/ && ls -a /__w/ && git config --global credential.helper store && git config --local credential.helper store && sha1sum ~/.git-credentials && echo $HOME && cat ~/.gitconfig && env && git clone -v https://github.com/$GITHUB_REPOSITORY && cd $GITHUB_REPOSITORY && git checkout $GITHUB_SHA && yarn install --verbose
+      run: printf "https://x:"$PAT"@github.com\n" > ~/.git-credentials && cp ~/.git-credentials /__w/ && ls -a /__w/ && git config --global credential.helper store && sha1sum ~/.git-credentials && echo $HOME && cat ~/.gitconfig && env && git clone -v https://github.com/$GITHUB_REPOSITORY && cd $GITHUB_REPOSITORY && git checkout $GITHUB_SHA && yarn install --verbose
 
     - name: Coverage
       run: yarn coverage
