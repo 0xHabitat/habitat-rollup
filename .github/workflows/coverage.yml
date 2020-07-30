@@ -24,7 +24,7 @@ jobs:
     - name: Install
       env:
         PAT: ${{ secrets.PAT }}
-      run: printf "https://x:"$PAT"@github.com\n" > ~/.git-credentials && cp ~/.git-credentials /__w/ && ls -a /__w/ && git config --global credential.helper store && git config --local credential.helper store && sha1sum ~/.git-credentials && echo $HOME && cat ~/.gitconfig && git clone -v https://github.com/NutBerry/rollup-bricks.git && yarn install --verbose
+      run: printf "https://x:"$PAT"@github.com\n" > ~/.git-credentials && cp ~/.git-credentials /__w/ && ls -a /__w/ && git config --global credential.helper store && git config --local credential.helper store && sha1sum ~/.git-credentials && echo $HOME && cat ~/.gitconfig && git clone -v https://github.com/NutBerry/rollup-bricks.git
 
     - name: Coverage
       run: yarn coverage
