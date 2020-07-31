@@ -129,7 +129,7 @@ const BRICK_ABI = [
 ];
 
 // Brick @ ropsten
-const BRIDGE_ADDRESS = '0x95968a2d9cfd8f1d67678ed7b19cdecae5836619';
+const BRIDGE_ADDRESS = '0x12fdf75018b2d1c2a69554043d62424c92620680';
 // The L2 node
 const RPC_URL = `https://${BRIDGE_ADDRESS}.fly.dev`;
 // TST @ ropsten
@@ -197,9 +197,9 @@ async function initMoloch () {
     summoner: await ctx.signer.getAddress(),
     approvedToken: ctx.erc20.address,
     periodDuration: 1,
-    votingPeriod: 10,
-    gracePeriod: 1,
-    abortWindow: 1,
+    votingPeriod: 300,
+    gracePeriod: 10,
+    abortWindow: 250,
     dilutionBound: 1,
     summoningTime: ~~(Date.now() / 1000),
   };
@@ -209,7 +209,7 @@ async function initMoloch () {
 
 async function submitProposal () {
   const args = {
-    startingPeriod: (await ctx.bridgeL2.getCurrentPeriod()),
+    startingPeriod: (await ctx.bridgeL2.getCurrentPeriod()).toHexString(),
     details: 'Hello World',
   };
 
