@@ -14,9 +14,7 @@ export default {
       { name: 'votingPeriod', type: 'uint256' },
       { name: 'gracePeriod', type: 'uint256' },
       { name: 'abortWindow', type: 'uint256' },
-      { name: 'proposalDeposit', type: 'uint256' },
       { name: 'dilutionBound', type: 'uint256' },
-      { name: 'processingReward', type: 'uint256' },
       { name: 'summoningTime', type: 'uint256' },
     ],
     SubmitProposal: [

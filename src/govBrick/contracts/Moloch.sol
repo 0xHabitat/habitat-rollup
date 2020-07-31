@@ -13,9 +13,7 @@ contract Moloch is GovBase {
   uint256 public votingPeriodLength; // default = 35 periods (7 days)
   uint256 public gracePeriodLength; // default = 35 periods (7 days)
   uint256 public abortWindow; // default = 5 periods (1 day)
-  uint256 public proposalDeposit; // default = 10 ETH (~$1,000 worth of ETH at contract deployment)
   uint256 public dilutionBound; // default = 3 - maximum multiplier a YES voter will be obligated to pay in case of mass ragequit
-  uint256 public processingReward; // default = 0.1 - amount of ETH to give to whoever processes a proposal
   uint256 public summoningTime; // needed to determine the current period
 
   address public approvedToken; // approved token contract reference; default = wETH
@@ -26,7 +24,6 @@ contract Moloch is GovBase {
   uint256 constant MAX_VOTING_PERIOD_LENGTH = 10**18; // maximum length of voting period
   uint256 constant MAX_GRACE_PERIOD_LENGTH = 10**18; // maximum length of grace period
   uint256 constant MAX_DILUTION_BOUND = 10**18; // maximum dilution bound
-  uint256 constant MAX_NUMBER_OF_SHARES = 10**18; // maximum number of shares that can be minted
 
   /***************
     EVENTS
@@ -37,7 +34,7 @@ contract Moloch is GovBase {
   event Ragequit(address indexed memberAddress, uint256 sharesToBurn);
   event Abort(uint256 indexed proposalIndex);
   event UpdateDelegateKey(address indexed memberAddress, address newDelegateKey);
-  event SummonComplete(address indexed summoner, uint256 shares);
+  event SummonComplete(address indexed summoner);
 
   /******************
     INTERNAL ACCOUNTING
@@ -92,9 +89,7 @@ contract Moloch is GovBase {
     uint256 _votingPeriodLength,
     uint256 _gracePeriodLength,
     uint256 _abortWindow,
-    uint256 _proposalDeposit,
     uint256 _dilutionBound,
-    uint256 _processingReward,
     uint256 _summoningTime
   ) internal {
     require(address(approvedToken) == address(0), 'already initialized');
@@ -108,7 +103,6 @@ contract Moloch is GovBase {
     require(_abortWindow <= _votingPeriodLength, 'Moloch::constructor - _abortWindow must be smaller than or equal to _votingPeriodLength');
     require(_dilutionBound > 0, 'Moloch::constructor - _dilutionBound cannot be 0');
     require(_dilutionBound <= MAX_DILUTION_BOUND, 'Moloch::constructor - _dilutionBound exceeds limit');
-    require(_proposalDeposit >= _processingReward, 'Moloch::constructor - _proposalDeposit cannot be smaller than _processingReward');
 
     approvedToken = _approvedToken;
 
@@ -116,13 +110,11 @@ contract Moloch is GovBase {
     votingPeriodLength = _votingPeriodLength;
     gracePeriodLength = _gracePeriodLength;
     abortWindow = _abortWindow;
-    proposalDeposit = _proposalDeposit;
     dilutionBound = _dilutionBound;
-    processingReward = _processingReward;
 
     summoningTime = _summoningTime;
 
-    emit SummonComplete(summoner, 0);
+    emit SummonComplete(summoner);
   }
 
   /*****************
@@ -249,8 +241,7 @@ contract Moloch is GovBase {
     require(proposalIndex < proposalQueue.length, 'Moloch::abort - proposal does not exist');
     Proposal storage proposal = proposalQueue[proposalIndex];
 
-    // TODO: remove this function or require that the .proposer has the right to abort the proposal
-    //require(msgSender == proposal.applicant, 'Moloch::abort - msgSender must be applicant');
+    require(msgSender == proposal.proposer, 'Moloch::abort - msgSender must be proposer');
     require(getCurrentPeriod() < proposal.startingPeriod.add(abortWindow), 'Moloch::abort - abort window must not have passed');
     require(!proposal.aborted, 'Moloch::abort - proposal must not have already been aborted');
 

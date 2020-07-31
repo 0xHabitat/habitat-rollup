@@ -24,17 +24,17 @@ function _parseTransaction (o) -> success, offset {
   switch primaryType
 
 // start of InitMoloch
-// typeHash: 0x2dfdcad7468aaf00f76b0ff8234ab2862ce6a33a8ed6eab59a319453887ef142
-// function: onInitMoloch(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)
+// typeHash: 0x81feff1e358dc4c1511047be6116cf48aa2fab7497cd30628c80eb0166d80234
+// function: onInitMoloch(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,uint256)
 case 0 {
-  let headSize := 384
+  let headSize := 320
   let typeLen := 0
-  let txPtr := 832
-  let endOfSlot := add(txPtr, 384)
+  let txPtr := 704
+  let endOfSlot := add(txPtr, 320)
 
-  txPtr := 864
+  txPtr := 736
   // typeHash of InitMoloch
-  mstore(0, 0x2dfdcad7468aaf00f76b0ff8234ab2862ce6a33a8ed6eab59a319453887ef142)
+  mstore(0, 0x81feff1e358dc4c1511047be6116cf48aa2fab7497cd30628c80eb0166d80234)
   // uint256 InitMoloch.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -98,7 +98,7 @@ case 0 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // uint256 InitMoloch.proposalDeposit
+  // uint256 InitMoloch.dilutionBound
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   mstore(txPtr, 0)
@@ -107,7 +107,7 @@ case 0 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // uint256 InitMoloch.dilutionBound
+  // uint256 InitMoloch.summoningTime
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   mstore(txPtr, 0)
@@ -116,26 +116,8 @@ case 0 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // uint256 InitMoloch.processingReward
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  mstore(txPtr, 0)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(320, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // uint256 InitMoloch.summoningTime
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  mstore(txPtr, 0)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(352, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
   // typeHash
-  let structHash := keccak256(0, 384)
+  let structHash := keccak256(0, 320)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -149,10 +131,10 @@ case 0 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(800, 0xf47cdbc1)
-  mstore(832, mload(128))
+  mstore(672, 0x48453e86)
+  mstore(704, mload(128))
 
-  success := call(gas(), address(), 0, 828, sub(endOfSlot, 828), 0, 0)
+  success := call(gas(), address(), 0, 700, sub(endOfSlot, 700), 0, 0)
   success := or(success, returndatasize())
 }
 // end of InitMoloch
