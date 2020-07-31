@@ -1874,6 +1874,7 @@ class Block {
     this.transactionHashes = [];
     this.isDepositBlock = false;
     this.isExitBlock = false;
+    this.submissionDeadline = 0;
 
     if (prevBlock) {
       // copy nonces since `prevBlock`
@@ -3452,6 +3453,20 @@ class Bridge {
       return false;
     }
 
+    if (this.pendingBlock.submissionDeadline !== 0) {
+      // TODO: make this a config option or calculate block submission time averages
+      // 180 seconds
+      const submissionTime = 180;
+      const now = ~~(Date.now() / 1000);
+      const shouldSubmit = now >= (this.pendingBlock.submissionDeadline - submissionTime);
+
+      this.log(`should submit next block because of transaction deadline: ${shouldSubmit} delta: ${this.pendingBlock.submissionDeadline - now}`);
+
+      if (shouldSubmit) {
+        return shouldSubmit;
+      }
+    }
+
     const timeSinceLastSubmission = Date.now() - this._lastBlockSubmission;
     const size = this.pendingBlock.calculateSize();
 
@@ -4939,6 +4954,8 @@ class BrickedRuntime extends EVMRuntime {
 }
 
 const BIG_ZERO$6 = BigInt(0);
+// _InternalTransactionDeadline(uint256)
+const INTERNAL_EVENT_DEADLINE_TOPIC = '0xa2f8e76d2f371a87c6d59fbc04d7af80e5a3cbd34a2d44287c97e55d25cb1dd8';
 
 class Block$1 extends Block {
   decodeTransactionLength (buf, offset, bridge) {
@@ -5054,6 +5071,25 @@ class Block$1 extends Block {
     // no errors and not in dry-mode = use new state
     if (state.errno === 0 && !dry) {
       this.inventory = customEnvironment;
+
+      // check if the contract emitted deadline events
+      if (this._isPending) {
+        for (const log of state.logs) {
+          if (log.topics.length !== 2) {
+            continue;
+          }
+
+          if (log.topics[0] === INTERNAL_EVENT_DEADLINE_TOPIC) {
+            const time = Number(log.topics[1]);
+
+            if (this.submissionDeadline === 0 || time < this.submissionDeadline) {
+              this.submissionDeadline = time;
+
+              this.log(`found deadline event: ${time}`);
+            }
+          }
+        }
+      }
     }
 
     let returnValue = '0x';

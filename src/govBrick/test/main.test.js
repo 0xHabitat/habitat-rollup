@@ -108,9 +108,7 @@ describe('GovBrick', async function () {
           votingPeriod: VOTING_PERIOD,
           gracePeriod: GRACE_PERIOD,
           abortWindow: ABORT_WINDOW,
-          proposalDeposit: 0,
           dilutionBound: 1,
-          processingReward: 0,
           summoningTime: ~~(Date.now() / 1000),
         };
 
@@ -205,6 +203,10 @@ describe('GovBrick', async function () {
         });
       }
 
+      it('forward / submit block', async () => {
+        myNode.send('debug_forwardChain', []);
+      });
+
       doSleep(true);
 
       it('ProcessProposal: alice', async () => {
@@ -259,6 +261,10 @@ describe('GovBrick', async function () {
         proposalIndex = bridge.interface.parseLog(receipt.logs[0]).args.proposalIndex;
       });
 
+      it('forward / submit block', async () => {
+        myNode.send('debug_forwardChain', []);
+      });
+
       doSleep(true);
 
       it('ProcessProposal: charlie', async () => {
@@ -307,10 +313,6 @@ describe('GovBrick', async function () {
       it('submitBlock', () => submitBlock(govBrick, rootProvider, myNode));
       it('doChallenge', () => doChallenge(govBrick, rootProvider, myNode));
       it('debugStorage', () => debugStorage(govBrick, rootProvider, myNode));
-      it('sleep', async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      });
-      //it('debugStorage', () => debugStorage(govBrick, rootProvider, myNode));
     });
   });
 

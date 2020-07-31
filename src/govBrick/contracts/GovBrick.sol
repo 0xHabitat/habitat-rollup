@@ -42,9 +42,7 @@ contract GovBrick is GovBrickChallenge, Moloch {
     uint256 votingPeriod,
     uint256 gracePeriod,
     uint256 abortWindow,
-    uint256 proposalDeposit,
     uint256 dilutionBound,
-    uint256 processingReward,
     uint256 summoningTime
   ) external {
     require(msg.sender == address(this));
@@ -57,9 +55,7 @@ contract GovBrick is GovBrickChallenge, Moloch {
       votingPeriod,
       gracePeriod,
       abortWindow,
-      proposalDeposit,
       dilutionBound,
-      processingReward,
       summoningTime
     );
   }

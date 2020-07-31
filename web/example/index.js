@@ -16,15 +16,12 @@ const TYPED_DATA = {
       { name: 'votingPeriod', type: 'uint256' },
       { name: 'gracePeriod', type: 'uint256' },
       { name: 'abortWindow', type: 'uint256' },
-      { name: 'proposalDeposit', type: 'uint256' },
       { name: 'dilutionBound', type: 'uint256' },
-      { name: 'processingReward', type: 'uint256' },
+      { name: 'summoningTime', type: 'uint256' },
     ],
     SubmitProposal: [
       { name: 'nonce', type: 'uint256' },
-      { name: 'applicant', type: 'address' },
-      { name: 'tokenTribute', type: 'uint256' },
-      { name: 'sharesRequested', type: 'uint256' },
+      { name: 'startingPeriod', type: 'uint256' },
       { name: 'details', type: 'string' },
     ],
     SubmitVote: [
@@ -71,15 +68,15 @@ const ERC20_ABI = [
 ];
 
 const BRICK_ABI = [
-  'event Abort(uint256 indexed proposalIndex, address applicantAddress)',
+  'event Abort(uint256 indexed proposalIndex)',
   'event BlockBeacon()',
   'event Deposit(address token, address owner, uint256 value)',
   'event NewSolution(uint256 blockNumber, bytes32 solutionHash)',
-  'event ProcessProposal(uint256 indexed proposalIndex, address indexed applicant, address indexed memberAddress, uint256 tokenTribute, uint256 sharesRequested, bool didPass)',
+  'event ProcessProposal(uint256 indexed proposalIndex, address indexed memberAddress, bool didPass)',
   'event Ragequit(address indexed memberAddress, uint256 sharesToBurn)',
-  'event SubmitProposal(uint256 proposalIndex, address indexed delegateKey, address indexed memberAddress, address indexed applicant, uint256 tokenTribute, uint256 sharesRequested)',
+  'event SubmitProposal(uint256 proposalIndex, address indexed delegateKey, address indexed memberAddress)',
   'event SubmitVote(uint256 indexed proposalIndex, address indexed delegateKey, address indexed memberAddress, uint8 uintVote)',
-  'event SummonComplete(address indexed summoner, uint256 shares)',
+  'event SummonComplete(address indexed summoner)',
   'event UpdateDelegateKey(address indexed memberAddress, address newDelegateKey)',
   'event Withdraw(address token, address owner, uint256 value)',
   'function BOND_AMOUNT() view returns (uint256)',
@@ -108,7 +105,6 @@ const BRICK_ABI = [
   'function getProposalQueueLength() view returns (uint256)',
   'function gracePeriodLength() view returns (uint256)',
   'function hasVotingPeriodExpired(uint256 startingPeriod) view returns (bool)',
-  'function lastNow() view returns (uint256)',
   'function memberAddressByDelegateKey(address) view returns (address)',
   'function members(address) view returns (address delegateKey, uint256 shares, bool exists, uint256 highestIndexYesVote)',
   'function nonces(address) view returns (uint256)',
@@ -116,21 +112,18 @@ const BRICK_ABI = [
   'function onChallenge() returns (uint256)',
   'function onDeposit(address token, address owner, uint256 value)',
   'function onFinalizeSolution(uint256 blockNumber, bytes32 hash)',
-  'function onInitMoloch(address msgSender, uint256 nonce, address summoner, address approvedToken, uint256 periodDuration, uint256 votingPeriod, uint256 gracePeriod, uint256 abortWindow, uint256 proposalDeposit, uint256 dilutionBound, uint256 processingReward)',
+  'function onInitMoloch(address msgSender, uint256 nonce, address summoner, address approvedToken, uint256 periodDuration, uint256 votingPeriod, uint256 gracePeriod, uint256 abortWindow, uint256 dilutionBound, uint256 summoningTime)',
   'function onProcessProposal(address msgSender, uint256 proposalIndex)',
   'function onRagequit(address msgSender, uint256 nonce, uint256 sharesToBurn)',
-  'function onSubmitProposal(address msgSender, uint256 nonce, address applicant, uint256 tokenTribute, uint256 sharesRequested, string details)',
+  'function onSubmitProposal(address msgSender, uint256 nonce, uint256 startingPeriod, string details)',
   'function onSubmitVote(address msgSender, uint256 proposalIndex, uint8 uintVote)',
   'function onUpdateDelegateKey(address msgSender, uint256 nonce, address newDelegateKey)',
   'function periodDuration() view returns (uint256)',
-  'function processingReward() view returns (uint256)',
-  'function proposalDeposit() view returns (uint256)',
-  'function proposalQueue(uint256) view returns (address proposer, address applicant, uint256 sharesRequested, uint256 startingPeriod, uint256 yesVotes, uint256 noVotes, bool processed, bool didPass, bool aborted, uint256 tokenTribute, string details, uint256 maxTotalSharesAtYesVote)',
+  'function proposalQueue(uint256) view returns (bool processed, bool didPass, bool aborted, address proposer, uint256 startingPeriod, uint256 yesVotes, uint256 noVotes, uint256 maxTotalSharesAtYesVote, string details)',
   'function submitBlock() payable',
   'function submitSolution(uint256 blockNumber, bytes32 solutionHash)',
   'function summoningTime() view returns (uint256)',
   'function totalShares() view returns (uint256)',
-  'function totalSharesRequested() view returns (uint256)',
   'function votingPeriodLength() view returns (uint256)',
   'function withdraw(address token, uint256 tokenId)'
 ];
@@ -207,9 +200,8 @@ async function initMoloch () {
     votingPeriod: 10,
     gracePeriod: 1,
     abortWindow: 1,
-    proposalDeposit: 0,
     dilutionBound: 1,
-    processingReward: 0,
+    summoningTime: ~~(Date.now() / 1000),
   };
 
   const receipt = await sendTransaction('InitMoloch', args);
@@ -217,9 +209,7 @@ async function initMoloch () {
 
 async function submitProposal () {
   const args = {
-    applicant: await ctx.signer.getAddress(),
-    tokenTribute: 0,
-    sharesRequested: 0,
+    startingPeriod: (await ctx.bridgeL2.getCurrentPeriod()),
     details: 'Hello World',
   };
 
@@ -319,8 +309,8 @@ async function withdraw () {
 
 async function eventTest () {
   ctx.bridgeL2.on(ctx.bridgeL2.filters.ProcessProposal(),
-    function (proposalIndex, applicant, memberAddress) {
-      log({ proposalIndex, applicant, memberAddress });
+    function (proposalIndex, memberAddress, didPass) {
+      log({ proposalIndex, memberAddress, didPass });
     }
   );
   ctx.bridgeL2.provider.resetEventsBlock(1);
