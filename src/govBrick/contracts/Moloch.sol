@@ -79,6 +79,10 @@ contract Moloch is GovBase {
     require(members[memberAddressByDelegateKey[addr]].shares > 0, 'Moloch::onlyDelegate - not a delegate');
   }
 
+  function _checkDeadline (uint256 periods) internal {
+    _emitTransactionDeadline( summoningTime.add(periods.mul(periodDuration)) );
+  }
+
   /********
     FUNCTIONS
    ********/
@@ -191,6 +195,7 @@ contract Moloch is GovBase {
     }
 
     emit SubmitVote(proposalIndex, msgSender, memberAddress, uintVote);
+    _checkDeadline(proposal.startingPeriod.add(votingPeriodLength));
   }
 
   function processProposal (address msgSender, uint256 proposalIndex) internal {
@@ -242,12 +247,15 @@ contract Moloch is GovBase {
     Proposal storage proposal = proposalQueue[proposalIndex];
 
     require(msgSender == proposal.proposer, 'Moloch::abort - msgSender must be proposer');
-    require(getCurrentPeriod() < proposal.startingPeriod.add(abortWindow), 'Moloch::abort - abort window must not have passed');
+
+    uint256 deadline = proposal.startingPeriod.add(abortWindow);
+    require(getCurrentPeriod() < deadline, 'Moloch::abort - abort window must not have passed');
     require(!proposal.aborted, 'Moloch::abort - proposal must not have already been aborted');
 
     proposal.aborted = true;
 
     emit Abort(proposalIndex);
+    _checkDeadline(deadline);
   }
 
   function updateDelegateKey(address msgSender, address newDelegateKey) internal {

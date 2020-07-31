@@ -203,6 +203,10 @@ describe('GovBrick', async function () {
         });
       }
 
+      it('forward / submit block', async () => {
+        myNode.send('debug_forwardChain', []);
+      });
+
       doSleep(true);
 
       it('ProcessProposal: alice', async () => {
@@ -255,6 +259,10 @@ describe('GovBrick', async function () {
         assert.equal(receipt.status, '0x1', 'receipt.status');
 
         proposalIndex = bridge.interface.parseLog(receipt.logs[0]).args.proposalIndex;
+      });
+
+      it('forward / submit block', async () => {
+        myNode.send('debug_forwardChain', []);
       });
 
       doSleep(true);
