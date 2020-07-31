@@ -129,7 +129,7 @@ const BRICK_ABI = [
 ];
 
 // Brick @ ropsten
-const BRIDGE_ADDRESS = '0x51f0cce6cb1e148f9626a918e338135505e35d39';
+const BRIDGE_ADDRESS = '0x95968a2d9cfd8f1d67678ed7b19cdecae5836619';
 // The L2 node
 const RPC_URL = `https://${BRIDGE_ADDRESS}.fly.dev`;
 // TST @ ropsten
