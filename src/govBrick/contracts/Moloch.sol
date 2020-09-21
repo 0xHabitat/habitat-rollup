@@ -1,4 +1,4 @@
-pragma solidity ^0.6.2;
+pragma solidity >=0.6.2;
 
 import './GovBase.sol';
 import './oz/SafeMath.sol';
@@ -64,9 +64,9 @@ contract Moloch is GovBase {
     uint256 noVotes; // the total number of NO votes for this proposal
     uint256 maxTotalSharesAtYesVote; // the maximum # of total shares encountered at a yes vote on this proposal
     string details; // proposal details - could be IPFS hash, plaintext, or JSON
-    mapping (address => Vote) votesByMember; // the votes on this proposal by each member
   }
 
+  mapping (uint256 => mapping(address => Vote)) votesByMember; // the votes on a proposal by each member
   mapping (address => Member) public members;
   mapping (address => address) public memberAddressByDelegateKey;
   Proposal[] public proposalQueue;
@@ -169,12 +169,12 @@ contract Moloch is GovBase {
 
     require(getCurrentPeriod() >= proposal.startingPeriod, 'Moloch::submitVote - voting period has not started');
     require(!hasVotingPeriodExpired(proposal.startingPeriod), 'Moloch::submitVote - proposal voting period has expired');
-    require(proposal.votesByMember[memberAddress] == Vote.Null, 'Moloch::submitVote - member has already voted on this proposal');
+    require(votesByMember[proposalIndex][memberAddress] == Vote.Null, 'Moloch::submitVote - member has already voted on this proposal');
     require(vote == Vote.Yes || vote == Vote.No, 'Moloch::submitVote - vote must be either Yes or No');
     require(!proposal.aborted, 'Moloch::submitVote - proposal has been aborted');
 
     // store vote
-    proposal.votesByMember[memberAddress] = vote;
+    votesByMember[proposalIndex][memberAddress] = vote;
 
     // count vote
     if (vote == Vote.Yes) {
@@ -304,6 +304,6 @@ contract Moloch is GovBase {
     require(members[memberAddress].exists, 'Moloch::getMemberProposalVote - member doesn\'t exist');
     require(proposalIndex < proposalQueue.length, 'Moloch::getMemberProposalVote - proposal doesn\'t exist');
 
-    return proposalQueue[proposalIndex].votesByMember[memberAddress];
+    return votesByMember[proposalIndex][memberAddress];
   }
 }

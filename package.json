@@ -12,13 +12,13 @@
     "_test": "yarn compile && yarn geth && RPC_PORT=$(printenv RPC_PORT || printf 8222) mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@"
   },
   "devDependencies": {
-    "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks.git#master",
+    "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks.git#d44c5a",
     "develatus-apparatus": "https://github.com/pinkiebell/develatus-apparatus.git#v0.2.0",
     "ethers": "=5.0.4",
     "mocha": "=7.1.1",
     "noble-ripemd160": "=0.1.1",
     "noble-secp256k1": "=1.0.3",
     "rustbn.js": "=0.2.0",
-    "solc": "=0.6.11"
+    "solc": "=0.7.1"
   }
 }
