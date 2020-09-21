@@ -79,6 +79,13 @@ const OPTIONS = [
     help: 'Time in seconds since last submitted block until a new block becomes eligible for submission regardless of the block size threshold.',
   },
   {
+    env: 'SUBMIT_SOLUTION_THRESHOLD',
+    key: 'submitSolutionThreshold',
+    type: Number,
+    default: 256,
+    help: 'Defines the threshold of pending blocks without solutions until the node considers to submit solutions for pending blocks.',
+  },
+  {
     env: 'TYPED_DATA',
     key: 'typedData',
     type: String,

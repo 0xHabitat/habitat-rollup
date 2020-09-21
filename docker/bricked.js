@@ -1759,18 +1759,23 @@ const ZERO_HASH = '0x00000000000000000000000000000000000000000000000000000000000
 // This needs to be rebased
 class Block {
   decodeTransactionLength (buf, offset, bridge) {
+    return 1;
   }
 
   encodeTx (tx, bridge) {
+    return '0x';
   }
 
   decodeTx (rawStringOrArray, bridge) {
+    const a = '0x0000000000000000000000000000000000000000';
+    return { from: a, to: a, hash: ZERO_HASH, nonce: BIG_ZERO };
   }
 
   newInventory () {
   }
 
   async executeTx (tx, bridge, dry) {
+    return { errno: 0, returnValue: '0x', logs: [] };
   }
 
   async handleExit (data) {
@@ -1865,7 +1870,7 @@ class Block {
     this.timestamp = prevBlock ? prevBlock.timestamp : 0;
     // the token inventory
     // TODO move Inventory to a proper commit-log state manager
-    this.inventory = prevBlock ? prevBlock.inventory.clone() : this.newInventory();
+    this.inventory = prevBlock && prevBlock.inventory ? prevBlock.inventory.clone() : this.newInventory();
     // address > nonce mapping
     this.nonces = {};
     // txHash > tx mapping
@@ -1879,8 +1884,11 @@ class Block {
     if (prevBlock) {
       // copy nonces since `prevBlock`
       this.nonces = Object.assign({}, prevBlock.nonces);
-      // clear storageKeys
-      this.inventory.storageKeys = {};
+
+      if (this.inventory) {
+        // clear storageKeys
+        this.inventory.storageKeys = {};
+      }
     }
   }
 
@@ -1924,7 +1932,9 @@ class Block {
   freeze () {
     // TODO
     // freeze other stuff too
-    this.inventory.freeze();
+    if (this.inventory) {
+      this.inventory.freeze();
+    }
   }
 
   prune () {
@@ -2074,10 +2084,8 @@ class Block {
 
   /// @dev Computes the solution for this Block.
   async computeSolution (bridge, doItWrong) {
-    const storageKeys = this.inventory.storageKeys;
+    const storageKeys = this.inventory ? this.inventory.storageKeys : {};
     const keys = Object.keys(storageKeys);
-
-    this.log('Block.computeSolution');
 
     let payload = '';
     for (let i = 0; i < keys.length; i++) {
@@ -2094,15 +2102,13 @@ class Block {
     }
 
     if ((payload.length / 2) > bridge.MAX_SOLUTION_SIZE) {
-      throw new Error('Reached MAX_SOLUTION_SIZE');
+      throw new Error(`Reached MAX_SOLUTION_SIZE: ${payload.length / 2} bytes`);
     }
 
     const solution = {
       payload,
       hash: keccak256HexPrefix(payload),
     };
-
-    this.log(`Solution: ${solution.hash}`);
 
     return solution;
   }
@@ -2146,7 +2152,7 @@ class Methods {
   }
 
   static 'debug_submitSolution' (obj, bridge) {
-    return bridge.submitSolution(BigInt(obj.params[0]));
+    return bridge.submitSolution([BigInt(obj.params[0])]);
   }
 
   static 'debug_finalizeSolution' (obj, bridge) {
@@ -2276,12 +2282,12 @@ class Methods {
       blockNumber,
       from: tx.from,
       to: tx.to,
+      status: tx.status,
+      logs: logs,
+      contractAddress: null,
+      logsBloom: ZERO_LOGS_BLOOM,
       cumulativeGasUsed: '0x0',
       gasUsed: '0x0',
-      contractAddress: null,
-      logs: logs,
-      logsBloom: ZERO_LOGS_BLOOM,
-      status: tx.status,
     };
   }
 
@@ -2319,13 +2325,13 @@ class Methods {
       r: tx.r,
       s: tx.s,
       v: tx.v,
-      value: '0x0',
       to: tx.to,
-      hash: txHash,
-      data: tx.data,
+      input: tx.data,
       nonce: '0x' + tx.nonce.toString(16),
+      hash: txHash,
       gasPrice: '0x0',
-      gasLimit: '0x0',
+      gas: '0x0',
+      value: '0x0',
     };
   }
 
@@ -2499,7 +2505,7 @@ const TOPIC_BEACON = '0x98f7f6a06026bc1e4789634d93bff8d19b1c3b070cc440b6a6ae70ba
 const TOPIC_SOLUTION = '0xc2c24b452cabde4a0f2fec2993e5af81879a802cba7b7b42cd2f42e3166a0e0b';
 
 const FUNC_SIG_SUBMIT_BLOCK = '0x25ceb4b2';
-const FUNC_SIG_SUBMIT_SOLUTION = '0xe1d45577';
+const FUNC_SIG_SUBMIT_SOLUTION = '0x84634f44';
 const FUNC_SIG_CHALLENGE = '0xd2ef7398';
 const FUNC_SIG_FINALIZE = '0xd5bb8c4b';
 const FUNC_SIG_DISPUTE = '0x1f2f7fc3';
@@ -2834,6 +2840,7 @@ class RootBridge {
 
 const BIG_ZERO$2 = BigInt(0);
 const BIG_ONE$2 = BigInt(1);
+const ZERO_HASH$2 = '0000000000000000000000000000000000000000000000000000000000000000';
 
 /// @dev Glue for everything.
 class Bridge {
@@ -2849,6 +2856,9 @@ class Bridge {
     // options regarding block submission behaviour
     this.blockSizeThreshold = options.blockSizeThreshold || 1000;
     this.blockTimeThreshold = options.blockTimeThreshold || 60;
+
+    // options regarding solution submission behaviour
+    this.submitSolutionThreshold = options.submitSolutionThreshold || 256;
 
     // TODO: find a better place / method
     this._pendingBlockSubmission = false;
@@ -2938,6 +2948,7 @@ class Bridge {
     {
       const next = (await this.rootBridge.finalizedHeight()) + BIG_ONE$2;
       const wrongSolutions = [];
+      const pendingSolutions = [];
 
       // we can do this for the next 256 pending blocks
       for (let i = 0; i < 256; i++) {
@@ -2947,14 +2958,12 @@ class Bridge {
           break;
         }
 
-        this.log(`forwardChain: checking ${block.number}`);
+        // this.log(`forwardChain: checking block(${block.number})`);
 
         // we found the next pending block
         // no solution yet?
         if (!block.submittedSolutionHash) {
-          if (await this.submitSolution(block.number)) {
-            this.log(`submitted solution for ${block.number}`);
-          }
+          pendingSolutions.push(block.number);
         } else {
           // ...has a submitted solution
           const mySolution = await block.computeSolution(this, this.badNodeMode);
@@ -2975,12 +2984,19 @@ class Bridge {
         await this.dispute(wrongSolutions);
       }
 
+      // submit them, if any
+      // TODO: support a config parameter that specifies a threshold for submission
+      if (pendingSolutions.length >= this.submitSolutionThreshold) {
+        await this.submitSolution(pendingSolutions);
+      }
+
       // fetch the block after `finalizedHeight`
       const pendingBlock = await this.getBlockByNumber(next);
       if (!pendingBlock || !pendingBlock.hash) {
         return;
       }
 
+      // check if we need to challenge
       if (pendingBlock.submittedSolutionHash) {
         const mySolution = await pendingBlock.computeSolution(this, this.badNodeMode);
 
@@ -3179,19 +3195,47 @@ class Bridge {
   async submitBlock () {
     const blockNumber = await this.pendingBlock.submitBlock(this);
 
-    return `0x${blockNumber.toString(16)}`;
+    return `0x${(blockNumber || 0).toString(16)}`;
   }
 
-  async submitSolution (blockNumber) {
-    const block = await this.getBlockByNumber(blockNumber);
-
-    if (!block) {
-      return false;
+  async submitSolution (blockNumbers) {
+    if (!blockNumbers || !Array.isArray(blockNumbers)) {
+      throw new TypeError(`expected an array of block numbers`);
+    }
+    if (blockNumbers.length === 0 || blockNumbers.length > 256) {
+      throw new Error(`invalid length of blockNumbers(${blockNumbers.length})`);
     }
 
-    const mySolution = await block.computeSolution(this, this.badNodeMode);
+    const firstBlock = blockNumbers[0];
+    let lastNumber = firstBlock - BIG_ONE$2;
+    let data = '';
+
+    for (const blockNumber of blockNumbers) {
+      let diff = blockNumber - lastNumber;
+
+      if (diff < BIG_ONE$2) {
+        throw new Error(`incorrect sequence of blockNumbers`);
+      }
+
+      while (diff-- > BIG_ONE$2) {
+        // fill `holes`
+        data += ZERO_HASH$2;
+      }
+
+      const block = await this.getBlockByNumber(blockNumber);
+
+      if (!block) {
+        throw new Error(`Block(${blockNumber}) not found`);
+      }
+
+      const mySolution = await block.computeSolution(this, this.badNodeMode);
+      data += mySolution.hash.replace('0x', '');
+      lastNumber = blockNumber;
+      this.log(`submitting solution for block(${blockNumber})`);
+    }
+
     const tx = await this.wrapSendTransaction(
-      this.rootBridge.encodeSolution(blockNumber, mySolution.hash)
+      this.rootBridge.encodeSolution(firstBlock, data)
     );
 
     this.log('Bridge.submitSolution', Number(tx.gasUsed));
@@ -3203,7 +3247,7 @@ class Bridge {
     const block = await this.getBlockByNumber(blockNumber);
 
     if (!block) {
-      return false;
+      throw new Error(`Block(${blockNumber}) not found`);
     }
 
     const TAG = 'Bridge.finalizeSolution';
