@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@NutBerry/rollup-bricks@https://github.com/NutBerry/rollup-bricks.git#master":
+"@NutBerry/rollup-bricks@https://github.com/NutBerry/rollup-bricks.git#d44c5a":
   version "0.1.0"
-  resolved "https://github.com/NutBerry/rollup-bricks.git#638cd92afd226dbd6b534e38bcb20b528d10a4cc"
+  resolved "https://github.com/NutBerry/rollup-bricks.git#d44c5a0b4a12e816ac884a48a77248977b0480a7"
 
 "@ethersproject/abi@^5.0.0":
   version "5.0.2"
@@ -620,6 +620,11 @@ flat@^4.1.0:
   dependencies:
     is-buffer "~2.0.3"
 
+follow-redirects@^1.12.1:
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.13.0.tgz#b42e8d93a2a7eea5ed88633676d6597bc8e384db"
+  integrity sha512-aq6gF1BEKje4a9i9+5jimNFIpq4Q1WiwBToeRK5NvZBd/TRsmW8BsJfOEGkr76TbOyPVD3OVDN910EcUNtRYEA==
+
 fs-extra@^0.30.0:
   version "0.30.0"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-0.30.0.tgz#f233ffcc08d4da7d432daa449776989db1df93f0"
@@ -1087,13 +1092,14 @@ set-blocking@^2.0.0:
   resolved "https://registry.yarnpkg.com/set-blocking/-/set-blocking-2.0.0.tgz#045f9782d011ae9a6803ddd382b24392b3d890f7"
   integrity sha1-BF+XgtARrppoA93TgrJDkrPYkPc=
 
-solc@=0.6.11:
-  version "0.6.11"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.11.tgz#3205b13c8162a02c5d8f1d85ff267889a5095467"
-  integrity sha512-qMe8epy45eMzXZ9IGDk986NGjakC5/s+yPGuO99YsDaJQitxDAd3rIItlzxgfEvjr0xNJ3IaqGAGvvJ0/59nfA==
+solc@=0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.7.1.tgz#a8283af3406ada8919a35026ba7469c068c3f839"
+  integrity sha512-LepFVKDOcZ1O3OskOy45XTQ6G4rMRTmsGjn4gssaOrI9uyJI9LL6/X2MlYqeJx22UrpPUtCjQAb5IFWRoOSe+w==
   dependencies:
     command-exists "^1.2.8"
     commander "3.0.2"
+    follow-redirects "^1.12.1"
     fs-extra "^0.30.0"
     js-sha3 "0.8.0"
     memorystream "^0.3.1"
