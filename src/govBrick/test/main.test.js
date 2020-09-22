@@ -47,6 +47,9 @@ describe('GovBrick', async function () {
 
   before('Prepare contracts', async () => {
     erc20 = await deploy(TestERC20, alice);
+    // Replace the inspection period
+    GovBrick.bytecode = GovBrick.bytecode.replace('615460', '61000a');
+
     govBrick = await deploy(GovBrick, alice);
     myNode = await startNode('../../bricked/lib/index.js', 9999, 0, govBrick.address, TYPED_DATA);
     bridge = govBrick.connect(myNode);
