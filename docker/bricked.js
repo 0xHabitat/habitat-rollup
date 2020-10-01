@@ -2862,7 +2862,7 @@ class Bridge {
 
     // TODO: find a better place / method
     this._pendingBlockSubmission = false;
-    this._lastBlockSubmission = 0;
+    this._lastBlockSubmission = Date.now();
 
     if (options.privKey) {
       this.privKey = options.privKey.replace('0x', '');
