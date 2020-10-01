@@ -2118,6 +2118,22 @@ const ZERO_LOGS_BLOOM = `0x${''.padStart(512, '0')}`;
 const ZERO_NONCE = '0x0000000000000000';
 const ZERO_HASH$1 = `0x${''.padStart(64, '0')}`;
 
+function formatObject (obj) {
+  const ret = {};
+
+  for (const key in obj) {
+    let value = obj[key];
+
+    if (typeof value === 'number' || typeof value === 'bigint') {
+      value = `0x${value.toString(16)}`;
+    }
+
+    ret[key] = value;
+  }
+
+  return ret;
+}
+
 function blockRequest (block) {
   if (!block) {
     throw new Error('Requested Block not found');
@@ -2324,7 +2340,7 @@ class Methods {
         blockHash,
         blockNumber,
         primaryType: tx.primaryType,
-        message: tx.message,
+        message: formatObject(tx.message),
         from: tx.from,
         to: tx.to,
         r: tx.r,
