@@ -2317,6 +2317,27 @@ class Methods {
     const blockHash = block.hash || ZERO_HASH$1;
     const blockNumber = `0x${block.number.toString(16)}`;
 
+    // Typed data transaction
+    if (tx.primaryType) {
+      return {
+        transactionIndex,
+        blockHash,
+        blockNumber,
+        primaryType: tx.primaryType,
+        message: tx.message,
+        from: tx.from,
+        to: tx.to,
+        r: tx.r,
+        s: tx.s,
+        v: tx.v,
+        nonce: '0x' + tx.nonce.toString(16),
+        hash: txHash,
+        gasPrice: '0x0',
+        gas: '0x0',
+        value: '0x0',
+      };
+    }
+
     return {
       transactionIndex,
       blockHash,
@@ -3168,7 +3189,14 @@ class Bridge {
   }
 
   async runTx ({ data }) {
-    const tx = await this.pendingBlock.addTransaction(data, this);
+    let hexString = data;
+
+    if (typeof data === 'object') {
+      // encode the transaction object if `data` is a object instead of a hex-string
+      hexString = await this.pendingBlock.encodeTx(data, this);
+    }
+
+    const tx = await this.pendingBlock.addTransaction(hexString, this);
 
     if (!tx) {
       throw new Error('Invalid transaction');
