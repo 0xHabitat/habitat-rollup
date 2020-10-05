@@ -1542,6 +1542,10 @@ function p1600 (s) {
   }
 }
 
+const BIG_8 = BigInt(8);
+const BIG_255 = BigInt(255);
+const BIG_256 = BigInt(256);
+
 class Keccak256 {
   constructor () {
     this.state = new Uint32Array(50);
@@ -1550,6 +1554,24 @@ class Keccak256 {
     this.blockSize = 136;
     this.count = 0;
     this.squeezing = false;
+  }
+
+  updateBigInt (n, byteLen) {
+    let m = BigInt(byteLen * 8);
+
+    for (let i = 0; i < byteLen; i++) {
+      const val = Number((n >> (m -= BIG_8)) & BIG_255);
+
+      this.state[~~(this.count / 4)] ^= val << (8 * (this.count % 4));
+      this.count += 1;
+
+      if (this.count === this.blockSize) {
+        p1600(this.state);
+        this.count = 0;
+      }
+    }
+
+    return this;
   }
 
   update (data) {
@@ -1630,6 +1652,17 @@ class Keccak256 {
     let i = 0;
     for (const val of this.drain()) {
       output[i++] = val;
+    }
+
+    return output;
+  }
+
+  digestBigInt () {
+    let output = BigInt(0);
+    let i = BIG_256;
+
+    for (const val of this.drain()) {
+      output |= BigInt(val) << (i -= BIG_8);
     }
 
     return output;
@@ -1751,6 +1784,15 @@ function privateToAddress (privateKey) {
   return publicToAddress(privateToPublic(privateKey));
 }
 
+function timeLog (...args) {
+  const now = Date.now();
+  const delta = now - (globalThis._timeLogLast || now);
+
+  console.log(`+${delta} ms`, ...args);
+
+  globalThis._timeLogLast = now;
+}
+
 const BIG_ZERO = BigInt(0);
 const BIG_ONE = BigInt(1);
 const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
@@ -1819,7 +1861,7 @@ class Block {
         const rawTx = buf.slice(offset, offset += txLen);
 
         try {
-          await this.addTransaction(rawTx, bridge);
+          await this.addTransaction(rawTx, bridge, true);
         } catch (e) {
           this.log(e);
         }
@@ -1916,7 +1958,7 @@ class Block {
       data: obj.value,
       nonce: BIG_ZERO,
       status: '0x1',
-      errno: '0x0',
+      errno: 0,
       logs: [],
       returnData: '0x',
       size: 72,
@@ -1926,7 +1968,7 @@ class Block {
   }
 
   log (...args) {
-    console.log(`${this.isDepositBlock ? 'DepositBlock' : 'Block'}(${this.number})`, ...args);
+    timeLog(`${this.isDepositBlock ? 'DepositBlock' : 'Block'}(${this.number})`, ...args);
   }
 
   freeze () {
@@ -1962,13 +2004,13 @@ class Block {
     this.log(`Rebase:Complete ${this.transactionHashes.length} transactions left`);
   }
 
-  async addTransaction (rawStringOrArray, bridge) {
+  async addTransaction (rawStringOrArray, bridge, fromBeacon) {
     const tx = this.decodeTx(rawStringOrArray, bridge);
 
-    return this.addDecodedTransaction(tx, bridge);
+    return this.addDecodedTransaction(tx, bridge, fromBeacon);
   }
 
-  async addDecodedTransaction (tx, bridge) {
+  async addDecodedTransaction (tx, bridge, fromBeacon) {
     if (this.validateTransaction(tx)) {
       const { errno, returnValue, logs } = await this.executeTx(tx, bridge);
 
@@ -1978,15 +2020,16 @@ class Block {
       // check modified storage keys, take MAX_SOLUTION_SIZE into account
       if (errno !== 0) {
         this.log(`invalid tx errno:${errno}`);
-        // revert
-        if (errno !== 7) {
-          throw new Error(`transaction errno ${errno}`);
+
+        if (!fromBeacon && !bridge.debugMode) {
+          // if this transaction is not already included in a block, then throw
+          throw new Error(`transaction evm errno: ${errno}`);
         }
       }
 
       tx.logs = logs || [];
       tx.status = errno === 0 ? '0x1' : '0x0';
-      tx.errno = `0x${errno.toString(16)}`;
+      tx.errno = errno;
       tx.returnData = returnValue;
 
       this.nonces[tx.from] = tx.nonce + BIG_ONE;
@@ -2316,7 +2359,7 @@ class Methods {
     }
 
     return {
-      errno: tx.errno,
+      errno: `0x${tx.errno.toString(16)}`,
       returnData: tx.returnData,
     };
   }
@@ -2554,6 +2597,7 @@ const FUNC_SIG_INSPECTION_PERIOD = '0xe70f0e35';
 const FUNC_SIG_BOND_AMOUNT = '0xbcacc70a';
 const FUNC_SIG_CREATED_AT_BLOCK = '0x59acb42c';
 const FUNC_SIG_FINALIZED_HEIGHT = '0xb2223bd6';
+const FUNC_SIG_CHALLENGE_OFFSET = '0x058b7a6a';
 
 const UINT_MAX = '0x'.padEnd(66, 'f');
 const BIG_ZERO$1 = BigInt(0);
@@ -2618,6 +2662,10 @@ class RootBridge {
 
         await delegate.onSolution(blockNumber, solutionHash, evt);
       };
+  }
+
+  log (...args) {
+    timeLog('RootBridge', ...args);
   }
 
   async init () {
@@ -2733,6 +2781,12 @@ class RootBridge {
     return BigInt(res);
   }
 
+  async challengeOffset () {
+    const res = await this.abiCall(FUNC_SIG_CHALLENGE_OFFSET);
+
+    return Number(res);
+  }
+
   async fetchRootBlock (blockHash) {
     const res = await this.fetchJson('eth_getBlockByHash',
       [
@@ -2821,8 +2875,12 @@ class RootBridge {
           address: this.eventFilter.address,
           topics: this.eventFilter.topics,
         };
+
+        this.log(`syncing from: ${this.eventFilter.fromBlock} to: ${this.eventFilter.toBlock}`);
         res = await this.fetchJson('eth_getLogs', [r]);
       } catch (e) {
+        this.log(e);
+
         fetchQuantity -= quantityStepping;
         if (fetchQuantity < 1) {
           fetchQuantity = 1;
@@ -2841,6 +2899,7 @@ class RootBridge {
     }
 
     this.ready = true;
+    this.log('synced');
   }
 
   async _dispatchEvent (evt, delegate) {
@@ -2912,7 +2971,7 @@ class Bridge {
   }
 
   log (...args) {
-    console.log(...args);
+    timeLog('Bridge', ...args);
   }
 
   async init () {
@@ -2945,19 +3004,8 @@ class Bridge {
       }
     );
 
-    // TODO
-    this.log('syncing...');
     await this.rootBridge.initialSync(this);
-
     this.ready = true;
-    this.log(
-      'synced',
-      {
-        fromBlock: this.rootBridge.eventFilter.fromBlock,
-        toBlock: this.rootBridge.eventFilter.toBlock,
-      }
-    );
-
     this._eventLoop();
 
     // Disable automatic submissions for testing or debugging purposes.
@@ -5101,7 +5149,7 @@ class Block$1 extends Block {
 
   async addDeposit (obj, bridge) {
     await super.addDeposit(obj);
-    const ret = await this.executeTx({}, bridge, false, obj);
+    const ret = await this.executeTx({ hash: this.hash }, bridge, false, obj);
 
     // TODO: save result & log events somewhere?
     if (ret.errno !== 0) {
