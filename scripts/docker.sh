@@ -1,11 +1,17 @@
 #!/bin/sh
 
-set -x
+set -ex
 
-tag='ghcr.io/nutberry/artifacts/habitat:latest'
+image='ghcr.io/nutberry/artifacts/habitat'
+tag=$(git tag)
 
+if [ -z "$tag" ]; then
+  tag='latest'
+fi
+
+echo $image:$tag
 pushd docker/
-docker buildx create --name mybuilder --use
+docker buildx create --name mybuilder --use || echo 'skip'
 docker buildx inspect --bootstrap
-docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6 -t $tag --push .
-docker buildx imagetools inspect $tag
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6 -t $image:$tag --push .
+docker buildx imagetools inspect $image:$tag

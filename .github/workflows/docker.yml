@@ -1,0 +1,16 @@
+name: Docker
+
+jobs:
+  coverage:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Login to ghcr.io
+      env:
+        PAT: ${{ secrets.PAT }}
+      run: printf "$PAT" | docker login --username _ --password-stdin ghcr.io
+
+    - name: Build and push Docker images
+      run: ./scripts/docker.sh
