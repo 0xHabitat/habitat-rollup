@@ -2543,6 +2543,7 @@ async function createFetchJson (url) {
 
       return new Promise(
         function (resolve, reject) {
+          const timeoutMsec = 5000;
           const fetchOptions = urlParse(url);
 
           fetchOptions.method = method;
@@ -2553,7 +2554,9 @@ async function createFetchJson (url) {
 
           let body = '';
 
+          req.setTimeout(timeoutMsec, () => req.abort());
           req.on('error', reject);
+          req.on('socket', (socket) => socket.setTimeout(timeoutMsec));
           req.on('response', function (resp) {
             resp.on('data', function (buf) {
               body += buf.toString();
