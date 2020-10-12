@@ -173,9 +173,10 @@ function packString (values, defs) {
 }
 
 function toHex (buf) {
+  const len = buf.length;
   let res = '';
 
-  for (let i = 0; i < buf.length; i++) {
+  for (let i = 0; i < len; i++) {
     res += (buf[i] | 0).toString(16).padStart(2, '0');
   }
 
@@ -187,10 +188,17 @@ function toHexPrefix (buf) {
 }
 
 function bufToHex (buf, start, end) {
+  const len = buf.length;
+  const max = end > len ? len : end;
   let res = '0x';
+  let i;
 
-  for (let i = start; i < end; i++) {
+  for (i = start; i < max; i++) {
     res += (buf[i] | 0).toString(16).padStart(2, '0');
+  }
+
+  for (; i < end; i++) {
+    res += '00';
   }
 
   return res;
@@ -1793,6 +1801,22 @@ function timeLog (...args) {
   globalThis._timeLogLast = now;
 }
 
+function formatObject (obj) {
+  const ret = {};
+
+  for (const key in obj) {
+    let value = obj[key];
+
+    if (typeof value === 'number' || typeof value === 'bigint') {
+      value = `0x${value.toString(16)}`;
+    }
+
+    ret[key] = value;
+  }
+
+  return ret;
+}
+
 const BIG_ZERO = BigInt(0);
 const BIG_ONE = BigInt(1);
 const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
@@ -1805,7 +1829,7 @@ class Block {
   }
 
   encodeTx (tx, bridge) {
-    return '0x';
+    return '0xff';
   }
 
   decodeTx (rawStringOrArray, bridge) {
@@ -2160,22 +2184,6 @@ class Block {
 const ZERO_LOGS_BLOOM = `0x${''.padStart(512, '0')}`;
 const ZERO_NONCE = '0x0000000000000000';
 const ZERO_HASH$1 = `0x${''.padStart(64, '0')}`;
-
-function formatObject (obj) {
-  const ret = {};
-
-  for (const key in obj) {
-    let value = obj[key];
-
-    if (typeof value === 'number' || typeof value === 'bigint') {
-      value = `0x${value.toString(16)}`;
-    }
-
-    ret[key] = value;
-  }
-
-  return ret;
-}
 
 function blockRequest (block) {
   if (!block) {
@@ -2941,6 +2949,8 @@ const BIG_ZERO$2 = BigInt(0);
 const BIG_ONE$2 = BigInt(1);
 const ZERO_HASH$2 = '0000000000000000000000000000000000000000000000000000000000000000';
 
+const IS_NATIVE_ENV = typeof process !== 'undefined';
+
 /// @dev Glue for everything.
 class Bridge {
   constructor (options, BlockClass) {
@@ -2954,7 +2964,7 @@ class Bridge {
 
     // options regarding block submission behaviour
     this.blockSizeThreshold = options.blockSizeThreshold || 1000;
-    this.blockTimeThreshold = options.blockTimeThreshold || 60;
+    this.blockTimeThreshold = (options.blockTimeThreshold * 1000) || 60000;
 
     // options regarding solution submission behaviour
     this.submitSolutionThreshold = options.submitSolutionThreshold || 256;
@@ -2971,6 +2981,9 @@ class Bridge {
     }
 
     this.rootBridge = new RootBridge(options);
+
+    // keep track of pending transactions
+    this._pendingTransactionPool = [];
   }
 
   log (...args) {
@@ -3014,6 +3027,33 @@ class Bridge {
     // Disable automatic submissions for testing or debugging purposes.
     if (this.debugMode) {
       this.log('Disabled update loop because of debugMode');
+    }
+
+    if (IS_NATIVE_ENV) {
+      // restore and check pendingTransactionPool
+      const { existsSync, readFileSync } = await import('fs');
+      const path = `txsafe-${this.rootBridge.protocolAddress}.json`;
+
+      if (existsSync(path)) {
+        try {
+          const txs = JSON.parse(readFileSync(path));
+
+          for (const tx of txs) {
+            const found = await this.getTransaction(tx.hash);
+
+            if (!found) {
+              try {
+                // add again
+                await this.runTx({ data: tx.raw });
+              } catch (e) {
+                this.log(`Error adding transaction from store`, e);
+              }
+            }
+          }
+        } catch (e) {
+          this.log('restore transactions from store', e);
+        }
+      }
     }
   }
 
@@ -3122,6 +3162,33 @@ class Bridge {
       }
       if (!this.debugMode) {
         await this.forwardChain();
+      }
+      // filter _pendingTransactionPool
+      if (IS_NATIVE_ENV) {
+        const tmp = [];
+
+        for (const tx of this._pendingTransactionPool) {
+          const { block } = await this.getBlockOfTransaction(tx.hash);
+
+          // if this transaction is inside a block that is lower than the pending one,
+          // then drop it
+          if (block && block.number < this.pendingBlock.number) {
+            continue;
+          }
+
+          // else append it again
+          tmp.push(tx);
+        }
+
+        // update
+        this._pendingTransactionPool = tmp;
+
+        const { writeFileSync } = await import('fs');
+        // save to file
+        writeFileSync(
+          `./txsafe-${this.rootBridge.protocolAddress}.json`,
+          JSON.stringify(this._pendingTransactionPool)
+        );
       }
     } catch (e) {
       this.log(e);
@@ -3267,6 +3334,11 @@ class Bridge {
 
     if (!tx) {
       throw new Error('Invalid transaction');
+    }
+
+    // store tx into pending pool. We might get duplicates, but this is not an error per se.
+    {
+      this._pendingTransactionPool.push({ hash: tx.hash, raw: hexString });
     }
 
     return tx.hash;
@@ -3509,7 +3581,13 @@ class Bridge {
         for (let gas = 500000; gas < maxGas; gas += 250000) {
           tx.gas = `0x${gas.toString(16)}`;
 
-          const callRes = await this.rootBridge.fetchJson('eth_call', [tx, 'latest']);
+          let callRes;
+          try {
+            callRes = await this.rootBridge.fetchJson('eth_call', [tx, 'latest']);
+          } catch (e) {
+            callRes = '0x0';
+          }
+
           const complete = Number(callRes.substring(0, 66));
 
           if (complete) {
@@ -5244,10 +5322,7 @@ class Block$1 extends Block {
   }
 }
 
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
-
-const SUPPORTED_TYPES = {
+var SUPPORTED_TYPES = {
   address: 20,
   bytes: 0,
   string: 0,
@@ -5349,6 +5424,9 @@ const SUPPORTED_TYPES = {
   int8: 1,
 };
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
 function hash (val) {
   if (typeof val === 'string') {
     if (!val.startsWith('0x')) {
@@ -5384,7 +5462,9 @@ function decodeValue (type, typeSize, val) {
     return BigInt.asIntN(n, bufToHex(val, 0, typeSize));
   }
 
-  return bufToHex(val, 0, SUPPORTED_TYPES[type] || val.length);
+  // everything else
+  // pad left with zeros
+  return '0x' + bufToHex(val, 0, typeSize).replace('0x', '').padStart((SUPPORTED_TYPES[type] || typeSize) * 2, '0');
 }
 
 function encodeHashingValue (type, val) {
@@ -5400,7 +5480,7 @@ function encodeHashingValue (type, val) {
 
   // bytes
   if (type[0] === 'b') {
-    return '0x' + BigInt.asUintN(n * 8, BigInt(val)).toString(16).padEnd(64, '0');
+    return '0x' + BigInt.asUintN(n * 8, BigInt(val)).toString(16).padStart(n * 2, '0').padEnd(64, '0');
   }
 
   // int
@@ -5420,6 +5500,7 @@ function encodeValue (type, val) {
   } else if (type === 'bytes') {
     ret = arrayify(val);
   } else {
+    // we strip leading zeroes from everything else
     const n = SUPPORTED_TYPES[type] * 8;
     const str = BigInt.asUintN(n, BigInt(val)).toString(16);
     const v = str.padStart(str.length % 2 ? str.length + 1 : str.length, '0');
