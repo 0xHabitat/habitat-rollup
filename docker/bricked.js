@@ -3031,9 +3031,13 @@ class Bridge {
 
     if (IS_NATIVE_ENV) {
       // restore and check pendingTransactionPool
-      const { existsSync, readFileSync } = await import('fs');
-      const path = `txsafe-${this.rootBridge.protocolAddress}.json`;
+      const { existsSync, readFileSync, mkdirSync } = await import('fs');
 
+      // create directories
+      this._dataDir = `./data/${this.rootBridge.protocolAddress}`;
+      mkdirSync(this._dataDir, { recursive: true });
+
+      const path = `${this._dataDir}/txsafe.json`;
       if (existsSync(path)) {
         try {
           const txs = JSON.parse(readFileSync(path));
@@ -3186,7 +3190,7 @@ class Bridge {
         const { writeFileSync } = await import('fs');
         // save to file
         writeFileSync(
-          `./txsafe-${this.rootBridge.protocolAddress}.json`,
+          `${this._dataDir}/txsafe.json`,
           JSON.stringify(this._pendingTransactionPool)
         );
       }
