@@ -42,6 +42,8 @@ function onRequest (req, resp) {
 
     if (path.endsWith('.js')) {
       resp.setHeader('content-type', 'application/javascript');
+    } else if (path.endsWith('.svg')) {
+      resp.setHeader('content-type', 'image/svg+xml');
     }
 
     resp.end(buf);
@@ -56,7 +58,8 @@ const httpServer = new http.Server(onRequest);
 const host = 'localhost';
 let port = 0;
 
-httpServer.listen(0, host, function () {
+process.chdir('web/');
+httpServer.listen(8080, host, function () {
   port = this.address().port;
   console.log(`http://${host}:${port}`);
 });

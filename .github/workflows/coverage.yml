@@ -14,25 +14,21 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event.comment.body == '/COVERAGE'
     timeout-minutes: 45
     runs-on: ubuntu-latest
-    container: node:14-alpine
     steps:
-    - name: Setup
-      run: apk add --no-cache git geth bash curl
-
-    - uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.PAT }}
+     - uses: actions/checkout@v2
+       with:
+         token: ${{ secrets.PAT }}
 
     - name: Setup git credentials
       env:
         PAT: ${{ secrets.PAT }}
-      run: printf "https://x:"$PAT"@github.com\n" > ~/.git-credentials && git config --global credential.helper store
+      run: printf "https://x:"$PAT"@github.com\n" > .env
 
-    - name: Install
-      run: yarn install
+    - name: Setup
+      run: docker-compose up --timeout 1 --exit-code-from dev
 
     - name: Coverage
-      run: yarn coverage
+      run: docker-compose run dev sh -c 'cd /app && yarn coverage'
 
     - name: Upload Coverage
       if: success()

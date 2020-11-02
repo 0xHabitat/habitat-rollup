@@ -3,18 +3,19 @@
 import fs from 'fs';
 import ethers from 'ethers';
 
-const artifact = JSON.parse(fs.readFileSync('./build/contracts/GovBrick.json'));
+const GovBrick = JSON.parse(fs.readFileSync('./build/contracts/GovBrick.json'));
+const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
 
-async function deployBridge (wallet, txOverrides, logFile) {
+async function deploy (artifact, args, wallet, txOverrides, logFile) {
   const _factory = new ethers.ContractFactory(
     artifact.abi,
     artifact.bytecode,
     wallet
   );
 
-  logFile.write('deploying Bridge\n');
+  logFile.write(`deploying ${artifact.contractName}\n`);
 
-  let contract = await _factory.deploy(txOverrides);
+  let contract = await _factory.deploy(...args, txOverrides);
   let tx = await contract.deployTransaction.wait();
 
   logFile.write(`\n
@@ -51,5 +52,6 @@ Contract: ${artifact.contractName}
     wallet = provider.getSigner();
   }
 
-  await deployBridge(wallet, txOverrides, process.stdout);
+  const { contract } = await deploy(GovBrick, [], wallet, txOverrides, process.stdout);
+  await deploy(ExecutionProxy, [contract.address], wallet, txOverrides, process.stdout);
 })();

@@ -1,9 +1,16 @@
 
 # Development
 
+Use `docker-compose up` to bootstrap the environment.
+Enter the development container with `docker-compose run dev sh`, the root folder is mounted at `/app`.
+
+Additionally, use `docker-compose run -p 8111:8111 dev sh` to establish a port mapping.
+Then run `node receipts/simple.js' for a simple bootstrap environment.
+A local http server at `scripts/http.js` is available to host the web ui at `web/`.
+That provides you with a full stack environment in combination with `receipts/simple.js`.
+
 Run the tests with `yarn test`.
 You can run single/multiple tests only with `yarn _test path/to/file(s)`.
-The test require `geth` version `1.9.9` is recommended and you can grab it here: `https://geth.ethereum.org/downloads/`.
 
 
 # Deploy

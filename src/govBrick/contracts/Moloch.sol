@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 pragma solidity >=0.6.2;
 
 import './GovBase.sol';
@@ -28,13 +29,19 @@ contract Moloch is GovBase {
   /***************
     EVENTS
    ***************/
-  event SubmitProposal(uint256 proposalIndex, address indexed delegateKey, address indexed memberAddress);
+  event SubmitProposal(
+    uint256 proposalIndex,
+    address indexed delegateKey,
+    address indexed memberAddress,
+    string title
+  );
   event SubmitVote(uint256 indexed proposalIndex, address indexed delegateKey, address indexed memberAddress, uint8 uintVote);
   event ProcessProposal(uint256 indexed proposalIndex, address indexed memberAddress, bool didPass);
   event Ragequit(address indexed memberAddress, uint256 sharesToBurn);
   event Abort(uint256 indexed proposalIndex);
   event UpdateDelegateKey(address indexed memberAddress, address newDelegateKey);
   event SummonComplete(address indexed summoner);
+  //event SubmitProposalDetails(string details, bytes actions);
 
   /******************
     INTERNAL ACCOUNTING
@@ -63,7 +70,8 @@ contract Moloch is GovBase {
     uint256 yesVotes; // the total number of YES votes for this proposal
     uint256 noVotes; // the total number of NO votes for this proposal
     uint256 maxTotalSharesAtYesVote; // the maximum # of total shares encountered at a yes vote on this proposal
-    string details; // proposal details - could be IPFS hash, plaintext, or JSON
+    // the hash of the structure for proposalIndex + proposal actions
+    bytes32 executionPermit;
   }
 
   mapping (uint256 => mapping(address => Vote)) votesByMember; // the votes on a proposal by each member
@@ -121,19 +129,21 @@ contract Moloch is GovBase {
     emit SummonComplete(summoner);
   }
 
-  /*****************
-    PROPOSAL FUNCTIONS
-   *****************/
-
+  /// @notice Submit a proposal, `msgSender` must be the delegate.
+  /// @param details proposal details - could be IPFS hash, plaintext, or JSON
   function submitProposal(
     address msgSender,
     uint256 startingPeriod,
-    string memory details
+    string memory title,
+    string memory details,
+    bytes memory actions
   ) internal
   {
     onlyDelegate(msgSender);
 
     address memberAddress = memberAddressByDelegateKey[msgSender];
+    uint256 proposalIndex = proposalQueue.length;
+    bytes32 executionPermit = keccak256(abi.encode(proposalIndex, actions));
 
     // create proposal ...
     Proposal memory proposal = Proposal({
@@ -144,15 +154,13 @@ contract Moloch is GovBase {
       processed: false,
       didPass: false,
       aborted: false,
-      details: details,
-      maxTotalSharesAtYesVote: 0
+      maxTotalSharesAtYesVote: 0,
+      executionPermit: executionPermit
     });
-
     // ... and append it to the queue
     proposalQueue.push(proposal);
 
-    uint256 proposalIndex = proposalQueue.length.sub(1);
-    emit SubmitProposal(proposalIndex, msgSender, memberAddress);
+    emit SubmitProposal(proposalIndex, msgSender, memberAddress, title);
   }
 
   function submitVote(address msgSender, uint256 proposalIndex, uint8 uintVote) internal {
@@ -198,7 +206,7 @@ contract Moloch is GovBase {
     _checkDeadline(proposal.startingPeriod.add(votingPeriodLength));
   }
 
-  function processProposal (address msgSender, uint256 proposalIndex) internal {
+  function processProposal (uint256 proposalIndex) internal {
     require(proposalIndex < proposalQueue.length, 'Moloch::processProposal - proposal does not exist');
     Proposal storage proposal = proposalQueue[proposalIndex];
 
@@ -218,6 +226,7 @@ contract Moloch is GovBase {
     // PROPOSAL PASSED
     if (didPass && !proposal.aborted) {
       proposal.didPass = true;
+      executionPermits[proposalIndex] = proposal.executionPermit;
     }
 
     emit ProcessProposal(

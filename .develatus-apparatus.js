@@ -1,7 +1,7 @@
 export default {
-  testCommand: 'RPC_PORT=8333 yarn test',
+  testCommand: 'ROOT_RPC_URL=http://localhost:8333/ yarn test',
   artifactsPath: 'build/contracts',
   proxyPort: 8333,
-  rpcUrl: 'http://localhost:8222',
-  fuzzyMatchFactor: 0.6
+  rpcUrl: process.env.ROOT_RPC_URL,
+  fuzzyMatchFactor: 0.8
 }

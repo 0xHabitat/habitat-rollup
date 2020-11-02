@@ -1,0 +1,7 @@
+/* custom page styles goes here */
+.textarea{
+    border-radius: 5px;
+    border-color: lightgray;
+    border-width: 2px;
+    margin-bottom: 15px;
+}

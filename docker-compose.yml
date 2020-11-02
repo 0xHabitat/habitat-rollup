@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  geth:
+    image: ethereum/client-go:v1.9.23
+    tty: true
+    volumes:
+      - ./scripts:/scripts
+    ports:
+      - 8222:8222
+    environment:
+      - GETH_ARGS=--networkid=99 --maxpeers=0 --nodiscover --nousb --targetgaslimit=12000000 --gasprice=0x01 --rpc --rpcport=8222 --rpcapi=eth,net,web3,debug,personal,miner --allow-insecure-unlock --rpcaddr=0.0.0.0 --rpccorsdomain=* --rpcvhosts=*
+    entrypoint: '/bin/sh -c "geth $$GETH_ARGS init /scripts/genesis.json && geth $$GETH_ARGS --preload /scripts/chainInit.js console"'
+
+  dev:
+    depends_on:
+      - geth
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    image: node:14-alpine
+    command: "/bin/sh -c 'apk add git && git config --global credential.helper store && echo $GIT_CREDENTIAL > $$HOME/.git-credentials && cd /app && yarn'"
+    tty: true
+    stdin_open: true
+    environment:
+      - ROOT_RPC_URL=http://geth:8222/
+
+volumes:
+  node_modules:

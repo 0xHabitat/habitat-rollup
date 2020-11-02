@@ -1,0 +1,103 @@
+import { formatObject, computeVotePercentages, wrapListener, getEtherscanLink } from '../common/utils.js';
+import { getProviders, sendTransaction, decodeProposalActions, executeProposalActions } from '../common/tx.js';
+
+async function submitVote (proposalIndex, uintVote) {
+  const args = {
+    proposalIndex,
+    uintVote,
+  };
+
+  await sendTransaction('SubmitVote', args);
+
+  // lazy, reload page
+  window.location.reload();
+}
+
+async function processProposal (proposalIndex) {
+  const args = {
+    proposalIndex,
+  };
+
+  await sendTransaction('ProcessProposal', args);
+
+  // lazy, reload page
+  window.location.reload();
+}
+
+async function executeProposal (proposalId, actionBytes) {
+  const tx = await executeProposalActions(proposalId, actionBytes);
+  // lazy :)
+  window.location.href = getEtherscanLink(tx.hash);
+}
+
+async function render () {
+  const { habitat } = await getProviders();
+  const proposalTxHash = window.location.hash.replace('#', '');
+  const tx = await habitat.provider.send('eth_getTransactionByHash', [proposalTxHash]);
+  const receipt = await habitat.provider.send('eth_getTransactionReceipt', [proposalTxHash]);
+  const submitProposalEvent = habitat.interface.parseLog(receipt.logs[0]);
+  const proposalId = submitProposalEvent.values.proposalIndex.toString();
+  const proposal = await habitat.proposalQueue(proposalId);
+  const { yay, nay } = computeVotePercentages(proposal);
+  const expired = await habitat.hasVotingPeriodExpired(proposal.startingPeriod);
+  const votingDisabled = expired || proposal.didPass || proposal.processed || proposal.aborted;
+
+  let status = expired ? 'Voting Ended' : 'open';
+  if (proposal.aborted) {
+    status = 'aborted by proposer';
+  } else if (proposal.didPass) {
+    status = 'passed';
+  } else if (proposal.processed) {
+    status = 'processed';
+  }
+
+  const container = document.querySelector('.proposal');
+  let ele = formatObject(
+      {
+        id: proposalId,
+        status,
+        yay: `${(yay * 100).toFixed(2)} %`,
+        nay: `${(nay * 100).toFixed(2)} %`,
+        proposer: proposal.proposer,
+      }
+    );
+  ele.className = 'grid2';
+  container.appendChild(ele);
+
+  ele = document.createElement('p');
+  ele.className = 'details';
+  ele.textContent = tx.message.details;
+  container.appendChild(ele);
+
+  const proposalActions = decodeProposalActions(tx.message.actions);
+  {
+    // proposal actions
+    const grid = document.querySelector('.proposalActions');
+    for (const str of proposalActions) {
+      const p = document.createElement('p');
+      p.textContent = str;
+      grid.appendChild(p);
+    }
+  }
+
+  // buttons
+  const actions = document.querySelector('.actions');
+  if (!votingDisabled) {
+    // yay
+    wrapListener('button#yay', () => submitVote(proposalId, 1));
+    // nay
+    wrapListener('button#nay', () => submitVote(proposalId, 2));
+  }
+
+  if (!proposal.processed) {
+    wrapListener('button#finalize', () => processProposal(proposalId));
+  } else {
+    // any actions we can execute?
+    // TODO: calculate estimate of bridge finalization time
+    if (proposal.didPass && proposalActions.length) {
+      wrapListener('button#execProposal', () => executeProposal(proposalId, tx.message.actions));
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded', render, false);
