@@ -18,8 +18,10 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/node_modules
-    image: node:14-alpine
-    command: "/bin/sh -c 'apk add git && git config --global credential.helper store && echo $GIT_CREDENTIAL > $$HOME/.git-credentials && cd /app && yarn'"
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+    command: "/bin/sh -c 'git config --global credential.helper store && echo $GIT_CREDENTIAL > $$HOME/.git-credentials && cd /app && yarn'"
     tty: true
     stdin_open: true
     environment:
