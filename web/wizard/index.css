@@ -1,0 +1,8 @@
+/* custom page styles goes here */
+pre#log {
+  overflow: scroll;
+}
+
+pre {
+  overflow: scroll;
+}

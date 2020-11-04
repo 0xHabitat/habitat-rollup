@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='../assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='index.css'>
+    <link rel='icon' type='image/png' href='../assets/logo.png'>
+    <link rel='apple-touch-icon' href='../assets/logo.png'>
+    <title>Habitat - Wizard</title>
+  </head>
+  <body>
+    <canvas id="gradient-canvas"></canvas>
+    <section class='wrapperNav'>
+      <div class='Nav'>
+        <img src='../assets/logoBig.svg'>
+      </div>
+    </section>
+    <section class='wrapperContent'>
+      <div class='container'>
+        <div>
+          <section>
+            <h1>1. Step</h1>
+            <p>Connect your wallet</p>
+            <button id='connectWallet'>Connect</button>
+          </section>
+          <section>
+            <h1>2. Step</h1>
+            <p>Deploy the Habitat contract</p>
+            <button id='deployHabitat'>Deploy Habitat</button>
+          </section>
+          <section>
+            <h1>3. Step</h1>
+            <p>Configuring the Habitat node (ghcr.io/nutberry/artifacts/habitat:latest)</p>
+            <form id='nodeConfig'>
+              <label>
+                Time in milliseconds to check for Bridge event updates.
+                <input type='number' id='EVENT_CHECK_MS' value='6000'>
+              </label>
+              <label>
+                Minimum size in bytes until a block becomes eligible for submission.
+                <input type='number' id='BLOCK_SIZE_THRESHOLD' value='31000'>
+              </label>
+              <label>
+                Time in seconds since last submitted block until a new block becomes eligible for submission regardless of the block size threshold.
+                <input type='number' id='BLOCK_TIME_THRESHOLD' value='99999999'>
+              </label>
+              <label>
+                Defines the threshold of pending blocks without solutions until the node considers to submit solutions for pending blocks.
+                <input type='number' id='SUBMIT_SOLUTION_THRESHOLD' value='256'>
+              </label>
+              <label>
+                The URL for the root-chain JSON-RPC provider.
+                <input type='text' id='ROOT_RPC_URL' value='https://ropsten.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73'>
+              </label>
+              <label>
+                The private key for a root-chain account. That account should have some ether to be useful.
+                Required to participate in the network.
+                <input type='text' id='PRIV_KEY' placeholder='0x..'>
+              </label>
+              <label>
+                The contract address of the Bridge on the root-chain.
+                <input type='text' id='BRIDGE_ADDRESS' placeholder='0x..'>
+              </label>
+            </form>
+            <button id='createNodeConfig'>Generate node config</button>
+            <pre id='flyctlConfig'></pre>
+            <pre id='dockerConfig'></pre>
+          </section>
+          <section>
+            <h1>4. Step</h1>
+            <p>Initialize the Habitat parameters and submit them to the Bridge on Layer-1.</p>
+            <form id='config'>
+              <label>
+                The address of the allowed governance token.
+                <input type='text' id='approvedToken' placeholder='0x...'>
+              </label>
+              <label>
+                Defines how long a period is (in seconds). Defaults to 1 day.
+                <input type='number' id='periodDuration' value='86400'></input>
+              </label>
+              <label>
+                Defines the voting period that allows token holders to vote on a proposal.
+                <input type='number' id='votingPeriod' value='7'></input>
+              </label>
+              <label>
+                proposal.startPeriod + votingPeriod + gracePeriod until a proposal can be processed.
+                <input type='number' id='gracePeriod' value='1'></input>
+              </label>
+              <label>
+                Deadline for proposal.startingPeriod + abortWindow. Proposals can be aborted inside the abort window.
+                <input type='number' id='abortWindow' value='1'>
+              </label>
+              <label>
+                Makes the proposal fail if the dilutionBound is exceeded
+                if (totalShares.mul(dilutionBound) < proposal.maxTotalSharesAtYesVote)
+                <input type='number' id='dilutionBound' value='1'>
+              </label>
+            </form>
+            <button id='initHabitat'>Initialize Habitat</button>
+          </section>
+          <section>
+            <h1>5. Step</h1>
+            <p>Deploys the frontend with the configuration from the prior steps.</p>
+
+            <label>
+              The RPC endpoint of your Habitat node.
+              <input type='text' id='RPC_URL' placeholder='https://...'>
+            </label>
+            <button id='createFrontendConfig'>Deploy frontend via IPFS</button>
+          </section>
+        </div>
+      </div>
+    </section>
+    <script src='https://cdn.jsdelivr.net/gh/ethers-io/ethers.js@v4.0.41/dist/ethers.min.js'
+      integrity='sha384-IdAlK0noI+bswjSrSiA28qV6LA5h1D02N+O5o6WZXfAvn/lbm/MVNaEdaebOhtPL'
+            crossorigin='anonymous'></script>
+    <script type='module' src='./index.js'></script>
+    <script src="../common/Gradient/script.js"></script>
+  </body>
+</html>

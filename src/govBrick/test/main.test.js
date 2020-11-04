@@ -2,8 +2,7 @@ import ethers from 'ethers';
 
 import TransactionBuilder from '@NutBerry/rollup-bricks/src/bricked/lib/TransactionBuilder.js';
 import TYPED_DATA from '../typedData.js';
-
-const { GovBrick, TestERC20 } = Artifacts;
+import { encodeProposalActions } from './utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
@@ -21,39 +20,23 @@ async function createTransaction (primaryType, message, signer, bridge) {
 
   Object.assign(tx, { r, s, v });
 
-  const encoded = builder.encode(tx);
-  const decoded = builder.decode(encoded);
+  const txHash = await bridge.provider.send('eth_sendRawTransaction', [tx]);
+  const receipt = await bridge.provider.send('eth_getTransactionReceipt', [txHash]);
 
-  assert.equal(decoded.from, signer.address.toLowerCase());
-
-  let str = '';
-  for (const v of encoded) {
-    str += v.toString(16).padStart(2, '0');
-  }
-
-  return str;
+  return { txHash, receipt };
 }
 
 describe('GovBrick', async function () {
-  const { alice, bob, charlie } = getDefaultWallets();
-  const rootRpcUrl = `http://localhost:${process.env.RPC_PORT}`;
-  const rootProvider = new ethers.providers.JsonRpcProvider(rootRpcUrl);
+  const { GovBrick, ExecutionProxy, TestERC20, ExecutionTest } = Artifacts;
+  const { rootProvider, alice, bob, charlie } = getDefaultWallets();
   let bridge;
   let govBrick;
+  let executionProxy;
   let myNode;
   let erc20;
   let cumulativeDeposits = BigInt(0);
   let proposalIndex;
-
-  before('Prepare contracts', async () => {
-    erc20 = await deploy(TestERC20, alice);
-    // Replace the inspection period
-    GovBrick.bytecode = GovBrick.bytecode.replace('615460', '61000a');
-
-    govBrick = await deploy(GovBrick, alice);
-    myNode = await startNode('../../bricked/lib/index.js', 9999, 0, govBrick.address, TYPED_DATA);
-    bridge = govBrick.connect(myNode);
-  });
+  let executionTestContract;
 
   const VOTING_PERIOD = 2;
   const GRACE_PERIOD = 1;
@@ -61,6 +44,36 @@ describe('GovBrick', async function () {
   let alreadyInitialized = false;
   let round = 0;
   let sharesBurntAlice = 0;
+  let proposals = [];
+  let invalidAction;
+  let validAction;
+
+  before('Prepare contracts', async () => {
+    erc20 = await deploy(TestERC20, alice);
+
+    // Replace the inspection period
+    GovBrick.bytecode = GovBrick.bytecode.replace('615460', '61000a');
+
+    govBrick = await deploy(GovBrick, alice);
+    myNode = await startNode('../../bricked/lib/index.js', 9999, 0, govBrick.address, TYPED_DATA);
+    bridge = govBrick.connect(myNode);
+
+    executionProxy = await deploy(ExecutionProxy, alice, govBrick.address);
+    executionTestContract = await deploy(ExecutionTest, alice, executionProxy.address);
+
+    invalidAction = encodeProposalActions(
+      [
+        executionTestContract.address,
+        '0xbadc0ffe',
+      ]
+    );
+    validAction = encodeProposalActions(
+      [
+        executionTestContract.address,
+        executionTestContract.interface.encodeFunctionData('changeSomething', ['0xbadbeef']),
+      ]
+    );
+  });
 
   function _doRound (abortProposal = false) {
     const depositAmount = '0xffffffff';
@@ -91,7 +104,7 @@ describe('GovBrick', async function () {
         const oldBlock = await myNode.getBlockNumber();
         //const oldBalance = await bridge.balances(erc20.address, user);
 
-        const tx = await govBrick.connect(signer).deposit(erc20.address, depositAmount);
+        const tx = await govBrick.connect(signer).deposit(erc20.address, depositAmount, await signer.getAddress());
         const receipt = await tx.wait();
 
         await waitForValueChange(oldBlock, () => myNode.getBlockNumber());
@@ -115,9 +128,7 @@ describe('GovBrick', async function () {
           summoningTime: ~~(Date.now() / 1000),
         };
 
-        const rawTx = '0x' + await createTransaction('InitMoloch', args, alice, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('InitMoloch', args, alice, bridge);
 
         assert.equal(receipt.status, alreadyInitialized ? '0x0' : '0x1', 'receipt.status');
         alreadyInitialized = true;
@@ -139,17 +150,19 @@ describe('GovBrick', async function () {
 
       it('submitProposal: alice', async () => {
         const args = {
-          startingPeriod: (await bridge.getCurrentPeriod()).add(2),
+          startingPeriod: (await bridge.getCurrentPeriod()).add(2).toString(),
+          title: 'hello title',
           details: 'Hello World',
+          actions: invalidAction,
         };
 
-        const rawTx = '0x' + await createTransaction('SubmitProposal', args, alice, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('SubmitProposal', args, alice, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
 
-        proposalIndex = bridge.interface.parseLog(receipt.logs[0]).args.proposalIndex;
+        const evt = bridge.interface.parseLog(receipt.logs[0]).args;
+        proposalIndex = evt.proposalIndex.toString();
+        proposals.push({ valid: false, args, proposalIndex, executionPermit: evt.executionPermit, txHash });
       });
 
       it('deposit: bob', async () => {
@@ -172,9 +185,7 @@ describe('GovBrick', async function () {
           uintVote: 1,
         };
 
-        const rawTx = '0x' + await createTransaction('SubmitVote', args, alice, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('SubmitVote', args, alice, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
@@ -185,9 +196,7 @@ describe('GovBrick', async function () {
           uintVote: 2,
         };
 
-        const rawTx = '0x' + await createTransaction('SubmitVote', args, bob, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('SubmitVote', args, bob, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
@@ -198,9 +207,7 @@ describe('GovBrick', async function () {
             proposalIndex,
           };
 
-          const rawTx = '0x' + await createTransaction('Abort', args, alice, bridge);
-          const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-          const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+          const { txHash, receipt } = await createTransaction('Abort', args, alice, bridge);
 
           assert.equal(receipt.status, '0x1', 'receipt.status');
         });
@@ -217,9 +224,7 @@ describe('GovBrick', async function () {
           proposalIndex,
         };
 
-        const rawTx = '0x' + await createTransaction('ProcessProposal', args, alice, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
@@ -229,9 +234,7 @@ describe('GovBrick', async function () {
           newDelegateKey: await charlie.getAddress(),
         };
 
-        const rawTx = '0x' + await createTransaction('UpdateDelegateKey', args, alice, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('UpdateDelegateKey', args, alice, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
@@ -240,9 +243,7 @@ describe('GovBrick', async function () {
         const args = {
           sharesToBurn: 1,
         };
-        const rawTx = '0x' + await createTransaction('Ragequit', args, alice, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('Ragequit', args, alice, bridge);
 
         sharesBurntAlice++;
 
@@ -251,17 +252,32 @@ describe('GovBrick', async function () {
 
       it('submitProposal: charlie', async () => {
         const args = {
-          startingPeriod: (await bridge.getCurrentPeriod()).add(2),
+          startingPeriod: (await bridge.getCurrentPeriod()).add(2).toString(),
+          title: 'hello title',
           details: 'Hello World',
+          actions: validAction,
         };
 
-        const rawTx = '0x' + await createTransaction('SubmitProposal', args, charlie, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('SubmitProposal', args, charlie, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
 
-        proposalIndex = bridge.interface.parseLog(receipt.logs[0]).args.proposalIndex;
+        const evt = bridge.interface.parseLog(receipt.logs[0]).args;
+        proposalIndex = evt.proposalIndex.toString();
+        proposals.push({ valid: true, args, proposalIndex, executionPermit: evt.executionPermit, txHash });
+      });
+
+      doSleep();
+
+      it('submitVote: bob', async () => {
+        const args = {
+          proposalIndex,
+          uintVote: 1,
+        };
+
+        const { txHash, receipt } = await createTransaction('SubmitVote', args, bob, bridge);
+
+        assert.equal(receipt.status, '0x1', 'receipt.status');
       });
 
       it('forward / submit block', async () => {
@@ -275,9 +291,7 @@ describe('GovBrick', async function () {
           proposalIndex,
         };
 
-        const rawTx = '0x' + await createTransaction('ProcessProposal', args, charlie, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('ProcessProposal', args, charlie, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
@@ -287,12 +301,58 @@ describe('GovBrick', async function () {
           newDelegateKey: await alice.getAddress(),
         };
 
-        const rawTx = '0x' + await createTransaction('UpdateDelegateKey', args, alice, bridge);
-        const txHash = await myNode.send('eth_sendRawTransaction', [rawTx]);
-        const receipt = await myNode.send('eth_getTransactionReceipt', [txHash]);
+        const { txHash, receipt } = await createTransaction('UpdateDelegateKey', args, alice, bridge);
 
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
+
+      {
+        it('submitProposal: alice - with invalid action', async () => {
+          const args = {
+            startingPeriod: (await bridge.getCurrentPeriod()).add(2).toString(),
+            title: 'hello alice',
+            details: 'Hello World',
+            actions: invalidAction,
+          };
+
+          const { txHash, receipt } = await createTransaction('SubmitProposal', args, alice, bridge);
+
+          assert.equal(receipt.status, '0x1', 'receipt.status');
+
+          const evt = bridge.interface.parseLog(receipt.logs[0]).args;
+          proposalIndex = evt.proposalIndex.toString();
+          proposals.push({ valid: true, args, proposalIndex, executionPermit: evt.executionPermit, txHash });
+        });
+
+        doSleep();
+
+        it('submitVote: bob', async () => {
+          const args = {
+            proposalIndex,
+            uintVote: 1,
+          };
+
+          const { txHash, receipt } = await createTransaction('SubmitVote', args, bob, bridge);
+
+          assert.equal(receipt.status, '0x1', 'receipt.status');
+        });
+
+        it('forward / submit block', async () => {
+          myNode.send('debug_forwardChain', []);
+        });
+
+        doSleep(true);
+
+        it('ProcessProposal: charlie', async () => {
+          const args = {
+            proposalIndex,
+          };
+
+          const { txHash, receipt } = await createTransaction('ProcessProposal', args, charlie, bridge);
+
+          assert.equal(receipt.status, '0x1', 'receipt.status');
+        });
+      }
     });
   }
 
@@ -301,21 +361,60 @@ describe('GovBrick', async function () {
     _doRound(true);
   }
 
+  function doExecutionTest () {
+    describe('on-chain execution tests', () => {
+      it('check execution permit and execute', async () => {
+        for (const { args, proposalIndex, txHash, executionPermit, valid, actions } of proposals) {
+          const ok = await govBrick.executionPermits(proposalIndex);
+
+          assert.equal(!!Number(ok), valid, 'execution permit only for valid proposals');
+
+          let expected = valid && args.actions === validAction;
+          // try to execute
+          let result;
+          if (expected) {
+            const tx = await executionProxy.execute(proposalIndex, args.actions);
+            const receipt = await tx.wait();
+            result = !!receipt.status;
+          } else {
+            await assertRevert(executionProxy.execute(proposalIndex, args.actions, { gasLimit: GAS_LIMIT }));
+            result = false;
+          }
+
+          assert.equal(result, expected, 'expected execution result via proxy');
+          console.log({ proposalIndex, expected });
+
+          if (expected) {
+            // a second time should fail
+            await assertRevert(executionProxy.execute(proposalIndex, args.actions, { gasLimit: GAS_LIMIT }));
+          }
+        }
+      });
+
+      it('non existent permits', async () => {
+        await assertRevert(executionProxy.execute(0xff, '0x', { gasLimit: GAS_LIMIT }));
+      });
+    });
+  }
+
   describe('chain - forward', function () {
     doRound();
     describe('finalize', function () {
       it('submitBlock', () => submitBlock(govBrick, rootProvider, myNode));
       it('doForward', () => doForward(govBrick, rootProvider, myNode));
       it('debugStorage', () => debugStorage(govBrick, rootProvider, myNode));
+      doExecutionTest();
     });
   });
 
   describe('chain - challenge', function () {
+    return;
     doRound();
     describe('finalize', function () {
       it('submitBlock', () => submitBlock(govBrick, rootProvider, myNode));
       it('doChallenge', () => doChallenge(govBrick, rootProvider, myNode));
       it('debugStorage', () => debugStorage(govBrick, rootProvider, myNode));
+      doExecutionTest();
     });
   });
 

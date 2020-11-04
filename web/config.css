@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900');
+@import url('https://fonts.googleapis.com/css2?family=Roboto%20Mono:wght@400');
+
+:root {
+  --color-bg: #FAFDFFAC;
+  --color-error: #eb4d62;
+  --color-text: #000000;
+  --color-brand1: #635BFF;
+  --color-brand2: #1CDB9E;
+  --color-brand3: #3BDEFF;
+  --color-brand4: #FFCB57;
+  --font-family-default: 'Montserrat';
+  --font-family-mono: 'Roboto Mono';
+}
+
+.Nav > img {
+  width: 160px;
+  height: 74px;
+}

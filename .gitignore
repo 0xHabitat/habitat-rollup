@@ -7,9 +7,14 @@
 !*.yml
 !*.md
 !*.html
+!*.css
+!*.woff2
+!*.png
+!*.jpg
+!*.jpeg
+!*.m4a
+!*.svg
 !package.json
 !yarn.lock
 !Dockerfile
 !LICENSE
-node_modules/
-build/

@@ -8,8 +8,8 @@ contract GovBrickChallenge {
     assembly {
       
 function _parseTransaction (o) -> success, offset {
-  // TODO: clear memory?
-  // calldatacopy(0, calldatasize(), msize())
+  // zero memory
+  calldatacopy(0, calldatasize(), msize())
   offset := o
 
   let v := byte(0, calldataload(offset))
@@ -38,7 +38,6 @@ case 0 {
   // uint256 InitMoloch.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(32, mload(txPtr))
   offset := add(offset, typeLen)
@@ -47,7 +46,6 @@ case 0 {
   // address InitMoloch.summoner
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(64, mload(txPtr))
   offset := add(offset, typeLen)
@@ -56,7 +54,6 @@ case 0 {
   // address InitMoloch.approvedToken
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(96, mload(txPtr))
   offset := add(offset, typeLen)
@@ -65,7 +62,6 @@ case 0 {
   // uint256 InitMoloch.periodDuration
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(128, mload(txPtr))
   offset := add(offset, typeLen)
@@ -74,7 +70,6 @@ case 0 {
   // uint256 InitMoloch.votingPeriod
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(160, mload(txPtr))
   offset := add(offset, typeLen)
@@ -83,7 +78,6 @@ case 0 {
   // uint256 InitMoloch.gracePeriod
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(192, mload(txPtr))
   offset := add(offset, typeLen)
@@ -92,7 +86,6 @@ case 0 {
   // uint256 InitMoloch.abortWindow
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(224, mload(txPtr))
   offset := add(offset, typeLen)
@@ -101,7 +94,6 @@ case 0 {
   // uint256 InitMoloch.dilutionBound
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(256, mload(txPtr))
   offset := add(offset, typeLen)
@@ -110,7 +102,6 @@ case 0 {
   // uint256 InitMoloch.summoningTime
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(288, mload(txPtr))
   offset := add(offset, typeLen)
@@ -134,27 +125,26 @@ case 0 {
   mstore(672, 0x48453e86)
   mstore(704, mload(128))
 
-  success := call(gas(), address(), 0, 700, sub(endOfSlot, 700), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 700, sub(endOfSlot, 700), 0, 0)
   success := or(success, returndatasize())
 }
 // end of InitMoloch
 
 // start of SubmitProposal
-// typeHash: 0xfd87472e121f06cd8d7e56ec374113119a190c33c0f2083752f976644930fecd
-// function: onSubmitProposal(address,uint256,uint256,string)
+// typeHash: 0xd0ebe18810212da9ebaae6e8d65fb7241681bb93ca0dabbe72a5ac643880cad5
+// function: onSubmitProposal(address,uint256,uint256,string,string,bytes)
 case 1 {
-  let headSize := 128
+  let headSize := 192
   let typeLen := 0
-  let txPtr := 320
-  let endOfSlot := add(txPtr, 128)
+  let txPtr := 448
+  let endOfSlot := add(txPtr, 192)
 
-  txPtr := 352
+  txPtr := 480
   // typeHash of SubmitProposal
-  mstore(0, 0xfd87472e121f06cd8d7e56ec374113119a190c33c0f2083752f976644930fecd)
+  mstore(0, 0xd0ebe18810212da9ebaae6e8d65fb7241681bb93ca0dabbe72a5ac643880cad5)
   // uint256 SubmitProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(32, mload(txPtr))
   offset := add(offset, typeLen)
@@ -163,13 +153,12 @@ case 1 {
   // uint256 SubmitProposal.startingPeriod
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(64, mload(txPtr))
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // string SubmitProposal.details
+  // string SubmitProposal.title
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -182,8 +171,34 @@ case 1 {
   endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
   offset := add(offset, typeLen)
 
+  // string SubmitProposal.details
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(128, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
+  // bytes SubmitProposal.actions
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(160, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
   // typeHash
-  let structHash := keccak256(0, 128)
+  let structHash := keccak256(0, 192)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -197,10 +212,10 @@ case 1 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(288, 0xcfe3a4de)
-  mstore(320, mload(128))
+  mstore(416, 0xe56d4302)
+  mstore(448, mload(128))
 
-  success := call(gas(), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 444, sub(endOfSlot, 444), 0, 0)
   success := or(success, returndatasize())
 }
 // end of SubmitProposal
@@ -220,7 +235,6 @@ case 2 {
   // uint256 SubmitVote.proposalIndex
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(32, mload(txPtr))
   offset := add(offset, typeLen)
@@ -229,7 +243,6 @@ case 2 {
   // uint8 SubmitVote.uintVote
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(64, mload(txPtr))
   offset := add(offset, typeLen)
@@ -253,7 +266,7 @@ case 2 {
   mstore(224, 0xd4fc0aba)
   mstore(256, mload(128))
 
-  success := call(gas(), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
   success := or(success, returndatasize())
 }
 // end of SubmitVote
@@ -273,7 +286,6 @@ case 3 {
   // uint256 ProcessProposal.proposalIndex
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(32, mload(txPtr))
   offset := add(offset, typeLen)
@@ -297,7 +309,7 @@ case 3 {
   mstore(160, 0x0a625af4)
   mstore(192, mload(128))
 
-  success := call(gas(), address(), 0, 188, sub(endOfSlot, 188), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 188, sub(endOfSlot, 188), 0, 0)
   success := or(success, returndatasize())
 }
 // end of ProcessProposal
@@ -317,7 +329,6 @@ case 4 {
   // uint256 Ragequit.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(32, mload(txPtr))
   offset := add(offset, typeLen)
@@ -326,7 +337,6 @@ case 4 {
   // uint256 Ragequit.sharesToBurn
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(64, mload(txPtr))
   offset := add(offset, typeLen)
@@ -350,7 +360,7 @@ case 4 {
   mstore(224, 0x1c6b038a)
   mstore(256, mload(128))
 
-  success := call(gas(), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
   success := or(success, returndatasize())
 }
 // end of Ragequit
@@ -370,7 +380,6 @@ case 5 {
   // uint256 Abort.proposalIndex
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(32, mload(txPtr))
   offset := add(offset, typeLen)
@@ -394,7 +403,7 @@ case 5 {
   mstore(160, 0x4cb4583d)
   mstore(192, mload(128))
 
-  success := call(gas(), address(), 0, 188, sub(endOfSlot, 188), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 188, sub(endOfSlot, 188), 0, 0)
   success := or(success, returndatasize())
 }
 // end of Abort
@@ -414,7 +423,6 @@ case 6 {
   // uint256 UpdateDelegateKey.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(32, mload(txPtr))
   offset := add(offset, typeLen)
@@ -423,7 +431,6 @@ case 6 {
   // address UpdateDelegateKey.newDelegateKey
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
-  mstore(txPtr, 0)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
   mstore(64, mload(txPtr))
   offset := add(offset, typeLen)
@@ -447,7 +454,7 @@ case 6 {
   mstore(224, 0xd2527a14)
   mstore(256, mload(128))
 
-  success := call(gas(), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
   success := or(success, returndatasize())
 }
 // end of UpdateDelegateKey

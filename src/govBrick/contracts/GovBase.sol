@@ -8,6 +8,7 @@ import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
 contract GovBase is TokenBridgeBrick, UtilityBrick {
   // nonces
   mapping (address => uint256) public nonces;
+  mapping (uint256 => bytes32) public executionPermits;
 
   function _checkUpdateNonce (address msgSender, uint256 nonce) internal {
     require(nonce == nonces[msgSender], 'nonce');

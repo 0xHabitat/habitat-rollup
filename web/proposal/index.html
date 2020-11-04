@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='../assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='index.css'>
+    <link rel='icon' type='image/png' href='../assets/logo.png'>
+    <link rel='apple-touch-icon' href='../assets/logo.png'>
+    <title>Proposals</title>
+  </head>
+  <body>
+    <canvas id="gradient-canvas"></canvas>
+    <section class='wrapperNav'>
+      <div class='Nav'>
+        <img src='../assets/logoBig.svg'>
+        <div>
+          <a class='button' href='/'>Proposals</a>
+          <a class='button' href='/propose/'>Submit a Proposal</a>
+          <a class='button' href='/account/'>My Account</a>
+        </div>
+      </div>
+    </section>
+    <div class='wrapperContent'>
+      <section>
+        <h1>Proposal</h1>
+        <section>
+          <div class='proposal'></div>
+
+          <section class='highlight'>
+            <h2>On-chain execution</h2>
+            <space></space>
+            <h3>Proposal Actions</h3>
+            <sep></sep>
+            <div class='grid-2 proposalActions'>
+              <p>Contract Address</p>
+              <p>Input data</p>
+            </div>
+          </section>
+
+          <div class='flex actions'>
+            <button id='yay' disabled=true >Vote Yay 👍</button>
+            <button id='nay' disabled=true >Vote Nay 👎</button>
+            <button id='finalize' disabled=true >Finalize Proposal</button>
+            <button id='execProposal' disabled=true >Execute On-chain Proposal actions</button>
+          </div>
+        </section>
+      </section>
+    </div>
+    <script src='https://cdn.jsdelivr.net/gh/ethers-io/ethers.js@v4.0.41/dist/ethers.min.js'
+            integrity='sha384-IdAlK0noI+bswjSrSiA28qV6LA5h1D02N+O5o6WZXfAvn/lbm/MVNaEdaebOhtPL'
+            crossorigin='anonymous'></script>
+    <script type='module' src='index.js'></script>
+    <script src="../common/Gradient/script.js"></script>
+  </body>
+</html>

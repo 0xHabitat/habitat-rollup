@@ -11,9 +11,12 @@ contract GovBrick is GovBrickChallenge, Moloch {
     // all power the core protocol
     require(msg.sender == address(this));
 
-    // only our approved token
-    // TODO: if it is a wrong token, then make it available for exit.
-    require(token == address(approvedToken), 'wrong token');
+    // if it's a wrong token, then make it available for exit.
+    // But if this is a ERC-721 then this will lead to wrong exit values, dont care in this case.
+    if (token != address(approvedToken)) {
+      _incrementExit(token, owner, value);
+      return;
+    }
 
     Member storage member = members[owner];
 
@@ -45,8 +48,7 @@ contract GovBrick is GovBrickChallenge, Moloch {
     uint256 dilutionBound,
     uint256 summoningTime
   ) external {
-    require(msg.sender == address(this));
-
+    _commonChecks();
     _checkUpdateNonce(msgSender, nonce);
     Moloch.initMoloch(
       summoner,
@@ -64,30 +66,27 @@ contract GovBrick is GovBrickChallenge, Moloch {
     address msgSender,
     uint256 nonce,
     uint256 startingPeriod,
-    string memory details
+    string memory title,
+    string memory details,
+    bytes memory actions
   ) external {
-    // all power the core protocol
-    require(msg.sender == address(this));
-
+    _commonChecks();
     _checkUpdateNonce(msgSender, nonce);
-    Moloch.submitProposal(msgSender, startingPeriod, details);
+    Moloch.submitProposal(msgSender, startingPeriod, title, details, actions);
   }
 
   function onSubmitVote (address msgSender, uint256 proposalIndex, uint8 uintVote) external {
-    require(msg.sender == address(this));
-
+    _commonChecks();
     Moloch.submitVote(msgSender, proposalIndex, uintVote);
   }
 
   function onProcessProposal (address msgSender, uint256 proposalIndex) external {
-    require(msg.sender == address(this));
-
-    Moloch.processProposal(msgSender, proposalIndex);
+    _commonChecks();
+    Moloch.processProposal(proposalIndex);
   }
 
   function onRagequit (address msgSender, uint256 nonce, uint256 sharesToBurn) external {
-    require(msg.sender == address(this));
-
+    _commonChecks();
     _checkUpdateNonce(msgSender, nonce);
     Moloch.ragequit(msgSender, sharesToBurn);
     // if ragequit did not revert, then increment the exit allowance
@@ -95,14 +94,12 @@ contract GovBrick is GovBrickChallenge, Moloch {
   }
 
   function onAbort (address msgSender, uint256 proposalIndex) external {
-    require(msg.sender == address(this));
-
+    _commonChecks();
     Moloch.abort(msgSender, proposalIndex);
   }
 
   function onUpdateDelegateKey (address msgSender, uint256 nonce, address newDelegateKey) external {
-    require(msg.sender == address(this));
-
+    _commonChecks();
     _checkUpdateNonce(msgSender, nonce);
     Moloch.updateDelegateKey(msgSender, newDelegateKey);
   }
@@ -117,6 +114,11 @@ contract GovBrick is GovBrickChallenge, Moloch {
   /// Calldata contains a blob of key:value pairs that we are going to apply.
   /// If this functions reverts, then the block can only be finalised by a call to `challenge`.
   function onFinalizeSolution (uint256 blockNumber, bytes32 hash) external {
-    UtilityBrick._onFinalizeSolution(blockNumber, hash);
+    UtilityBrick._finalizeStateRootAndStorage(blockNumber, hash);
+  }
+
+  function _commonChecks () internal {
+    // all power the core protocol
+    require(msg.sender == address(this));
   }
 }
