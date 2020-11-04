@@ -26,7 +26,7 @@ jobs:
     - name: Setup git credentials
       env:
         PAT: ${{ secrets.PAT }}
-      run: printf "https://x:"$PAT"@github.com\n" > .env
+      run: printf "GIT_CREDENTIAL=https://_:$PAT@github.com" > .env
 
     - name: Setup
       run: docker-compose up --timeout 1 --exit-code-from dev
