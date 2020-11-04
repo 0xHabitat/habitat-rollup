@@ -6,6 +6,10 @@ on:
     - master
     - release/*
 
+  pull_request:
+    branches:
+    - master
+
   pull_request_review_comment:
     types: [created, edited]
 
