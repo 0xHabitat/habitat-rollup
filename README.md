@@ -5,8 +5,16 @@ Use `docker-compose up --exit-code-from dev` to bootstrap the environment.
 Enter the development container with `docker-compose run dev sh`, the root folder is mounted at `/app`.
 
 Additionally, use `docker-compose run -p 8111:8111 dev sh` to establish a port mapping.
-Then run `node receipts/simple.js` for a simple bootstrap environment.
+
+Then change the directory inside the container `cd /app` and run `node receipts/simple.js` for a simple bootstrap environment.
+
+Note: You may need to run `yarn compile` first.
+
 That provides you with a full stack environment in combination with `receipts/simple.js`.
+
+### Compiling Contracts
+
+Run `yarn compile` inside the docker container.
 
 ### UI
 
