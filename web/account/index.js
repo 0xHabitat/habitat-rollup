@@ -32,13 +32,18 @@ async function render () {
     btn.innerText = 'Connect Wallet';
     btn.addEventListener(
       'click',
-      function () {
-        if (!window.ethereum) {
-          return;
-        }
+      async function () {
+        try {
+          if (!window.ethereum) {
+            throw new Error('No Ethereum Wallet detected');
+            return;
+          }
 
-        btn.remove();
-        render();
+          await render();
+          btn.remove();
+        } catch (e) {
+          window.alert(e.toString());
+        }
       },
       false
     );
