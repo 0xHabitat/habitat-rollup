@@ -5,4 +5,4 @@ export const ROOT_CHAIN_ID = 99;
 // The execution proxy for on-chain execution
 
 
-export const EXECUTION_PROXY_ADDRESS = '0x75ec01f4DBDe6C9F7f5C5156A181431b32987c76';
+export const EXECUTION_PROXY_ADDRESS = '0x3435A6180fBB1BAEc87bDC49915282BfBC328C70';
