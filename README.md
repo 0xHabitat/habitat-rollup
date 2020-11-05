@@ -6,15 +6,21 @@ Enter the development container with `docker-compose run dev sh`, the root folde
 
 Additionally, use `docker-compose run -p 8111:8111 dev sh` to establish a port mapping.
 Then run `node receipts/simple.js` for a simple bootstrap environment.
-A local http server at `scripts/http.js` is available to host the web ui at `web/`.
 That provides you with a full stack environment in combination with `receipts/simple.js`.
+
+### UI
+
+The Web UI is available at `http://localhost:8080/`.
+
+### Tests
 
 Run the tests with `yarn test`.
 You can run single/multiple tests only with `yarn _test path/to/file(s)`.
 
-### Git Credentials
+### MetaMask - connect to development root chain (geth)
 
-Append `GIT_CREDENTIAL=https://_:XXX_PAN_TOKEN_XXX@github.com` to `.env` to import git credentials into the dev environment.
+rpc url: `http://localhost:8222`
+chainId: `99`
 
 # Deploy
 

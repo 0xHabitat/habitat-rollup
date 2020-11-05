@@ -55,11 +55,11 @@ function onRequest (req, resp) {
 }
 
 const httpServer = new http.Server(onRequest);
-const host = 'localhost';
+const host = process.env.HOST || 'localhost';
 let port = 0;
 
 process.chdir('web/');
-httpServer.listen(8080, host, function () {
+httpServer.listen(Number(process.env.PORT) || 8080, host, function () {
   port = this.address().port;
   console.log(`http://${host}:${port}`);
 });

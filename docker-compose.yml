@@ -12,6 +12,17 @@ services:
       - GETH_ARGS=--networkid=99 --maxpeers=0 --nodiscover --nousb --targetgaslimit=12000000 --gasprice=0x01 --rpc --rpcport=8222 --rpcapi=eth,net,web3,debug,personal,miner --allow-insecure-unlock --rpcaddr=0.0.0.0 --rpccorsdomain=* --rpcvhosts=*
     entrypoint: '/bin/sh -c "geth $$GETH_ARGS init /scripts/genesis.json && geth $$GETH_ARGS --preload /scripts/chainInit.js console"'
 
+  web:
+    volumes:
+      - .:/app
+    image: node:14-alpine
+    ports:
+      - 8080:8080
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+    command: '/bin/sh -c "cd /app && ./scripts/http.js"'
+
   dev:
     depends_on:
       - geth
