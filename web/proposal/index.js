@@ -73,10 +73,22 @@ async function render () {
   {
     // proposal actions
     const grid = document.querySelector('.proposalActions');
-    for (const str of proposalActions) {
-      const p = document.createElement('p');
-      p.textContent = str;
-      grid.appendChild(p);
+    for (let i = 0, len = proposalActions.length; i < len; i++) {
+      const str = proposalActions[i];
+      let e;
+
+      if (i % 2 === 0) {
+        // the contract address
+        e = document.createElement('a');
+        e.href = getEtherscanLink(str);
+        e.target = '_blank';
+      } else {
+        // calldata
+        e = document.createElement('p');
+      }
+
+      e.textContent = str;
+      grid.appendChild(e);
     }
   }
 
