@@ -286,7 +286,8 @@ div, button, .button {
   grid-gap: 1rem;
 }
 
-.grid-2 > p {
+.grid-2 > p,
+.grid-2 > a {
   margin: 0;
 }
 
