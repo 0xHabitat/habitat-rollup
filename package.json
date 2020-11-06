@@ -7,6 +7,7 @@
   "scripts": {
     "build": "./scripts/manifest.js",
     "compile": "for x in src/*/scripts/codegen.js; do $x; done && node_modules/@NutBerry/rollup-bricks/scripts/compile.js src/*/**/*.sol src/*/**/**/*.sol",
+    "dump": "for file in GovBrick.sol ExecutionProxy.sol; do DUMP_INPUT=\"$file\"-standard.json node_modules/@NutBerry/rollup-bricks/scripts/compile.js src/govBrick/contracts/$file ; done",
     "coverage": "yarn compile && develatus-apparatus",
     "test": "yarn _test \"src/*/**/*.test.js\"",
     "_test": "yarn compile && mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@"
