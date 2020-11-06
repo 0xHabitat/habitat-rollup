@@ -73,12 +73,12 @@ async function main () {
     await startServer(br, { host: '0.0.0.0', rpcPort: 8111 });
     await br.init();
     // edit the config file
-    const path = './web/config.js';
+    const path = './web/.config.js';
     const config = fs.readFileSync(path).toString().split('\n').filter((e) => e.indexOf('EXECUTION_PROXY_ADDRESS') === -1);
     config.push(`export const EXECUTION_PROXY_ADDRESS = '${execProxy.address}';`);
     console.log(config);
     fs.writeFileSync(
-      path,
+      './web/config.js',
       config.join('\n')
     );
 
