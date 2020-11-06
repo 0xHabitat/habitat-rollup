@@ -35,6 +35,10 @@ You can run single/multiple tests only with `yarn _test path/to/file(s)`.
 rpc url: `http://localhost:8222`
 chainId: `99`
 
+### MetaMask - common errors
+
+Try to reset the `account history` in MetaMask if you experience strange ~~visions~~ errors.
+
 # Deploy
 
 ```
