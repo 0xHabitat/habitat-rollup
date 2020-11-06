@@ -2,7 +2,7 @@ import TransactionBuilder from '../common/TransactionBuilder.js';
 import { TYPED_DATA } from '../common/constants.js';
 import { ipfsPush } from '../common/ipfs.js';
 import FRONTEND_FILES from '../files.js';
-import habitatBytecode from './bytecode.js';
+import { BRIDGE_BYTECODE, EXECUTION_PROXY_BYTECODE }from './bytecode.js';
 
 const ABI = [
   'function nonces(address) view returns (uint256)',
@@ -53,15 +53,31 @@ async function connectWallet () {
 }
 
 async function deployHabitat () {
-  const _factory = new ethers.ContractFactory(
-    [],
-    habitatBytecode,
-    ctx.signer
-  );
-  const contract = await _factory.deploy();
+  let bridgeAddress;
+  {
+    const _factory = new ethers.ContractFactory(
+      [],
+      BRIDGE_BYTECODE,
+      ctx.signer
+    );
+    const contract = await _factory.deploy();
+    log(contract.deployTransaction);
+    await contract.deployTransaction.wait();
+    document.querySelector('input#BRIDGE_ADDRESS').value = contract.address;
+    bridgeAddress = contract.address;
+  }
 
-  log(contract.deployTransaction);
-  await contract.deployTransaction.wait();
+  {
+    const _factory = new ethers.ContractFactory(
+      ['constructor (address _delegate)'],
+      EXECUTION_PROXY_BYTECODE,
+      ctx.signer
+    );
+    let contract = await _factory.deploy(bridgeAddress);
+    log(contract.deployTransaction);
+    await contract.deployTransaction.wait();
+    document.querySelector('input#EXECUTION_PROXY_ADDRESS').value = contract.address;
+  }
 }
 
 async function initHabitat () {
@@ -108,7 +124,7 @@ function createNodeConfig () {
     flyctlCommand += `${key}=${value} `;
     dockerCommand += `-e ${key}=${value} `;
   }
-  dockerCommand += 'ghcr.io/nutberry/artifacts/habitat:latest';
+  dockerCommand += 'ghcr.io/nutberry/artifacts/bricked:latest';
 
   document.querySelector('#flyctlConfig').textContent = flyctlCommand;
   document.querySelector('#dockerConfig').textContent = dockerCommand;
@@ -119,13 +135,18 @@ async function createFrontendConfig () {
   const config = {
     RPC_URL: document.querySelector('input#RPC_URL').value,
     ROOT_CHAIN_ID: network.chainId,
+    EXECUTION_PROXY_ADDRESS: document.querySelector('input#EXECUTION_PROXY_ADDRESS').value,
   };
   let configStr = '';
 
   for (const key in config) {
-    const value = JSON.stringify(config[key]);
+    const value = config[key];
 
-    configStr += `export const ${key} = ${value};\n`;
+    if (!value) {
+      throw new Error(`Missing value for ${key}`);
+    }
+
+    configStr += `export const ${key} = ${JSON.stringify(value)};\n`;
   }
 
   log(configStr);

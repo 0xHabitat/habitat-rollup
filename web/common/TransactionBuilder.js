@@ -75,9 +75,10 @@ function arrayify (val) {
 }
 
 function toHex (buf) {
+  const len = buf.length;
   let res = '';
 
-  for (let i = 0; i < buf.length; i++) {
+  for (let i = 0; i < len; i++) {
     res += (buf[i] | 0).toString(16).padStart(2, '0');
   }
 
@@ -85,10 +86,17 @@ function toHex (buf) {
 }
 
 function bufToHex (buf, start, end) {
+  const len = buf.length;
+  const max = end > len ? len : end;
   let res = '0x';
+  let i;
 
-  for (let i = start; i < end; i++) {
+  for (i = start; i < max; i++) {
     res += (buf[i] | 0).toString(16).padStart(2, '0');
+  }
+
+  for (; i < end; i++) {
+    res += '00';
   }
 
   return res;
@@ -1375,6 +1383,10 @@ function p1600 (s) {
   }
 }
 
+const BIG_8 = BigInt(8);
+const BIG_255 = BigInt(255);
+const BIG_256 = BigInt(256);
+
 class Keccak256 {
   constructor () {
     this.state = new Uint32Array(50);
@@ -1383,6 +1395,24 @@ class Keccak256 {
     this.blockSize = 136;
     this.count = 0;
     this.squeezing = false;
+  }
+
+  updateBigInt (n, byteLen) {
+    let m = BigInt(byteLen * 8);
+
+    for (let i = 0; i < byteLen; i++) {
+      const val = Number((n >> (m -= BIG_8)) & BIG_255);
+
+      this.state[~~(this.count / 4)] ^= val << (8 * (this.count % 4));
+      this.count += 1;
+
+      if (this.count === this.blockSize) {
+        p1600(this.state);
+        this.count = 0;
+      }
+    }
+
+    return this;
   }
 
   update (data) {
@@ -1468,6 +1498,17 @@ class Keccak256 {
     return output;
   }
 
+  digestBigInt () {
+    let output = BigInt(0);
+    let i = BIG_256;
+
+    for (const val of this.drain()) {
+      output |= BigInt(val) << (i -= BIG_8);
+    }
+
+    return output;
+  }
+
   reset () {
     this.state.fill(0);
 
@@ -1502,10 +1543,7 @@ function keccak256HexPrefix (array) {
   return `0x${keccak.reset().update(array).digest()}`;
 }
 
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
-
-const SUPPORTED_TYPES = {
+var SUPPORTED_TYPES = {
   address: 20,
   bytes: 0,
   string: 0,
@@ -1607,6 +1645,9 @@ const SUPPORTED_TYPES = {
   int8: 1,
 };
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
 function hash (val) {
   if (typeof val === 'string') {
     if (!val.startsWith('0x')) {
@@ -1642,7 +1683,9 @@ function decodeValue (type, typeSize, val) {
     return BigInt.asIntN(n, bufToHex(val, 0, typeSize));
   }
 
-  return bufToHex(val, 0, SUPPORTED_TYPES[type] || val.length);
+  // everything else
+  // pad left with zeros
+  return '0x' + bufToHex(val, 0, typeSize).replace('0x', '').padStart((SUPPORTED_TYPES[type] || typeSize) * 2, '0');
 }
 
 function encodeHashingValue (type, val) {
@@ -1658,12 +1701,13 @@ function encodeHashingValue (type, val) {
 
   // bytes
   if (type[0] === 'b') {
-    return '0x' + BigInt.asUintN(n * 8, BigInt(val)).toString(16).padEnd(64, '0');
+    return '0x' + BigInt.asUintN(n * 8, BigInt(val)).toString(16).padStart(n * 2, '0').padEnd(64, '0');
   }
 
   // int
   if (type[0] === 'i') {
-    return '0x' + BigInt.asUintN(n * 8, BigInt(val)).toString(16).padStart(64, 'f');
+    const tmp = BigInt.asUintN(n * 8, BigInt(val)).toString(16);
+    return '0x' + tmp.padStart(tmp.length + (tmp.length % 2), '0').padStart(64, 'f');
   }
 
   // everything else
@@ -1678,6 +1722,7 @@ function encodeValue (type, val) {
   } else if (type === 'bytes') {
     ret = arrayify(val);
   } else {
+    // we strip leading zeroes from everything else
     const n = SUPPORTED_TYPES[type] * 8;
     const str = BigInt.asUintN(n, BigInt(val)).toString(16);
     const v = str.padStart(str.length % 2 ? str.length + 1 : str.length, '0');
