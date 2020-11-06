@@ -48,3 +48,7 @@ GAS_GWEI=3 ROOT_RPC_URL=http://localhost:8222 PRIV_KEY=0x2bdd21761a483f71054e14f
 ### web/
 
 Edit `web/config.{js,css}` and publish to ipfs via `pin=1 yarn ipfs-publish web/`.
+
+## NutBerry node setup
+
+Habitat uses NutBerry optimistic rollups. For setup of the node see: [a relative link](nutberrySetup.md)
