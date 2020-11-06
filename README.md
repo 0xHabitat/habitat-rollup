@@ -51,4 +51,4 @@ Edit `web/config.{js,css}` and publish to ipfs via `pin=1 yarn ipfs-publish web/
 
 ## NutBerry node setup
 
-Habitat uses NutBerry optimistic rollups. For setup of the node see: [a relative link](nutberrySetup.md)
+Habitat uses NutBerry optimistic rollups. For setup of the node see: [NutBerry setup](nutberrySetup.md)
