@@ -58,6 +58,7 @@ const httpServer = new http.Server(onRequest);
 const host = process.env.HOST || 'localhost';
 let port = 0;
 
+process.on('SIGTERM', () => process.exit(0));
 process.chdir('web/');
 httpServer.listen(Number(process.env.PORT) || 8080, host, function () {
   port = this.address().port;
