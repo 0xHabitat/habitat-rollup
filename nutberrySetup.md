@@ -1,4 +1,4 @@
-# NuBerry node for Habitat on Raspberry Pi
+# NutBerry node for Habitat on Raspberry Pi
 This document describes how to setup and run NutBerry (optimistic rollups) node for Habitat. It is focused on Raspberry Pi but should be applicable to other environments. 
 
 ## Setup overview
@@ -30,14 +30,14 @@ mkdir data
 ```
 
 ## Docker config
-Inside `habitat` folder create `docker-compose.yml` file. The contents of the file are below (don't forget to put actual vaules to `$INFURA_KEY`, `$NODE_PK`, `$HABITAT_BRIDGE`, `$TIMEZONE`, `$EMAIL`, `$DUCK_DNS_DOMAIN` (if using DuckDNS) and `$DUCK_DNS_TOKEN` (if using DuckDNS)).
+Inside `habitat` folder create `docker-compose.yml` file. The contents of the file are below (don't forget to put actual values to `$INFURA_KEY`, `$NODE_PK`, `$HABITAT_BRIDGE`, `$TIMEZONE`, `$EMAIL`, `$DUCK_DNS_DOMAIN` (if using DuckDNS) and `$DUCK_DNS_TOKEN` (if using DuckDNS)).
 
 Contents of `docker-compose.yml`:
 ```
 version: "3"
 services:
   nutberry:
-    image: ghcr.io/nutberry/artifacts/habitat:latest
+    image: ghcr.io/nutberry/artifacts/bricked:latest
     container_name: nutberry
     restart: unless-stopped
     environment:
