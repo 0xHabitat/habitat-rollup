@@ -12,6 +12,7 @@ services:
       - BLOCK_SIZE_THRESHOLD=31000
       - BLOCK_TIME_THRESHOLD=99999999
       - SUBMIT_SOLUTION_THRESHOLD=256
+      - MAX_TRANSACTION_SIZE=512
       # Provide these via environment variables or edit in place
       - ROOT_RPC_URL=https://mainnet.infura.io/v3/$INFURA_KEY
       - PRIV_KEY=$NODE_PK
