@@ -38,7 +38,8 @@ async function render () {
   const submitProposalEvent = habitat.interface.parseLog(receipt.logs[0]);
   const proposalId = submitProposalEvent.values.proposalIndex.toString();
   const proposal = await habitat.proposalQueue(proposalId);
-  const { yay, nay } = computeVotePercentages(proposal);
+  const totalShares = await habitat.totalShares();
+  const { yay, nay, participationRate } = computeVotePercentages(proposal, totalShares);
   const expired = await habitat.hasVotingPeriodExpired(proposal.startingPeriod);
   const votingDisabled = expired || proposal.didPass || proposal.processed || proposal.aborted;
 
@@ -64,6 +65,7 @@ async function render () {
         status,
         yay: `${(yay * 100).toFixed(2)} %`,
         nay: `${(nay * 100).toFixed(2)} %`,
+        'Participation Rate': `${(participationRate * 100).toFixed(2)} %`,
         proposer: proposal.proposer,
       }
     );

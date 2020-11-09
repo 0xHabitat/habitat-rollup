@@ -16,6 +16,7 @@ async function getStats () {
   const tokenSymbol = await token.symbol();
   // TODO: inform the user about pending exits
   const availableForExit = ethers.utils.formatUnits(await bridge.getERC20Exit(tokenAddress, signerAddress), decimals);
+  const totalShares = await habitat.totalShares();
 
   return {
     'Token adress': tokenAddress,
@@ -23,6 +24,7 @@ async function getStats () {
     'Your shares on Habitat': ethers.utils.formatUnits(shares, decimals),
     'Delegated account address': delegateKey,
     'Shares available to Withdraw': availableForExit,
+    'Your Voting Power': `${shares.mul(100).div(totalShares).toString()} % of total locked shares`,
   };
 }
 

@@ -9,13 +9,14 @@ async function render () {
   const currentPeriod = await habitat.getCurrentPeriod();
   const votingPeriodLength = await habitat.votingPeriodLength();
   const periodDuration = await habitat.periodDuration();
+  const totalShares = await habitat.totalShares();
 
   async function renderProposal (evt, args) {
     const proposalIndex = args.proposalIndex.toString()
     const proposal = await habitat.proposalQueue(proposalIndex);
     const title = args.title;
     const description = title.length > 24 ? title.substring(0, 21) + '...' : title;
-    const { yay, nay } = computeVotePercentages(proposal);
+    const { yay, nay, participationRate } = computeVotePercentages(proposal, totalShares);
 
     const expired = await habitat.hasVotingPeriodExpired(proposal.startingPeriod);
     const lengthInSeconds = (((+proposal.startingPeriod)+(+votingPeriodLength))-(+currentPeriod))*(+periodDuration);
@@ -37,6 +38,7 @@ async function render () {
           title: description,
           yay: `${(yay * 100).toFixed(2)} % 👍`,
           nay: `${(nay * 100).toFixed(2)} % 👎`,
+          'Participation Rate': `${(participationRate * 100).toFixed(2)} %`,
         },
         `/proposal/#${evt.transactionHash}`
       )

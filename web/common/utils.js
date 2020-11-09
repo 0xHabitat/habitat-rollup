@@ -69,20 +69,26 @@ export function formatObject (obj, href) {
   return child;
 }
 
-export function computeVotePercentages (proposal) {
+export function computeVotePercentages (proposal, totalShares) {
   // TODO: use bignumber/bigint
   const y = Number(proposal.yesVotes);
   const n = Number(proposal.noVotes);
   const total = y + n;
+  const nTotalShares = Number(totalShares);
   let yay = 0;
   let nay = 0;
+  let participationRate = 0;
 
   if (total > 0) {
     yay = y / total;
     nay = n / total;
   }
 
-  return { yay, nay };
+  if (nTotalShares > 0) {
+    participationRate = total / nTotalShares;
+  }
+
+  return { yay, nay, participationRate };
 }
 
 export function wrapListener (selector, func) {
