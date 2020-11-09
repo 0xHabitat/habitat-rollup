@@ -1,5 +1,7 @@
 import { formatObject, wrapListener } from '../common/utils.js';
-import { sendTransaction, getProviders, encodeProposalActions } from '../common/tx.js';
+import { sendTransaction, getProviders, getSigner, encodeProposalActions } from '../common/tx.js';
+import { MIN_PROPOSAL_CREATION_STAKE } from '../config.js';
+import { ERC20_ABI } from '../common/constants.js';
 
 function getAndReset (selector) {
   const ele = document.querySelector(selector);
@@ -36,7 +38,7 @@ async function submitProposal (startingPeriod, title, details, proposalActions) 
 }
 
 async function render () {
-  const { habitat } = await getProviders();
+  const { habitat, rootProvider } = await getProviders();
 
   const container = document.querySelector('.proposal');
   const input = container.querySelector('input');
@@ -52,6 +54,18 @@ async function render () {
       textArea.disabled = true;
 
       try {
+        const signer = await getSigner();
+        const { shares } = await habitat.members(await signer.getAddress());
+
+        // setup token and retrieve token decimals
+        const tokenAddress = await habitat.approvedToken();
+        const token = new ethers.Contract(tokenAddress, ERC20_ABI, rootProvider);
+        const decimals = await token.decimals();
+
+        if (shares.lt(ethers.utils.parseUnits(MIN_PROPOSAL_CREATION_STAKE.toString(), decimals))) {
+          throw new Error(`You need at least ${MIN_PROPOSAL_CREATION_STAKE} shares to create Proposals`);
+        }
+
         const childs = document.querySelector('.proposalActions').children;
         const proposalActions = [];
 
