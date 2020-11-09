@@ -1,4 +1,4 @@
-import { formatObject, computeVotePercentages, wrapListener, getEtherscanLink } from '../common/utils.js';
+import { formatObject, computeVotePercentages, wrapListener, getEtherscanLink, secondsToHms } from '../common/utils.js';
 import { getProviders, sendTransaction, decodeProposalActions, executeProposalActions } from '../common/tx.js';
 
 async function submitVote (proposalIndex, uintVote) {
@@ -42,7 +42,13 @@ async function render () {
   const expired = await habitat.hasVotingPeriodExpired(proposal.startingPeriod);
   const votingDisabled = expired || proposal.didPass || proposal.processed || proposal.aborted;
 
-  let status = expired ? 'Voting Ended' : 'open';
+  const currentPeriod = await habitat.getCurrentPeriod();
+  const votingPeriodLength = await habitat.votingPeriodLength();
+  const periodDuration = await habitat.periodDuration();
+
+  const lengthInSeconds = (((+proposal.startingPeriod)+(+votingPeriodLength))-(+currentPeriod))*(+periodDuration);
+
+  let status = expired ? 'Voting Ended' : secondsToHms(lengthInSeconds);
   if (proposal.aborted) {
     status = 'aborted by proposer';
   } else if (proposal.didPass) {

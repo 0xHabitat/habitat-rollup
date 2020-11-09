@@ -1,4 +1,4 @@
-import { formatObject, computeVotePercentages } from './common/utils.js';
+import { formatObject, computeVotePercentages, secondsToHms } from './common/utils.js';
 import { getProviders } from './common/tx.js';
 
 async function render () {
@@ -6,7 +6,9 @@ async function render () {
   const pendingContainer = document.querySelector('.pending');
   const proposedContainer = document.querySelector('.proposed');
   // TODO: calculate current period in seconds and display voting time left
-  //const currentPeriod = await habitat.getCurrentPeriod();
+  const currentPeriod = await habitat.getCurrentPeriod();
+  const votingPeriodLength = await habitat.votingPeriodLength();
+  const periodDuration = await habitat.periodDuration();
 
   async function renderProposal (evt, args) {
     const proposalIndex = args.proposalIndex.toString()
@@ -16,7 +18,9 @@ async function render () {
     const { yay, nay } = computeVotePercentages(proposal);
 
     const expired = await habitat.hasVotingPeriodExpired(proposal.startingPeriod);
-    let status = expired ? 'Voting Ended' : '🎤';
+    const lengthInSeconds = (((+proposal.startingPeriod)+(+votingPeriodLength))-(+currentPeriod))*(+periodDuration);
+
+    let status = expired ? 'Voting Ended' : secondsToHms(lengthInSeconds);
     if (proposal.aborted) {
       status = '❌';
     } else if (proposal.didPass || proposal.processed) {

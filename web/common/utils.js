@@ -1,5 +1,17 @@
 import { ROOT_CHAIN_ID } from '../config.js';
 
+export function secondsToHms(d) {
+    d = Number(d);
+    var h = Math.floor(d / 3600);
+    var m = Math.floor(d % 3600 / 60);
+    var s = Math.floor(d % 3600 % 60);
+
+    var hDisplay = h > 0 ? h + (h == 1 ? " h " : " h ") : "";
+    var mDisplay = m > 0 ? m + (m == 1 ? " min " : " min ") : "";
+    var sDisplay = s > 0 ? s + (s == 1 ? " s " : " s ") : "";
+    return hDisplay + mDisplay + sDisplay + "left";
+}
+
 export function formatString (val, expandable) {
   const str = val === undefined ? 'undefined' : val.toString();
   const child = document.createElement('p');
