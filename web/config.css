@@ -13,7 +13,11 @@
   --font-family-mono: 'Roboto Mono';
 }
 
-.Nav > img {
-  width: 160px;
-  height: 74px;
+.navLogo {
+  display: block;
+  min-width: 160px;
+  min-height: 74px;
+  background-image: url('assets/logoBig.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
 }
