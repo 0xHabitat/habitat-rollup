@@ -16,7 +16,11 @@ async function getStats () {
   const tokenSymbol = await token.symbol();
   // TODO: inform the user about pending exits
   const availableForExit = ethers.utils.formatUnits(await bridge.getERC20Exit(tokenAddress, signerAddress), decimals);
-  const totalShares = await habitat.totalShares();
+  let totalShares = await habitat.totalShares();
+
+  if (totalShares.eq(0)) {
+    totalShares = totalShares.add(1);
+  }
 
   return {
     'Token adress': tokenAddress,
