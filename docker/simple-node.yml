@@ -14,7 +14,7 @@ services:
       - SUBMIT_SOLUTION_THRESHOLD=256
       - MAX_TRANSACTION_SIZE=512
       # Provide these via environment variables or edit in place
-      - ROOT_RPC_URL=https://mainnet.infura.io/v3/$INFURA_KEY
+      - ROOT_RPC_URL=https://rpc-proxy.fly.dev/https://mainnet.infura.io/v3/$INFURA_KEY
       - PRIV_KEY=$NODE_PK
       - BRIDGE_ADDRESS=$HABITAT_BRIDGE
     volumes:
