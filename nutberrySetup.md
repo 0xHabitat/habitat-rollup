@@ -1,18 +1,29 @@
 # NutBerry node for Habitat on Raspberry Pi
-This document describes how to setup and run NutBerry (optimistic rollups) node for Habitat. It is focused on Raspberry Pi but should be applicable to other environments. 
+This document describes how to setup and run a NutBerry node for your Habitat.
+
+It is focused on Raspberry Pi but should be applicable to other environments. 
 
 ## Setup overview
-Along with NutBerry (https://github.com/NutBerry) itslef this setup uses SWAG (https://hub.docker.com/r/linuxserver/swag) as gateway and DuckDNS (duckdns.org) for mapping of dynamic IP to domain name. Infura is used as Ethereum node.
-This setup was tested on Raspberry Pi 3B+ running on Raspberry Pi OS (ex. Raspbian) (https://www.raspberrypi.org/downloads/raspberry-pi-os/)
+Along with [NutBerry](https://github.com/NutBerry) itself this setup uses [SWAG](https://hub.docker.com/r/linuxserver/swag) as gateway and [DuckDNS](duckdns.org) for mapping of dynamic IP to domain name.
+
+Infura is used as Ethereum node.
+
+This setup was tested on Raspberry Pi 3B+ running on Raspberry Pi OS, ex. [Raspbian](https://www.raspberrypi.org/downloads/raspberry-pi-os/)
 
 ## DuckDNS
-Habitat accesses NutBerry node via gateway and domain name (and not just IP) should be used. In this setup DuckDNS was used to provide domain name as well as mitigate dynamic DNS. It is not required for environments that already have their own domain name. DuckDNS setup instructions can be found here: http://www.duckdns.org/install.jsp.
+Habitat accesses NutBerry node via gateway and domain name (and not just IP) should be used.
+
+In this setup DuckDNS was used to provide domain name as well as mitigate dynamic DNS. It is not required for environments that already have their own domain name. DuckDNS setup instructions can be found here: http://www.duckdns.org/install.jsp
 
 ## Firewall/NAT
-Ports 80 and 443 (gateway) should be open while 8080 (NutBerry port that should only be used by gateway) should be closed.
+Ports *80* and *443* (gateway) should be **open** while *8080* (NutBerry port that should only be used by gateway) should be **closed**.
 
 ## Fund the node
-Node needs some funds for gas to submit transactions on Ethereum mainnet. So address should be created and funded with some ETH. Private Key of this address will be used later in configuration.
+The Habitat node needs some funds for gas to submit transactions to the Ethereum mainnet.
+
+So the address should be created and funded with some ETH.
+
+The Private Key of this address will be used later in configuration.
 
 ## Install Docker
 Both NutBerry and SWAG run as Docker images. So having Docker and Docker-Compose are prerequisites:
@@ -30,7 +41,11 @@ mkdir data
 ```
 
 ## Docker config
-Inside `habitat` folder create `docker-compose.yml` file. The contents of the file are below (don't forget to put actual values to `$INFURA_KEY`, `$NODE_PK`, `$HABITAT_BRIDGE`, `$TIMEZONE`, `$EMAIL`, `$DUCK_DNS_DOMAIN` (if using DuckDNS) and `$DUCK_DNS_TOKEN` (if using DuckDNS)).
+Inside `habitat` folder create `docker-compose.yml` file.
+
+The contents of the file are below.
+
+Don't forget to put actual values to `$INFURA_KEY`, `$NODE_PK`, `$HABITAT_BRIDGE`, `$TIMEZONE`, `$EMAIL`, `$DUCK_DNS_DOMAIN` and `$DUCK_DNS_TOKEN` (if using DuckDNS).
 
 Contents of `docker-compose.yml`:
 ```
@@ -79,11 +94,18 @@ services:
 ```
 
 ## Start the node
-To run the node use the following comand from in `habitat` folder
+To run the node use the following comand from in `habitat` folder:
 `sudo docker-compose up -d`
 
-This will download the images and run them. On the first run SWAG will also create certificates. Last step is to forward calls to NutBerry. Edit `config/nginx/site-confs/default`: add following line in `location /` in `server` section `# main server block`:
+This will download the images and run them. On the first run SWAG will also create certificates.
+
+Last step is to forward calls to NutBerry.
+
+Edit `config/nginx/site-confs/default`:
+
+add following line in `location /` in `server` section `# main server block`:
 `proxy_pass http://nutberry:8080;`
+
 So it will look like this:
 ```
 	location / {
@@ -96,3 +118,6 @@ After this restart SWAG:
 
 To check NutBerry logs use the following command:
 `sudo docker logs nutberry -f`
+
+:tada:
+
