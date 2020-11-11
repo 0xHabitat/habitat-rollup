@@ -195,7 +195,7 @@ footer > .wrapper > a > img {
   margin: 0 auto -2rem auto;
   padding: 1vw;
   border-radius: 9px;
-  overflow: scroll !important;
+  overflow: auto !important;
   background-color: var(--color-bg);
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
