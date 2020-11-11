@@ -10,7 +10,8 @@
     "dump": "for file in GovBrick.sol ExecutionProxy.sol; do DUMP_INPUT=\"$file\"-standard.json node_modules/@NutBerry/rollup-bricks/scripts/compile.js src/govBrick/contracts/$file ; done",
     "coverage": "yarn compile && develatus-apparatus",
     "test": "yarn _test \"src/*/**/*.test.js\"",
-    "_test": "yarn compile && mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@"
+    "_test": "yarn compile && mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@",
+    "web:build:publish": "./scripts/manifest.js && ./scripts/exportBytecode.js && pin=1 ipfs-publish web/"
   },
   "devDependencies": {
     "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks.git#master",
