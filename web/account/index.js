@@ -1,5 +1,5 @@
 import { ERC20_ABI } from '../common/constants.js';
-import { formatObject, wrapListener } from '../common/utils.js';
+import { formatObject, wrapListener, alertModal } from '../common/utils.js';
 import { WithdrawFlow, DepositFlow, RagequitFlow } from '../common/flows.js';
 import { getProviders, getSigner } from '../common/tx.js';
 
@@ -48,7 +48,7 @@ async function render () {
           await render();
           btn.remove();
         } catch (e) {
-          window.alert(e.toString());
+          alertModal(e.toString());
         }
       },
       false

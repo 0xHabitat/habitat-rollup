@@ -104,7 +104,7 @@ export function wrapListener (selector, func) {
       try {
         await func(evt);
       } catch (e) {
-        alert(e.toString());
+        alertModal(e.toString());
       }
 
       evt.target.disabled = false;
@@ -122,4 +122,27 @@ export function getEtherscanLink (hashOrAddress) {
 
   // address
   return `${base}/address/${hashOrAddress}`;
+}
+
+export function alertModal (str) {
+  const container = document.querySelector('.overlay .alert') || document.createElement('overlay');
+  container.className = 'overlay alert';
+
+  {
+    const wrapper = document.createElement('section');
+    const message = document.createElement('p');
+    const btn = document.createElement('button');
+
+    wrapper.className = 'item center';
+    message.className = 'error';
+    message.textContent = str;
+    btn.textContent = 'Close';
+    btn.addEventListener('click', () => container.remove(), false);
+
+    wrapper.appendChild(message);
+    wrapper.appendChild(btn);
+    container.appendChild(wrapper);
+  }
+
+  document.body.appendChild(container);
 }

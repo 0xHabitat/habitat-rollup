@@ -1,4 +1,4 @@
-import { formatObject, wrapListener } from '../common/utils.js';
+import { formatObject, wrapListener, alertModal } from '../common/utils.js';
 import { sendTransaction, getProviders, getSigner, encodeProposalActions } from '../common/tx.js';
 import { MIN_PROPOSAL_CREATION_STAKE } from '../config.js';
 import { ERC20_ABI } from '../common/constants.js';
@@ -88,7 +88,7 @@ async function render () {
         );
       } catch (e) {
         console.error(e);
-        window.alert((e.message || e).toString());
+        alertModal((e.message || e).toString());
       }
 
       btn.disabled = false;

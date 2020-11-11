@@ -328,7 +328,7 @@ kv > p:nth-child(1) {
   color: var(--color-brand1);
 }
 
-.listitem {
+.item, .listitem {
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   border-radius: 9px;
   padding: 10px 15px;
@@ -336,7 +336,7 @@ kv > p:nth-child(1) {
   background-color: #ffffff85;
 }
 
-.listitem > div {
+.item > div, .listitem > div {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
 }
@@ -360,4 +360,22 @@ sep {
   height: 1rem;
   margin-bottom: 1rem;
   border-bottom: 3px solid black;
+}
+
+.overlay {
+  display: flex;
+  flex-direction: column;
+  place-content: space-evenly;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-bg);
+}
+
+.center {
+  max-width: fit-content;
+  max-height: fit-content;
+  margin: 0 auto;
 }
