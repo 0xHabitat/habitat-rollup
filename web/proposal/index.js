@@ -58,17 +58,20 @@ async function render () {
     status = 'processed';
   }
 
+  const obj = {
+    id: proposalId,
+    status,
+    yay: `${(yay * 100).toFixed(2)} %`,
+    nay: `${(nay * 100).toFixed(2)} %`,
+    proposer: proposal.proposer,
+  };
+
+  if (!expired) {
+    obj['Participation Rate'] = `${(participationRate * 100).toFixed(2)} %`;
+  }
+
   const container = document.querySelector('.proposal');
-  let ele = formatObject(
-      {
-        id: proposalId,
-        status,
-        yay: `${(yay * 100).toFixed(2)} %`,
-        nay: `${(nay * 100).toFixed(2)} %`,
-        'Participation Rate': `${(participationRate * 100).toFixed(2)} %`,
-        proposer: proposal.proposer,
-      }
-    );
+  let ele = formatObject(obj);
   ele.className = 'grid2';
   container.appendChild(ele);
 

@@ -28,18 +28,23 @@ async function render () {
       status = '✅';
     }
 
+    const obj = {
+      id: proposalIndex,
+      status,
+      title: description,
+      yay: `${(yay * 100).toFixed(2)} % 👍`,
+      nay: `${(nay * 100).toFixed(2)} % 👎`,
+    };
+
+    if (!expired) {
+      obj['Participation Rate'] =  `${(participationRate * 100).toFixed(2)} %`;
+    }
+
     const ele = document.createElement('div');
     ele.className = 'listitem';
     ele.appendChild(
       formatObject(
-        {
-          id: proposalIndex,
-          status,
-          title: description,
-          yay: `${(yay * 100).toFixed(2)} % 👍`,
-          nay: `${(nay * 100).toFixed(2)} % 👎`,
-          'Participation Rate': `${(participationRate * 100).toFixed(2)} %`,
-        },
+        obj,
         `/proposal/#${evt.transactionHash}`
       )
     );
