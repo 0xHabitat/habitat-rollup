@@ -100,9 +100,9 @@ async function render () {
   }
 }
 
-function errorWrapper () {
+async function errorWrapper () {
   try {
-    this();
+    await this();
   } catch (e) {
     alertModal(e);
   }
