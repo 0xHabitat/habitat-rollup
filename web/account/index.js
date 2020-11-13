@@ -100,4 +100,12 @@ async function render () {
   }
 }
 
-window.addEventListener('DOMContentLoaded', render, false);
+function errorWrapper () {
+  try {
+    this();
+  } catch (e) {
+    alertModal(e);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', errorWrapper.bind(render), false);
