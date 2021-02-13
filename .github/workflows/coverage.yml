@@ -32,7 +32,7 @@ jobs:
       run: docker-compose up --timeout 1 --exit-code-from dev
 
     - name: Coverage
-      run: docker-compose run dev sh -c 'cd /app && yarn coverage'
+      run: docker-compose run dev -c 'yarn coverage'
 
     - name: Upload Coverage
       if: success()

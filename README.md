@@ -1,12 +1,12 @@
 
 # Development
 
-Use `docker-compose up --exit-code-from dev` to bootstrap the environment,
+Use `docker-compose up dev` to bootstrap the environment,
 you only need to do this once and if you changed node_modules and/or docker files.
 
 Enter the development container with
 
-`docker-compose run -p 8111:8111 dev sh`
+`docker-compose run -p 8111:8111 dev -i`
 
 to establish a port mapping.
 

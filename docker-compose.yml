@@ -2,7 +2,7 @@ version: '3'
 
 services:
   geth:
-    image: ethereum/client-go:v1.9.23
+    image: ethereum/client-go:v1.9.25
     tty: true
     volumes:
       - ./scripts:/scripts
@@ -33,7 +33,9 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile.dev
-    command: "/bin/sh -c 'git config --global credential.helper store && echo $GIT_CREDENTIAL > $$HOME/.git-credentials && cd /app && yarn'"
+    working_dir: /app
+    entrypoint: /bin/sh
+    command: "-c 'git config --global credential.helper store && echo $GIT_CREDENTIAL > $$HOME/.git-credentials && yarn'"
     tty: true
     stdin_open: true
     environment:
