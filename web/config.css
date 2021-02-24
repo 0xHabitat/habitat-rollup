@@ -1,15 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto%20Mono:wght@400');
 
 :root {
   --color-bg: #FAFDFFAC;
   --color-error: #eb4d62;
   --color-text: #000000;
-  --color-brand1: #635BFF;
-  --color-brand2: #1CDB9E;
-  --color-brand3: #3BDEFF;
-  --color-brand4: #FFCB57;
-  --font-family-default: 'Montserrat';
+  --color-grey: #606060;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-link: #93b1e0;
+  --color-brand1: #c6f6f7;
+  --color-brand2: #d9f7f6;
+  --color-brand3: #eaf8f9;
+  --color-brand4: #fbfafb;
+  --font-family-default: 'Work Sans';
   --font-family-mono: 'Roboto Mono';
 }
 
@@ -17,7 +21,7 @@
   display: block;
   min-width: 160px;
   min-height: 74px;
-  background-image: url('assets/logoBig.svg');
+  background-image: url('assets/logoAnimated.svg');
   background-repeat: no-repeat;
   background-size: contain;
 }
