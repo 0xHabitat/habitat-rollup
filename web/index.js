@@ -86,7 +86,7 @@ async function render () {
     async function _check () {
       const fetchMore =
         (wrapper.scrollHeight < window.screen.height)
-        || (wrapper.scrollHeight - wrapper.scrollTop) < window.screen.height;
+        || (wrapper.scrollHeight - wrapper.scrollTop) < window.screen.height * 1.5;
 
       if (fetchMore) {
         try {
