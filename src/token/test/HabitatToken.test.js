@@ -108,6 +108,10 @@ describe('HabitatToken', function () {
     await assert.rejects(hbt.connect(charlie).transferFrom(alice.address, charlie.address, TRANSFER_AMOUNT), /ALLOWANCE/);
   });
 
+  it('transfer should fail - zero value triggers overflow check', async () => {
+    await assert.rejects(hbt.transfer(bob.address, 0), /OVERFLOW/);
+  });
+
   it('approve charlie', async () => {
     await hbt.approve(charlie.address, TRANSFER_AMOUNT);
 
