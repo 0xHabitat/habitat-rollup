@@ -5,7 +5,7 @@ import './Utilities.sol';
 
 /// @notice This contract manages 'dripping assets' from a droplet and acts as a wrapper/gatekeeper
 /// around the assets for `rollupBridge`.
-/// The `rollupBridge` can only be set once and has an activation delay of `ACTIVATION_DELAY`.
+/// The `rollupBridge` can only be set once and has an activation delay of `activationDelay`.
 contract DropletWrapper is Utilities {
   struct PendingChange {
     uint64 activationDate;
@@ -13,7 +13,7 @@ contract DropletWrapper is Utilities {
   }
 
   /// @dev How long (in seconds) we have to wait once the change of `rollupBridge` can be applied.
-  uint256 constant ACTIVATION_DELAY = 1209600; // 2 weeks
+  uint256 activationDelay;
   /// @dev The address of the ERC-20 token this contract manages.
   address sourceToken;
   /// @dev Owner of this contract that can propose changes.
@@ -23,9 +23,10 @@ contract DropletWrapper is Utilities {
   /// @dev The droplet this contract drips from.
   IDroplet droplet;
   /// @dev Used for temporary state until `rollupBridge` is set.
-  PendingChange pendingChange;
+  PendingChange public pendingChange;
 
-  constructor (address _token, address _owner, IDroplet _droplet) {
+  constructor (uint256 _delay, address _token, address _owner, IDroplet _droplet) {
+    activationDelay = _delay;
     sourceToken = _token;
     owner = _owner;
     droplet = _droplet;
@@ -60,7 +61,7 @@ contract DropletWrapper is Utilities {
       rollupBridge = reserve;
     } else {
       _pendingChange.reserve = reserve;
-      _pendingChange.activationDate = uint64(block.timestamp + ACTIVATION_DELAY);
+      _pendingChange.activationDate = uint64(block.timestamp + activationDelay);
       // save
       pendingChange = _pendingChange;
     }
