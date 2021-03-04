@@ -10,9 +10,9 @@ contract TokenTurner is Utilities {
   /// @dev How many epochs the funding event is open.
   uint256 constant FUNDING_EPOCHS = 12;
   /// @dev The decay rate per funding epoch.
-  uint256 constant DECAY_PER_EPOCH = 40; // 4 %
+  uint256 constant DECAY_PER_EPOCH = 4; // 4 %
   /// @dev Maximum decay rate.
-  uint256 constant MAX_DECAY_RATE = 1000; // 100 %
+  uint256 constant MAX_DECAY_RATE = 100; // 100 %
   /// @dev Price of 1 `outputToken` for 1 `inputToken`.
   uint256 constant FUNDING_PRICE = 25e6; // 25 dai-pennies
   /// @dev The maximum epoch that needs to be reached so that the last possible funding epoch has a decay of 100%.
@@ -206,13 +206,13 @@ contract TokenTurner is Utilities {
       Utilities._safeTransfer(inputToken, receiver, sellAmount);
     } else {
       // we swap `inputToken`
-      bool wantETH = swapRoute[0] == 0;
+      address wethIfNotZero = address(swapRoute[0]);
       swapRoute[0] = uint256(inputToken);
 
-      if (wantETH) {
-        Utilities._swapExactTokensForETH(swapRoute, sellAmount, address(this), receiver);
-      } else {
+      if (wethIfNotZero == address(0)) {
         Utilities._swapExactTokensForTokens(swapRoute, sellAmount, address(this), receiver);
+      } else {
+        Utilities._swapExactTokensForETH(swapRoute, sellAmount, address(this), receiver, wethIfNotZero);
       }
     }
   }
@@ -224,5 +224,15 @@ contract TokenTurner is Utilities {
     require(token != inputToken && token != outputToken);
 
     Utilities._safeTransfer(token, communityFund, Utilities._safeBalance(token, address(this)));
+  }
+
+  /// @notice Required for receiving ETH from WETH.
+  /// Reverts if caller == origin. Helps against wrong ETH transfers.
+  fallback () external payable {
+    assembly {
+      if eq(caller(), origin()) {
+        revert(0, 0)
+      }
+    }
   }
 }

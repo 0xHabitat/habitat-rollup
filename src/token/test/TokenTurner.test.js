@@ -11,8 +11,8 @@ describe('TokenTurner', function () {
   const SUPPLY = 2_000_000n * (10n ** 10n);
   const FUNDING_PRICE = 25n * (10n ** 6n);
   const FUNDING_EPOCHS = 12n;
-  const DECAY_PER_EPOCH = 40n;
-  const MAX_DECAY_RATE = 1000n;
+  const DECAY_PER_EPOCH = 4n;
+  const MAX_DECAY_RATE = 100n;
   const MAX_EPOCH = Number(FUNDING_EPOCHS + (MAX_DECAY_RATE / DECAY_PER_EPOCH));
   const ctx = { alice, bob, charlie };
   const decimals = {
@@ -293,6 +293,7 @@ describe('TokenTurner', function () {
           const wallet = ctx[walletName];
           const path = _path.map((e) => ctx[e].address);
           const route = await getRoute(ctx.uniswapFactory, path);
+          route[0] = withETH ? ctx.weth.address : 0;
           const tx = await ctx.tokenTurner.swapOut(
             wallet.address,
             amountIn,
@@ -309,6 +310,7 @@ describe('TokenTurner', function () {
           const permit = await signPermit(ctx.hbt, wallet, ctx.tokenTurner.address, amountIn);
           const path = _path.map((e) => ctx[e].address);
           const route = await getRoute(ctx.uniswapFactory, path);
+          route[0] = withETH ? ctx.weth.address : 0;
           const args = [
             wallet.address,
             amountIn,

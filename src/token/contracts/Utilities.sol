@@ -104,7 +104,7 @@ contract Utilities {
   /// @param to Transfer ETH to.
   /// @param amount The ETH amount.
   function _safeTransferETH (address to, uint256 amount) internal {
-    (bool success,) = to.call{value:amount}(new bytes(0));
+    (bool success,) = to.call{value:amount}("");
     require(success, 'TRANSFER_ETH');
   }
 
@@ -178,7 +178,7 @@ contract Utilities {
       address to = i < path.length - 1 ? pair : _to;
 
       IUniswapV2Pair(pair).swap(
-        amount0Out, amount1Out, to, new bytes(0)
+        amount0Out, amount1Out, to, ""
       );
     }
   }
@@ -214,7 +214,8 @@ contract Utilities {
     uint256[] memory path,
     uint amountIn,
     address from,
-    address to
+    address to,
+    address weth
   ) internal returns (uint[] memory amounts)
   {
     amounts = UniswapV2Library.getAmountsOut(amountIn, path);
@@ -222,7 +223,8 @@ contract Utilities {
     _safeTransferWrapper(address(path[0]), from, address(path[1] >> 1), amounts[0]);
     _swap(amounts, path, address(this));
 
-    IWETH(address(path[0])).withdraw(amounts[amounts.length - 1]);
-    _safeTransferETH(to, amounts[amounts.length - 1]);
+    uint256 finalOutputAmount = amounts[amounts.length - 1];
+    IWETH(weth).withdraw(finalOutputAmount);
+    _safeTransferETH(to, finalOutputAmount);
   }
 }
