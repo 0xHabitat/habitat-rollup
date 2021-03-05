@@ -18,7 +18,7 @@ contract HabitatToken is Utilities {
 
   /// @notice Returns the name of token.
   function name () public virtual view returns (string memory) {
-    return 'Habitat';
+    return 'Habitat Token';
   }
 
   /// @notice Returns the symbol of the token.
