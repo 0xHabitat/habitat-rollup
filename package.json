@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks.git#master",
-    "develatus-apparatus": "https://github.com/pinkiebell/develatus-apparatus.git#master",
+    "develatus-apparatus": "https://github.com/pinkiebell/develatus-apparatus.git#v0.3.2",
     "ipfs-tools": "https://github.com/pinkiebell/ipfs-tools.git#master",
     "ethers": "=5.0.31",
     "mocha": "=7.1.1",
