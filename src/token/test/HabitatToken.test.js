@@ -18,7 +18,7 @@ describe('HabitatToken', function () {
 
   it('name', async () => {
     const v = await hbt.name();
-    assert.equal(v, 'Habitat');
+    assert.equal(v, 'Habitat Token');
   });
 
   it('symbol', async () => {

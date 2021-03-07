@@ -43,8 +43,8 @@ contract HabitatToken is Utilities {
       mstore(ptr, 0x8cad95687ba82c2ce50e74f7b754645e5117c3a5bec8151c0726d5857980a866)
       ptr := add(ptr, 32)
 
-      // keccak256(bytes('Habitat'))
-      mstore(ptr, 0x19fabbf4b64f526d3221ff98c3430ff1ca6295b5a1b6b8a7cb94a0f7d7f58ebe)
+      // keccak256(bytes('Habitat Token'))
+      mstore(ptr, 0x825a5bd2b322b183692110889ab8fda39cd7c633901fc90cea3ce579a5694e95)
       ptr := add(ptr, 32)
 
       // store chainid
