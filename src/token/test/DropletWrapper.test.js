@@ -2,7 +2,7 @@ import ethers from 'ethers';
 import { signPermit } from './helpers.js';
 
 describe('DropletWrapper', function () {
-  const { DropletWrapper, DropletMock, HabitatToken } = Artifacts;
+  const { DropletWrapperMock, DropletMock, HabitatToken } = Artifacts;
   const { alice, bob, charlie } = getDefaultWallets();
   const ACTIVATION_DELAY = 3;
   let hbt;
@@ -12,7 +12,7 @@ describe('DropletWrapper', function () {
   before('Prepare contracts', async () => {
     hbt = await deploy(HabitatToken, alice);
     dropletMock = await deploy(DropletMock, alice, hbt.address);
-    dropletWrapper = await deploy(DropletWrapper, alice, ACTIVATION_DELAY, hbt.address, charlie.address, dropletMock.address);
+    dropletWrapper = await deploy(DropletWrapperMock, alice, ACTIVATION_DELAY, hbt.address, charlie.address, dropletMock.address);
   });
 
   it('DropletMock: set payee', async () => {

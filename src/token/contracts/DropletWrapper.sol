@@ -5,43 +5,44 @@ import './Utilities.sol';
 
 /// @notice This contract manages 'dripping assets' from a droplet and acts as a wrapper/gatekeeper
 /// around the assets for `rollupBridge`.
-/// The `rollupBridge` can only be set once and has an activation delay of `activationDelay`.
+/// The `rollupBridge` can only be set once and has an activation delay of `ACTIVATION_DELAY`.
 contract DropletWrapper is Utilities {
   struct PendingChange {
     uint64 activationDate;
     address reserve;
   }
 
-  /// @dev How long (in seconds) we have to wait once the change of `rollupBridge` can be applied.
-  uint256 activationDelay;
-  /// @dev The address of the ERC-20 token this contract manages.
-  address sourceToken;
-  /// @dev Owner of this contract that can propose changes.
-  address owner;
-  /// @dev Address that can claim `sourceToken`.
+  /// @dev Address that can claim `SOURCE_TOKEN`.
   address rollupBridge;
-  /// @dev The droplet this contract drips from.
-  IDroplet droplet;
   /// @dev Used for temporary state until `rollupBridge` is set.
   PendingChange public pendingChange;
 
-  constructor (uint256 _delay, address _token, address _owner, IDroplet _droplet) {
-    activationDelay = _delay;
-    sourceToken = _token;
-    owner = _owner;
-    droplet = _droplet;
+  /// @dev Owner of this contract that can propose changes.
+  function OWNER () internal view virtual returns (address) {
   }
 
-  /// @notice Drips funds from `droplet` and calls `rollupBridge` with `data` as calldata.
+  /// @dev The droplet this contract drips from.
+  function DROPLET () internal view virtual returns (address) {
+  }
+
+  /// @dev The address of the ERC-20 token this contract manages.
+  function SOURCE_TOKEN () internal view virtual returns (address) {
+  }
+
+  /// @dev How long (in seconds) we have to wait once the change of `rollupBridge` can be applied.
+  function ACTIVATION_DELAY () internal view virtual returns (uint256) {
+  }
+
+  /// @notice Drips funds from `DROPLET` and calls `rollupBridge` with `data` as calldata.
   function execute (bytes calldata data) external {
     require(rollupBridge != address(0));
 
     // drip any funds
-    droplet.drip();
+    IDroplet(DROPLET()).drip();
     // check balance
-    uint256 balance = Utilities._safeBalance(sourceToken, address(this));
+    uint256 balance = Utilities._safeBalance(SOURCE_TOKEN(), address(this));
     // approve
-    Utilities._safeApprove(sourceToken, rollupBridge, balance);
+    Utilities._safeApprove(SOURCE_TOKEN(), rollupBridge, balance);
 
     (bool success,) = rollupBridge.call(data);
     require(success);
@@ -51,7 +52,7 @@ contract DropletWrapper is Utilities {
   /// once for initalization and afterwards for activation.
   /// This function also allows to overwrite a yet pending change.
   function setReserve (address reserve) external {
-    require(msg.sender == owner);
+    require(msg.sender == OWNER());
     require(rollupBridge == address(0));
     require(reserve != address(0));
 
@@ -61,17 +62,17 @@ contract DropletWrapper is Utilities {
       rollupBridge = reserve;
     } else {
       _pendingChange.reserve = reserve;
-      _pendingChange.activationDate = uint64(block.timestamp + activationDelay);
+      _pendingChange.activationDate = uint64(block.timestamp + ACTIVATION_DELAY());
       // save
       pendingChange = _pendingChange;
     }
   }
 
-  /// @notice Allows to recover `token` except `sourceToken`.
+  /// @notice Allows to recover `token` except `SOURCE_TOKEN`.
   /// Transfers `token` to `msg.sender`.
   /// @param token The address of the ERC-20 token to recover.
   function recoverLostTokens (address token) external {
-    require(token != sourceToken);
+    require(token != SOURCE_TOKEN());
 
     Utilities._safeTransfer(token, msg.sender, Utilities._safeBalance(token, address(this)));
   }
