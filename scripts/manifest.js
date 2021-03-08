@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 
-const dir = 'web/';
+const dir = 'web/mvp';
 const outPath = `${dir}files.js`;
 const basePath = dir.endsWith('/') ? dir : dir + '/';
 const files = [];

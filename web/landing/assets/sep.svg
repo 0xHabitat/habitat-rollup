@@ -1,0 +1,33 @@
+<svg width="1440" height="510" viewBox="0 0 1440 510" fill="none" xmlns="http://www.w3.org/2000/svg">
+<style>
+:root {
+  --color-fill:#ffffff;
+}
+@media (prefers-color-scheme: dark) {
+:root {
+  --color-fill:#202020;
+}
+[data-theme="light"] {
+--color-fill:#ffffff;
+}
+}
+[data-theme="dark"] {
+--color-fill:#202020;
+}
+path {
+fill: var(--color-fill);
+}
+</style>
+<g style="mix-blend-mode:hard-light">
+<path d="M-6 0L168.757 67.8994L370.477 93.0473L845.318 114.172L1145.9 218.284L1434 255H-6V0Z" fill-opacity="0.85"/>
+</g>
+<g style="mix-blend-mode:hard-light">
+<path d="M96.0888 229L378.315 243.5L876.068 198L1066.71 145.635L1445 30.4792V255H5L96.0888 229Z" fill-opacity="0.5"/>
+</g>
+<g style="mix-blend-mode:hard-light">
+<path d="M1440 510L1265.24 442.101L1063.52 416.953L588.682 395.828L288.1 291.716L0 255L1440 255V510Z" fill-opacity="0.85"/>
+</g>
+<g style="mix-blend-mode:hard-light">
+<path d="M1348.91 281L1066.69 266.5L568.932 312L378.292 364.364L0 479.521V255L1440 255L1348.91 281Z" fill-opacity="0.5"/>
+</g>
+</svg>

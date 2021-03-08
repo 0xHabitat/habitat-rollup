@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='../assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='../assets/assets.css'>
+    <link rel='stylesheet' type='text/css' href='index.css'>
+    <link rel='stylesheet' type='text/css' href='wallet.css'>
+    <link rel='icon' type='image/png' href='../assets/logo.png'>
+    <link rel='apple-touch-icon' href='../assets/logo.png'>
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:site' content='@0xHabitat'>
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='https://0xhabitat.org'>
+    <meta property='og:title' content='Habitat - Grow and collaborate on Ethereum'>
+    <meta property='og:description' content='Scaling communities with Rollup technology.'>
+    <meta property='og:image' content='/token/curve.png'>
+    <title>Habitat - Grow and collaborate on Ethereum</title>
+    <script src='../common.js'></script>
+    <script src='../common/colorSchemeToggle.js'></script>
+  </head>
+  <body>
+    <section class='content'>
+      <canvas id='gradient-canvas'></canvas>
+
+      <section style='z-index:9;transform: translateZ(0)'>
+        <article>
+          <section class='wrapperNav'>
+            <div class='flex row center evenly'>
+              <div>
+                <object type='image/svg+xml' style='height:64px;min-width:130px;' data='../assets/logoAnimated.svg'></object>
+              </div>
+              <div class='flex row evenly'>
+                <div style='margin:0 1em;' id='colorSchemeToggle'></div>
+                <div id='wallet' class='flex row shadow'>
+                  <button id='left'></button>
+                  <button id='connect' class='connect purple flex' style='border-radius:0;'>Connect</button>
+                  <button id='right'></button>
+                </div>
+              </div>
+            </div>
+            <script type='module' src='wallet.js'></script>
+          </section>
+
+          <section>
+            <h1><br></h1>
+            <h1>The People Owned Ecosystem 🌞</h1>
+            <h4>HBT is the utility & governance token of the Habitat Rollup</h4>
+            <h1><br></h1>
+            <h6 class='phrasebox'>This is a Fair Launch. No Rugging, No VCs, No Whales.</h6>
+          </section>
+
+          <section>
+            <h1><br></h1>
+            <div class='flex col evenly center left padh'>
+              <div style='max-width:120ch;'>
+                <h6 class='text-center'><bold>Easily swap any token to HBT to support the development of the Habitat Ecosystem.</bold></h6>
+                <p class='text-center'>To ensure a fair distribution, the swap happens at a fixed rate of <bold>0.25 DAI = 1 HBT</bold></p>
+                <p><br></p>
+                <p>
+To fund the bootstrapping pool an individual swap back decay is applied. With each week the decay increases and the available funds are locked to build out Habitat. You can always swap back with no decay in the epoch you joined. The bootstrap phase offers only a limited supply of <bold>2.000.000 HBT</bold>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h1><br></h1>
+            <div class='flex row'>
+            </div>
+            <div class='flex col center evenly padh' style='max-width:100ch;'>
+              <div style='width:100%'>
+                <h3 class='left inline' style='float:left;'>Funding Progress</h3>
+                <h3 class='right inline' style='float:right;'>Hardcap 2M HBT</h3>
+              </div>
+              <div id='fundingProgress' class='shadow'><div id='innerbar'></div></div>
+              <h6><br></h6>
+              <h6><span id='epochDisplayDescription'></span></h6>
+              <p><span id='epochDisplayTime'></span></p>
+            </div>
+            <h1><br></h1>
+          </section>
+
+          <section>
+            <div class='flex row center fit evenly'>
+              <div class='flex col swapbox'>
+                <h2>Get HBT</h2>
+                <p class='small bold'>You can swap back, trade or transfer your HBT at any time.</p>
+                <label>
+                  Choose your token
+                  <input required=true list='tokenlist' id='token' placeholder='Choose from the list or paste the token contract address'>
+                </label>
+
+                <label>
+                  Input Amount
+                  <input id='inputAmount' required=true type='number' min='0' value='0.0'>
+                </label>
+
+                <label>
+                  You will receive (HBT)
+                  <input id='outputAmount' disabled required=true type='number' min='1' value='0.0'>
+                </label>
+
+                <label>
+                  Receiver of HBT tokens
+                  <input required=true id='receiver' placeholder='0x.. or alice.eth'>
+                  <button class='blue' id='receiverAutofill'>Use address from my Wallet</button>
+                </label>
+
+                <button id='swap' class='yellow bigger bold'>Swap</button>
+                <h6><br></h6>
+                <div id='feedback' style='max-width:42ch;'></div>
+              </div>
+              <div>
+                <img class='minmax lighten' src='curve.png'>
+              </div>
+            </div>
+            <h1><br></h1>
+          </section>
+
+          <section class='bgWhite'>
+            <h1>Your invested Epochs</h1>
+            <div class='flex col center'>
+              <h6 style='visibility:hidden;'; id='nothingToSwap'>All plates are empty</h6>
+              <div>
+                <button id='showSwapHistory' class='blue'>Connect Wallet</button>
+                <h6><br></h6>
+              </div>
+              <div id='swapHistory' class='grid-2'></div>
+            </div>
+            <h1><br></h1>
+          </section>
+
+          <section>
+            <h1><br></h1>
+            <div class='flex col center evenly padh'>
+              <h1>Soft-Governance in v0.5</h1>
+              <div style='max-width:80ch;'>
+                <p>
+Under <bold>“Evolution 🌱”</bold> HBT can be used to vote on pre-defined milestones to achieve v1.0. The progress is transparent and can be checked or upvoted to increase its priority. Feel free to support.  
+                </p>
+                <p>
+Additionally, HBT can be used to vote on first community suggestions or bugs. These proposal can be submitted by every community member.
+                </p>
+              </div>
+              <a class='button purple'>Evolution 🌱 - Coming Soon</a>
+            </div>
+            <h1><br></h1>
+          </section>
+
+          <section>
+            <h1><br></h1>
+            <h1>Utility of the Habitat Token (HBT)</h1>
+            <h1><br></h1>
+            <div class='flex row'>
+              <div id='infobox' class='grid-2 center'>
+
+                <div id='operatorrewards'>
+                  <h6>Operator Rewards 💸</h6>
+                  <p>
+The rollup operator is not a single entity but every member of Habitat.
+
+Therefore all the rewards and profits of the rollup go towards the liquidity providers and feature farmers.
+
+Communities should not only benefit by low txn fees or fast confirmation times but also by the very own profit Habitat generates.
+                  </p>
+                </div>
+                <div class='no-box'>
+                  <h1 class='big-emoji'>💸</h1>
+                </div>
+
+                <div class='no-box'>
+                  <h1 class='big-emoji'>🌱</h1>
+                </div>
+                <div id='featurefarming'>
+                  <h6>Feature Farming 🌱</h6>
+                  <p>
+Habitat v1.0 is a modular toolkit that allows to easily build or migrate your community on the Habitat rollup.
+
+Since every community and their process is unique the HBT Token is the signal to propose new modules and tools.
+
+As more features are farmed the adoption of Habitat increases and HBT gains in value.
+                  </p>
+                </div>
+
+                <div id='ecosystemcurrency'>
+                  <h6>Ecosystem Currency 🌺</h6>
+                  <p>
+HBT is the fuel of the Habitat ecosystem.
+
+It is issued as a reward for increasing the stability, security and further development of Habitat.
+
+Habitat is based on a circular economy. Builders, stakers and active voters can earn while users and communities pay in HBT for operator fees or new features.
+                  </p>
+                </div>
+                <div class='no-box'>
+                  <h1 class='big-emoji'>🌺</h1>
+                </div>
+
+                <div class='no-box'>
+                  <h1 class='big-emoji'>🏗</h1>
+                </div>
+                <div id='rollupgovernance'>
+                  <h6>Rollup Governance 🏗</h6>
+                  <p>
+The Habitat rollup is owned by the communities and their members.
+
+The infrastracture of Habitat is therefore controlled and governed by the people.
+
+When HBT and ETH are staked you earn the right to vote on important rollup design decisions.
+This can include challenge times, block finalizations, operator fees and many more rollup specific governance.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div class='flex col center evenly padh'>
+              <h1>Roadmap</h1>
+              <p>
+The bootstrap pool directly funds Habitat v1.0 These funds will solely be used to pay for operations and bounties for Habitat’s ongoing development.
+              </p>
+            </div>
+            <h1><br></h1>
+            <div class='flex col center fit'>
+              <img class='lighten' style='padding: 1rem; width: 98%;' src='../assets/roadmap.svg'>
+            </div>
+            <h1><br></h1>
+          </section>
+
+          <section class='lighten' style='padding-bottom:10vw;'>
+            <h1><br></h1>
+            <h1><br></h1>
+            <div class='flex col center fit'>
+              <img class='fit' style='width: 98%' src='economics.svg'>
+            </div>
+            <h1><br></h1>
+            <div class='flex center evenly'>
+              <a class='button purple' target='_blank' href='https://0xhabitat.substack.com/p/hbt-token-design-and-economics-'>Read More</a>
+            </div>
+            <h1><br></h1>
+          </section>
+
+          <div class='uniscene' style='width:100%;min-height:56vw;margin-top:-42vw;'></div>
+        </article>
+      </section>
+    </section>
+    <script src='../common/Gradient/script.js'></script>
+    <script type='module' src='index.js'></script>
+    <script src='../extern/ethers-5.0.31.umd.min.js'></script>
+  </body>
+</html>
