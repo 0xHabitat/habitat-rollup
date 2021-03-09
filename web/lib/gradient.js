@@ -538,7 +538,8 @@ class HabitatGradient extends HTMLElement {
         self.gradient.disconnect();
         self.gradient.connect();
       }
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', init, false);
+      // xxx: disable auto detection
+      //window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', init, false);
     }
   }
 

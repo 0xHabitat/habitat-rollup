@@ -21,6 +21,7 @@
   background-image: url('night.png');
 }
 
+/*
 @media (prefers-color-scheme: dark) {
   .uniscene {
     background-image: url('night.png');
@@ -38,3 +39,4 @@
     background-image: url('day.png');
   }
 }
+*/

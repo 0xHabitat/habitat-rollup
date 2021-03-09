@@ -88,6 +88,7 @@
   background-image: url('night/3.png');
 }
 
+/*
 @media (prefers-color-scheme: dark) {
   .l1 {
     background-image: url('night/1.png');
@@ -137,3 +138,4 @@
     background-image: url('day/3.png');
   }
 }
+*/

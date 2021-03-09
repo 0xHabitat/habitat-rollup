@@ -21,22 +21,12 @@ habitat-color-toggle {
 }
 
 div#colorSchemeToggle {
-  background: white;
   font-size: 30px;
-  border-radius: 50%;
   width: 32px;
   height: 32px;
   overflow: hidden;
   cursor: pointer;
   -webkit-user-select: none;
-}
-
-div#colorSchemeToggle.dark {
-  background: white;
-}
-
-div#colorSchemeToggle.light {
-  background: black;
 }
 
 div#colorSchemeToggle > div > div {

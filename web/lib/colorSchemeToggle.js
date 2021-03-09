@@ -7,7 +7,8 @@ function getColor () {
   let tmp = 'light';
 
   if (window.matchMedia) {
-    tmp = window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light';
+    // xxx: disable auto detection
+    //tmp = window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light';
   }
 
   if (toggledOnce && cur) {
