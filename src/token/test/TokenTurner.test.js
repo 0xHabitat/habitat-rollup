@@ -190,13 +190,14 @@ describe('TokenTurner', function () {
           for (let i = 0; i <= currentEpoch; i++) {
             for (const walletName of ['alice', 'bob', 'charlie']) {
               const wallet = ctx[walletName];
-              const inflow = BigInt(await ctx.tokenTurner.inflows(i, wallet.address));
+              const { inflow, outflow } = await ctx.tokenTurner.inflowOutflow(i, wallet.address);
+
               let decay = BigInt((currentEpoch - i)) * DECAY_PER_EPOCH;
               if (decay > MAX_DECAY_RATE) {
                 decay = MAX_DECAY_RATE;
               }
-              swappable += inflow - ((inflow / MAX_DECAY_RATE) * decay);
-              total += inflow;
+              swappable += (BigInt(inflow) - ((BigInt(inflow) / MAX_DECAY_RATE) * decay)) - BigInt(outflow);
+              total += BigInt(inflow);
             }
           }
           if (DEBUG) {

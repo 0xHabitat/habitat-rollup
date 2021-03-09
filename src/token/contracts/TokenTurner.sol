@@ -28,10 +28,15 @@ contract TokenTurner is Utilities {
   function COMMUNITY_FUND () internal view virtual returns (address) {
   }
 
+  struct InflowOutflow {
+    uint128 inflow;
+    uint128 outflow;
+  }
+
   /// @dev The last closed epoch this contract knows of.  Used for bookkeeping purposes.
   uint256 activeEpoch;
-  /// @notice epoch > address > amount (`INPUT_TOKEN`)
-  mapping (uint256 => mapping (address => uint256)) public inflows;
+  /// @notice epoch > address > amount (inflow `INPUT_TOKEN`, outflow `INPUT_TOKEN`)
+  mapping (uint256 => mapping (address => InflowOutflow)) public inflowOutflow;
 
   event Buy (address indexed buyer, uint256 indexed epoch, uint256 amount);
   event Sell (address indexed seller, uint256 indexed epoch, uint256 amount);
@@ -148,7 +153,8 @@ contract TokenTurner is Utilities {
 
     // bookkeeping
     emit Buy(msg.sender, currentEpoch, outflowAmount);
-    inflows[currentEpoch][msg.sender] += inflowAmount;
+    // practically, this should never overflow
+    inflowOutflow[currentEpoch][msg.sender].inflow += uint128(inflowAmount);
 
     // transfer `OUTPUT_TOKEN` to `receiver`
     Utilities._safeTransfer(OUTPUT_TOKEN(), receiver, outflowAmount);
@@ -179,17 +185,23 @@ contract TokenTurner is Utilities {
 
     Utilities._maybeRedeemPermit(OUTPUT_TOKEN(), permitData);
 
-    uint256 sellAmount = inputSellAmount * FUNDING_PRICE;
+    uint128 sellAmount = uint128(inputSellAmount * FUNDING_PRICE);
     // check available amount
     {
-      uint256 swappableAmount = inflows[epoch][msg.sender];
+      // practically, this should never overflow
+      InflowOutflow storage account = inflowOutflow[epoch][msg.sender];
+      uint128 swappableAmount = account.inflow;
+      uint128 oldOutflow = account.outflow;
+      uint128 newOutflow = sellAmount + oldOutflow;
+      // just to make sure
+      require(newOutflow > oldOutflow);
 
       if (epoch != currentEpoch) {
         uint256 decay = getDecayRateForEpoch(epoch);
-        swappableAmount = swappableAmount - ((swappableAmount / MAX_DECAY_RATE) * decay);
+        swappableAmount = uint128(swappableAmount - ((swappableAmount / MAX_DECAY_RATE) * decay));
       }
-      require(swappableAmount >= sellAmount, 'AMOUNT');
-      inflows[epoch][msg.sender] = swappableAmount - sellAmount;
+      require(newOutflow <= swappableAmount, 'AMOUNT');
+      account.outflow = newOutflow;
     }
 
     emit Sell(msg.sender, epoch, inputSellAmount);

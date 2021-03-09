@@ -4,6 +4,12 @@ pragma solidity >=0.6.2;
 import '../TokenTurner.sol';
 
 contract TokenTurnerRopsten is TokenTurner {
+  uint256 _startDate;
+
+  constructor () {
+    _startDate = block.timestamp;
+  }
+
   function INPUT_TOKEN () internal view override returns (address) {
     return 0x217582928Fb133171e2c5Ca019429a3831DD9537;
   }
@@ -17,8 +23,8 @@ contract TokenTurnerRopsten is TokenTurner {
   }
 
   function getCurrentEpoch () public view override returns (uint256 epoch) {
-    uint256 FUNDING_START_DATE = 1615289631;
-    uint256 EPOCH_SECONDS = 7200;
+    uint256 FUNDING_START_DATE = _startDate;
+    uint256 EPOCH_SECONDS = 1800;
     epoch = (block.timestamp - FUNDING_START_DATE) / EPOCH_SECONDS;
     if (epoch > MAX_EPOCH) {
       epoch = MAX_EPOCH;

@@ -118,7 +118,7 @@ contract Utilities {
     require(success && (data.length == 0 || abi.decode(data, (bool))), 'APPROVE');
   }
 
-  /// @dev Provides a wrapper for ERC-20.approve.
+  /// @dev Provides a wrapper for ERC-20.balanceOf.
   /// Reverts if failed.
   /// @param token The address of the ERC-20 token.
   /// @param account Address of the account to query.

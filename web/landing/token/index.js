@@ -23,7 +23,7 @@ import {
 } from '/lib/config.js';
 
 const TOKEN_TURNER_ABI = [
-  'function inflows (uint256, address) public view returns (uint256)',
+  'function inflowOutflow (uint256, address) public view returns (uint128 inflow, uint128 outflow)',
   'function getCurrentEpoch () public view returns (uint256 epoch)',
   'function getDecayRateForEpoch (uint256 epoch) public view returns (uint256 rate)',
   'function updateInflow () public',
@@ -149,6 +149,7 @@ async function getToken (val) {
 
 async function updateProgressBar () {
   const currentEpoch = Number(await tokenTurner.getCurrentEpoch());
+  // xxx: hardcoded decimals
   const balance = ethers.utils.formatUnits(await habitatToken.balanceOf(TOKEN_TURNER), '10');
   const progress = 100 - ((balance / FUNDING_SUPPLY) * 100);
   const hbtAmount = FUNDING_SUPPLY - balance;
@@ -156,9 +157,9 @@ async function updateProgressBar () {
   const ele = document.querySelector('#innerbar');
   ele.style.width = `${progress}%`;
 
-  const bla = FUNDING_START_DATE + ((currentEpoch + 1) * EPOCH_SECONDS);
   const now = ~~(Date.now() / 1000);
-  const nextEpochDelta = bla - now;
+  const nextEpoch = FUNDING_START_DATE + ((currentEpoch + 1) * EPOCH_SECONDS);
+  const nextEpochDelta = nextEpoch - now;
   const fundingEnd = FUNDING_START_DATE + (EPOCH_SECONDS * FUNDING_EPOCHS) - now;
   const time = `${secondsToHms(nextEpochDelta)}`;
   const fundingEnds = `${secondsToHms(fundingEnd)}`;
@@ -216,6 +217,7 @@ async function onInputChange (evt) {
   const realAmount = ethers.utils.parseUnits(v, inputToken._decimals);
   const route = await findInputRoute(inputToken);
   const { inflow, outflow } = await tokenTurner.getQuote(realAmount, route);
+  // xxx: hardcoded decimals
   outp.value = ethers.utils.formatUnits(outflow, '10');
 }
 
@@ -226,12 +228,11 @@ async function swapBack (evt) {
   }
 
   const signer = await getSigner();
+  // xxx: hardcoded decimals
   const sellAmount = ethers.utils.parseUnits(config.swapout, '10');
-  const amount = sellAmount.mul(FUNDING_PRICE);
   const outputToken = await getToken(config.tokenout);
   const route = await findOutputRoute(outputToken);
-  const { inflow, outflow } = await tokenTurner.getQuote(amount, route);
-  const { permitData } = await signPermit(habitatToken, signer, tokenTurner.address, amount);
+  const { permitData } = await signPermit(habitatToken, signer, tokenTurner.address, sellAmount);
   route[0] = outputToken.isETH ? WETH : 0;
   const args = [
     await signer.getAddress(),
@@ -297,17 +298,17 @@ async function updateSwapHistory () {
     const e = container.children[epoch];
     const decay = await tokenTurner.getDecayRateForEpoch(epoch);
     // amount in dai
-    let inflow = await tokenTurner.inflows(epoch, account);
-    //swappableAmount = swappableAmount - ((swappableAmount / MAX_DECAY_RATE) * decay);
+    let { inflow, outflow }= await tokenTurner.inflowOutflow(epoch, account);
     // that can be swapped
-    inflow = inflow.sub(inflow.div(100).mul(decay));
-    inflow = inflow.div(FUNDING_PRICE);
-    if (inflow.eq(0)) {
+    let available = inflow.sub(outflow);
+    available = available.sub(available.div(100).mul(decay));
+    available = available.div(FUNDING_PRICE);
+    if (available.eq(0)) {
       e.style.display = 'none';
       continue;
     }
-    // xxx
-    const amount = ethers.utils.formatUnits(inflow, '10');
+    // xxx: hardcoded decimals
+    const amount = ethers.utils.formatUnits(available, '10');
     e.children[0].textContent = `Epoch ${epoch + 1} | ${decay}% Decay`;
     e.children[2].textContent = `Maximum swappable amount due to decay: ${amount}`;
     e.children[3].children[0].value = amount;
@@ -332,6 +333,7 @@ async function onOutputChange (evt) {
     return;
   }
 
+  // xxx: hardcoded decimals
   const sellAmount = ethers.utils.parseUnits(config.swapout, '10');
   const amount = sellAmount.mul(FUNDING_PRICE);
   const outputToken = await getToken(config.tokenout);
