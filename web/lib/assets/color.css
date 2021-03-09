@@ -18,6 +18,7 @@
   --color-border-box: var(--color-black);
 }
 
+/*
 @media (prefers-color-scheme: dark) {
   :root {
     --color-brand1: #504060;
@@ -45,6 +46,7 @@
     --color-border-box: var(--color-black);
   }
 }
+*/
 
 [data-theme="dark"] {
   --color-brand1: #504060;
