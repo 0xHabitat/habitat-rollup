@@ -158,7 +158,7 @@ export function wrapListener (selectorOrElement, func, eventName = 'click') {
     try {
       await func(evt);
     } catch (e) {
-      alertModal((e.error ? e.error.message : '') || e.toString());
+      alertModal((e.error ? e.error.message : '') || e.message || e.toString());
     }
 
     evt.target.disabled = false;
