@@ -6,7 +6,6 @@ import {
   wrapListener,
   signPermit,
   getRoute,
-  alertModal,
   secondsToHms,
   selectOnFocus,
 } from '/lib/utils.js';
@@ -116,14 +115,19 @@ async function swap (evt) {
     }
   }
 
-  // xxx increase gaslimit
-  const tx = await tokenTurner.connect(signer).swapIn(
+  const args = [
     config.receiver,
     inflow,
     route,
     permitData,
-    { value: erc20.isETH ? inflow : '0x0' }
-  );
+    { value: erc20.isETH ? inflow : '0x0' },
+  ];
+  const tokenTurnerSigner = tokenTurner.connect(signer);
+  const estimate = await tokenTurnerSigner.estimateGas.swapIn(...args);
+  // increase gaslimit in case of non-determinism regarding uniswap
+  args[args.length - 1].gasLimit = estimate.add('10000');
+
+  const tx = await tokenTurnerSigner.swapIn(...args);
   displayFeedback('Swap', document.querySelector('.swapbox > #feedback'), tx);
   const receipt = await tx.wait();
   updateSwapHistory();
@@ -229,15 +233,19 @@ async function swapBack (evt) {
   const { inflow, outflow } = await tokenTurner.getQuote(amount, route);
   const { permitData } = await signPermit(habitatToken, signer, tokenTurner.address, amount);
   route[0] = outputToken.isETH ? WETH : 0;
-  // xxx increase gaslimit
-  const tx = await tokenTurner.connect(signer).swapOut(
+  const args = [
     await signer.getAddress(),
     sellAmount,
     config.epoch,
     route,
     permitData,
-  );
+  ];
+  const tokenTurnerSigner = tokenTurner.connect(signer);
+  const estimate = await tokenTurnerSigner.estimateGas.swapOut(...args);
+  // increase gaslimit in case of non-determinism regarding uniswap
+  args.push({ gasLimit: estimate.add('10000') });
 
+  const tx = await tokenTurnerSigner.swapOut(...args);
   displayFeedback('Swap', evt.target.parentElement.querySelector('#feedback'), tx);
   await tx.wait();
   updateSwapHistory();
@@ -255,6 +263,7 @@ async function updateSwapHistory () {
     e.innerHTML = `
     <p class='bold'></p>
     <sep></sep>
+    <p class='bold small'></p>
     <label>
       Choose how many HBT you want to swap back
       <input id='swapout' type='number' min='0' required=true>
@@ -300,8 +309,9 @@ async function updateSwapHistory () {
     // xxx
     const amount = ethers.utils.formatUnits(inflow, '10');
     e.children[0].textContent = `Epoch ${epoch + 1} | ${decay}% Decay`;
-    e.children[2].children[0].value = amount;
-    e.children[2].children[0].max = amount;
+    e.children[2].textContent = `Maximum swappable amount due to decay: ${amount}`;
+    e.children[3].children[0].value = amount;
+    e.children[3].children[0].max = amount;
     e.style.display = 'block';
     nothingToSwap = false;
   }
