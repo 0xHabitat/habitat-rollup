@@ -11,6 +11,8 @@ import {
   HBT,
 } from './config.js';
 
+import './colorSchemeToggle.js';
+
 let walletContainer;
 let tokenContract;
 let account;
@@ -61,3 +63,31 @@ async function render () {
 }
 
 window.addEventListener('DOMContentLoaded', render, false);
+
+const TEMPLATE =
+`
+<section class='wrapperNav'>
+  <div class='flex row center evenly'>
+    <div>
+      <object type='image/svg+xml' style='height:64px;min-width:130px;' data='/lib/assets/logoAnimated.svg'></object>
+    </div>
+    <div class='flex row evenly'>
+      <habitat-color-toggle style='margin:0 1em;'></habitat-color-toggle>
+      <div id='wallet' class='flex row shadow'>
+        <button id='left'></button>
+        <button id='connect' class='connect purple flex' style='border-radius:0;'>Connect</button>
+        <button id='right'></button>
+      </div>
+    </div>
+  </div>
+</section>`;
+
+class HabitatNav extends HTMLElement {
+  constructor() {
+    super();
+
+    this.innerHTML = TEMPLATE;
+  }
+}
+
+customElements.define('habitat-nav', HabitatNav);

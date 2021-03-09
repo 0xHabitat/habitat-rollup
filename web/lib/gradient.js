@@ -7,23 +7,24 @@
 
 //Converting colors to proper format
 function normalizeColor(hexCode) {
-    return [(hexCode >> 16 & 255) / 255, (hexCode >> 8 & 255) / 255, (255 & hexCode) / 255]
-  } ["SCREEN", "LINEAR_LIGHT"].reduce((hexCode, t, n) => Object.assign(hexCode, {
-    [t]: n
-  }), {});
+  return [(hexCode >> 16 & 255) / 255, (hexCode >> 8 & 255) / 255, (255 & hexCode) / 255]
+}
+["SCREEN", "LINEAR_LIGHT"].reduce((hexCode, t, n) => Object.assign(hexCode, {
+  [t]: n
+}), {});
 
-  //Essential functionality of WebGl
-  //t = width
-  //n = height
-  class MiniGl {
-    constructor(canvas, width, height, debug = false) {
-        const _miniGl = this,
-            debug_output = -1 !== document.location.search.toLowerCase().indexOf("debug=webgl");
-        _miniGl.canvas = canvas, _miniGl.gl = _miniGl.canvas.getContext("webgl", {
-            antialias: true
-        }), _miniGl.meshes = [];
-        const context = _miniGl.gl;
-        width && height && this.setSize(width, height), _miniGl.lastDebugMsg, _miniGl.debug = debug && debug_output ? function(e) {
+//Essential functionality of WebGl
+//t = width
+//n = height
+class MiniGl {
+  constructor(canvas, width, height, debug = false) {
+    const _miniGl = this,
+      debug_output = -1 !== document.location.search.toLowerCase().indexOf("debug=webgl");
+    _miniGl.canvas = canvas, _miniGl.gl = _miniGl.canvas.getContext("webgl", {
+      antialias: true
+    }), _miniGl.meshes = [];
+    const context = _miniGl.gl;
+    width && height && this.setSize(width, height), _miniGl.lastDebugMsg, _miniGl.debug = debug && debug_output ? function(e) {
             const t = new Date;
             t - _miniGl.lastDebugMsg > 1e3 && console.log("---"), console.log(t.toLocaleTimeString() + Array(Math.max(0, 32 - e.length)).join(" ") + e + ": ", ...Array.from(arguments).slice(1)), _miniGl.lastDebugMsg = t
         } : () => {}, Object.defineProperties(_miniGl, {
@@ -266,20 +267,20 @@ function normalizeColor(hexCode) {
 
 
 
-  //Sets initial properties
-  function e(object, propertyName, val) {
-    return propertyName in object ? Object.defineProperty(object, propertyName, {
-        value: val,
-        enumerable: !0,
-        configurable: !0,
-        writable: !0
-    }) : object[propertyName] = val, object
-  }
+//Sets initial properties
+function e(object, propertyName, val) {
+  return propertyName in object ? Object.defineProperty(object, propertyName, {
+    value: val,
+    enumerable: !0,
+    configurable: !0,
+    writable: !0
+  }) : object[propertyName] = val, object
+}
 
-  //Gradient object
-  class Gradient {
-    constructor(...t) {
-        e(this, "el", void 0), e(this, "cssVarRetries", 0), e(this, "maxCssVarRetries", 200), e(this, "angle", 0), e(this, "isLoadedClass", !1), e(this, "isScrolling", !1), /*e(this, "isStatic", o.disableAmbientAnimations()),*/ e(this, "scrollingTimeout", void 0), e(this, "scrollingRefreshDelay", 200), e(this, "isIntersecting", !1), e(this, "shaderFiles", void 0), e(this, "vertexShader", void 0), e(this, "sectionColors", void 0), e(this, "computedCanvasStyle", void 0), e(this, "conf", void 0), e(this, "uniforms", void 0), e(this, "t", 1253106), e(this, "last", 0), e(this, "width", void 0), e(this, "minWidth", 1111), e(this, "height", 600), e(this, "xSegCount", void 0), e(this, "ySegCount", void 0), e(this, "mesh", void 0), e(this, "material", void 0), e(this, "geometry", void 0), e(this, "minigl", void 0), e(this, "scrollObserver", void 0), e(this, "amp", 320), e(this, "seed", 5), e(this, "freqX", 14e-5), e(this, "freqY", 29e-5), e(this, "freqDelta", 1e-5), e(this, "activeColors", [1, 1, 1, 1]), e(this, "isMetaKey", !1), e(this, "isGradientLegendVisible", !1), e(this, "isMouseDown", !1), e(this, "handleScroll", () => {
+//Gradient object
+class Gradient {
+  constructor(...t) {
+    e(this, "el", void 0), e(this, "cssVarRetries", 0), e(this, "maxCssVarRetries", 200), e(this, "angle", 0), e(this, "isLoadedClass", !1), e(this, "isScrolling", !1), /*e(this, "isStatic", o.disableAmbientAnimations()),*/ e(this, "scrollingTimeout", void 0), e(this, "scrollingRefreshDelay", 200), e(this, "isIntersecting", !1), e(this, "shaderFiles", void 0), e(this, "vertexShader", void 0), e(this, "sectionColors", void 0), e(this, "computedCanvasStyle", void 0), e(this, "conf", void 0), e(this, "uniforms", void 0), e(this, "t", 1253106), e(this, "last", 0), e(this, "width", void 0), e(this, "minWidth", 1111), e(this, "height", 600), e(this, "xSegCount", void 0), e(this, "ySegCount", void 0), e(this, "mesh", void 0), e(this, "material", void 0), e(this, "geometry", void 0), e(this, "minigl", void 0), e(this, "scrollObserver", void 0), e(this, "amp", 320), e(this, "seed", 5), e(this, "freqX", 14e-5), e(this, "freqY", 29e-5), e(this, "freqDelta", 1e-5), e(this, "activeColors", [1, 1, 1, 1]), e(this, "isMetaKey", !1), e(this, "isGradientLegendVisible", !1), e(this, "isMouseDown", !1), e(this, "handleScroll", () => {
             clearTimeout(this.scrollingTimeout), this.scrollingTimeout = setTimeout(this.handleScrollEnd, this.scrollingRefreshDelay), this.isGradientLegendVisible && this.hideGradientLegend(), this.conf.playing && (this.isScrolling = !0, this.pause())
         }), e(this, "handleScrollEnd", () => {
             this.isScrolling = !1, this.isIntersecting && this.play()
@@ -501,30 +502,53 @@ function normalizeColor(hexCode) {
             return hex && `0x${hex.substr(1)}`
         }).filter(Boolean).map(normalizeColor)
     }
-  }
-
-
-
-
-  /*
-  *Finally initializing the Gradient class, assigning a canvas to it and calling Gradient.connect() which initializes everything,
-  * Use Gradient.pause() and Gradient.play() for controls.
-  *
-  * Here are some default property values you can change anytime:
-  * Amplitude:    Gradient.amp = 0
-  * Colors:       Gradient.sectionColors (if you change colors, use normalizeColor(#hexValue)) before you assign it.
-  *
-  *
-  * Useful functions
-  * Gradient.toggleColor(index)
-  * Gradient.updateFrequency(freq)
-  */
-var gradient = new Gradient();
-gradient.initGradient("#gradient-canvas");
-if (window.matchMedia) {
-  function init () {
-    gradient.disconnect();
-    gradient.connect();
-  }
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', init, false);
 }
+
+
+/*
+*Finally initializing the Gradient class, assigning a canvas to it and calling Gradient.connect() which initializes everything,
+* Use Gradient.pause() and Gradient.play() for controls.
+*
+* Here are some default property values you can change anytime:
+* Amplitude:    Gradient.amp = 0
+* Colors:       Gradient.sectionColors (if you change colors, use normalizeColor(#hexValue)) before you assign it.
+*
+*
+* Useful functions
+* Gradient.toggleColor(index)
+* Gradient.updateFrequency(freq)
+*/
+
+const TEMPLATE =
+`
+<canvas id='gradient-canvas'></canvas>
+`;
+
+class HabitatGradient extends HTMLElement {
+  constructor() {
+    super();
+
+    this.innerHTML = TEMPLATE;
+    this.gradient = new Gradient();
+    this.gradient.initGradient("#gradient-canvas");
+
+    if (window.matchMedia) {
+      const self = this;
+      function init () {
+        self.gradient.disconnect();
+        self.gradient.connect();
+      }
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', init, false);
+    }
+  }
+
+  connect () {
+    this.gradient.connect();
+  }
+
+  disconnect () {
+    this.gradient.disconnect();
+  }
+}
+
+customElements.define('habitat-gradient', HabitatGradient);

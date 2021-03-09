@@ -1,8 +1,9 @@
 const speeds = [.1, .5, 1, 1];
-const layers = document.querySelectorAll('.para > div');
-const numLayers = layers.length;
-const parent = document.querySelector('.para').parentElement;
 const baseZoom = 100;
+let layers;
+let numLayers;
+let container;
+let parent;
 let maxWidth = 0;
 let stop = false;
 let lastTop = 1;
@@ -14,13 +15,13 @@ function onResize () {
   const w = document.body.offsetWidth;
   const h = document.body.offsetHeight
   maxWidth = w;
-  maxHeight = document.querySelector('.para').offsetHeight;
+  maxHeight = container.offsetHeight;
   isSmallScreen = (w / h) < 1.5;
   lastTop = 1;
   clampDeltaY = h / 7;
 
   if (isSmallScreen) {
-    maxHeight = document.querySelector('.para').offsetWidth;
+    maxHeight = container.offsetWidth;
   }
 }
 
@@ -69,6 +70,37 @@ function renderScene () {
   }
 }
 
-window.addEventListener('resize', onResize, false);
-onResize();
-window.requestAnimationFrame(renderScene);
+const TEMPLATE =
+`
+  <div class='para'>
+  <div class='l1'></div>
+  <div class='l2'></div>
+  <div class='l3'></div>
+  <div class='l4' style='width:100%;'>
+  <a href='/'><object type='image/svg+xml' style='position:absolute;top:4rem;width:20rem;left:6rem;' data='/lib/assets/logoAnimated.svg'></object></a>
+  <h1><br></h1>
+  <div class='left padh' style='left:6rem;bottom:20vh;position:absolute;font-size:2vh;max-width:70vw;'>
+  <h1 class='whitetext'>Grow and collaborate on Ethereum</h1>
+  <h3 class='whitetext'>Scaling communities with Rollup technology.</h3>
+  </div>
+  <h1><br></h1>
+  </div>
+  </div>
+  `;
+
+class HabitatScene extends HTMLElement {
+  constructor() {
+    super();
+
+    this.innerHTML = TEMPLATE;
+    layers = this.querySelectorAll('.para > div');
+    numLayers = layers.length;
+    container = this.children[0];
+    parent = this.parentElement;
+    window.addEventListener('resize', onResize, false);
+    onResize();
+    window.requestAnimationFrame(renderScene);
+  }
+}
+
+customElements.define('habitat-scene', HabitatScene);

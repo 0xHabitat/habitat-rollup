@@ -4,40 +4,25 @@
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width,initial-scale=1'>
     <meta name='referrer' content='no-referrer'>
-    <link rel='stylesheet' type='text/css' href='assets/base.css'>
-    <link rel='stylesheet' type='text/css' href='scene/scene.css'>
-    <link rel='icon' type='image/png' href='assets/logo.png'>
-    <link rel='apple-touch-icon' href='assets/logo.png'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/scene/scene.css'>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
     <meta name='twitter:card' content='summary_large_image'>
     <meta name='twitter:site' content='@0xHabitat'>
     <meta property='og:type' content='website'>
     <meta property='og:url' content='https://0xhabitat.org'>
     <meta property='og:title' content='Habitat - Grow and collaborate on Ethereum'>
     <meta property='og:description' content='Scaling communities with Rollup technology.'>
-    <meta property='og:image' content='https://0xhabitat.org/assets/preview.jpg'>
+    <meta property='og:image' content='https://0xhabitat.org/lib/assets/preview.jpg'>
     <title>Habitat - Grow and collaborate on Ethereum</title>
-    <script src='common.js'></script>
-    <script src='common/colorSchemeToggle.js'></script>
+    <script src='/lib/common.js'></script>
   </head>
   <body>
+    <habitat-gradient></habitat-gradient>
     <section class='content'>
-      <div style='position:absolute;z-index:100;' id='colorSchemeToggle'></div>
-
-      <div class='para'>
-        <div class='l1'></div>
-        <div class='l2'></div>
-        <div class='l3'></div>
-        <div class='l4' style='width:100%;'>
-          <a href='/'><object type='image/svg+xml' style='position:absolute;top:4rem;width:20rem;left:6rem;' data='assets/logoAnimated.svg'></object></a>
-          <h1><br></h1>
-          <div class='left padh' style='left:6rem;bottom:20vh;position:absolute;font-size:2vh;max-width:70vw;'>
-            <h1 class='whitetext'>Grow and collaborate on Ethereum</h1>
-            <h3 class='whitetext'>Scaling communities with Rollup technology.</h3>
-          </div>
-          <h1><br></h1>
-        </div>
-      </div>
-      <canvas id='gradient-canvas'></canvas>
+      <habitat-color-toggle style='position:absolute;z-index:100;'></habitat-color-toggle>
+      <habitat-scene></habitat-scene>
 
       <section style='z-index:9;transform: translateZ(0)'>
         <article>
@@ -70,24 +55,24 @@ Habitat also connects voting with smart contract interactions and management of 
 Goodbye, multisig wallet.
                 </p>
                 <div class='padh'>
-                  <img class='minmax lighten' src='assets/drawing1.png'>
+                  <img class='minmax lighten' src='/lib/assets/drawing1.png'>
                 </div>
               </div>
             </div>
           </section>
 
           <div style='overflow:hidden;margin:-6vw 0;'>
-            <object class='box' style='width:100%;margin-top:-1px;' data='assets/sep.svg'></object>
+            <object class='box' style='width:100%;margin-top:-1px;' data='/lib/assets/sep.svg'></object>
             <div class='' style='margin-top:-25%;margin-bottom:25%;'>
               <div>
                 <h3>Domains on Habitat</h3>
               </div>
               <div class='flex center'>
                 <a href='https://gov.leapdao.org' target='_blank' style='margin:0;line-height:0;'>
-                  <img src='assets/leap.png' style='margin:1em;width:18vw;'>
+                  <img src='/lib/assets/leap.png' style='margin:1em;width:18vw;'>
                 </a>
                 <a href='https://vote.strudel.finance' target='_blank' style='margin:0;line-height:0;'>
-                  <img src='assets/strudel.png' style='margin:1em;width:18vw;'>
+                  <img src='/lib/assets/strudel.png' style='margin:1em;width:18vw;'>
                 </a>
               </div>
             </div>
@@ -98,7 +83,7 @@ Goodbye, multisig wallet.
               <h1>A Self-Sustained Ecosystem</h1>
               <div class='flex row center fit evenly'>
                 <div class='padh'>
-                  <img class='minmax lighten' src='assets/drawing2.png'>
+                  <img class='minmax lighten' src='/lib/assets/drawing2.png'>
                 </div>
                 <p class='padh' style='max-width: 30rem'>
 Discover, Discuss, Propose, Vote. Decide, Together.
@@ -130,7 +115,7 @@ Participate in the design of the infrastructure and improve the protocol by stac
                 </p>
               </div>
               <div class='padv'>
-                <img src='assets/coins.svg'>
+                <img src='/lib/assets/coins.svg'>
                 <h1><br></h1>
                 <a class='button yellow' target='_blank' href='https://0xhabitat.substack.com/subscribe'>Join the Token waitlist</a>
               </div>
@@ -140,26 +125,26 @@ Participate in the design of the infrastructure and improve the protocol by stac
           <h1><br><br></h1>
 
           <div style='overflow:hidden;'>
-            <object class='box' style='width:100%;margin-bottom:-1px;' data='assets/waveTop.svg'></object>
+            <object class='box' style='width:100%;margin-bottom:-1px;' data='/lib/assets/waveTop.svg'></object>
           </div>
           <section class='bgwhite'>
             <div id='tech' class='flex row center fit evenly'>
               <div>
-                <img width='96' src='assets/nutberry.png'>
+                <img width='96' src='/lib/assets/nutberry.png'>
                 <h3><br></h3>
                 <h3>Scaling on a Optimistic Rollup</h3>
                 <p class='padv'>Supports more people and saves up to 96% of transactions costs.</p>
               </div>
 
               <div>
-                <img width='96' src='assets/raise-hand.svg'>
+                <img width='96' src='/lib/assets/raise-hand.svg'>
                 <h3><br></h3>
                 <h3>Owned and Governed by You.</h3>
                 <p class='padv'>Grow the Habitat by signaling new tools and vote on new features.</p>
               </div>
 
               <div>
-                <img width='96' src='assets/distributed.svg'>
+                <img width='96' src='/lib/assets/distributed.svg'>
                 <h3><br></h3>
                 <h3>Independent and Autonomous</h3>
                 <p class='padv'>Communities on Habitat stay sovereign as “Domains”.<br>Your Domain, your Rules.</p>
@@ -167,7 +152,7 @@ Participate in the design of the infrastructure and improve the protocol by stac
             </div>
 
             <div class='flex col center fit'>
-              <img class='lighten' style='padding: 1rem; width: 98%;' src='assets/roadmap.svg'>
+              <img class='lighten' style='padding: 1rem; width: 98%;' src='/lib/assets/roadmap.svg'>
               <h3><br></h3>
               <a class='button yellow' target='_blank' href='https://mvp.0xhabitat.org'>Test the Demo 🎮</a>
               <h3><br></h3>
@@ -175,13 +160,13 @@ Participate in the design of the infrastructure and improve the protocol by stac
           </section>
 
           <div style='overflow:hidden;'>
-            <object class='box' style='width:100%;margin-top:-1px;' data='assets/waveBottom.svg'></object>
+            <object class='box' style='width:100%;margin-top:-1px;' data='/lib/assets/waveBottom.svg'></object>
           </div>
 
           <h1><br></h1>
           <footer>
             <div class='flex col center fit'>
-              <img class='logoShadow' width='64' src='assets/logo.png'>
+              <img class='logoShadow' width='64' src='/lib/assets/logo.png'>
               <h3><br></h3>
               <a href='mailto:hello@0xhabitat.org'>hello@0xhabitat.org</a>
               <p>© 2021 - Habitat Community</p>
@@ -191,7 +176,8 @@ Participate in the design of the infrastructure and improve the protocol by stac
         </article>
       </section>
     </section>
-    <script src='common/Gradient/script.js'></script>
-    <script src='scene/scene.js'></script>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/colorSchemeToggle.js'></script>
+    <script type='module' src='/lib/scene/scene.js'></script>
   </body>
 </html>

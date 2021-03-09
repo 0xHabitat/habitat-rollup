@@ -9,7 +9,7 @@ import {
   alertModal,
   secondsToHms,
   selectOnFocus,
-} from './utils.js';
+} from '/lib/utils.js';
 import {
   ROOT_CHAIN_ID,
   TOKEN_TURNER,
@@ -21,7 +21,7 @@ import {
   FUNDING_SUPPLY,
   FUNDING_START_DATE,
   EPOCH_SECONDS,
-} from './config.js';
+} from '/lib/config.js';
 
 const TOKEN_TURNER_ABI = [
   'function inflows (uint256, address) public view returns (uint256)',

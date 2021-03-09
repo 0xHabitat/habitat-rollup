@@ -4,12 +4,11 @@
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width,initial-scale=1'>
     <meta name='referrer' content='no-referrer'>
-    <link rel='stylesheet' type='text/css' href='../assets/base.css'>
-    <link rel='stylesheet' type='text/css' href='../assets/assets.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/assets.css'>
     <link rel='stylesheet' type='text/css' href='index.css'>
-    <link rel='stylesheet' type='text/css' href='wallet.css'>
-    <link rel='icon' type='image/png' href='../assets/logo.png'>
-    <link rel='apple-touch-icon' href='../assets/logo.png'>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
     <meta name='twitter:card' content='summary_large_image'>
     <meta name='twitter:site' content='@0xHabitat'>
     <meta property='og:type' content='website'>
@@ -18,32 +17,15 @@
     <meta property='og:description' content='Scaling communities with Rollup technology.'>
     <meta property='og:image' content='/token/curve.png'>
     <title>Habitat - Grow and collaborate on Ethereum</title>
-    <script src='../common.js'></script>
-    <script src='../common/colorSchemeToggle.js'></script>
+    <script src='/lib/common.js'></script>
   </head>
   <body>
+    <habitat-gradient></habitat-gradient>
     <section class='content'>
-      <canvas id='gradient-canvas'></canvas>
 
       <section style='z-index:9;transform: translateZ(0)'>
+        <habitat-nav></habitat-nav>
         <article>
-          <section class='wrapperNav'>
-            <div class='flex row center evenly'>
-              <div>
-                <object type='image/svg+xml' style='height:64px;min-width:130px;' data='../assets/logoAnimated.svg'></object>
-              </div>
-              <div class='flex row evenly'>
-                <div style='margin:0 1em;' id='colorSchemeToggle'></div>
-                <div id='wallet' class='flex row shadow'>
-                  <button id='left'></button>
-                  <button id='connect' class='connect purple flex' style='border-radius:0;'>Connect</button>
-                  <button id='right'></button>
-                </div>
-              </div>
-            </div>
-            <script type='module' src='wallet.js'></script>
-          </section>
-
           <section>
             <h1><br></h1>
             <h1>The People Owned Ecosystem 🌞</h1>
@@ -227,7 +209,7 @@ The bootstrap pool directly funds Habitat v1.0 These funds will solely be used t
             </div>
             <h1><br></h1>
             <div class='flex col center fit'>
-              <img class='lighten' style='padding: 1rem; width: 98%;' src='../assets/roadmap.svg'>
+              <img class='lighten' style='padding: 1rem; width: 98%;' src='/lib/assets/roadmap.svg'>
             </div>
             <h1><br></h1>
           </section>
@@ -249,8 +231,9 @@ The bootstrap pool directly funds Habitat v1.0 These funds will solely be used t
         </article>
       </section>
     </section>
-    <script src='../common/Gradient/script.js'></script>
+    <script src='/lib/extern/ethers-5.0.31.umd.min.js'></script>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/wallet.js'></script>
     <script type='module' src='index.js'></script>
-    <script src='../extern/ethers-5.0.31.umd.min.js'></script>
   </body>
 </html>

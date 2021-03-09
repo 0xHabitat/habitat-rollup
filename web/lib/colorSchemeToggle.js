@@ -45,9 +45,9 @@ function setColor (tmp) {
     setTimeout(() => setColor(tmp), 100);
   }
 
-  if (window.gradient) {
-    window.gradient.disconnect();
-    window.gradient.connect();
+  for (const gradient of document.querySelectorAll('habitat-gradient')) {
+    gradient.disconnect();
+    gradient.connect();
   }
 }
 
@@ -66,21 +66,36 @@ function addColorSchemeToggle (_ele) {
   ele.className = getColor();
   ele.innerHTML = '<div><div>☀️</div><div>🌙</div></div>';
   ele.addEventListener('click', onClick, false);
-  // fix any settings after page load
-  // we do this w/ setTimeout because of a race condition in certain browser's DOM handling
-  setTimeout(detectColorScheme, 1);
+
 }
 
 window.addEventListener('load', function () {
-  addColorSchemeToggle(document.querySelector('#colorSchemeToggle'));
+  // fix any settings after page load
+  // we do this w/ setTimeout because of a race condition in certain browser's DOM handling
+  setTimeout(detectColorScheme, 1);
 }, false);
 
 if (window.matchMedia) {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectColorScheme, false);
 }
 
-const pref = localStorage.getItem(STORAGE_KEY);
-if (pref) {
-  setColor(pref);
-  toggledOnce = true;
+const TEMPLATE =
+`
+<div id='colorSchemeToggle'></div>
+`;
+
+class HabitatColorToggle extends HTMLElement {
+  constructor() {
+    super();
+
+    this.innerHTML = TEMPLATE;
+    addColorSchemeToggle(this.querySelector('div#colorSchemeToggle'));
+    const pref = localStorage.getItem(STORAGE_KEY);
+    if (pref) {
+      setColor(pref);
+      toggledOnce = true;
+    }
+  }
 }
+
+customElements.define('habitat-color-toggle', HabitatColorToggle);

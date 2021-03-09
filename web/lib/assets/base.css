@@ -1,6 +1,24 @@
 @import '../fonts/WorkSans.css';
 @import 'color.css';
-@import '../common/Gradient/style.css';
+@import 'wallet.css';
+
+#gradient-canvas {
+  position:absolute;
+  left:0;
+  top:0;
+  height: 100vh;
+  width: 100%;
+  z-index: 0;
+  background-color: var(--color-bg);
+}
+
+habitat-color-toggle {
+  position: sticky;
+  transform: translateZ(1000px);
+  top: 16px;
+  right: 24px;
+  float: right;
+}
 
 div#colorSchemeToggle {
   background: white;
@@ -11,11 +29,6 @@ div#colorSchemeToggle {
   overflow: hidden;
   cursor: pointer;
   -webkit-user-select: none;
-  position: sticky;
-  transform: translateZ(1000px);
-  top: 16px;
-  right: 24px;
-  float: right;
 }
 
 div#colorSchemeToggle.dark {
@@ -71,7 +84,7 @@ body {
   font-size: 2vh;
   overflow: hidden;
   text-align: center;
-  background-color: transparent;
+  background-color: var(--color-bg);
   -webkit-font-smoothing: subpixel-antialiased;
   font-smoothing: subpixel-antialiased;
   -webkit-tap-highlight-color: none;
@@ -227,6 +240,7 @@ button:disabled, .button:disabled {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  z-index: 1;
 }
 
 .col {
