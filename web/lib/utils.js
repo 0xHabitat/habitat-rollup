@@ -235,6 +235,9 @@ export async function getRoute (uniswapFactory, path) {
     const { token0, token1 } = sortTokens(tokenA, tokenB);
     //(uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
     const direction = tokenA === token0 ? 0n : 1n;
+    //(uint amount0Out, uint amount1Out) = direction == 0 ? (uint(0), amountOut) : (amountOut, uint(0));
+
+    console.log({ token0, token1, direction });
 
     let pair;
     try {

@@ -100,12 +100,21 @@ async function swap (evt) {
   }
 
   const route = await findInputRoute(erc20);
+  console.log({route});
   let permitData = '0x';
   if (!erc20.isETH) {
     const allowance = await erc20.allowance(account, tokenTurner.address);
     if (allowance.lt(inflow)) {
-      const permit = await signPermit(erc20, signer, tokenTurner.address, inflow);
+      console.log('before permit');
+      let permit;
+      try {
+        permit = await signPermit(erc20, signer, tokenTurner.address, inflow);
+      } catch (e) {
+        console.log(e);
+      }
+      console.log('after permit');
       if (!permit) {
+        console.log('approve');
         const tx = await erc20.connect(signer).approve(tokenTurner.address, inflow);
         displayFeedback('Approve', document.querySelector('.swapbox > #feedback'), tx);
         await tx.wait();
@@ -122,12 +131,16 @@ async function swap (evt) {
     permitData,
     { value: erc20.isETH ? inflow : '0x0' },
   ];
+  console.log('sign1');
   const tokenTurnerSigner = tokenTurner.connect(signer);
+  console.log('sign2');
   const estimate = await tokenTurnerSigner.estimateGas.swapIn(...args);
   // increase gaslimit in case of non-determinism regarding uniswap
   args[args.length - 1].gasLimit = estimate.add('10000');
 
+  console.log('sign3');
   const tx = await tokenTurnerSigner.swapIn(...args);
+  console.log('sign end');
   displayFeedback('Swap', document.querySelector('.swapbox > #feedback'), tx);
   const receipt = await tx.wait();
   update();
