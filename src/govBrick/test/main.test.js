@@ -27,7 +27,7 @@ async function createTransaction (primaryType, message, signer, bridge) {
 }
 
 describe('GovBrick', async function () {
-  const { GovBrick, ExecutionProxy, TestERC20, ExecutionTest } = Artifacts;
+  const { GovBrickMock, ExecutionProxy, TestERC20, ExecutionTest } = Artifacts;
   const { rootProvider, alice, bob, charlie } = getDefaultWallets();
   let bridge;
   let govBrick;
@@ -51,10 +51,7 @@ describe('GovBrick', async function () {
   before('Prepare contracts', async () => {
     erc20 = await deploy(TestERC20, alice);
 
-    // Replace the inspection period
-    GovBrick.bytecode = GovBrick.bytecode.replace('615460', '61000a');
-
-    govBrick = await deploy(GovBrick, alice);
+    govBrick = await deploy(GovBrickMock, alice);
     myNode = await startNode('../../bricked/lib/index.js', 9999, 0, govBrick.address, TYPED_DATA);
     bridge = govBrick.connect(myNode);
 
@@ -162,7 +159,7 @@ describe('GovBrick', async function () {
 
         const evt = bridge.interface.parseLog(receipt.logs[0]).args;
         proposalIndex = evt.proposalIndex.toString();
-        proposals.push({ valid: false, args, proposalIndex, executionPermit: evt.executionPermit, txHash });
+        proposals.push({ valid: false, args, proposalIndex, txHash });
       });
 
       it('deposit: bob', async () => {
@@ -264,7 +261,7 @@ describe('GovBrick', async function () {
 
         const evt = bridge.interface.parseLog(receipt.logs[0]).args;
         proposalIndex = evt.proposalIndex.toString();
-        proposals.push({ valid: true, args, proposalIndex, executionPermit: evt.executionPermit, txHash });
+        proposals.push({ valid: true, args, proposalIndex, txHash });
       });
 
       doSleep();
@@ -321,7 +318,7 @@ describe('GovBrick', async function () {
 
           const evt = bridge.interface.parseLog(receipt.logs[0]).args;
           proposalIndex = evt.proposalIndex.toString();
-          proposals.push({ valid: true, args, proposalIndex, executionPermit: evt.executionPermit, txHash });
+          proposals.push({ valid: true, args, proposalIndex, txHash });
         });
 
         doSleep();
@@ -357,6 +354,10 @@ describe('GovBrick', async function () {
   }
 
   function doRound () {
+    it('reset proposal array', async () => {
+      proposals = [];
+    });
+
     _doRound(false);
     _doRound(true);
   }
@@ -364,7 +365,7 @@ describe('GovBrick', async function () {
   function doExecutionTest () {
     describe('on-chain execution tests', () => {
       it('check execution permit and execute', async () => {
-        for (const { args, proposalIndex, txHash, executionPermit, valid, actions } of proposals) {
+        for (const { args, proposalIndex, txHash, valid } of proposals) {
           const ok = await govBrick.executionPermits(proposalIndex);
 
           assert.equal(!!Number(ok), valid, 'execution permit only for valid proposals');
@@ -408,7 +409,6 @@ describe('GovBrick', async function () {
   });
 
   describe('chain - challenge', function () {
-    return;
     doRound();
     describe('finalize', function () {
       it('submitBlock', () => submitBlock(govBrick, rootProvider, myNode));

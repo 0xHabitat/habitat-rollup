@@ -19,7 +19,7 @@ contract GovBase is TokenBridgeBrick, UtilityBrick {
   /// @dev Constant, the inspection period defines how long it takes (in L1 blocks)
   /// until a submitted solution can be finalized.
   /// Default: 60 blocks ~ 14 minutes.
-  function INSPECTION_PERIOD () public view override returns (uint16) {
+  function INSPECTION_PERIOD () public view virtual override returns (uint16) {
     // ~84 hours
     return 21600;
   }
