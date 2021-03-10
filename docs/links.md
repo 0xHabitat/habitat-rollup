@@ -3,9 +3,13 @@
 
 ## OFFICIAL CHANNELS
 **Website** // https://0xhabitat.org/
+
 **GitHub** // https://github.com/0xHabitat
+
 **Twitter** // https://twitter.com/0xHabitat
+
 **Substack** // https://0xhabitat.substack.com/
+
 **Discord Invite** // https://discord.gg/4Cu6vBZhDp
 
 ## PLEASE UPVOTE
