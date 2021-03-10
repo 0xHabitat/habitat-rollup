@@ -1,0 +1,4 @@
+ignore:
+  - "src/common/contracts"
+  - "src/**/**/test/**.sol"
+  - "src/**/**/mocks/**.sol"
