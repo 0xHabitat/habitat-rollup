@@ -47,37 +47,40 @@ https://etherscan.io/address/0xd92efbaf6ab353fde763c9a9dd1023ecd20fa0e7
 
 ## DROPLETS
 ### Community Reserve
+https://droplet.0xhabitat.org/overview/#0x1822C9f88b18C1C2324Ae9ac0ad228aA68c56317
 https://etherscan.io/address/0x1822c9f88b18c1c2324ae9ac0ad228aa68c56317
+
 started: 2021/6/02 // 10:00 / 1622628000
 
 - 84,000,000 HBT
 - 420,000 HBT per Week via Droplet
 - = 200 weeks // ≈3.84 years
 
-https://droplet.0xhabitat.org/overview/#0x1822C9f88b18C1C2324Ae9ac0ad228aA68c56317
-
 ### Future Hire & Team
+https://droplet.0xhabitat.org/overview/#0x4498d2F48eB2D7473c30ec3B010B8c4CE69417Fb
 https://etherscan.io/address/0x4498d2f48eb2d7473c30ec3b010b8c4ce69417fb
+
 started: 2021/6/02 // 10:00 / 1622628000
 
 - 14,000,000 HBT
 - 87,500 HBT per Week via Droplet
 - = 160 Weeks // ≈3.07 years
 
-https://droplet.0xhabitat.org/overview/#0x4498d2F48eB2D7473c30ec3B010B8c4CE69417Fb
-
 ### Droplet Source Code
 https://github.com/0xHabitat/droplet/blob/master/src/dispenser/contracts/Dispenser.sol#L182
 
 ## GENESIS TEAM
 https://github.com/pinkiebell 
+
 --> [Deployer Address](https://etherscan.io/address/0xDF708717070981a8097912318C722F19eEFb3BEf)
 
 https://github.com/MaxKuck
---> [Team Address](https://etherscan.io/address/0x0B5A2A20ed3773aA33274F6684E97810338c09cB)
+
+--> [Team Address #1](https://etherscan.io/address/0x0B5A2A20ed3773aA33274F6684E97810338c09cB)
 
 https://github.com/0x-vic
---> [Team Address](https://etherscan.io/address/0x3336318C7Cd22D0A32477235637F779E7071459B)
+
+--> [Team Address #2](https://etherscan.io/address/0x3336318C7Cd22D0A32477235637F779E7071459B)
 
 ## UNISWAP
 **HBT-ETH SWAP**
