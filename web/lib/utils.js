@@ -87,9 +87,6 @@ export async function getSigner () {
   }
 
   document._signer = signer;
-  for (const iframe of document.querySelectorAll('iframe#wallet')) {
-    iframe.postMessage('init');
-  }
 
   return signer;
 }

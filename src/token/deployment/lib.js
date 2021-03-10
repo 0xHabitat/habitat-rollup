@@ -7,8 +7,10 @@ export async function deploy (artifact, wallet, ...args) {
     artifact.bytecode,
     wallet
   );
-  console.log(`Deploying ${artifact.contractName}`);
-  const contract = await _factory.deploy(...args);
+  const gwei = process.env.gwei || '2';
+  console.log(`Deploying ${artifact.contractName} using ${gwei} gwei`);
+  const contract = await _factory.deploy(...args, { gasPrice: ethers.utils.parseUnits(gwei, 'gwei') });
+  console.log(`tx: ${contract.deployTransaction.hash}`);
   await contract.deployTransaction.wait();
   console.log(`Deployed ${artifact.contractName} ${contract.address}`);
 

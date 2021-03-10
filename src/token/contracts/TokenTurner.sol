@@ -65,7 +65,7 @@ contract TokenTurner is Utilities {
   }
 
   /// @notice Used for updating the epoch and claiming any decay.
-  function updateInflow () public {
+  function updateEpoch () public {
     require(msg.sender != address(this));
     uint256 currentEpoch = getCurrentEpoch();
 
@@ -121,7 +121,7 @@ contract TokenTurner is Utilities {
     uint256[] memory swapRoute,
     bytes memory permitData
   ) external payable {
-    updateInflow();
+    updateEpoch();
     address fromToken = address(swapRoute[0]);
 
     Utilities._maybeRedeemPermit(fromToken, permitData);
@@ -179,7 +179,7 @@ contract TokenTurner is Utilities {
     uint256[] memory swapRoute,
     bytes memory permitData
   ) external {
-    updateInflow();
+    updateEpoch();
     uint256 currentEpoch = getCurrentEpoch();
     require(epoch <= currentEpoch, 'EPOCH');
 

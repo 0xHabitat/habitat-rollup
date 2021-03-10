@@ -24,7 +24,7 @@ contract TokenTurnerRopsten is TokenTurner {
 
   function getCurrentEpoch () public view override returns (uint256 epoch) {
     uint256 FUNDING_START_DATE = _startDate;
-    uint256 EPOCH_SECONDS = 1800;
+    uint256 EPOCH_SECONDS = 300;
     epoch = (block.timestamp - FUNDING_START_DATE) / EPOCH_SECONDS;
     if (epoch > MAX_EPOCH) {
       epoch = MAX_EPOCH;

@@ -352,7 +352,7 @@ describe('TokenTurner', function () {
 
       it('claims any decay', async () => {
         const daiBalance = await ctx.dai.balanceOf(ctx.tokenTurner.address);
-        const tx = await ctx.tokenTurner.updateInflow();
+        const tx = await ctx.tokenTurner.updateEpoch();
         const receipt = await tx.wait();
         const claimEvents = receipt.events.filter((e) => e.event === 'Claim');
 

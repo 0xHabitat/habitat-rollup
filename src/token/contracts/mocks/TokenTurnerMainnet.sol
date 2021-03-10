@@ -5,11 +5,13 @@ import '../TokenTurner.sol';
 
 contract TokenTurnerMainnet is TokenTurner {
   function INPUT_TOKEN () internal view override returns (address) {
-    return 0x217582928Fb133171e2c5Ca019429a3831DD9537;
+    // DAI
+    return 0x6B175474E89094C44Da98b954EedeAC495271d0F;
   }
 
   function OUTPUT_TOKEN () internal view override returns (address) {
-    return 0x26246423C568aC31CE040EedA33896AD9BDd2DfD;
+    // HBT
+    return 0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415;
   }
 
   function COMMUNITY_FUND () internal view override returns (address) {
@@ -18,8 +20,8 @@ contract TokenTurnerMainnet is TokenTurner {
   }
 
   function getCurrentEpoch () public view override returns (uint256 epoch) {
-    // ~~(Date.parse('2021-03-05 20:00 UTC+1') / 1000)
-    uint256 FUNDING_START_DATE = 1614899552;
+    // ~~(Date.parse('2021-03-10 11:00 UTC+1') / 1000)
+    uint256 FUNDING_START_DATE = 1615370400;
     // 1 week
     uint256 EPOCH_SECONDS = 604800;
     epoch = (block.timestamp - FUNDING_START_DATE) / EPOCH_SECONDS;

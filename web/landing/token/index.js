@@ -26,7 +26,6 @@ const TOKEN_TURNER_ABI = [
   'function inflowOutflow (uint256, address) public view returns (uint128 inflow, uint128 outflow)',
   'function getCurrentEpoch () public view returns (uint256 epoch)',
   'function getDecayRateForEpoch (uint256 epoch) public view returns (uint256 rate)',
-  'function updateInflow () public',
   'function getQuote (uint256 amountIn, uint256[] memory path) public view returns (uint256 inflow, uint256 outflow)',
   'function swapIn (address receiver, uint256 inputAmount, uint256[] memory swapRoute, bytes memory permitData) external payable',
   'function swapOut (address receiver, uint256 inputSellAmount, uint256 epoch, uint256[] memory swapRoute, bytes memory permitData) external',
@@ -37,6 +36,7 @@ let uniswapFactory;
 const FUNDING_PRICE = 25e6;
 let tokenTurner;
 let habitatToken;
+let swapHistoryTimer = null;
 
 async function setupTokenlist () {
   //const src = 'https://gateway.ipfs.io/ipns/tokens.uniswap.org';
@@ -130,7 +130,7 @@ async function swap (evt) {
   const tx = await tokenTurnerSigner.swapIn(...args);
   displayFeedback('Swap', document.querySelector('.swapbox > #feedback'), tx);
   const receipt = await tx.wait();
-  updateSwapHistory();
+  update();
 }
 
 async function getToken (val) {
@@ -249,10 +249,13 @@ async function swapBack (evt) {
   const tx = await tokenTurnerSigner.swapOut(...args);
   displayFeedback('Swap', evt.target.parentElement.querySelector('#feedback'), tx);
   await tx.wait();
-  updateSwapHistory();
+  update();
 }
 
 async function updateSwapHistory () {
+  if (swapHistoryTimer !== null) {
+    // swapHistoryTimer = setInterval(updateSwapHistory, 30000);
+  }
   const currentEpoch = Number(await tokenTurner.getCurrentEpoch());
   const container = document.querySelector('#swapHistory');
   const length = container.children.length;
@@ -262,12 +265,13 @@ async function updateSwapHistory () {
     e.classList.add('listitem');
     e.style.display = 'none';
     e.innerHTML = `
-    <p class='bold'></p>
+    <p class='bold' id='head'></p>
     <sep></sep>
-    <p class='bold small'></p>
     <label>
       Choose how many HBT you want to swap back
       <input id='swapout' type='number' min='0' required=true>
+      <p id='info' class='bold small padv'></p>
+      <habitat-slider></habitat-slider>
     </label>
     <label>
       Choose the token you want to receive.
@@ -278,15 +282,30 @@ async function updateSwapHistory () {
       <input id='outputAmount' disabled type='number' value='0'>
     </label>
 
-    <button class='yellow'>Swap-back</button>
-      <h6><br></h6>
-      <div id='feedback' style='max-width:42ch;'></div>
+    <button class='bold yellow'>Swap Back</button>
+    <h6><br></h6>
+    <div id='feedback' style='max-width:42ch;'></div>
     <input type='hidden' id='epoch' value='${i}'>
     `;
 
+    const swapout = e.querySelector('input#swapout');
+    const slider = e.querySelector('habitat-slider');
+    slider.addEventListener('change', function (evt) {
+      swapout.value = evt.target.value;
+    }, false);
+    swapout.addEventListener('keyup', () => {
+      if (swapout.value > swapout.max) {
+        swapout.value = swapout.max;
+      }
+      slider.setRange(0, swapout.value, swapout.total);
+    });
+    slider.addEventListener('release', () => onOutputChange(e), false);
+    //wrapListener(e.querySelector('button#maxb'), () => {
+    //  swapout.value = swapout.max;
+    //});
     wrapListener(e.querySelector('button'), swapBack);
-    wrapListener(e.querySelector('input#tokenout'), onOutputChange, 'keyup');
-    wrapListener(e.querySelector('input#swapout'), onOutputChange, 'keyup');
+    wrapListener(e.querySelector('input#tokenout'), () => onOutputChange(e), 'keyup');
+    wrapListener(swapout, () => onOutputChange(e), 'keyup');
     selectOnFocus(e);
     container.appendChild(e);
   }
@@ -300,20 +319,26 @@ async function updateSwapHistory () {
     // amount in dai
     let { inflow, outflow }= await tokenTurner.inflowOutflow(epoch, account);
     // that can be swapped
-    let available = inflow.sub(outflow);
+    let available = inflow;
     available = available.sub(available.div(100).mul(decay));
-    available = available.div(FUNDING_PRICE);
-    if (available.eq(0)) {
+    available = available.sub(outflow).div(FUNDING_PRICE);
+    // skip if nothing is available
+    if (available.lt(1)) {
       e.style.display = 'none';
       continue;
     }
     // xxx: hardcoded decimals
+    const max = ethers.utils.formatUnits(inflow.div(FUNDING_PRICE), '10');
     const amount = ethers.utils.formatUnits(available, '10');
-    e.children[0].textContent = `Epoch ${epoch + 1} | ${decay}% Decay`;
-    e.children[2].textContent = `Maximum swappable amount due to decay: ${amount}`;
-    e.children[3].children[0].value = amount;
-    e.children[3].children[0].max = amount;
+    e.querySelector('#head').textContent = `Epoch ${epoch + 1} | ${decay}% Decay`;
+    e.querySelector('#info').textContent = `Maximum swappable amount due to decay: ${amount}`;
+    const swapout = e.querySelector('#swapout');
+    swapout.value = amount;
+    swapout.max = amount;
+    swapout.total = max;
     e.style.display = 'block';
+    e.querySelector('habitat-slider').setRange(0, amount, max);
+
     nothingToSwap = false;
   }
 
@@ -323,8 +348,7 @@ async function updateSwapHistory () {
   document.querySelector('#showSwapHistory').style.display = 'none';
 }
 
-async function onOutputChange (evt) {
-  const parent = evt.target.parentElement.parentElement;
+async function onOutputChange (parent) {
   const { config, error } = parseInput(parent);
   if (error) {
     return;
@@ -334,13 +358,18 @@ async function onOutputChange (evt) {
   }
 
   // xxx: hardcoded decimals
-  const sellAmount = ethers.utils.parseUnits(config.swapout, '10');
+  const sellAmount = ethers.utils.parseUnits(Number(config.swapout).toFixed(6), '10');
   const amount = sellAmount.mul(FUNDING_PRICE);
   const outputToken = await getToken(config.tokenout);
   const route = await findOutputRoute(outputToken);
   const { inflow, outflow } = await tokenTurner.getQuote(amount, route);
   const out = ethers.utils.formatUnits(inflow, outputToken._decimals);
   parent.querySelector('input#outputAmount').value = out;
+}
+
+async function update () {
+  await updateSwapHistory();
+  await updateProgressBar();
 }
 
 async function render () {
@@ -351,10 +380,10 @@ async function render () {
 
   setupTokenlist();
   updateProgressBar();
+  setInterval(updateProgressBar, 10000);
 
   wrapListener('button#receiverAutofill', receiverAutofill);
   wrapListener('button#swap', swap);
-  setInterval(updateProgressBar, 3000);
 
   wrapListener('input#inputAmount', onInputChange, 'keyup');
   selectOnFocus('.swapbox');
