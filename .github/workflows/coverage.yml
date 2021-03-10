@@ -17,7 +17,7 @@ on:
 
 jobs:
   coverage:
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event.comment.body == '/COVERAGE'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' || github.event.comment.body == '/COVERAGE'
     timeout-minutes: 45
     runs-on: ubuntu-latest
     steps:
