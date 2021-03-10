@@ -167,6 +167,22 @@
       "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD/logo.png"
     },
     {
+      "name": "Strudel Finance",
+      "address": "0x297d33e17e61c2ddd812389c2105193f8348188a",
+      "symbol": "$TRDL",
+      "decimals": 18,
+      "chainId": 1,
+      "logoURI": ""
+    },
+    {
+      "name": "Strudel BTC",
+      "address": "0xe1406825186D63980fd6e2eC61888f7B91C4bAe4",
+      "symbol": "VBTC",
+      "decimals": 18,
+      "chainId": 1,
+      "logoURI": ""
+    },
+    {
       "chainId": 1,
       "address": "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942",
       "name": "Decentraland",
