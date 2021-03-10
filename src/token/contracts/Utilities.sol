@@ -175,7 +175,7 @@ contract Utilities {
       address pair = address(path[i] >> 1);
       uint direction = path[i] & 1;
       (uint amount0Out, uint amount1Out) = direction == 0 ? (uint(0), amountOut) : (amountOut, uint(0));
-      address to = i < path.length - 1 ? pair : _to;
+      address to = i < path.length - 1 ? address(path[i + 1] >> 1) : _to;
 
       IUniswapV2Pair(pair).swap(
         amount0Out, amount1Out, to, ""
