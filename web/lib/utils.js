@@ -343,7 +343,13 @@ async function _findDomain (token, wallet) {
 }
 
 export async function signPermit (token, wallet, spender, value) {
-  const domain = await _findDomain(token, wallet);
+  let domain;
+  try {
+    domain = await _findDomain(token, wallet);
+  } catch (e) {
+    console.log(e);
+    return;
+  }
 
   try {
     const permit = await _signPermit(token, FAKE_WALLET, domain, spender, value);
