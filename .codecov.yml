@@ -1,4 +1,3 @@
 ignore:
-  - "src/common/contracts"
-  - "src/**/**/test/**.sol"
-  - "src/**/**/mocks/**.sol"
+  - "**/mocks/*.sol"
+  - "**/test/*.sol"
