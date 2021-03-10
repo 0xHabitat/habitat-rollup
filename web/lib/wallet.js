@@ -41,7 +41,7 @@ async function update (skipInit) {
 
   center.textContent = renderAddress(account);
   left.textContent = `${renderAmount(balance)} HBT`;
-  right.textContent = network.name;
+  right.textContent = network.name === 'homestead' ? 'mainnet' : network.name;
   walletContainer.classList.add('connected');
 }
 

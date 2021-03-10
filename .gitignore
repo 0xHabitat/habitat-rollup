@@ -19,3 +19,4 @@
 !yarn.lock
 !Dockerfile
 !LICENSE
+web/lib/config.js

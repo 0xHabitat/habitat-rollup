@@ -16,6 +16,13 @@ Note: You may need to run `yarn compile` first.
 
 That provides you with a full stack environment in combination with `receipts/simple.js`.
 
+### Git Credentials
+
+This project requires private access for one repo.
+You can add a git credential to a `.env` file like this:
+```
+GIT_CREDENTIAL=https://_:<YOUR GITHUB PAN TOKEN>@github.com
+```
 
 ### Compiling Contracts
 
