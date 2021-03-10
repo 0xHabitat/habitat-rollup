@@ -1,6 +1,7 @@
 @import '../fonts/WorkSans.css';
 @import 'color.css';
 @import 'wallet.css';
+@import 'menu.css';
 
 #gradient-canvas {
   position:absolute;
