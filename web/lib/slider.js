@@ -68,10 +68,10 @@ class HabitatSlider extends HTMLElement {
     const max = this.cap / this.max;
     const min = this.min / this.max;
     const x = Math.max(Math.min(this._width * max, this._x), this._width * min);
-    const percent = (x / this._width);
+    const percent = Math.round((x / this._width) * 100);
     this._x = x;
-    this.value = Math.max(Math.min(this.cap, this.max * percent), this.min);
-    this.inner.style.width = `${percent * 100}%`;
+    this.value = Math.max(Math.min(this.cap, (this.max * percent) / 99), this.min);
+    this.inner.style.width = `${percent}%`;
 
     this.dispatchEvent(new Event('change'));
   }

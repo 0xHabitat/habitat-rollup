@@ -346,6 +346,10 @@ img.minmax {
   font-size: .8rem;
 }
 
+.smaller {
+  font-size: .7rem;
+}
+
 .big {
   font-size: 1.5rem;
 }

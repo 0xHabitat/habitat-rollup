@@ -285,17 +285,18 @@ async function updateSwapHistory () {
       <input id='swapout' type='number' min='0' required=true>
       <p id='info' class='bold small padv'></p>
       <habitat-slider></habitat-slider>
+      <button id='max' class='smaller bold purple'>Use Maximum Amount</button>
     </label>
     <label>
       Choose the token you want to receive.
-      <input required=true list='tokenlist' id='tokenout' placeholder='Choose from the list or paste the token contract address'>
+      <input required=true autocomplete=off list='tokenlist' id='tokenout' placeholder='Choose from the list or paste the token contract address'>
     </label>
     <label>
       You will receive
       <input id='outputAmount' disabled type='number' value='0'>
     </label>
 
-    <button class='bold yellow'>Swap Back</button>
+    <button id='swap' class='bold yellow'>Swap Back</button>
     <h6><br></h6>
     <div id='feedback' style='max-width:42ch;'></div>
     <input type='hidden' id='epoch' value='${i}'>
@@ -304,7 +305,10 @@ async function updateSwapHistory () {
     const swapout = e.querySelector('input#swapout');
     const slider = e.querySelector('habitat-slider');
     slider.addEventListener('change', function (evt) {
-      swapout.value = evt.target.value;
+      if (document.activeElement !== swapout) {
+        swapout.value = Number(evt.target.value).toFixed(10);
+        onOutputChange(e);
+      }
     }, false);
     swapout.addEventListener('keyup', () => {
       if (swapout.value > swapout.max) {
@@ -313,10 +317,10 @@ async function updateSwapHistory () {
       slider.setRange(0, swapout.value, swapout.total);
     });
     slider.addEventListener('release', () => onOutputChange(e), false);
-    //wrapListener(e.querySelector('button#maxb'), () => {
-    //  swapout.value = swapout.max;
-    //});
-    wrapListener(e.querySelector('button'), swapBack);
+    wrapListener(e.querySelector('button#max'), () => {
+      slider.setRange(0, swapout.max, swapout.total);
+    });
+    wrapListener(e.querySelector('button#swap'), swapBack);
     wrapListener(e.querySelector('input#tokenout'), () => onOutputChange(e), 'keyup');
     wrapListener(swapout, () => onOutputChange(e), 'keyup');
     selectOnFocus(e);
