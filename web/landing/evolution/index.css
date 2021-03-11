@@ -1,0 +1,37 @@
+.tabs > div {
+  background-color: var(--color-bg);
+  cursor: pointer;
+}
+
+.tabs > div.active {
+  background-color: transparent;
+}
+
+.tabcontainer {
+  width: max-content;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+  transition: .5s all ease-in;
+}
+
+.tabcontainer > section {
+  width: 100vw;
+}
+
+.circle {
+  width: 10rem;
+  height: 10rem;
+  border-radius: 100%;
+  background: green;
+  box-shadow: inset 0px 0px 4px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(180deg, rgba(27, 177, 134, 0.8) 0%, rgba(64, 208, 142, 0.8) 29.17%, rgba(34, 244, 177, 0.8) 63.02%, rgba(31, 219, 113, 0.8) 100%);
+}
+
+.circle > .inner {
+  width: 90%;
+  height: 90%;
+  margin: 5%;
+  border-radius: 100%;
+  background-color: var(--color-bg);
+}

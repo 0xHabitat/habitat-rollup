@@ -22,6 +22,8 @@ import {
   EPOCH_SECONDS,
 } from '/lib/config.js';
 
+import { ethers } from '/lib/extern/ethers.esm.min.js';
+
 const TOKEN_TURNER_ABI = [
   'function inflowOutflow (uint256, address) public view returns (uint128 inflow, uint128 outflow)',
   'function getCurrentEpoch () public view returns (uint256 epoch)',

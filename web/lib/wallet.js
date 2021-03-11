@@ -12,6 +12,7 @@ import {
 } from './config.js';
 
 import './colorSchemeToggle.js';
+import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 let walletContainer;
 let tokenContract;
@@ -67,7 +68,7 @@ window.addEventListener('DOMContentLoaded', render, false);
 const TEMPLATE =
 `
 <section class='wrapperNav'>
-  <div class='flex row center evenly'>
+  <div class='flex row center evenly' style='padding-right:3rem;'>
     <div>
       <object type='image/svg+xml' style='height:64px;min-width:130px;' data='/lib/assets/logoAnimated.svg'></object>
     </div>

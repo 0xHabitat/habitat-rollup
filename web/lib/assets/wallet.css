@@ -3,6 +3,7 @@
   left: 0;
   right: 0;
   position: sticky;
+  padding: 1rem 0;
   background-color: var(--color-bg);
 }
 

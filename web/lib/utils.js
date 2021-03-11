@@ -1,4 +1,5 @@
 import { ROOT_CHAIN_ID } from './config.js';
+import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export const ERC20_ABI = [
   'function name() view returns (string)',

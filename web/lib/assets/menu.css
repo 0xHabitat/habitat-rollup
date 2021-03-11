@@ -43,11 +43,10 @@
 
 #menu-items a {
   color: black;
-  font-weight: bold;
   text-align: center;
   cursor: pointer;
   display: block;
-  padding: 14px 7px;
+  padding: 1rem .5rem;
 }
 
 #menu-items a.lightstraw.active,
@@ -78,25 +77,25 @@
 /* Reposition to top right corner */
 body.with-burger-menu #menu {
   position: absolute;
-  top: 16px;
-  right: 24px;
+  top: 1rem;
+  right: 1rem;
   left: auto;
   text-align: right;
 }
 
 /* Show burger icon */
-body.with-burger-menu #menu label { 
+body.with-burger-menu #menu label {
   display: inline-block;
   margin: 0;
   line-height: 32px;
 }
 
-body.with-burger-menu #menu label:before { 
+body.with-burger-menu #menu label:before {
   content: "\2630";
   display: flex;
   justify-content: center;
   align-items: center;
-  color: black;
+  color: var(--color-text);
   font-style: normal;
   font-size: 2rem;
   cursor: pointer;
@@ -165,6 +164,3 @@ body.with-burger-menu #menu input:checked ~ #menu-items:before {
 body.with-burger-menu #menu input:checked ~ label:before {
   content: "\00D7";
 }
-
-
-
