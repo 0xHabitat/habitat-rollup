@@ -2,7 +2,7 @@
   "org": "0xHabitat",
   "repo": "habitat",
   "tokenAddress": "0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415",
-  "labels": ["Community"],
+  "labels": ["Infrastructure","v1.0","v2.0"],
   "votingMethod": "QUADRATIC",
   "chainId": 1
 }
