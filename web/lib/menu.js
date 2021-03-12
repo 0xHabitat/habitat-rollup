@@ -5,7 +5,9 @@ const TEMPLATE =
   <label for="burger"></label>
   <ul id="menu-items">
     <li><a href="/" class="lightred"><span class="icon">🏕️</span> Home</a></li>
+  <!--
     <li><a href="/evolution/" class="lightgreen"><span class="icon">🌱</span> Evolution</a></li>
+  -->
     <li><a href="/token/" class="lightstraw"><span class="icon">🌞</span> Token</a></li>
   </ul>
 </nav>`;
