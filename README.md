@@ -1,3 +1,4 @@
+[![codecov](https://codecov.io/gh/0xHabitat/habitat/branch/master/graph/badge.svg)](https://codecov.io/gh/0xHabitat/habitat)
 
 # Development
 
