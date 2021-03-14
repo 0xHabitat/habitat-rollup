@@ -254,7 +254,7 @@ async function swapBack (evt) {
 
   const signer = await getSigner();
   // xxx: hardcoded decimals
-  const sellAmount = ethers.utils.parseUnits(config.swapout, '10');
+  const sellAmount = ethers.utils.parseUnits(Number(config.swapout).toFixed(6), '10');
   const outputToken = await getToken(config.tokenout);
   const route = await findOutputRoute(outputToken);
   const { permitData } = await signPermit(habitatToken, signer, tokenTurner.address, sellAmount);
@@ -316,11 +316,24 @@ async function updateSwapHistory () {
 
     const swapout = e.querySelector('input#swapout');
     const slider = e.querySelector('habitat-slider');
+
+    let lastTimeout;
     slider.addEventListener('change', function (evt) {
       if (document.activeElement !== swapout) {
-        swapout.value = Number(evt.target.value).toFixed(10);
-        onOutputChange(e);
+        // some chromium versions select the input on change
+        // even if the default behavour of the `change` event is prevented.
+        // So, just use a timer.
+        if (lastTimeout !== undefined) {
+          clearTimeout(lastTimeout);
+        }
+        lastTimeout = setTimeout(() => {
+          swapout.disabled = false;
+        }, 1000);
+
+        swapout.disabled = true;
+        swapout.value = evt.target.value == swapout.max ? swapout.max : Number(evt.target.value).toFixed(2);
       }
+      onOutputChange(e);
     }, false);
     swapout.addEventListener('keyup', () => {
       if (swapout.value > swapout.max) {
