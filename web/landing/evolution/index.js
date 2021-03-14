@@ -148,7 +148,7 @@ async function updateSignal (ele, signal) {
   const signalStrength = signal.signalStrength.toFixed(2);
   const signalElement = ele.querySelector('#signal');
   signalElement.parentElement.parentElement.style.background =
-    `linear-gradient(0deg, var(--color-purple), transparent ${signalStrength}%)`;
+    `linear-gradient(0deg, var(--color-purple), var(--color-bg) ${signalStrength}%)`;
   const totalShares = ethers.utils.formatUnits(signal.totalShares, erc20._decimals);
   signalElement.textContent = renderAmount(totalShares);
 
