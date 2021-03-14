@@ -368,10 +368,12 @@ img.minmax {
   max-width: 80ch;
 }
 
+/*
 .item > div, .listitem > div {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
 }
+*/
 
 .overlay {
   display: flex;
@@ -475,4 +477,63 @@ iframe {
 
 .text-center {
   text-align: center;
+}
+
+habitat-slider,
+habitat-slider #inner,
+habitat-slider pin {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+habitat-slider {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--color-purple);
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(99, 91, 255, 0.5) 6.42%, rgba(59, 222, 255, 0.5) 53.21%, rgba(28, 219, 158, 0.5) 98.54%);
+}
+
+habitat-slider #inner {
+  position: relative;
+  border-radius: 6px;
+  border: 1px solid var(--color-bg);
+  height: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all .07s ease-out;
+  background: var(--color-bg);
+  background-clip: content-box;
+}
+
+habitat-slider pin {
+  display: block;
+  position: relative;
+  left: 0;
+  width: .9rem;
+  height: .9rem;
+  max-width: .9rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  margin-left: -.45rem;
+  border-radius: 100%;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
+  background-color: var(--color-white);
+  cursor: pointer;
+}
+
+habitat-slider button:hover,
+habitat-slider button:focus,
+habitat-slider button:active {
+  transition: none;
+  box-shadow:none;
+}
+
+.auto-col-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18em, 1fr));
+  gap: 8px;
+  width: 100%;
 }

@@ -18,29 +18,35 @@ class HabitatSlider extends HTMLElement {
     this._width = 0;
     this._x = 0;
 
-    this.addEventListener('mousedown', (evt) => this.handleDown(evt), false);
-    this.addEventListener('mouseup', (evt) => this.handleUp(evt), false);
-    this.addEventListener('mousemove', (evt) => this.handleMove(evt), false);
-    this.addEventListener('mouseleave', (evt) => this.handleLeave(evt), false);
+    this.addEventListener('mousedown', this, false);
+    this.addEventListener('mouseup', this, false);
+    this.addEventListener('mousemove', this, false);
+    this.addEventListener('mouseleave', this, false);
   }
 
-  setRange (min, cap, max) {
+  handleEvent (evt) {
+    evt.preventDefault();
+    this[evt.type](evt);
+  }
+
+  setRange (min, cap, max, defaultValue) {
     this.max = Number(max);
     this.cap = Number(cap);
     this.min = Number(min);
 
     this._width = this.offsetWidth;
-    this._x = (this._width * (this.cap / this.max));
+    defaultValue = defaultValue || this.cap;
+    this._x = (this._width * (defaultValue / this.max));
 
     window.requestAnimationFrame(() => this.update());
   }
 
-  handleLeave (evt) {
+  mouseleave (evt) {
     this.active = false;
     this.dispatchEvent(new Event('release'));
   }
 
-  handleDown (evt) {
+  mousedown (evt) {
     this.active = true;
     this._width = this.offsetWidth;
     if (evt.target === this.pin) {
@@ -50,13 +56,13 @@ class HabitatSlider extends HTMLElement {
     window.requestAnimationFrame(() => this.update());
   }
 
-  handleUp (evt) {
+  mouseup (evt) {
     this.active = false;
     window.requestAnimationFrame(() => this.update());
     this.dispatchEvent(new Event('release'));
   }
 
-  handleMove (evt) {
+  mousemove (evt) {
     if (!this.active || evt.target === this.pin) {
       return;
     }
@@ -71,7 +77,7 @@ class HabitatSlider extends HTMLElement {
     const percent = Math.round((x / this._width) * 100);
     this._x = x;
     this.value = Math.max(Math.min(this.cap, (this.max * percent) / 99), this.min);
-    this.inner.style.width = `${percent}%`;
+    this.inner.style['padding-left'] = `${percent}%`;
 
     this.dispatchEvent(new Event('change'));
   }

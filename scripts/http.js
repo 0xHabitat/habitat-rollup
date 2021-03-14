@@ -24,6 +24,11 @@ function onRequest (req, resp) {
       buf = fs.readFileSync(path);
     } catch (e) {
       if (e.code === 'EISDIR') {
+        if (!path.endsWith('/')) {
+          resp.writeHead(308, { location: `http://${req.headers['host']}/${path}/` });
+          resp.end();
+          return;
+        }
         path += '/index.html';
       } else {
         resp.writeHead(500);

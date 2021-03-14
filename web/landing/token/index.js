@@ -182,6 +182,16 @@ async function updateProgressBar () {
   document.querySelector('#epochDisplayDescription').textContent =
     `Epoch: ${currentEpoch + 1} / ${FUNDING_EPOCHS} | ${hbtAmount.toLocaleString()} HBT distributed`;
   document.querySelector('#epochDisplayTime').textContent = `⏱ ${time} until next epoch and ⏱ ${fundingEnds} until funding ends.`;
+
+  const swapSection = document.querySelector('#swapin');
+  const fundingOverSection = document.querySelector('#fundingOver');
+  if (progress >= 99.99) {
+    swapSection.style.display = 'none';
+    fundingOverSection.style.display = 'block';
+  } else {
+    fundingOverSection.style.display = 'none';
+    swapSection.style.display = 'block';
+  }
 }
 
 async function findInputRoute (inputToken) {

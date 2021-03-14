@@ -3,9 +3,16 @@
 #menu {
   position: absolute;
   top: 100px;
-  left: 20px;
+  left: 1em;
   background: 0;
   z-index: 10;
+  font-size: .5em;
+  transition: all .1s ease-in;
+}
+
+#menu:hover,
+#menu:focus {
+  font-size: 1em;
 }
 
 /* Hide burger */
@@ -46,7 +53,8 @@
   text-align: center;
   cursor: pointer;
   display: block;
-  padding: 1rem .5rem;
+  padding: 1em .5em;
+  font-size: 1em;
 }
 
 #menu-items a.lightstraw.active,
@@ -66,7 +74,7 @@
 
 #menu-items .icon {
   display: block;
-  font-size: 2rem;
+  font-size: 2em;
   width: auto;
 }
 
@@ -163,4 +171,8 @@ body.with-burger-menu #menu input:checked ~ #menu-items:before {
 
 body.with-burger-menu #menu input:checked ~ label:before {
   content: "\00D7";
+}
+
+body.with-burger-menu #menu {
+  font-size: 1em;
 }

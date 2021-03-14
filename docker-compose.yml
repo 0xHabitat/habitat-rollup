@@ -27,6 +27,7 @@ services:
     depends_on:
       - geth
       - web
+      - evolution
     volumes:
       - .:/app
       - node_modules:/app/node_modules
@@ -41,5 +42,24 @@ services:
     environment:
       - ROOT_RPC_URL=http://geth:8222/
 
+  evolution:
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - TEST_ENV=1
+      - GITHUB_ORG=0xHabitat
+    ports:
+      - 1111:8080
+    volumes:
+      - ./backends/evolution:/app
+      - node_modules_evolution:/app/node_modules
+    image: node:14-alpine
+    working_dir: /app
+    entrypoint: /bin/sh
+    command: "-c 'yarn && node index.mjs'"
+    tty: true
+    stdin_open: true
+
 volumes:
   node_modules:
+  node_modules_evolution:
