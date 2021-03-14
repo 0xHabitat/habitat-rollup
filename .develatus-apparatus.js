@@ -5,7 +5,7 @@ export default {
   rpcUrl: process.env.ROOT_RPC_URL,
   fuzzyMatchFactor: 0.8,
   solcSettings: {
-    evmVersion: 'istanbul',
+    evmVersion: 'berlin',
     optimizer: {
       enabled: true,
       runs: 256,
