@@ -257,14 +257,24 @@ async function swapBack (evt) {
   const sellAmount = ethers.utils.parseUnits(Number(config.swapout).toFixed(6), '10');
   const outputToken = await getToken(config.tokenout);
   const route = await findOutputRoute(outputToken);
-  const { permitData } = await signPermit(habitatToken, signer, tokenTurner.address, sellAmount);
+  let permit;
+  try {
+    permit = await signPermit(habitatToken, signer, tokenTurner.address, sellAmount);
+  } catch (e) {
+    console.log(e);
+  }
+  if (!permit) {
+    const tx = await habitatToken.connect(signer).approve(tokenTurner.address, sellAmount);
+    displayFeedback('Approve', evt.target.parentElement.querySelector('#feedback'), tx);
+    await tx.wait();
+  }
   route[0] = outputToken.isETH ? WETH : 0;
   const args = [
     await signer.getAddress(),
     sellAmount,
     config.epoch,
     route,
-    permitData,
+    permit ? permit.permitData : '0x',
   ];
   const tokenTurnerSigner = tokenTurner.connect(signer);
   const estimate = await tokenTurnerSigner.estimateGas.swapOut(...args);
