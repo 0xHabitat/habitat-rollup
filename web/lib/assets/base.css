@@ -178,7 +178,7 @@ img {
 }
 
 .shadow {
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
 }
 
 button, .button {
@@ -191,14 +191,20 @@ button, .button {
   line-height: 1;
   text-align: center;
   color: var(--color-text);
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
   border-radius: 1rem;
   vertical-align: bottom;
   white-space: pre-wrap;
   cursor: pointer;
   animation: opacity 1s ease-out;
-  border: none;
+  border: 1px solid var(--color-bg);
   background: var(--color-bg);
+}
+
+button.secondary,
+.button.secondary {
+  border-radius: .5rem;
+  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 div, button, .button {
@@ -297,6 +303,12 @@ button:active,
 .purple {
   background-color: var(--color-purple);
   color: var(--color-white);
+}
+
+.secondary.purple {
+  color: var(--color-purple);
+  border-color: var(--color-purple);
+  background: none;
 }
 
 .black {
