@@ -48,6 +48,8 @@ services:
       - PORT=8080
       - TEST_ENV=1
       - GITHUB_ORG=0xHabitat
+      - GITHUB_API_KEY=$GITHUB_API_KEY
+      - INFURA_API_KEY=$INFURA_API_KEY
     ports:
       - 1111:8080
     volumes:
