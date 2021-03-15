@@ -26,7 +26,7 @@ const VOTING_STRUCT = [
 const MAX_SIGNAL = 100;
 const SIGNAL_TEMPLATE =
 `
-<div style='height:1.5rem;overflow:hidden;'>
+<div style='height:2.5rem;overflow:hidden;'>
 <a style='font-size:1.2rem;' class='bold' target='_blank' id='title'></a>
 </div>
 <div id='labels' class='flex row'></div>
