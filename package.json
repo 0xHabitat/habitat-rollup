@@ -11,7 +11,8 @@
     "coverage": "yarn compile && develatus-apparatus",
     "test": "yarn _test \"src/*/**/*.test.js\"",
     "_test": "yarn compile && mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@",
-    "web:build:publish": "./scripts/manifest.js && ./scripts/exportBytecode.js && pin=1 ipfs-publish web/mvp"
+    "web:build:publish": "./scripts/manifest.js && ./scripts/exportBytecode.js && pin=1 ipfs-publish web/mvp",
+    "docs:solidity": "./node_modules/@NutBerry/rollup-bricks/scripts/devdoc.js"
   },
   "devDependencies": {
     "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks.git#master",
