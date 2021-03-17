@@ -38,7 +38,7 @@ const SIGNAL_TEMPLATE =
 <p>HBT</p>
 </div>
 </div>
-<p id='totalVotes' class='text-center' style='padding:.3rem;'></p>
+<p id='totalVotes' class='text-center smaller bold' style='padding:.3rem;'></p>
 <p id='feedback' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
 </center>
 
