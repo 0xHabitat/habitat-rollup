@@ -8,6 +8,7 @@ import {
   getRoute,
   secondsToHms,
   selectOnFocus,
+  renderAmount,
 } from '/lib/utils.js';
 import {
   ROOT_CHAIN_ID,
@@ -180,7 +181,7 @@ async function updateProgressBar () {
   const fundingEnds = `${secondsToHms(fundingEnd)}`;
 
   document.querySelector('#epochDisplayDescription').textContent =
-    `Epoch: ${currentEpoch + 1} / ${FUNDING_EPOCHS} | ${hbtAmount.toLocaleString()} HBT distributed`;
+    `Epoch: ${currentEpoch + 1} / ${FUNDING_EPOCHS} | ${renderAmount(FUNDING_SUPPLY - hbtAmount)} HBT remaining`;
   document.querySelector('#epochDisplayTime').textContent = `⏱ ${time} until next epoch and ⏱ ${fundingEnds} until funding ends.`;
 
   const swapSection = document.querySelector('#swapin');
