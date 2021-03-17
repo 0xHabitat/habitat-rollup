@@ -57,6 +57,8 @@ You can replace your vote any time.
 </div>
 `;
 
+let totalHolders = 0;
+
 async function fetchWrapper (...args) {
   const ret = await (await fetch(...args)).json();
   if (ret.error) {
@@ -68,8 +70,9 @@ async function fetchWrapper (...args) {
 
 async function updateStats () {
   const ret = await fetchWrapper(STATS_URL);
+  totalHolders = ret.totalHolders[HBT] | 0;
   document.querySelector('#topics').textContent = ret.totalTopics;
-  document.querySelector('#members').textContent = ret.totalHolders[HBT] | 0;
+  document.querySelector('#members').textContent = totalHolders;
   document.querySelector('#votes').textContent = ret.totalVotes;
 }
 
@@ -129,7 +132,8 @@ async function updateSignal (ele, signal) {
   link.textContent = signal.title;
   link.href = signal.link;
   ele.querySelector('#open').href = signal.link;
-  ele.querySelector('#totalVotes').textContent = `#Votes: ${signal.totalVotes}`;
+  const participationRate = signal.totalVotes / (totalHolders | 1) * 100;
+  ele.querySelector('#totalVotes').textContent = `#Votes: ${signal.totalVotes} (${participationRate.toFixed(2)}% participation)`;
 
   const labelContainer = ele.querySelector('#labels');
   labelContainer.innerHTML = '';
@@ -148,7 +152,7 @@ async function updateSignal (ele, signal) {
   const signalStrength = signal.signalStrength.toFixed(2);
   const signalElement = ele.querySelector('#signal');
   signalElement.parentElement.parentElement.style.background =
-    `linear-gradient(180deg, white ${100 - signalStrength}%, transparent 0%), linear-gradient(180deg, #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 57%)`;
+    `linear-gradient(180deg, var(--color-bg) ${100 - signalStrength}%, #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 57%)`;
   const totalShares = ethers.utils.formatUnits(signal.totalShares, erc20._decimals);
   signalElement.textContent = renderAmount(totalShares);
 
