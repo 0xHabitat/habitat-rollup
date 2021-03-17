@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/assets.css'>
+    <link rel='stylesheet' type='text/css' href='index.css'>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:site' content='@0xHabitat'>
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='https://0xhabitat.org'>
+    <meta property='og:description' content='Scaling communities with Rollup technology.'>
+    <meta property='og:image' content='/lib/assets/preview.png'>
+    <meta property='og:title' content='Habitat - Liquidity Mining'>
+    <title>Habitat - Liquidity Mining</title>
+    <script src='/lib/common.js'></script>
+  </head>
+  <body>
+    <habitat-gradient></habitat-gradient>
+    <habitat-nav></habitat-nav>
+    <habitat-menu></habitat-menu>
+    <section class='content'>
+      <section style='z-index:9;transform: translateZ(0)'>
+        <article>
+          <section class='bgwhite'>
+            <div id="menu-breakpoint"></div>
+            <section>
+              <h1><br></h1>
+              <h1>Liquidity Mining ⛏</h1>
+              <h4>Providing Liquidity on Uniswap yields 💎</h4>
+              <h1><br></h1>
+            </section>
+
+            <section id='stats'>
+              <div class='flex col center evenly'>
+                <canvas id='graph' style='width:40rem;height:20rem;'></canvas>
+                <div class='flex row evenly'>
+                  <p class='purple' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Your Reward Curve</p>
+                  <!--
+                  <p class='yellow' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Absolute Reward</p>
+                  --->
+                </div>
+                <p><br></p>
+                <p id='description'></p>
+                <label>
+                  Amount of HBT you provide
+                  <input id='amt' type='number' value='1000'>
+                  <div id='data'></div>
+                </label>
+              </div>
+            </section>
+            <h1><br></h1>
+          </section>
+        </article>
+      </section>
+    </section>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/wallet.js'></script>
+    <script type='module' src='/lib/menu.js'></script>
+    <script type='module' src='index.js'></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+div#data {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+}
+
+div#data:nth-child(odd) {
+  background-color: grey;
+}
+
+div#data > p {
+  margin: 0;
+}
