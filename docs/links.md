@@ -64,7 +64,7 @@ distributes: 14,000,000 HBT // 87,500 HBT per Week via Droplet
 over a period of 160 Weeks // ≈3.07 years
 
 #### Distribution Plan
-https://bit.ly/2PSSvyC
+http://bit.ly/HBT-distribution
 
 #### Droplet Source Code
 https://github.com/0xHabitat/droplet/blob/master/src/dispenser/contracts/Dispenser.sol#L182
