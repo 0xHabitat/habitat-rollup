@@ -26,6 +26,7 @@
   padding: .1%;
   box-shadow: inset 0px 0px 4px rgba(0, 0, 0, 0.5);
   background: linear-gradient(180deg, rgba(27, 177, 134, 0.8) 0%, rgba(64, 208, 142, 0.8) 29.17%, rgba(34, 244, 177, 0.8) 63.02%, rgba(31, 219, 113, 0.8) 100%);
+  background-blend-mode: color-dodge;
 }
 
 .circle > .inner {
