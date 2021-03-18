@@ -8,6 +8,14 @@ div#data:nth-child(odd) {
   background-color: grey;
 }
 
-div#data > p {
+div#data > p,
+div#data > a,
+#leaderboard > a,
+#leaderboard > p {
+  text-align: right;
   margin: 0;
+}
+
+.highlight {
+  border: 1px solid var(--color-blue);
 }

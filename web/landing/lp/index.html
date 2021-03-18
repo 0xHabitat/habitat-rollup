@@ -37,20 +37,26 @@
 
             <section id='stats'>
               <div class='flex col center evenly'>
-                <canvas id='graph' style='width:40rem;height:20rem;'></canvas>
-                <div class='flex row evenly'>
-                  <p class='purple' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Your Reward Curve</p>
-                  <!--
-                  <p class='yellow' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Absolute Reward</p>
-                  --->
+                <div id='minting' class='flex col center evenly'>
+                  <canvas id='graph' style='width:40rem;height:20rem;'></canvas>
+                  <div class='flex row evenly'>
+                    <p class='purple' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Reward Curve</p>
+                    <!--
+                      <p class='yellow' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Absolute Reward</p>
+                      --->
+                  </div>
+                  <p><br></p>
+                  <p id='description'></p>
+                  <label>
+                    Amount of HBT you want to provide on Uniswap
+                    <input id='amt' type='number' value='1000'>
+                    <div id='data'></div>
+                  </label>
                 </div>
-                <p><br></p>
-                <p id='description'></p>
-                <label>
-                  Amount of HBT you provide
-                  <input id='amt' type='number' value='1000'>
-                  <div id='data'></div>
-                </label>
+                <div id='timeover' style='display:none'><h3>Liquidity Rewards are over😢</h3></div>
+                <a class='button smaller blue' target='_blank' href='https://app.uniswap.org/#/add/0x0ace32f6e87ac1457a5385f8eb0208f37263b415/ETH'>Visit Uniswap Pool</a>
+                <h6><br></h6>
+                <div id='leaderboard' style='max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, max-content);'></div>
               </div>
             </section>
             <h1><br></h1>
