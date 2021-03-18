@@ -88,9 +88,19 @@ async function githubFetch (path, raw = false) {
   return raw ? str : JSON.parse(str);
 }
 
-async function fetchIssues (repo, _labels) {
-  const labels = _labels.join(';');
-  return githubFetch(`repos/${GITHUB_ORG}/${repo}/issues?state=open&labels=${labels}&per_page=100`);
+async function fetchIssues (repo, labels) {
+  const issues = [];
+
+  for (const label of labels) {
+    const ret = await githubFetch(`repos/${GITHUB_ORG}/${repo}/issues?state=open&labels=${label}&per_page=100`);
+    for (const e of ret) {
+      if (issues.findIndex((a) => a.id === e.id) === -1) {
+        issues.push(e);
+      }
+    }
+  }
+
+  return issues;
 }
 
 async function fetchTokenHolders (tokenAddress) {
