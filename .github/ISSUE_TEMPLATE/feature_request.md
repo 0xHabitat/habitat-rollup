@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 ### ⚡️ Challenge:
-A clear and concise description of what the feature you need.
+A clear and concise description of what the feature needs to solve.
 
 ### 🦋 Desired Outcome
 A clear and concise description of the results/solution that you expect.
