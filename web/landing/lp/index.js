@@ -29,6 +29,7 @@ const MAX_SHARE = Math.sqrt(MAX_HBT) * (MAX_SECONDS * MAX_SECONDS);
 const MAX_REWARD_DAY = 2143;
 const START_DATE = 1615372251;
 const END_DATE = START_DATE + MAX_SECONDS;
+const MIN_LP_AMOUNT = 300;
 
 const globalBlocks = JSON.parse(localStorage.getItem('gblocks') || '{}');
 const globalReceipts = JSON.parse(localStorage.getItem('greceipts') || '{}');
@@ -36,6 +37,10 @@ const globalReceipts = JSON.parse(localStorage.getItem('greceipts') || '{}');
 function calcDailyReward (amount, duration) {
   const rewards = [];
   let cumulative = 0;
+
+  if (amount < MIN_LP_AMOUNT) {
+    amount = 0;
+  }
 
   for (let seconds = 0; seconds < duration; seconds += ONE_DAY_SECONDS) {
     const share = (Math.sqrt(amount) * (seconds * seconds)) / MAX_SHARE;
