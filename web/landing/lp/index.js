@@ -19,14 +19,16 @@ const BURN_TOPIC = '0xdccd412f0b1252819cb1fd330b93224ca42612892bb3f4f789976e6d81
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const START_BLOCK = 12_010_274;
 
-const ONE_WEEK = 3600 * 24 * 7; // seconds
-const MAX_WEEKS = ONE_WEEK * 12;
+// seconds
+const ONE_DAY_SECONDS = 3600 * 24;
+const ONE_WEEK_SECONDS = ONE_DAY_SECONDS * 7;
+const MAX_SECONDS = ONE_WEEK_SECONDS * 12;
+const MAX_DAYS = MAX_SECONDS / ONE_DAY_SECONDS;
 const MAX_HBT = 2_000_000;
-const MAX_SHARE = Math.sqrt(MAX_HBT) * (MAX_WEEKS * MAX_WEEKS);
+const MAX_SHARE = Math.sqrt(MAX_HBT) * (MAX_SECONDS * MAX_SECONDS);
 const MAX_REWARD_DAY = 2143;
-const DAY = 3600 * 24;
 const START_DATE = 1615372251;
-const END_DATE = 1615372251 + MAX_WEEKS;
+const END_DATE = START_DATE + MAX_SECONDS;
 
 const globalBlocks = JSON.parse(localStorage.getItem('gblocks') || '{}');
 const globalReceipts = JSON.parse(localStorage.getItem('greceipts') || '{}');
@@ -35,7 +37,7 @@ function calcDailyReward (amount, duration) {
   const rewards = [];
   let cumulative = 0;
 
-  for (let seconds = 0; seconds < duration; seconds += DAY) {
+  for (let seconds = 0; seconds < duration; seconds += ONE_DAY_SECONDS) {
     const share = (Math.sqrt(amount) * (seconds * seconds)) / MAX_SHARE;
     const r = MAX_REWARD_DAY * share;
     cumulative += r;
@@ -181,7 +183,10 @@ async function render () {
     const len = rewards.length;
 
     description.textContent =
-      `The sum of the maximum reward are ${renderAmount(cumulative)} HBT by providing ${renderAmount(amount)} HBT for ${(duration / DAY).toFixed(2)} days.`;
+      `You can mine up to ${renderAmount(cumulative)} HBT by providing ${renderAmount(amount)} HBT for ${(duration / ONE_DAY_SECONDS).toFixed(2)} days.`;
+    const maxRewardAmount = MAX_REWARD_DAY * MAX_DAYS;
+    document.querySelector('#notice').textContent =
+      `Note: ${renderAmount(maxRewardAmount)} HBT are provisioned during this timeframe.\nThe reward amount will be distributed evenly along the top liquidity providers if the collective rewards are higher than this amount.`;
 
     const gap = width / len;
     const MAX_RELATIVE = rewards[len - 1];
