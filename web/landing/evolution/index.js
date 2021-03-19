@@ -157,8 +157,9 @@ async function updateSignal (ele, signal) {
   signalElement.textContent = renderAmount(totalShares);
 
   const slider = ele.querySelector('habitat-slider');
-  if (!slider.value) {
-    slider.setRange(1, 100, 100, 50);
+  const defaultValue = signal.userVotingShares !== undefined ? Number(signal.userVotingStrength) : 50;
+  if (slider.value == slider.defaultValue) {
+    slider.setRange(1, 100, 100, defaultValue);
   }
 }
 

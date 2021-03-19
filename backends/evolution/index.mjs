@@ -213,11 +213,13 @@ async function getSignals ([org, repo, account]) {
         (e) => e.message.account === account && e.message.link === issue.link
       );
       let userVotingShares = '0x0';
+      let userVotingStrength = 0;
       if (idx !== -1) {
         const vote = globalVotingCache[idx];
         userVotingShares = vote.message.shares;
+        userVotingStrength = vote.message.signalStrength;
       }
-      payload.push(Object.assign({ userVotingShares }, issue));
+      payload.push(Object.assign({ userVotingShares, userVotingStrength }, issue));
     }
     return payload;
   }
@@ -229,7 +231,7 @@ async function submitVote (_args, jsonOject) {
   // copy
   const message = {
     account: jsonOject.message.account,
-    signalStrength: jsonOject.message.signalStrength,
+    signalStrength: Number(jsonOject.message.signalStrength),
     shares: jsonOject.message.shares,
     timestamp: jsonOject.message.timestamp,
     link: jsonOject.message.link,
@@ -297,7 +299,7 @@ async function submitVote (_args, jsonOject) {
 
   await update(true);
 
-  return Object.assign({ userVotingShares: message.shares }, globalLinkIndex[message.link]);
+  return Object.assign({ userVotingShares: message.shares, userVotingStrength: message.signalStrength }, globalLinkIndex[message.link]);
 }
 
 async function getStats () {

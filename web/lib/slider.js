@@ -15,6 +15,7 @@ class HabitatSlider extends HTMLElement {
     this.min = 0;
     this.cap = 0;
     this.max = 0;
+    this.defaultValue = 0;
     this.value = 0;
     this._width = 0;
     this._x = 0;
@@ -34,10 +35,10 @@ class HabitatSlider extends HTMLElement {
     this.max = Number(max);
     this.cap = Number(cap);
     this.min = Number(min);
+    this.defaultValue = defaultValue !== undefined ? Number(defaultValue) : this.cap;
 
     this._width = this.offsetWidth;
-    defaultValue = defaultValue || this.cap;
-    this._x = (this._width * (defaultValue / this.max));
+    this._x = (this._width * (this.defaultValue / this.max));
 
     this.scheduleUpdate();
   }
@@ -91,7 +92,7 @@ class HabitatSlider extends HTMLElement {
     const x = Math.max(Math.min(this._width * max, this._x), this._width * min);
     const percent = Math.round((x / this._width) * 100);
     this._x = x;
-    this.value = Math.max(Math.min(this.cap, (this.max * percent) / 99), this.min);
+    this.value = Math.max(Math.min(this.cap, (this.max * percent) / 100), this.min);
     this.inner.style['padding-left'] = `${percent}%`;
 
     this.dispatchEvent(new Event('change'));
