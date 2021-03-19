@@ -11,6 +11,7 @@ class HabitatSlider extends HTMLElement {
     this.inner = this.children[0];
     this.pin = this.children[0].children[0];
     this.active = false;
+    this.scheduled = false;
     this.min = 0;
     this.cap = 0;
     this.max = 0;
@@ -38,11 +39,16 @@ class HabitatSlider extends HTMLElement {
     defaultValue = defaultValue || this.cap;
     this._x = (this._width * (defaultValue / this.max));
 
-    window.requestAnimationFrame(() => this.update());
+    this.scheduleUpdate();
   }
 
   mouseleave (evt) {
+    if (!this.active) {
+      return;
+    }
     this.active = false;
+    this._x = evt.offsetX;
+    this.update();
     this.dispatchEvent(new Event('release'));
   }
 
@@ -53,12 +59,12 @@ class HabitatSlider extends HTMLElement {
       return;
     }
     this._x = evt.offsetX;
-    window.requestAnimationFrame(() => this.update());
+    this.scheduleUpdate();
   }
 
   mouseup (evt) {
     this.active = false;
-    window.requestAnimationFrame(() => this.update());
+    this.scheduleUpdate();
     this.dispatchEvent(new Event('release'));
   }
 
@@ -67,10 +73,19 @@ class HabitatSlider extends HTMLElement {
       return;
     }
     this._x = evt.offsetX;
+    this.scheduleUpdate();
+  }
+
+  scheduleUpdate () {
+    if (this.scheduled) {
+      return;
+    }
+    this.scheduled = true;
     window.requestAnimationFrame(() => this.update());
   }
 
   update () {
+    this.scheduled = false;
     const max = this.cap / this.max;
     const min = this.min / this.max;
     const x = Math.max(Math.min(this._width * max, this._x), this._width * min);
