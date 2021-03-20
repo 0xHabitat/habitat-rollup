@@ -5,19 +5,15 @@
   "license": "MPL-2.0",
   "type": "module",
   "scripts": {
-    "build": "./scripts/manifest.js",
     "compile": "for x in src/*/scripts/codegen.js; do $x; done && develatus-apparatus-compile src/*/**/*.sol src/*/**/**/*.sol",
-    "dump": "for file in GovBrick.sol ExecutionProxy.sol; do DUMP_INPUT=\"$file\"-standard.json node_modules/@NutBerry/rollup-bricks/scripts/compile.js src/govBrick/contracts/$file ; done",
     "coverage": "yarn compile && develatus-apparatus",
     "test": "yarn _test \"src/*/**/*.test.js\"",
     "_test": "yarn compile && mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@",
-    "web:build:publish": "./scripts/manifest.js && ./scripts/exportBytecode.js && pin=1 ipfs-publish web/mvp",
     "docs:solidity": "./node_modules/@NutBerry/rollup-bricks/scripts/devdoc.js"
   },
   "devDependencies": {
     "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks.git#master",
     "develatus-apparatus": "https://github.com/pinkiebell/develatus-apparatus.git#v0.3.2",
-    "ipfs-tools": "https://github.com/pinkiebell/ipfs-tools.git#master",
     "ethers": "=5.0.31",
     "mocha": "=7.1.1",
     "noble-ripemd160": "=0.1.1",
