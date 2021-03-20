@@ -1,7 +1,9 @@
 @import '../fonts/WorkSans.css';
+@import '../fonts/RobotoMono.css';
 @import 'color.css';
 @import 'wallet.css';
 @import 'menu.css';
+@import 'animations.css';
 
 #gradient-canvas {
   position:absolute;
@@ -163,17 +165,16 @@ img {
   display: block;
 }
 
-@keyframes opacity {
-  from {
-    opacity: 0.1;
-  }
-  to {
-    opacity: 1.0;
-  }
-}
-
 .flex {
   display: flex;
+  flex-wrap: wrap;
+}
+
+.flexcenter {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  place-self: center;
   flex-wrap: wrap;
 }
 
@@ -268,6 +269,13 @@ footer a {
   justify-content: space-evenly;
 }
 
+.flexSpaceBetween {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
 .showcase > img {
   margin: .3rem;
 }
@@ -354,6 +362,13 @@ img.minmax {
   grid-gap: 1rem;
 }
 
+/*
+.grid-2 > p,
+.grid-2 > a {
+  margin: 0;
+}
+*/
+
 .small {
   font-size: .8rem;
 }
@@ -407,20 +422,9 @@ img.minmax {
 
 .error {
   animation: shake 1s ease-in;
-}
-
-@keyframes shake {
-  0% { transform: translate(1px, 1px) rotate(0deg); color: var(--color-error); }
-  10% { transform: translate(-1px, -2px) rotate(-1deg); color: var(--color-error); }
-  20% { transform: translate(-3px, 0px) rotate(1deg); color: var(--color-error); }
-  30% { transform: translate(3px, 2px) rotate(0deg); color: var(--color-error); }
-  40% { transform: translate(1px, -1px) rotate(1deg); color: var(--color-error); }
-  50% { transform: translate(-1px, 2px) rotate(-1deg); color: var(--color-error); }
-  60% { transform: translate(-3px, 1px) rotate(0deg); color: var(--color-error); }
-  70% { transform: translate(3px, 1px) rotate(-1deg); color: var(--color-error); }
-  80% { transform: translate(-1px, -1px) rotate(1deg); color: var(--color-error); }
-  90% { transform: translate(1px, 2px) rotate(0deg); color: var(--color-error); }
-  100% { transform: translate(1px, -2px) rotate(-1deg); color: var(--color-error); }
+  /*
+   * color: var(--color-error);
+   * */
 }
 
 label {
@@ -435,6 +439,7 @@ label {
 
 input {
   min-width: 42ch;
+  max-width: 99%;
   display: block;
   background: none;
   padding: 1rem;
@@ -548,4 +553,56 @@ habitat-slider button:active {
   grid-template-columns: repeat(auto-fill, minmax(18em, 1fr));
   gap: 8px;
   width: 100%;
+  place-content: center space-evenly;
+}
+
+textarea {
+  width: 64ch;
+  max-width: 99%;
+  min-height: 23em;
+  max-height: 100%;
+  padding: 1em;
+  border: 1px solid var(--color-black);
+}
+
+.flow/*, button, .button*/ {
+  margin: 1em;
+  animation: jumpIn 1s;
+}
+
+.flow > button {
+  display: inline-grid;
+}
+
+.flow p > span {
+  font-family: var(--font-family-mono);
+}
+
+button#expanded,
+.button#expanded {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+space {
+  display: block;
+  height: 1rem;
+}
+
+kv {
+  flex: 1 1 auto;
+  margin: 0.1em;
+  padding: 0.1em;
+}
+
+kv#title {
+  flex: 100 1 auto;
+}
+
+kv > p {
+  white-space: pre-line;
+}
+
+kv > p:nth-child(1) {
+  color: var(--color-grey);
 }

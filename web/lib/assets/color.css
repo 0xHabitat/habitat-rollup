@@ -1,11 +1,13 @@
 :root {
   --font-family-default: 'Work Sans';
+  --font-family-mono: 'Roboto Mono';
   --color-brand1: #c6f6f7;
   --color-brand2: #d9f7f6;
   --color-brand3: #eaf8f9;
   --color-brand4: #fbfafb;
   --color-black: #202020;
   --color-white: #ffffff;
+  --color-grey: #606060;
   --color-blue: #80DAED;
   --color-purple: #635BFF;
   --color-yellow: #FBDC60;

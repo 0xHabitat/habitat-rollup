@@ -37,10 +37,6 @@
   background-color: var(--color-bg);
 }
 
-.listitem {
-  margin: 1rem 0;
-}
-
 #labels > p {
   border: 1px solid;
   border-radius: 1rem;
@@ -58,7 +54,7 @@
 }
 
 .listitem {
-  min-width: 42ch;
+  min-width: auto;
   max-width: 42ch;
   margin: 1rem;
   padding: 1rem;
@@ -66,10 +62,6 @@
   border: 1px solid #C4C4C4;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
-}
-
-.listitem {
-  min-width: auto;
 }
 
 habitat-slider {
