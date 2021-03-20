@@ -4,7 +4,7 @@
 
 "@NutBerry/rollup-bricks@https://github.com/NutBerry/rollup-bricks.git#master":
   version "0.1.0"
-  resolved "https://github.com/NutBerry/rollup-bricks.git#9993d8ff43100ad49617a000284e4cf04c30c641"
+  resolved "https://github.com/NutBerry/rollup-bricks.git#5fc01c94a9e75ddac53df8709fe0c92ed93d2467"
 
 "@ethersproject/abi@5.0.12", "@ethersproject/abi@^5.0.10":
   version "5.0.12"
@@ -774,10 +774,6 @@ inherits@2, inherits@^2.0.3, inherits@^2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
-
-"ipfs-tools@https://github.com/pinkiebell/ipfs-tools.git#master":
-  version "0.1.0"
-  resolved "https://github.com/pinkiebell/ipfs-tools.git#f9624015cf2c92cef91c46ef925b5fba7a13aa2c"
 
 is-binary-path@~2.1.0:
   version "2.1.0"
