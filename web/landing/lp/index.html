@@ -26,7 +26,7 @@
     <section class='content'>
       <section style='z-index:9;transform: translateZ(0)'>
         <article>
-          <section class='bgwhite'>
+          <section class='bgwhite' style='min-height:100vh;'>
             <div id="menu-breakpoint"></div>
             <section>
               <h1><br></h1>
@@ -36,29 +36,27 @@
             </section>
 
             <section id='stats'>
-              <div class='flex col center evenly'>
+              <div class='flex col center evenly padh'>
                 <div id='minting' class='flex col center evenly'>
-                  <canvas id='graph' style='width:40rem;height:20rem;'></canvas>
-                  <div class='flex row evenly'>
-                    <p class='purple' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Reward Curve</p>
-                    <!--
-                      <p class='yellow' style='border-radius:6px;padding:.3rem;margin:.5rem;'>Absolute Reward</p>
-                      --->
-                  </div>
-                  <p><br></p>
                   <p id='description'> </p>
                   <p><br></p>
-                  <p id='notice' class='bold smaller'> </p>
                   <label>
                     Amount of HBT you want to provide on Uniswap
                     <input id='amt' type='number' value='1000'>
                     <div id='data'></div>
                   </label>
+                  <p id='notice' class='bold smaller'> </p>
                 </div>
                 <div id='timeover' style='display:none'><h3>Liquidity Rewards are over😢</h3></div>
                 <a class='button smaller blue' target='_blank' href='https://app.uniswap.org/#/add/0x0ace32f6e87ac1457a5385f8eb0208f37263b415/ETH'>Visit Uniswap Pool</a>
                 <h6><br></h6>
-                <div id='leaderboard' style='max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, max-content);'></div>
+                <div id='leaderboard' style='font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, auto);'></div>
+                <div id='progress' style='width:42ch;'>
+                  <label>
+                    Loading...
+                    <habitat-slider></habitat-slider>
+                  </label>
+                </div>
               </div>
             </section>
             <h1><br></h1>
@@ -69,6 +67,7 @@
     <script type='module' src='/lib/gradient.js'></script>
     <script type='module' src='/lib/wallet.js'></script>
     <script type='module' src='/lib/menu.js'></script>
+    <script type='module' src='/lib/slider.js'></script>
     <script type='module' src='index.js'></script>
   </body>
 </html>

@@ -18,6 +18,7 @@ const MINT_TOPIC = '0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03
 const BURN_TOPIC = '0xdccd412f0b1252819cb1fd330b93224ca42612892bb3f4f789976e6d81936496';
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const START_BLOCK = 12_010_274;
+const PRECISION = 10000;
 
 // seconds
 const ONE_DAY_SECONDS = 3600 * 24;
@@ -32,148 +33,187 @@ const END_DATE = START_DATE + MAX_SECONDS;
 const MIN_LP_AMOUNT = 300;
 
 const globalBlocks = JSON.parse(localStorage.getItem('gblocks') || '{}');
-const globalReceipts = JSON.parse(localStorage.getItem('greceipts') || '{}');
-
-function calcDailyReward (amount, duration) {
-  const rewards = [];
-  let cumulative = 0;
-
-  if (amount < MIN_LP_AMOUNT) {
-    amount = 0;
-  }
-
-  for (let seconds = 0; seconds < duration; seconds += ONE_DAY_SECONDS) {
-    const share = (Math.sqrt(amount) * (seconds * seconds)) / MAX_SHARE;
-    const r = MAX_REWARD_DAY * share;
-    cumulative += r;
-    rewards.push(r);
-  }
-
-  return { cumulative, rewards };
-}
+const provider = getProvider();
+const uniswapPair = new ethers.Contract(
+  UNISWAP_PAIR,
+  [
+    'function getReserves() public view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast)',
+    'function totalSupply() public view returns (uint256)',
+  ],
+  provider
+);
 
 async function update () {
   let account;
   if (walletIsConnected()) {
     const signer = await getSigner();
-    account = await signer.getAddress();
+    account = (await signer.getAddress()).toLowerCase();
   }
 
-  const provider = getProvider();
   const eventFilter = {
     address: UNISWAP_PAIR,
-    topics: [[MINT_TOPIC, BURN_TOPIC]],
+    topics: [[MINT_TOPIC, BURN_TOPIC, TRANSFER_TOPIC]],
     fromBlock: `0x${START_BLOCK.toString(16)}`,
     toBlock: 'latest',
   };
-
-  // fetch the mint & burn events and gather timestamps
+  // fetch mint, burn and transfer events of the uniswap pair and gather timestamps
   const logs = await provider.send('eth_getLogs', [eventFilter]);
-  let tmp = [];
-  for (const log of logs) {
-    const block = globalBlocks[log.blockHash] || await provider.getBlock(log.blockHash);
-    globalBlocks[log.blockHash] = block;
-    const timestamp = Number(block.timestamp);
+  const slider = document.querySelector('#progress habitat-slider');
+
+  // fetch timestamps
+  const todo = [];
+  let lastLog;
+  for (let i = 0, len = logs.length; i < len; i++) {
+    slider.setRange(i, i, len);
+
+    const log = logs[i];
+    const { timestamp } = globalBlocks[log.blockHash] || await provider.getBlock(log.blockHash);
+    globalBlocks[log.blockHash] = { timestamp };
 
     if (timestamp > END_DATE) {
       // done
       break;
     }
 
-    const receipt = globalReceipts[log.transactionHash] || await provider.getTransactionReceipt(log.transactionHash);
-    globalReceipts[log.transactionHash] = receipt;
-    tmp.push({ log, receipt, timestamp });
+    if (lastLog && lastLog.transactionHash === log.transactionHash) {
+      lastLog.logs.push(log);
+      if (i === len-1) {
+        todo.push(lastLog);
+      }
+    } else {
+      // sortout transactions with no mint or burn events
+      if (lastLog && lastLog.logs.find((e) => e.topics[0] === MINT_TOPIC || e.topics[0] === BURN_TOPIC)) {
+        todo.push(lastLog);
+      } else {
+        console.log('ignoring', lastLog);
+      }
+      lastLog = { transactionHash: log.transactionHash, timestamp, logs: [log] };
+    }
   }
+
+  slider.parentElement.style.display = 'none';
 
   // save/cache
   localStorage.setItem('gblocks', JSON.stringify(globalBlocks));
-  localStorage.setItem('greceipts', JSON.stringify(globalReceipts));
 
-  // filter the events and extract the token amounts
-  const accountMap = {};
-  for (const ele of tmp) {
-    const from = ele.receipt.from;
-    const timestamp = ele.timestamp;
-    let hbtValue;
-    for (const log of ele.receipt.logs) {
-      // remember the last token transfer
-      if (log.topics[0] === TRANSFER_TOPIC && log.address.toLowerCase() === HBT.toLowerCase()) {
-        hbtValue = Number(ethers.utils.formatUnits(log.data, '10'));
+  // filter the events and keep track of pool shares for each day
+  const days = [];
+  let prevDay = {};
+  let totalPool = BigInt(0);
+  // assuming insertition order
+  for (const { timestamp, logs } of todo) {
+    const day = ~~((timestamp - START_DATE) / ONE_DAY_SECONDS);
+    const accountMap = days[day] || Object.assign({}, prevDay);
+    prevDay = accountMap;
+    days[day] = accountMap;
+
+    let transfers = [];
+    for (const log of logs) {
+      const topic = log.topics[0];
+
+      if (topic === TRANSFER_TOPIC) {
+        transfers.push(log);
         continue;
       }
-      if (log.address.toLowerCase() !== UNISWAP_PAIR) {
-        // skip if target is not the uniswap pair
+
+      const isMint = topic === MINT_TOPIC;
+      const isBurn = topic === BURN_TOPIC;
+      if (!isMint && !isBurn) {
         continue;
       }
-      const isMint = log.topics[0] === MINT_TOPIC;
-      const isBurn = log.topics[0] === BURN_TOPIC;
-      if (isMint || isBurn) {
-        const ary = accountMap[from] || [];
-        ary.push({ isMint,isBurn, hbtValue, timestamp });
-        accountMap[from] = ary;
+
+      const transferAmount = BigInt(transfers[transfers.length - 1].data);
+      // for a burn, we get the owner from the transfer event before the last one
+      const from =
+        `0x${(isMint ? transfers[transfers.length - 1].topics[2] : transfers[transfers.length - 2].topics[1]).slice(-40)}`;
+      let balance = accountMap[from] || BigInt(0);
+
+      if (topic === MINT_TOPIC) {
+        totalPool += transferAmount;
+        balance += transferAmount;
       }
+      if (topic === BURN_TOPIC) {
+        totalPool -= transferAmount;
+        balance -= transferAmount;
+      }
+
+      accountMap[from] = balance;
+      accountMap.total = totalPool;
     }
   }
 
-  // calculate the average for each user
-  const now = ~~(Date.now() / 1000);
-  let res = [];
-  for (const addr in accountMap) {
-    const events = accountMap[addr];
-    let liquidity = 0;
-    let lastTime = 0;
-    let reward = 0;
-    for (const evt of events) {
-      if (!lastTime) {
-        // init
-        lastTime = evt.timestamp;
-      }
-      // calculate the reward since last time
-      const snapshot = calcDailyReward(liquidity, evt.timestamp - lastTime).cumulative;
-      lastTime = evt.timestamp;
-      reward += snapshot;
-
-      if (evt.isMint) {
-        liquidity += evt.hbtValue;
-      } else {
-        liquidity -= evt.hbtValue;
-      }
+  let totalRewards = [];
+  prevDay = undefined;
+  for (let i = 0, len = days.length; i < len; i++) {
+    const day = days[i] || prevDay;
+    if (!day) {
+      continue;
     }
-    // calculate remaining reward up to now
-    reward += calcDailyReward(liquidity, now - lastTime).cumulative;
-    // and the max reward if the liquidity stays in until `END_DATE`
-    const maxReward = reward + calcDailyReward(liquidity, END_DATE - now).cumulative;
-    res.push({ addr, reward, maxReward, liquidity });
+    prevDay = day;
+
+    let totalPool = day.total;
+    for (const addr in day) {
+      if (addr === 'total') {
+        continue;
+      }
+
+      const balance = day[addr];
+      const share = totalPool > 0n ? ((balance * BigInt(PRECISION)) / (totalPool)) : PRECISION;
+
+      let totalReward = totalRewards.find((e) => e.addr === addr);
+      if (!totalReward) {
+        totalReward = { reward: 0, share: 0, days: 0, addr: addr };
+        totalRewards.push(totalReward);
+      }
+      totalReward.days++;
+      totalReward.share = Number(share);
+      totalReward.reward += (MAX_REWARD_DAY / PRECISION) * Number(share);
+    }
   }
 
   // now sort this stuff and render it
-  res = res.sort((a, b) => b.maxReward - a.maxReward);
-  let html = '<p>Rank</p><p>Address</p><p>Current Reward</p><p>Expected Reward</p><p>Liquidity (Average)</p>';
-  for (let i = 0, len = res.length; i < len; i++) {
-    const { addr, reward, maxReward, liquidity } = res[i];
+  totalRewards = totalRewards.sort((a, b) => b.share - a.share);
+  let html = '<p>Rank</p><p>Address</p><p>Current Reward</p><p>Expected Reward</p><p>Pool Share</p>';
+  for (let i = 0, len = totalRewards.length; i < len; i++) {
+    const { addr, reward, days, share } = totalRewards[i];
+    const expectedReward = reward + (((MAX_REWARD_DAY / PRECISION) * share) * (MAX_DAYS - days));
     const highlight = account && addr === account;
     html +=
-      `<p>${highlight ? '<bold>🌟' + (i + 1) + '</bold>' : i + 1}.</p><p>${renderAddress(addr)}</p><p>${renderAmount(reward)} HBT</p><p>${renderAmount(maxReward)} HBT</p><p>${renderAmount(liquidity)} HBT</p>`;
+      `<p>${highlight ? '<bold>🌟' + (i + 1) + '</bold>' : i + 1}.</p><p>${renderAddress(addr)}</p><p>${renderAmount(reward)} HBT</p><p>${renderAmount(expectedReward)} HBT</p><p>${((share / PRECISION) * 100).toFixed(2)}%</p>`;
   }
   document.querySelector('#leaderboard').innerHTML = html;
+}
+
+let _reserves;
+let _lastUpdate = 0;
+async function getReserves () {
+  const now = Date.now();
+  if (now - _lastUpdate > 30000) {
+    _lastUpdate = now;
+    const totalSupply = await uniswapPair.totalSupply();
+    const { _reserve0, _reserve1 } = await uniswapPair.getReserves();
+    _reserves = { totalSupply, _reserve0,_reserve1 };
+  }
+
+  return _reserves;
+}
+
+async function getPoolShareFor (amount) {
+  const { totalSupply, _reserve0 } = await getReserves();
+  const amount0 = ethers.utils.parseUnits(amount.toString(), '10')
+  const liquidity = amount0.mul(totalSupply).div(_reserve0);
+  const share = Number(liquidity.mul(PRECISION).div(totalSupply.add(liquidity)));
+
+  return share;
 }
 
 async function render () {
   const description = document.querySelector('#description');
   const grid = document.querySelector('div#data');
   const input = document.querySelector('input#amt');
-  const canvas = document.querySelector('canvas#graph');
-  const ctx = canvas.getContext('2d');
-  const scale = window.devicePixelRatio;
-  const width = canvas.width;
-  const height = canvas.height;
-
-  canvas.width = Math.floor(width * scale);
-  canvas.height = Math.floor(height * scale);
-  ctx.scale(scale, scale);
   input.max = MAX_HBT;
 
-  function draw () {
+  async function draw () {
     const now = ~~(Date.now() / 1000);
 
     if (now > END_DATE) {
@@ -183,59 +223,21 @@ async function render () {
     }
 
     const amount = Number(input.value);
-    const duration = END_DATE - now;
-    const { rewards, cumulative }= calcDailyReward(amount, duration);
-    const len = rewards.length;
+    const days = ((END_DATE - now) / ONE_DAY_SECONDS);
+    const share = await getPoolShareFor(amount);
+    const expectedReward = (MAX_REWARD_DAY * (share / PRECISION)) * days;
 
     description.textContent =
-      `You can mine up to ${renderAmount(cumulative)} HBT by providing ${renderAmount(amount)} HBT for ${(duration / ONE_DAY_SECONDS).toFixed(2)} days.`;
+      `You can mine up to ${renderAmount(expectedReward)} HBT by providing ${renderAmount(amount)} HBT for ${days.toFixed(1)} days.`;
     const maxRewardAmount = MAX_REWARD_DAY * MAX_DAYS;
     document.querySelector('#notice').textContent =
-      `Note: ${renderAmount(maxRewardAmount)} HBT are provisioned during this timeframe.\nThe reward amount will be distributed evenly along the top liquidity providers if the collective rewards are higher than this amount.`;
-
-    const gap = width / len;
-    const MAX_RELATIVE = rewards[len - 1];
-    ctx.clearRect(0, 0, width, height);
-    {
-      ctx.strokeStyle = '#635BFF';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, height);
-      let x = 0;
-      for (let i = 0; i < len; i++) {
-        const r = rewards[i] / MAX_RELATIVE;
-        const y = height - (height * r);
-        ctx.lineTo(x, y);
-        //ctx.arc(x, y, 1, 0, Math.PI * 2);
-        x += gap;
-      }
-      ctx.stroke();
-      ctx.closePath();
-    }
-
-    /*
-    {
-      ctx.strokeStyle = '#FBDC60';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, height);
-      let x = 0;
-      for (let i = 0; i < len; i++) {
-        const r = rewards[i] / MAX_REWARD_DAY;
-        const y = height - (height * r);
-        ctx.lineTo(x, y);
-        x += gap;
-      }
-      ctx.stroke();
-      ctx.closePath();
-    }
-    */
+      `Note: ${renderAmount(maxRewardAmount)} HBT are provisioned during this timeframe.\n${renderAmount(MAX_REWARD_DAY)} HBT are rewarded to liquidity providers depending on their share after each day.`;
   }
 
   wrapListener(input, draw, 'keyup');
-  setInterval(update, 5000);
-  update();
   draw();
+  await update();
+  setInterval(update, 5000);
 }
 
 window.addEventListener('DOMContentLoaded', render, false);
