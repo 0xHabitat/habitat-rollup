@@ -92,6 +92,8 @@ export async function getSigner () {
     throw new Error(`Please switch your wallet network to ${name}`);
   }
 
+  // workaround that ethers.js requests eth_chainId for almost any call.
+  signer.detectNetwork = () => ROOT_CHAIN_ID;
   document._signer = signer;
 
   return signer;
