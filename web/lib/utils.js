@@ -133,21 +133,35 @@ export async function displayFeedback (tag, target, tx) {
   e.textContent = e.textContent.replace('Pending', 'Done');
 }
 
-export function secondsToHms (val) {
-  const d = Number(val);
-  if (d <= 0) {
+export function secondsToString (val) {
+  let seconds = Number(val);
+  if (seconds <= 0) {
     return 'nothing left';
   }
 
-  const h = Math.floor(d / 3600);
-  const m = Math.floor(d % 3600 / 60);
-  const s = Math.floor(d % 3600 % 60);
+  const MIN = 60;
+  const HOUR = 3600;
+  const DAY = HOUR * 24;
+  const WEEK = DAY * 7;
+  const UNITS = [WEEK, DAY, HOUR, MIN, 1];
+  const NAMES = ['week', 'day', 'hour', 'minute', 'second'];
+  let str = '';
 
-  const hDisplay = h > 0 ? h + (h == 1 ? ' hour ' : ' hours ') : '';
-  const mDisplay = m > 0 ? m + (m == 1 ? ' minute ' : ' minutes ') : '';
-  const sDisplay = m === 0 && s > 0 ? s + (s == 1 ? ' second ' : ' seconds ') : '';
+  for (let i = 0, len = UNITS.length; i < len; i++) {
+    const A = UNITS[i];
+    const t = Math.floor(seconds / A);
+    if (t > 0) {
+      const U = NAMES[i];
+      str += `${t} ${t == 1 ? U : U + 's'} `;
+      seconds -= A * t;
 
-  return hDisplay + mDisplay + sDisplay + 'left';
+      if (i > 1) {
+        break;
+      }
+    }
+  }
+
+  return str + 'left';
 }
 
 export function wrapListener (selectorOrElement, func, eventName = 'click') {
