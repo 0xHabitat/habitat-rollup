@@ -38,17 +38,23 @@ const PERMIT_EIP_2612 = new ethers.utils.Interface(
   ['function permit(address owner,address spender,uint256 value,uint256 deadline,uint8 v,bytes32 r,bytes32 s)']
 );
 const _cache = {};
-let prov;
+let _prov;
 
 export function getProvider () {
-  if (!prov) {
-    const networkName = ethers.providers.getNetwork(ROOT_CHAIN_ID).name;
-    const name = networkName === 'homestead' ? 'mainnet' : networkName;
+  if (!_prov) {
+    const name = getNetworkName(ROOT_CHAIN_ID);
     const url = `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
-    prov = new ethers.providers.JsonRpcProvider(url);
+    _prov = new ethers.providers.JsonRpcProvider(url, 'any');
+    // workaround that ethers.js requests eth_chainId for almost any call.
+    _prov.detectNetwork = () => ROOT_CHAIN_ID;
   }
 
-  return prov;
+  return _prov;
+}
+
+export function getNetworkName (id) {
+  const networkName = ethers.providers.getNetwork(id).name;
+  return networkName === 'homestead' ? 'mainnet' : networkName;
 }
 
 export async function getErc20 (addr) {
@@ -78,12 +84,11 @@ export async function getSigner () {
   await new Promise(
     (resolve) => window.ethereum.sendAsync({ jsonrpc: '2.0', id: 1, method: 'eth_requestAccounts', params: [] }, resolve)
   );
-  const signer = (new ethers.providers.Web3Provider(window.ethereum)).getSigner();
+  const signer = (new ethers.providers.Web3Provider(window.ethereum, 'any')).getSigner();
   const network = await signer.provider.getNetwork();
 
   if (network.chainId !== ROOT_CHAIN_ID) {
-    const networkName = ethers.providers.getNetwork(ROOT_CHAIN_ID).name;
-    const name = networkName === 'homestead' ? 'mainnet' : networkName;
+    const name = getNetworkName(ROOT_CHAIN_ID);
     throw new Error(`Please switch your wallet network to ${name}`);
   }
 
