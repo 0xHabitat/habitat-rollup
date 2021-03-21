@@ -46,7 +46,8 @@ export function getProvider () {
     const url = `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
     _prov = new ethers.providers.JsonRpcProvider(url, 'any');
     // workaround that ethers.js requests eth_chainId for almost any call.
-    _prov.detectNetwork = () => ROOT_CHAIN_ID;
+    const network = ethers.providers.getNetwork(ROOT_CHAIN_ID);
+    _prov.detectNetwork = async () => network;
   }
 
   return _prov;
@@ -93,7 +94,7 @@ export async function getSigner () {
   }
 
   // workaround that ethers.js requests eth_chainId for almost any call.
-  signer.detectNetwork = () => ROOT_CHAIN_ID;
+  signer.provider.detectNetwork = async () => network;
   document._signer = signer;
 
   return signer;
