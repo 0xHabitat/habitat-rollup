@@ -57,19 +57,25 @@
   font-size: 1em;
 }
 
-#menu-items a.lightstraw.active,
-#menu-items a.lightstraw:hover {
-  background-color: #fcf7e6;
+#menu-items .lightstraw {
+  --color-focus: #fcf7e6;
 }
 
-#menu-items a.lightgreen.active,
-#menu-items a.lightgreen:hover {
-  background-color: #eef6e5;
+#menu-items .lightgreen {
+  --color-focus: #eef6e5;
 }
 
-#menu-items a.lightred.active,
-#menu-items a.lightred:hover {
-  background-color: #fef4ef;
+#menu-items .lightred {
+  --color-focus: #fef4ef;
+}
+
+#menu-items .lightblue {
+  --color-focus: aliceblue;
+}
+
+#menu-items a.active,
+#menu-items a:hover {
+  background-color: var(--color-focus);
 }
 
 #menu-items .icon {
