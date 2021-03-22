@@ -36,26 +36,26 @@ describe('TokenTurner', function () {
   }
 
   it('mint dai,weth', async () => {
-    await ctx.dai.mint(alice.address, BigInt.asUintN(128, '-1'));
-    await ctx.weth.deposit({ value: parseAmount(10_000, 'weth') });
+    await (await ctx.dai.mint(alice.address, BigInt.asUintN(128, '-1'))).wait();
+    await (await ctx.weth.deposit({ value: parseAmount(10_000, 'weth') })).wait();
   });
 
   it('create & charge dai-weth pool (1000 : 1)', async () => {
     const pair = await ctx.uniswapFactory.callStatic.createPair(ctx.dai.address, ctx.weth.address);
-    await ctx.uniswapFactory.createPair(ctx.dai.address, ctx.weth.address);
-    await ctx.dai.transfer(pair, parseAmount(500_000n, 'dai'));
-    await ctx.weth.transfer(pair, parseAmount(500n, 'weth'));
-    await new ethers.Contract(pair, ['function mint(address)'], alice).mint(alice.address);
+    await (await ctx.uniswapFactory.createPair(ctx.dai.address, ctx.weth.address)).wait();
+    await (await ctx.dai.transfer(pair, parseAmount(500_000n, 'dai'))).wait();
+    await (await ctx.weth.transfer(pair, parseAmount(500n, 'weth'))).wait();
+    await (await new ethers.Contract(pair, ['function mint(address)'], alice).mint(alice.address)).wait();
   });
 
   it('charge tokenTurner with supply', async () => {
-    await ctx.hbt.transfer(ctx.tokenTurner.address, SUPPLY);
+    await (await ctx.hbt.transfer(ctx.tokenTurner.address, SUPPLY)).wait();
 
     assert.equal(SUPPLY.toString(), (await ctx.hbt.balanceOf(ctx.tokenTurner.address)).toString());
   });
 
   it('burn remaining supply', async () => {
-    await ctx.hbt.transfer(ethers.constants.AddressZero, await ctx.hbt.balanceOf(alice.address));
+    await (await ctx.hbt.transfer(ethers.constants.AddressZero, await ctx.hbt.balanceOf(alice.address))).wait();
   });
 
   it('WETH>DAI: check output amount', async () => {

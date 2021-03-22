@@ -1,5 +1,12 @@
-import { formatObject, computeVotePercentages, wrapListener, getEtherscanLink, secondsToHms } from '../common/utils.js';
-import { getProviders, sendTransaction, decodeProposalActions, executeProposalActions } from '../common/tx.js';
+import { wrapListener, getEtherscanLink, secondsToString } from '/lib/utils.js';
+import {
+  getProviders,
+  sendTransaction,
+  decodeProposalActions,
+  executeProposalActions,
+  formatObject,
+  computeVotePercentages,
+} from '/lib/rollup.js';
 
 async function submitVote (proposalIndex, uintVote) {
   const args = {
@@ -49,7 +56,7 @@ async function render () {
 
   const lengthInSeconds = (((+proposal.startingPeriod)+(+votingPeriodLength))-(+currentPeriod))*(+periodDuration);
 
-  let status = expired ? 'Voting Ended' : secondsToHms(lengthInSeconds);
+  let status = expired ? 'Voting Ended' : secondsToString(lengthInSeconds);
   if (proposal.aborted) {
     status = 'aborted by proposer';
   } else if (proposal.didPass) {

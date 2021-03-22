@@ -1,7 +1,6 @@
-import { ERC20_ABI } from '../common/constants.js';
-import { formatObject, wrapListener, alertModal } from '../common/utils.js';
-import { WithdrawFlow, DepositFlow, RagequitFlow } from '../common/flows.js';
-import { getProviders, getSigner } from '../common/tx.js';
+import { ERC20_ABI, wrapListener, alertModal } from '/lib/utils.js';
+import { WithdrawFlow, DepositFlow, RagequitFlow } from '/lib/flows.js';
+import { getProviders, getSigner, formatObject } from '/lib/rollup.js';
 
 async function getStats () {
   const signer = await getSigner();

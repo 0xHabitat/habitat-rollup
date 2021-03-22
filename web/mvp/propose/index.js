@@ -1,7 +1,6 @@
-import { formatObject, wrapListener, alertModal } from '../common/utils.js';
-import { sendTransaction, getProviders, getSigner, encodeProposalActions } from '../common/tx.js';
-import { MIN_PROPOSAL_CREATION_STAKE } from '../config.js';
-import { ERC20_ABI } from '../common/constants.js';
+import { sendTransaction, getProviders, getSigner, encodeProposalActions, formatObject } from '/lib/rollup.js';
+import { MIN_PROPOSAL_CREATION_STAKE } from '/lib/rollup-config.js';
+import { ERC20_ABI, wrapListener, alertModal } from '/lib/utils.js';
 
 function getAndReset (selector) {
   const ele = document.querySelector(selector);

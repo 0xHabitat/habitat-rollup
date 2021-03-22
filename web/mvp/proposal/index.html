@@ -4,26 +4,28 @@
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width,initial-scale=1'>
     <meta name='referrer' content='no-referrer'>
-    <link rel='stylesheet' type='text/css' href='../assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/assets.css'>
     <link rel='stylesheet' type='text/css' href='index.css'>
-    <link rel='icon' type='image/png' href='../assets/logo.png'>
-    <link rel='apple-touch-icon' href='../assets/logo.png'>
-    <title>Proposals</title>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:site' content='@0xHabitat'>
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='https://0xhabitat.org'>
+    <meta property='og:description' content='Scaling communities with Rollup technology.'>
+    <meta property='og:image' content='/lib/assets/preview.png'>
+    <meta property='og:title' content='Habitat - Proposal'>
+    <title>Habitat - Proposal</title>
+    <script src='/lib/common.js'></script>
   </head>
   <body>
-    <canvas id="gradient-canvas"></canvas>
-    <section class='wrapperNav'>
-      <div class='Nav'>
-        <a class='navLogo' href='/'></a>
-        <div>
-          <a class='button' href='/'>Proposals</a>
-          <a class='button' href='/propose/'>Submit a Proposal</a>
-          <a class='button' href='/account/'>My Account</a>
-        </div>
-      </div>
-    </section>
-    <div class='wrapperContent'>
-      <section>
+    <habitat-gradient></habitat-gradient>
+    <habitat-nav></habitat-nav>
+    <habitat-menu></habitat-menu>
+    <section class='content'>
+      <section style='z-index:9;transform: translateZ(0)'>
+       <section>
         <h1>Proposal</h1>
         <section>
           <div class='proposal'></div>
@@ -47,11 +49,12 @@
           </div>
         </section>
       </section>
-    </div>
-    <script src='https://cdn.jsdelivr.net/gh/ethers-io/ethers.js@v4.0.41/dist/ethers.min.js'
-            integrity='sha384-IdAlK0noI+bswjSrSiA28qV6LA5h1D02N+O5o6WZXfAvn/lbm/MVNaEdaebOhtPL'
-            crossorigin='anonymous'></script>
+      </section>
+    </section>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/wallet.js'></script>
+    <script type='module' src='/lib/menu.js'></script>
+    <script type='module' src='/lib/slider.js'></script>
     <script type='module' src='index.js'></script>
-    <script src="../common/Gradient/script.js"></script>
   </body>
 </html>

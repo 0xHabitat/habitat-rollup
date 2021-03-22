@@ -1,105 +1,41 @@
-import { formatObject, computeVotePercentages, secondsToHms } from './common/utils.js';
-import { getProviders } from './common/tx.js';
+import { checkScroll } from '/lib/utils.js';
+import { formatObject, computeVotePercentages, getProviders, pullEvents } from '/lib/rollup.js';
 
-async function render () {
+async function fetchCommunities () {
   const { habitat } = await getProviders();
-  const pendingContainer = document.querySelector('.pending');
-  const proposedContainer = document.querySelector('.proposed');
-  // TODO: calculate current period in seconds and display voting time left
-  const currentPeriod = await habitat.getCurrentPeriod();
-  const votingPeriodLength = await habitat.votingPeriodLength();
-  const periodDuration = await habitat.periodDuration();
-  const totalShares = await habitat.totalShares();
-
-  async function renderProposal (evt, args) {
-    const proposalIndex = args.proposalIndex.toString()
-    const proposal = await habitat.proposalQueue(proposalIndex);
-    const title = args.title;
-    const description = title.length > 24 ? title.substring(0, 21) + '...' : title;
-    const { yay, nay, participationRate } = computeVotePercentages(proposal, totalShares);
-
-    const expired = await habitat.hasVotingPeriodExpired(proposal.startingPeriod);
-    const lengthInSeconds = (((+proposal.startingPeriod)+(+votingPeriodLength))-(+currentPeriod))*(+periodDuration);
-
-    let status = expired ? 'Voting Ended' : secondsToHms(lengthInSeconds);
-    if (proposal.aborted) {
-      status = '❌';
-    } else if (proposal.didPass || proposal.processed) {
-      status = '✅';
-    }
-
-    const obj = {
-      id: proposalIndex,
-      status,
-      title: description,
-      yay: `${(yay * 100).toFixed(2)} % 👍`,
-      nay: `${(nay * 100).toFixed(2)} % 👎`,
-    };
-
-    if (!expired) {
-      obj['Participation Rate'] =  `${(participationRate * 100).toFixed(2)} %`;
-    }
-
-    const ele = document.createElement('div');
-    ele.className = 'listitem';
-    ele.appendChild(
-      formatObject(
-        obj,
-        `/proposal/#${evt.transactionHash}`
-      )
-    );
-
-    if (proposal.processed) {
-      proposedContainer.appendChild(ele);
-    } else {
-      pendingContainer.appendChild(ele);
-    }
-  }
-
   const blockNum = await habitat.provider.getBlockNumber();
-  const filter = habitat.filters.SubmitProposal();
+  const filter = habitat.filters.CommunityCreated();
+
   filter.toBlock = blockNum;
 
-  async function pull () {
-    if (filter.toBlock === 0) {
-      return;
+  checkScroll(() => console.warn('pull more'));
+
+  const container = document.querySelector('#communities');
+  for await (const evt of pullEvents(habitat, filter, 10)) {
+    const { communityId, governanceToken } = evt.args;
+    let metadata;
+    try {
+      metadata = JSON.parse(evt.args.metadata);
+    } catch (e) {
+      console.error(e);
     }
-
-    filter.fromBlock = filter.toBlock - 1;
-
-    if (filter.fromBlock < 1) {
-      filter.fromBlock = 1;
-    }
-
-    const logs = await habitat.provider.send('eth_getLogs', [filter]);
-    for (const log of logs.reverse()) {
-      const evt = habitat.interface.parseLog(log);
-
-      await renderProposal(log, evt.values);
-    }
-    filter.toBlock = filter.fromBlock - 1;
+    const child = document.createElement('div');
+    child.className = 'listitem';
+    child.innerHTML = `
+      <a href='community/#${communityId}'></a>
+      <sep></sep>
+      <label>
+      Governance Token
+      <input disabled value='${governanceToken}'>
+      </label>
+    `;
+    child.querySelector('a').textContent = (metadata ? metadata.title : '') || '???';
+    container.appendChild(child);
   }
+}
 
-  {
-    // calculates scroll position and pulls more (older) proposals if needed
-    const wrapper = document.querySelector('.wrapperContent');
-    async function _check () {
-      const fetchMore =
-        (wrapper.scrollHeight < window.screen.height)
-        || (wrapper.scrollHeight - wrapper.scrollTop) < window.screen.height * 1.5;
-
-      if (fetchMore) {
-        try {
-          await pull();
-        } catch (e) {
-          console.log(e);
-        }
-      }
-
-      window.requestAnimationFrame(_check);
-    }
-    _check();
-  }
+async function render () {
+  await fetchCommunities();
 }
 
 window.addEventListener('DOMContentLoaded', render, false);

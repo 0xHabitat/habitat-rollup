@@ -20,3 +20,4 @@
 !Dockerfile
 !LICENSE
 web/lib/config.js
+web/lib/rollup-config.js

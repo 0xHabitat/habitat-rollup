@@ -4,14 +4,14 @@ import fs from 'fs';
 import TransactionBuilder from '@NutBerry/rollup-bricks/dist/TransactionBuilder.js';
 import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
 
-import TYPED_DATA from './../src/govBrick/typedData.js';
-import { encodeProposalActions } from './../src/govBrick/test/utils.js';
+import TYPED_DATA from './../src/rollup/habitatV1.js';
+import { encodeProposalActions } from './../src/rollup/test/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
 async function sendTransaction (primaryType, message, signer, bridge) {
   if (message.nonce === undefined && builder.fieldNames[primaryType][0].name === 'nonce') {
-    message.nonce = (await bridge.nonces(signer.address)).toHexString();
+    message.nonce = (await bridge.txNonces(signer.address)).toHexString();
   }
 
   const tx = {
@@ -25,8 +25,16 @@ async function sendTransaction (primaryType, message, signer, bridge) {
 
   const txHash = await bridge.provider.send('eth_sendRawTransaction', [tx]);
   const receipt = await bridge.provider.send('eth_getTransactionReceipt', [txHash]);
+  const events = [];
+  for (const log of receipt.logs) {
+    try {
+      const evt = bridge.interface.parseLog(log);
+      events.push(evt);
+    } catch (e) {
+    }
+  }
 
-  return { txHash, receipt };
+  return { txHash, receipt, events };
 }
 
 async function deploy (artifact, args, wallet, txOverrides = {}) {
@@ -45,7 +53,7 @@ async function deploy (artifact, args, wallet, txOverrides = {}) {
 async function main () {
   const privKey = '0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501200';
   //
-  const GovBrick = JSON.parse(fs.readFileSync('./build/contracts/GovBrick.json'));
+  const HabitatV1Mock = JSON.parse(fs.readFileSync('./build/contracts/HabitatV1Mock.json'));
   const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
   const ERC20 = JSON.parse(fs.readFileSync('./build/contracts/TestERC20.json'));
   //
@@ -54,7 +62,7 @@ async function main () {
   const provider = new ethers.providers.JsonRpcProvider('http://localhost:8111');
   const wallet = new ethers.Wallet(privKey, rootProvider);
   //
-  const bridgeL1 = await deploy(GovBrick, [], wallet);
+  const bridgeL1 = await deploy(HabitatV1Mock, [], wallet);
   const execProxy = await deploy(ExecutionProxy, [bridgeL1.address], wallet);
   const erc20 = await deploy(ERC20, [], wallet);
 
@@ -73,40 +81,44 @@ async function main () {
     await startServer(br, { host: '0.0.0.0', rpcPort: 8111 });
     await br.init();
     // edit the config file
-    const path = './web/.config.js';
+    const path = './web/lib/.rollup-config.js';
     const config = fs.readFileSync(path).toString().split('\n').filter((e) => e.indexOf('EXECUTION_PROXY_ADDRESS') === -1);
     config.push(`export const EXECUTION_PROXY_ADDRESS = '${execProxy.address}';`);
     console.log(config);
-    fs.writeFileSync(
-      './web/config.js',
-      config.join('\n')
-    );
+    fs.writeFileSync('./web/lib/rollup-config.js', config.join('\n'));
 
     // try to forward the chain at a interval
     setInterval(async () => {
       await br.forwardChain();
       // forward
       await br.directReplay(BigInt((await bridgeL1.finalizedHeight()).add(1)));
-    }, 1000);
+    }, 3000);
   }
   //
   const bridgeL2 = bridgeL1.connect(provider);
 
   {
-    const args = {
-      summoner: wallet.address,
-      approvedToken: erc20.address,
-      periodDuration: 1,
-      votingPeriod: 30,
-      gracePeriod: 1,
-      abortWindow: 1,
-      dilutionBound: 1,
-      summoningTime: ~~(Date.now() / 1000),
-    };
+    for (let i = 0; i < 32; i++) {
+      let args = {
+        governanceToken: erc20.address,
+        metadata: JSON.stringify({ title: `Community #${i}` }),
+      };
+      let tmp = await sendTransaction('CreateCommunity', args, wallet, bridgeL2);
 
-    const { txHash, receipt } = await sendTransaction('InitMoloch', args, wallet, bridgeL2);
-    // submit block
-    await provider.send('debug_submitBlock', []);
+      args = {
+        communityId: tmp.events[0].args.communityId,
+        condition: ethers.constants.AddressZero,
+      };
+      tmp = await sendTransaction('CreateVault', args, wallet, bridgeL2);
+
+      args = {
+        startDate: ~~(Date.now() / 1000) + i,
+        vault: tmp.events[0].args.vaultAddress,
+        title: 'Foo the Bar',
+        actions: '0x',
+      };
+      tmp = await sendTransaction('CreateProposal', args, wallet, bridgeL2);
+    }
   }
 
   {
@@ -124,42 +136,6 @@ async function main () {
     while (oldBlock === nBlock) {
       nBlock = await provider.getBlockNumber();
     }
-  }
-
-  {
-    const args = {
-      startingPeriod: 1,
-      title: 'hello alice',
-      details: 'Hello World',
-      actions: '0x',
-    };
-
-    const { txHash, receipt } = await sendTransaction('SubmitProposal', args, wallet, bridgeL2);
-  }
-
-  {
-    const args = {
-      startingPeriod: 1,
-      title: 'hello 👋',
-      details: 'Hello World\nFoo the bar. Wrong proposal actions are attached',
-      actions: '0xff',
-    };
-
-    const { txHash, receipt } = await sendTransaction('SubmitProposal', args, wallet, bridgeL2);
-  }
-
-  {
-    const args = {
-      startingPeriod: 1,
-      title: 'hello 👋',
-      details: 'Hello World2\nFoo the bar. Correct proposal actions are attached',
-      actions: encodeProposalActions([bridgeL1.address, bridgeL1.interface.encodeFunctionData('MAX_BLOCK_SIZE', [])]),
-    };
-
-    const { txHash, receipt } = await sendTransaction('SubmitProposal', args, wallet, bridgeL2);
-
-    // vote yes
-    await sendTransaction('SubmitVote', { uintVote: 1, proposalIndex: 2 }, wallet, bridgeL2);
   }
 }
 

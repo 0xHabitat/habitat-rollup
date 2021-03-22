@@ -426,3 +426,23 @@ export function selectOnFocus (selectorOrElement) {
     input.addEventListener('focus', (evt) => evt.target.select(), false);
   }
 }
+
+export function checkScroll (selectorOrElement, callback) {
+  const el = typeof selectorOrElement === 'string' ? document.querySelector(selectorOrElement) : selectorOrElement;
+  async function _check () {
+    const fetchMore =
+      (el.scrollHeight < window.innerHeight)
+      || (el.scrollHeight - el.scrollTop) < window.innerHeight * 1.5;
+
+    if (fetchMore) {
+      try {
+        await callback();
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
+    window.requestAnimationFrame(_check);
+  }
+  _check();
+}
