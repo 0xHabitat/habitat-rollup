@@ -5,7 +5,7 @@ import './HabitatBase.sol';
 
 /// @notice Voting Functionality.
 contract HabitatVoting is HabitatBase {
-  event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate);
+  event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string title, bytes actions);
   event VotedOnProposal(bytes32 indexed proposalId);
 
   /// xxx: change this to support the convention: community > (vault w/ condition). {proposal,vote,finalize}
@@ -14,7 +14,7 @@ contract HabitatVoting is HabitatBase {
     uint256 nonce,
     uint256 startDate,
     address vault,
-    string memory title,
+    string calldata title,
     bytes memory actions
   ) external {
     HabitatBase._commonChecks();
@@ -46,7 +46,7 @@ contract HabitatVoting is HabitatBase {
 
     proposal[proposalId][vault] = startDate;
 
-    emit ProposalCreated(vault, proposalId, startDate);
+    emit ProposalCreated(vault, proposalId, startDate, title, actions);
     UtilityBrick._emitTransactionDeadline(startDate);
   }
 

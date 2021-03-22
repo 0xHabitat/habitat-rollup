@@ -136,7 +136,7 @@ export async function displayFeedback (tag, target, tx) {
 export function secondsToString (val) {
   let seconds = Number(val);
   if (seconds <= 0) {
-    return 'nothing left';
+    return '';
   }
 
   const MIN = 60;
@@ -161,7 +161,7 @@ export function secondsToString (val) {
     }
   }
 
-  return str + 'left';
+  return str;
 }
 
 export function wrapListener (selectorOrElement, func, eventName = 'click') {

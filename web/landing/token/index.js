@@ -177,8 +177,8 @@ async function updateProgressBar () {
   const nextEpoch = FUNDING_START_DATE + ((currentEpoch + 1) * EPOCH_SECONDS);
   const nextEpochDelta = nextEpoch - now;
   const fundingEnd = FUNDING_START_DATE + (EPOCH_SECONDS * FUNDING_EPOCHS) - now;
-  const time = `${secondsToString(nextEpochDelta)}`;
-  const fundingEnds = `${secondsToString(fundingEnd)}`;
+  const time = `${secondsToString(nextEpochDelta) || 'nothing '}left`;
+  const fundingEnds = `${secondsToString(fundingEnd) || 'nothing '}left`;
 
   document.querySelector('#epochDisplayDescription').textContent =
     `Epoch: ${currentEpoch + 1} / ${FUNDING_EPOCHS} | ${renderAmount(FUNDING_SUPPLY - hbtAmount)} HBT remaining`;

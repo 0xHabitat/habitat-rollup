@@ -8,7 +8,7 @@ async function fetchCommunities () {
 
   filter.toBlock = blockNum;
 
-  checkScroll(() => console.warn('pull more'));
+  checkScroll('.content', () => console.warn('pull more'));
 
   const container = document.querySelector('#communities');
   for await (const evt of pullEvents(habitat, filter, 10)) {

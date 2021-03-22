@@ -6,6 +6,7 @@ import {
   getProvider,
   renderAddress,
   getEtherscanLink,
+  secondsToString,
 } from '/lib/utils.js';
 import {
   HBT,
@@ -44,6 +45,9 @@ const uniswapPair = new ethers.Contract(
 );
 
 async function update () {
+  const delta = END_DATE - ~~(Date.now() / 1000);
+  document.querySelector('#timeLeft').textContent = secondsToString(delta);
+
   let account;
   if (walletIsConnected()) {
     const signer = await getSigner();
@@ -226,6 +230,8 @@ async function render () {
     const days = ((END_DATE - now) / ONE_DAY_SECONDS);
     const share = await getPoolShareFor(amount);
     const expectedReward = (MAX_REWARD_DAY * (share / PRECISION)) * days;
+
+    document.querySelector('#yieldPercent').textContent = `${((expectedReward / amount) * 100).toFixed(2)}%`;
 
     description.textContent =
       `You can mine up to ${renderAmount(expectedReward)} HBT by providing ${renderAmount(amount)} HBT for ${days.toFixed(1)} days.`;

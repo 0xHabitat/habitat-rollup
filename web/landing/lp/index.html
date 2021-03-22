@@ -31,20 +31,31 @@
             <section>
               <h1><br></h1>
               <h1>Liquidity Mining ⛏</h1>
-              <h4>Providing Liquidity on Uniswap yields 💎</h4>
+              <h4>Providing Liquidity for Uniswap Pool</h4>
               <h1><br></h1>
             </section>
 
             <section id='stats'>
               <div class='flex col center evenly padh'>
                 <div id='minting' class='flex col center evenly'>
-                  <p id='description'> </p>
-                  <p><br></p>
+                  <div class='flex row center evenly' style='width:100%;'>
+                    <div>
+                      <p>Current yield:</p>
+                      <p class='text-center bold padv' id='yieldPercent'> </p>
+                    </div>
+                    <div>
+                      <p>Time left:</p>
+                      <p class='text-center bold padv' id='timeLeft'> </p>
+                    </div>
+                  </div>
                   <label>
                     Amount of HBT you want to provide on Uniswap
                     <input id='amt' type='number' value='1000'>
                     <div id='data'></div>
                   </label>
+                  <p><br></p>
+                  <p id='description'> </p>
+                  <p><br></p>
                   <p id='notice' class='bold smaller'> </p>
                 </div>
                 <div id='timeover' style='display:none'><h3>Liquidity Rewards are over😢</h3></div>
