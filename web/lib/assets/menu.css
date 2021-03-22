@@ -119,8 +119,8 @@ body.with-burger-menu #menu label:before {
 /* Circle-shaped semi-transparent background. Hidden by default */
 body.with-burger-menu #menu-items:before {
   background-color: white;
-  width: 250px;
-  height: 250px;
+  width: 300px;
+  height: 300px;
   border-radius: 100%;
   content: "";
   display: none;
