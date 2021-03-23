@@ -36,6 +36,7 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'communityId', type: 'bytes32' },
       { name: 'condition', type: 'address' },
+      { name: 'metadata', type: 'string' },
     ],
     SubmitModule: [
       // xxx: args

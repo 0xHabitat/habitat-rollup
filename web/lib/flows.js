@@ -1,6 +1,7 @@
 import { ROOT_CHAIN_ID } from './rollup-config.js';
-import { ERC20_ABI } from './utils.js';
+import { ERC20_ABI, getSigner, setupTokenlist, getToken } from './utils.js';
 import { getProviders, sendTransaction } from './rollup.js';
+import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export function stringDance (ele, str, _childs, idx, _skip) {
   if (_skip) {
@@ -61,6 +62,7 @@ export class BaseFlow {
     this.input.disabled = true;
     this.input.addEventListener('keyup', this.onInput.bind(this), false);
     this.input.setAttribute('list', 'tokenlist');
+    this.input.autocomplete = 'off';
     this.container.appendChild(this.input);
 
     this.cancelButton = document.createElement('button');
@@ -99,20 +101,27 @@ export class BaseFlow {
     this.input.focus();
 
     stringDance(this.notifyBox, str);
+
+    this._buttonCallback = () => this.onInput();
+    this.confirmButton.textContent = 'Continue';
+    this.confirmButton.style.visibility = 'visible';
+    this.confirmButton.style.animation = 'jumpIn 1s';
   }
 
   onInput (evt) {
-    evt.preventDefault();
-    evt.stopImmediatePropagation();
+    if (evt) {
+      evt.preventDefault();
+      evt.stopImmediatePropagation();
+    }
 
     // enter
-    if (evt.which === 13) {
-      const str = evt.target.value.split(' - ')[0];
+    if (!evt || evt.which === 13) {
+      const str = this.input.value.split(' - ')[0];
 
-      evt.target.blur();
-      evt.target.value = '';
-      evt.target.placeholder = '';
-      evt.target.disabled = true;
+      this.input.blur();
+      this.input.value = '';
+      this.input.placeholder = '';
+      this.input.disabled = true;
 
       this.handleCallback(this._inputCallback, str);
     }
@@ -206,12 +215,12 @@ export class BaseFlow {
   }
 
   async onSetupWallet () {
-    if (!window.ethereum) {
-      throw new Error('No Ethereum Provider found.');
-    }
-
     this.write('Connecting to wallet...');
 
+
+    this.signer = await getSigner();
+    this.runNext(this.setupFlow);
+    /*
     await window.ethereum.enable();
 
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -229,7 +238,7 @@ export class BaseFlow {
     this.erc20 = new ethers.Contract(tokenAddress, ERC20_ABI, rootProvider);
     this.tokenSymbol = await this.erc20.symbol();
 
-    this.runNext(this.setupFlow);
+    */
   }
 }
 
@@ -381,5 +390,65 @@ export class RagequitFlow extends BaseFlow {
       `Ragequit transaction hash: ${receipt.transactionHash}. It can take an hour before it becomes available to withdraw.`,
       this.onDone
     );
+  }
+}
+
+export class CreateCommunityFlow extends BaseFlow {
+  constructor (root) {
+    super(root);
+
+    this.context = {};
+    this.runNext(this.setupWallet);
+  }
+
+  async setupFlow () {
+    this.ask(
+      `What should be the name of your community?`,
+      'Community Name',
+      this.confirmName
+    );
+  }
+
+  async confirmName (str) {
+    this.context.name = str;
+    await setupTokenlist();
+    this.input.setAttribute('list', 'tokenlist');
+
+    this.ask(
+      `What is the Governance Token of the community?`,
+      'Governance Token',
+      this.confirmGovernanceToken
+    );
+  }
+
+  async confirmGovernanceToken (str) {
+    const erc20 = await getToken(str);
+    this.context.governanceToken = erc20.address;
+    const tknName = await erc20.name();
+    this.confirm(
+      'Looks Good',
+      `So, you are creating ${this.context.name} by using ${tknName}?`,
+      this.looksGood
+    );
+  }
+
+  async looksGood () {
+    let args = {
+      governanceToken: this.context.governanceToken,
+      metadata: JSON.stringify({ title: this.context.name }),
+    };
+    let tmp = await sendTransaction('CreateCommunity', args, this.signer, this.habitat);
+
+    this.confirm(
+      'Done',
+      'Confirmed! Welcome to the 🏕',
+      this.onDone
+    );
+  }
+}
+
+export class CreateTreasuryFlow extends CreateCommunityFlow {
+  constructor (root) {
+    super(root);
   }
 }

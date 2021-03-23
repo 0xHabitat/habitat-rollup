@@ -1,5 +1,6 @@
-import { checkScroll } from '/lib/utils.js';
+import { checkScroll, wrapListener, renderAddress } from '/lib/utils.js';
 import { getProviders, pullEvents } from '/lib/rollup.js';
+import { CreateTreasuryFlow } from '/lib/flows.js';
 
 async function fetchVaults (communityId) {
   const { habitat } = await getProviders();
@@ -15,7 +16,7 @@ async function fetchVaults (communityId) {
     const { vaultAddress, condition } = evt.args;
     let metadata;
     try {
-      //metadata = JSON.parse(evt.args.metadata);
+      metadata = JSON.parse(evt.args.metadata);
     } catch (e) {
       console.error(e);
     }
@@ -30,7 +31,7 @@ async function fetchVaults (communityId) {
       </label>
       <label>
       Condition
-      <input disabled value='${condition}'>
+      <input disabled value='${renderAddress(condition)}'>
       </label>
     `;
     child.querySelector('a').textContent = (metadata ? metadata.title : '') || '???';
@@ -41,6 +42,7 @@ async function fetchVaults (communityId) {
 async function render () {
   // a community has vaults, proposals
   const communityId = window.location.hash.replace('#', '');
+  wrapListener('button#treasury', (evt) => new CreateTreasuryFlow(evt.target));
   await fetchVaults(communityId);
 }
 

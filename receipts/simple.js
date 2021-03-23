@@ -108,6 +108,7 @@ async function main () {
       args = {
         communityId: tmp.events[0].args.communityId,
         condition: ethers.constants.AddressZero,
+        metadata: JSON.stringify({ title: `Test Vault` }),
       };
       tmp = await sendTransaction('CreateVault', args, wallet, bridgeL2);
 

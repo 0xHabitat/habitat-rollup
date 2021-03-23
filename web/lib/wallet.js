@@ -67,7 +67,7 @@ window.addEventListener('DOMContentLoaded', render, false);
 
 const TEMPLATE =
 `
-<section class='wrapperNav'>
+<div class='wrapperNav'>
   <div class='flex row center evenly' style='padding-right:3rem;'>
     <div>
       <object type='image/svg+xml' style='height:64px;min-width:130px;' data='/lib/assets/logoAnimated.svg'></object>
@@ -81,7 +81,7 @@ const TEMPLATE =
       </div>
     </div>
   </div>
-</section>`;
+</div>`;
 
 class HabitatNav extends HTMLElement {
   constructor() {

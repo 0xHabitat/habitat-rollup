@@ -1,4 +1,4 @@
-import { ROOT_CHAIN_ID } from './config.js';
+import { ROOT_CHAIN_ID, WETH } from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export const ERC20_ABI = [
@@ -445,4 +445,43 @@ export function checkScroll (selectorOrElement, callback) {
     window.requestAnimationFrame(_check);
   }
   _check();
+}
+
+export async function setupTokenlist () {
+  if (document.querySelector('datalist#tokenlist')) {
+    return;
+  }
+
+  //const src = 'https://gateway.ipfs.io/ipns/tokens.uniswap.org';
+  const src = '/lib/tokens.uniswap.org';
+  const { tokens } = await (await fetch(src)).json();
+  const datalist = document.createElement('datalist');
+
+  for (const token of tokens) {
+    if (token.chainId !== ROOT_CHAIN_ID) {
+      continue;
+    }
+
+    const opt = document.createElement('option');
+    opt.value = `${token.name} (${token.symbol}) ${token.address}`;
+    datalist.appendChild(opt);
+  }
+
+  datalist.id = 'tokenlist';
+  document.body.appendChild(datalist);
+}
+
+export async function getToken (val) {
+  const defaultProvider = getProvider();
+  const token = ethers.utils.getAddress(val.split(' ').pop());
+  if (token.toLowerCase() === ethers.constants.AddressZero) {
+    return { isETH: true, address: WETH, _decimals: 18,
+      balanceOf: defaultProvider.getBalance.bind(defaultProvider),
+    };
+  }
+
+  const tokenAddress = await defaultProvider.resolveName(token);
+  const erc20 = await getErc20(tokenAddress);
+
+  return erc20;
 }

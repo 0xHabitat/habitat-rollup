@@ -91,7 +91,7 @@ html, body, .button, button, input, label {
 div {
   display: block;
   margin: 0;
-  animation: opacity .3s ease-out;
+  transition: .3s ease-in;
 }
 
 a, p {
@@ -197,19 +197,17 @@ button, .button {
   vertical-align: bottom;
   white-space: pre-wrap;
   cursor: pointer;
+  transition: .3s ease-out;
   animation: opacity 1s ease-out;
-  border: 1px solid var(--color-bg);
+  border: 1px solid var(--color-white);
   background: var(--color-bg);
+  overflow: hidden;
 }
 
 button.secondary,
 .button.secondary {
   border-radius: .5rem;
   box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.25);
-}
-
-div, button, .button {
-  transition: .3s ease-out;
 }
 
 button:disabled, .button:disabled {
@@ -413,7 +411,7 @@ img.minmax {
   left: 0;
   z-index: 100;
   background: var(--color-bg);
-  animation: opacity .3s ease-out;
+  animation: opacity .3s ease-in;
 }
 
 .overlay > .listitem {
@@ -519,7 +517,7 @@ habitat-slider #inner {
   height: 1rem;
   width: 100%;
   box-sizing: border-box;
-  transition: all .07s ease-out;
+  transition: all .07s linear;
   background: var(--color-bg);
   background-clip: content-box;
 }

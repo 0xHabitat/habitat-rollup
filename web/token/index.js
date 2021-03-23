@@ -9,6 +9,8 @@ import {
   secondsToString,
   selectOnFocus,
   renderAmount,
+  setupTokenlist,
+  getToken,
 } from '/lib/utils.js';
 import {
   ROOT_CHAIN_ID,
@@ -40,26 +42,6 @@ const FUNDING_PRICE = 25e6;
 let tokenTurner;
 let habitatToken;
 let swapHistoryTimer = null;
-
-async function setupTokenlist () {
-  //const src = 'https://gateway.ipfs.io/ipns/tokens.uniswap.org';
-  const src = './tokens.uniswap.org';
-  const { tokens } = await (await fetch(src)).json();
-  const datalist = document.createElement('datalist');
-
-  for (const token of tokens) {
-    if (token.chainId !== ROOT_CHAIN_ID) {
-      continue;
-    }
-
-    const opt = document.createElement('option');
-    opt.value = `${token.name} (${token.symbol}) ${token.address}`;
-    datalist.appendChild(opt);
-  }
-
-  datalist.id = 'tokenlist';
-  document.body.appendChild(datalist);
-}
 
 async function receiverAutofill (evt) {
   const signer = await getSigner();
@@ -147,20 +129,6 @@ async function swap (evt) {
   displayFeedback('Swap', document.querySelector('.swapbox > #feedback'), tx);
   const receipt = await tx.wait();
   update();
-}
-
-async function getToken (val) {
-  const token = ethers.utils.getAddress(val.split(' ').pop());
-  if (token.toLowerCase() === ethers.constants.AddressZero) {
-    return { isETH: true, address: WETH, _decimals: 18,
-      balanceOf: defaultProvider.getBalance.bind(defaultProvider),
-    };
-  }
-
-  const tokenAddress = await defaultProvider.resolveName(token);
-  const erc20 = await getErc20(tokenAddress);
-
-  return erc20;
 }
 
 async function updateProgressBar () {

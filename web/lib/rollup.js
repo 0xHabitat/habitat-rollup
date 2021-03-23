@@ -47,7 +47,7 @@ export async function sendTransaction (primaryType, message) {
   const signerAddress = await signer.getAddress();
 
   if (message.nonce === undefined && TYPED_DATA.types[primaryType][0].name === 'nonce') {
-    message.nonce = (await habitat.nonces(signerAddress)).toHexString();
+    message.nonce = (await habitat.txNonces(signerAddress)).toHexString();
   }
 
   const callResult = await habitat.provider.send('eth_call', [{ from: signerAddress, primaryType, message }]);

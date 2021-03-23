@@ -1,5 +1,6 @@
-import { checkScroll } from '/lib/utils.js';
+import { checkScroll, wrapListener } from '/lib/utils.js';
 import { formatObject, computeVotePercentages, getProviders, pullEvents } from '/lib/rollup.js';
+import { CreateCommunityFlow } from '/lib/flows.js';
 
 async function fetchCommunities () {
   const { habitat } = await getProviders();
@@ -35,6 +36,7 @@ async function fetchCommunities () {
 }
 
 async function render () {
+  wrapListener('button#community', (evt) => new CreateCommunityFlow(evt.target));
   await fetchCommunities();
 }
 

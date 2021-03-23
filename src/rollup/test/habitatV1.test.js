@@ -194,6 +194,7 @@ describe('HabitatV1', async function () {
         const args = {
           communityId,
           condition: vaultCondition,
+          metadata: '{}',
         };
         const { txHash, receipt } = await createTransaction('CreateVault', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
@@ -245,6 +246,7 @@ describe('HabitatV1', async function () {
         const args = {
           communityId,
           condition: vaultCondition,
+          metadata: '{}',
         };
         const { txHash, receipt } = await createTransaction('CreateVault', args, alice, habitat);
         assert.equal(receipt.status, '0x1');

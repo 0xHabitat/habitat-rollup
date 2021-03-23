@@ -324,17 +324,17 @@ case 4 {
 // end of CreateCommunity
 
 // start of CreateVault
-// typeHash: 0x9048b6c78b353f7da2f5c13d920a58195cf2d05ba07969c220f380910c3a3df4
-// function: onCreateVault(address,uint256,bytes32,address)
+// typeHash: 0x6f70797b7bf84e5eb6136f9bba812b553d6bfd37e9b86a9016c12a59a9b58eaf
+// function: onCreateVault(address,uint256,bytes32,address,string)
 case 5 {
-  let headSize := 128
+  let headSize := 160
   let typeLen := 0
-  let txPtr := 320
-  let endOfSlot := add(txPtr, 128)
+  let txPtr := 384
+  let endOfSlot := add(txPtr, 160)
 
-  txPtr := 352
+  txPtr := 416
   // typeHash of CreateVault
-  mstore(0, 0x9048b6c78b353f7da2f5c13d920a58195cf2d05ba07969c220f380910c3a3df4)
+  mstore(0, 0x6f70797b7bf84e5eb6136f9bba812b553d6bfd37e9b86a9016c12a59a9b58eaf)
   // uint256 CreateVault.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -359,8 +359,21 @@ case 5 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
+  // string CreateVault.metadata
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(128, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
   // typeHash
-  let structHash := keccak256(0, 128)
+  let structHash := keccak256(0, 160)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -374,10 +387,10 @@ case 5 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(288, 0xeb21e53f)
-  mstore(320, mload(128))
+  mstore(352, 0xa37bbbe8)
+  mstore(384, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 380, sub(endOfSlot, 380), 0, 0)
   success := or(success, returndatasize())
 }
 // end of CreateVault
