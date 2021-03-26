@@ -128,8 +128,23 @@ async function update () {
 
       const transferAmount = BigInt(transfers[transfers.length - 1].data);
       // for a burn, we get the owner from the transfer event before the last one
+      // the special case for zapper is looking for the last transfer in case of MINT
+      let dst;
+      if (isMint) {
+        const lastLog = logs[logs.length - 1];
+        // defaults to the last transfer event
+        dst = transfers[transfers.length - 1];
+
+        if (lastLog.topics[0] === TRANSFER_TOPIC && dst.data === lastLog.data) {
+          console.log(logs);
+          dst = lastLog;
+        }
+      } else {
+        dst = transfers[transfers.length - 2];
+      }
+
       const from =
-        `0x${(isMint ? transfers[transfers.length - 1].topics[2] : transfers[transfers.length - 2].topics[1]).slice(-40)}`;
+        `0x${(isMint ? dst.topics[2] : dst.topics[1]).slice(-40)}`;
       let balance = accountMap[from] || BigInt(0);
 
       if (topic === MINT_TOPIC) {
