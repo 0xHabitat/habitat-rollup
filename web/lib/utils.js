@@ -1,6 +1,8 @@
 import { ROOT_CHAIN_ID, WETH } from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
+export { ethers };
+
 export const ERC20_ABI = [
   'function name() view returns (string)',
   'function symbol() view returns (string)',
@@ -68,8 +70,10 @@ export async function getErc20 (addr) {
   return _cache[addr];
 }
 
+const WALLET_AUTH_KEY = '_utils_wallet_auth';
+
 export function walletIsConnected () {
-  return !!document._signer;
+  return !!document._signer || (!!localStorage.getItem(WALLET_AUTH_KEY) && window.ethereum);
 }
 
 export async function getSigner () {
@@ -96,6 +100,7 @@ export async function getSigner () {
   // workaround that ethers.js requests eth_chainId for almost any call.
   signer.provider.detectNetwork = async () => network;
   document._signer = signer;
+  localStorage.setItem(WALLET_AUTH_KEY, '1');
 
   return signer;
 }
@@ -484,4 +489,29 @@ export async function getToken (val) {
   const erc20 = await getErc20(tokenAddress);
 
   return erc20;
+}
+
+async function _getTokenCached (address) {
+  const erc20 = await getErc20(address);
+
+  try {
+    if (erc20._name === undefined) {
+      erc20._name = await erc20.name();
+    }
+    if (erc20._symbol === undefined) {
+      erc20._symbol = await erc20.symbol();
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+
+  return erc20;
+}
+
+export async function getTokenName (address) {
+  return (await _getTokenCached(address))._name || '???';
+}
+
+export async function getTokenSymbol (address) {
+  return (await _getTokenCached(address))._symbol || '???';
 }

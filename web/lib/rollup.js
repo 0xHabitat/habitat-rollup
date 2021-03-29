@@ -1,5 +1,6 @@
 import { ROOT_CHAIN_ID, RPC_URL, EXECUTION_PROXY_ADDRESS } from './rollup-config.js';
 import { BRICK_ABI, EXECUTION_PROXY_ABI, TYPED_DATA } from './constants.js';
+import { getSigner, getErc20, getTokenSymbol, walletIsConnected, secondsToString, renderAddress } from './utils.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export async function getProviders () {
@@ -16,29 +17,6 @@ export async function getProviders () {
   document._providers = { rootProvider, childProvider, habitat, bridgeContract };
 
   return document._providers;
-}
-
-export async function getSigner () {
-  if (document._signer) {
-    return document._signer;
-  }
-
-  if (!window.ethereum) {
-    throw new Error('Please visit this page with a dApp compatible browser');
-  }
-
-  // TODO: check for errors
-  await window.ethereum.enable();
-  const signer = (new ethers.providers.Web3Provider(window.ethereum)).getSigner();
-  const network = await signer.provider.getNetwork();
-
-  if (network.chainId !== ROOT_CHAIN_ID) {
-    throw new Error(`Please switch your wallet network to ${ethers.utils.getNetwork(ROOT_CHAIN_ID).name}`);
-  }
-
-  document._signer = signer;
-
-  return signer;
 }
 
 export async function sendTransaction (primaryType, message) {
@@ -66,9 +44,14 @@ export async function sendTransaction (primaryType, message) {
   const txHash = await habitat.provider.send('eth_sendRawTransaction', [{ primaryType, message, r, s, v }]);
   const receipt = await habitat.provider.getTransactionReceipt(txHash);
   console.log({ receipt });
+  receipt.events = [];
 
   for (const obj of receipt.logs) {
-    console.log({ evt: habitat.interface.parseLog(obj) });
+    try {
+      receipt.events.push(habitat.interface.parseLog(obj));
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
   return receipt;
@@ -214,7 +197,138 @@ export async function* pullEvents (habitat, filter, blocks) {
   const logs = await habitat.provider.send('eth_getLogs', [filter]);
   for (const log of logs.reverse()) {
     const evt = habitat.interface.parseLog(log);
-    yield evt;
+    yield Object.assign(evt, { transactionHash: log.transactionHash });
   }
   filter.toBlock = filter.fromBlock - 1;
+}
+
+export function humanProposalTime (startDate) {
+  const now = ~~(Date.now() / 1000);
+  if (startDate >= now) {
+    return `starts in ${secondsToString(startDate - now)}`;
+  }
+  return `open since ${secondsToString(now - startDate)}`;
+}
+
+export async function doQuery (name, ...args) {
+  const { habitat } = await getProviders();
+  const blockNum = await habitat.provider.getBlockNumber();
+  const filter = habitat.filters[name](...args);
+
+  filter.toBlock = blockNum;
+  filter.fromBlock = 1;
+  console.log({filter});
+
+  return await habitat.provider.send('eth_getLogs', [filter]);
+}
+
+export async function getUsername (address) {
+  const logs = await doQuery('ClaimUsername', address);
+  let username = '???';
+
+  if (logs.length) {
+    try {
+      username = ethers.utils.toUtf8String(logs[logs.length - 1].topics[2]);
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+  return `${username} (${renderAddress(address)})`;
+}
+
+export async function setupModulelist () {
+  if (document.querySelector('datalist#modulelist')) {
+    return;
+  }
+
+  function randomAddress () {
+    return ethers.utils.hexlify(ethers.utils.randomBytes(20));
+  }
+
+  const modules = [{ name: 'Multisig', 'address': randomAddress() }, { name: 'One share,  One Vote', 'address': randomAddress() }];
+  const datalist = document.createElement('datalist');
+
+  for (const module of modules) {
+    const opt = document.createElement('option');
+    opt.value = `${module.name} @ ${module.address}`;
+    datalist.appendChild(opt);
+  }
+
+  datalist.id = 'modulelist';
+  document.body.appendChild(datalist);
+}
+
+export async function fetchProposalStats ({ proposalId, communityId }) {
+  const { habitat } = await getProviders();
+  const governanceToken = await habitat.tokenOfCommunity(communityId);
+  const erc20 = await getErc20(governanceToken);
+  const tokenSymbol = await getTokenSymbol(governanceToken);
+  const signals = {};
+  for (const log of await doQuery('VotedOnProposal', null, proposalId)) {
+    const { account, signalStrength } = habitat.interface.parseLog(log).args;
+    signals[account] = signalStrength;
+  }
+  let defaultSliderValue = 50;
+
+  // statistics
+  const numSignals = Object.keys(signals).length;
+  let cumulativeSignals = 0;
+  for (const k in signals) {
+    cumulativeSignals += signals[k];
+  }
+
+  console.log({cumulativeSignals,numSignals});
+  const signalStrength = cumulativeSignals / numSignals;
+  const totalVotes = Number(await habitat.getVoteCount(proposalId));
+  const totalShares = ethers.utils.formatUnits(await habitat.getTotalVotingShares(proposalId), erc20._decimals);
+  const totalMembers = Number(await habitat.getTotalMemberCount(communityId));
+  const participationRate = (totalVotes / totalMembers) * 100;
+  console.log({totalVotes, totalShares});
+
+  let userShares = ethers.BigNumber.from(0);
+  let userSignal = 0;
+  if (walletIsConnected()) {
+    const signer = await getSigner();
+    const account = await signer.getAddress();
+    const userVote = await habitat.getVote(proposalId, account);
+
+    if (userVote.gt(0)) {
+      userShares = ethers.utils.formatUnits(userVote, erc20._decimals);
+      userSignal = signals[account];
+      if (userSignal) {
+        defaultSliderValue = userSignal;
+      }
+    }
+  }
+
+  return {
+    totalVotes,
+    totalShares,
+    totalMembers,
+    participationRate,
+    defaultSliderValue,
+    signals,
+    signalStrength,
+    userShares,
+    userSignal,
+    tokenSymbol
+  };
+}
+
+export async function submitVote (communityId, proposalId, signalStrength) {
+  const { habitat } = await getProviders();
+  const signer = await getSigner();
+  const account = await signer.getAddress();
+  const governanceToken = await habitat.tokenOfCommunity(communityId);
+  const balance = await habitat.getErc20Balance(governanceToken, account);
+  const shares = balance.div(100).mul(signalStrength).toHexString();
+  const timestamp = ~~(Date.now() / 1000);
+  const args = {
+    proposalId,
+    signalStrength,
+    shares,
+    timestamp,
+  };
+
+  return sendTransaction('VoteOnProposal', args);
 }

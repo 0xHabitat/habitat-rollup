@@ -61,6 +61,7 @@ async function render () {
   wrapListener('#wallet button#connect', connect);
   wrapListener('#wallet button#left', visitEtherscan);
   setInterval(update, 3000);
+  await update();
 }
 
 window.addEventListener('DOMContentLoaded', render, false);

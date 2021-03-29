@@ -3,20 +3,19 @@
 import fs from 'fs';
 import ethers from 'ethers';
 
-const GovBrick = JSON.parse(fs.readFileSync('./build/contracts/GovBrick.json'));
-const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
+const artifact = JSON.parse(fs.readFileSync(process.argv[2]));
 
-async function deploy (artifact, args, wallet, txOverrides, logFile) {
+async function deploy (wallet, txOverrides, logFile) {
   const _factory = new ethers.ContractFactory(
     artifact.abi,
     artifact.bytecode,
     wallet
   );
 
-  logFile.write(`deploying ${artifact.contractName}\n`);
+  logFile.write(`deploying: ${artifact.contractName}...\n`);
 
-  let contract = await _factory.deploy(...args, txOverrides);
-  let tx = await contract.deployTransaction.wait();
+  const contract = await _factory.deploy(txOverrides);
+  const tx = await contract.deployTransaction.wait();
 
   logFile.write(`\n
 Contract: ${artifact.contractName}
@@ -24,7 +23,7 @@ Contract: ${artifact.contractName}
   Transaction Hash: ${tx.transactionHash}
   Deployer: ${tx.from}
   Gas used: ${tx.gasUsed.toString()}
-  Gas fee in Ether: ${ethers.utils.formatUnits(contract.deployTransaction.gasPrice.mul(tx.gasUsed), 'ether')}
+  Gas fee (ETH): ${ethers.utils.formatUnits(contract.deployTransaction.gasPrice.mul(tx.gasUsed), 'ether')}
   \n`);
 
   return { contract, tx, artifact };
@@ -52,6 +51,5 @@ Contract: ${artifact.contractName}
     wallet = provider.getSigner();
   }
 
-  const { contract } = await deploy(GovBrick, [], wallet, txOverrides, process.stdout);
-  await deploy(ExecutionProxy, [contract.address], wallet, txOverrides, process.stdout);
+  await deploy(wallet, txOverrides, process.stdout);
 })();

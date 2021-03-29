@@ -88,7 +88,7 @@ html, body, .button, button, input, label {
   font-family: var(--font-family-default), sans-serif;
 }
 
-div {
+section, div {
   display: block;
   margin: 0;
   transition: .3s ease-in;
@@ -199,7 +199,7 @@ button, .button {
   cursor: pointer;
   transition: .3s ease-out;
   animation: opacity 1s ease-out;
-  border: 1px solid var(--color-white);
+  border: 1px solid var(--color-bg-invert);
   background: var(--color-bg);
   overflow: hidden;
 }
@@ -336,11 +336,13 @@ button:active,
 }
 
 .padh {
-  padding: 0 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .padv {
-  padding: 1rem 0;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 img.minmax {
@@ -441,9 +443,10 @@ input {
   display: block;
   background: none;
   padding: 1rem;
-  border: 1px solid var(--color-black);
+  border: 1px solid var(--color-bg-invert);
   border-radius: 3px;
   color: var(--color-text);
+  box-sizing: border-box;
 }
 
 input::placeholder {
@@ -560,7 +563,8 @@ textarea {
   min-height: 23em;
   max-height: 100%;
   padding: 1em;
-  border: 1px solid var(--color-black);
+  border: 1px solid var(--color-bg-invert);
+  outline: none;
 }
 
 .flow/*, button, .button*/ {
@@ -574,6 +578,10 @@ textarea {
 
 .flow p > span {
   font-family: var(--font-family-mono);
+}
+
+.flow > input {
+  width: 100%;
 }
 
 button#expanded,
@@ -642,4 +650,12 @@ kv > p:nth-child(1) {
   margin: 5%;
   border-radius: 100%;
   background-color: var(--color-bg);
+}
+
+habitat-circle {
+  --circle-gradient: rgba(27, 177, 134, 0.8) 0%, rgba(64, 208, 142, 0.8) 29.17%, rgba(34, 244, 177, 0.8) 63.02%, rgba(31, 219, 113, 0.8) 100%;
+}
+
+habitat-circle.signal {
+  --circle-gradient: #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 57%;
 }

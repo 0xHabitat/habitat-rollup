@@ -53,8 +53,9 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'startDate', 'type': 'uint256' },
       { name: 'vault', type: 'address' },
-      { name: 'title', type: 'string' },
       { name: 'actions', type: 'bytes' },
+      { name: 'title', type: 'string' },
+      { name: 'metadata', type: 'string' },
     ],
     VoteOnProposal: [
       // xxx add account because of delegate?

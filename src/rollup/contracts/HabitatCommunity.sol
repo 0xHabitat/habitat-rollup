@@ -27,6 +27,8 @@ contract HabitatCommunity is HabitatBase {
     // this should actually not happen but check it anyway
     require(tokenOfCommunity[communityId] == address(0));
     tokenOfCommunity[communityId] = governanceToken;
+    HabitatBase._setIsMemberOfCommunity(communityId, msgSender);
+    HabitatBase._incrementTotalMemberCount(communityId);
 
     emit CommunityCreated(governanceToken, communityId, metadata);
   }

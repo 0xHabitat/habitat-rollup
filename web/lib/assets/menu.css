@@ -33,7 +33,6 @@
   border: 1px solid #dddddd;
   border-top: 0;
   border-bottom: 0;
-  box-shadow: 2px 2px 5px #888888;
 }
 
 #menu-items li:first-child {
@@ -73,6 +72,10 @@
   --color-focus: aliceblue;
 }
 
+#menu-items .lightgrey {
+  --color-focus: ghostwhite;
+}
+
 #menu-items a.active,
 #menu-items a:hover {
   background-color: var(--color-focus);
@@ -82,6 +85,7 @@
   display: block;
   font-size: 2em;
   width: auto;
+  padding-bottom: 1px;
 }
 
 
@@ -119,14 +123,14 @@ body.with-burger-menu #menu label:before {
 /* Circle-shaped semi-transparent background. Hidden by default */
 body.with-burger-menu #menu-items:before {
   background-color: white;
-  width: 300px;
-  height: 300px;
+  width: 350px;
+  height: 350px;
   border-radius: 100%;
   content: "";
   display: none;
   position: absolute;
   top: -50px;
-  right: -100px;
+  right: -150px;
   opacity: 0.8;
   z-index: -2;
 }
@@ -143,16 +147,7 @@ body.with-burger-menu #menu-items a {
   line-height: 28px;
   text-align: right;
   padding: 7px;
-}
-
-/* Hide background for items */
-body.with-burger-menu #menu-items a.lightstraw.active,
-body.with-burger-menu #menu-items a.lightstraw:hover,
-body.with-burger-menu #menu-items a.lightgreen.active,
-body.with-burger-menu #menu-items a.lightgreen:hover,
-body.with-burger-menu #menu-items a.lightred.active,
-body.with-burger-menu #menu-items a.lightred:hover {
-  background-color: transparent;
+  border-radius: 1em;
 }
 
 /* Show icon on the right */

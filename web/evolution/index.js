@@ -197,9 +197,10 @@ async function render () {
     wrapListener(e, onTab);
   }
 
+  // load statistics first
+  await updateStats();
   setInterval(updateStats, 3000);
   setInterval(updateSignals, 10000);
-  updateStats();
   updateSignals();
 }
 

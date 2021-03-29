@@ -506,17 +506,17 @@ case 7 {
 // end of ActivateModule
 
 // start of CreateProposal
-// typeHash: 0x08ca432aed00b336d83523efc8c7f5b8ab9e19df5f8398f2b2f80a5a03598b37
-// function: onCreateProposal(address,uint256,uint256,address,string,bytes)
+// typeHash: 0xb4dd5870399af19082da41c7baee72e65d3b390ffcbddf786660a22664c474b7
+// function: onCreateProposal(address,uint256,uint256,address,bytes,string,string)
 case 8 {
-  let headSize := 192
+  let headSize := 224
   let typeLen := 0
-  let txPtr := 448
-  let endOfSlot := add(txPtr, 192)
+  let txPtr := 512
+  let endOfSlot := add(txPtr, 224)
 
-  txPtr := 480
+  txPtr := 544
   // typeHash of CreateProposal
-  mstore(0, 0x08ca432aed00b336d83523efc8c7f5b8ab9e19df5f8398f2b2f80a5a03598b37)
+  mstore(0, 0xb4dd5870399af19082da41c7baee72e65d3b390ffcbddf786660a22664c474b7)
   // uint256 CreateProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -541,7 +541,7 @@ case 8 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // string CreateProposal.title
+  // bytes CreateProposal.actions
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -554,7 +554,7 @@ case 8 {
   endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
   offset := add(offset, typeLen)
 
-  // bytes CreateProposal.actions
+  // string CreateProposal.title
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -567,8 +567,21 @@ case 8 {
   endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
   offset := add(offset, typeLen)
 
+  // string CreateProposal.metadata
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(192, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
   // typeHash
-  let structHash := keccak256(0, 192)
+  let structHash := keccak256(0, 224)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -582,10 +595,10 @@ case 8 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(416, 0xdf6d7010)
-  mstore(448, mload(128))
+  mstore(480, 0x07045db4)
+  mstore(512, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 444, sub(endOfSlot, 444), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 508, sub(endOfSlot, 508), 0, 0)
   success := or(success, returndatasize())
 }
 // end of CreateProposal

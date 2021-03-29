@@ -26,5 +26,5 @@
 }
 
 habitat-slider {
-  background: linear-gradient(240deg, #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 89.92%);
+  background: var(--gradient-coldhot);
 }

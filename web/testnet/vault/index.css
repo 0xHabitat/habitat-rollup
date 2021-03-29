@@ -20,3 +20,7 @@
 .auto-col-grid {
   grid-template-columns: repeat(auto-fill, minmax(44ch, 1fr));
 }
+
+habitat-slider {
+  background: var(--gradient-coldhot);
+}

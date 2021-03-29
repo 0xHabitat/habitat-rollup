@@ -1,6 +1,6 @@
 import { ROOT_CHAIN_ID } from './rollup-config.js';
-import { ERC20_ABI, getSigner, setupTokenlist, getToken } from './utils.js';
-import { getProviders, sendTransaction } from './rollup.js';
+import { getSigner, setupTokenlist, getErc20, getToken, walletIsConnected } from './utils.js';
+import { getProviders, sendTransaction, setupModulelist } from './rollup.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export function stringDance (ele, str, _childs, idx, _skip) {
@@ -211,34 +211,18 @@ export class BaseFlow {
   }
 
   async setupWallet () {
+    if (walletIsConnected()) {
+      this.onSetupWallet();
+      return;
+    }
     this.confirm('Connect', 'Please Connect your Wallet.', this.onSetupWallet);
   }
 
   async onSetupWallet () {
     this.write('Connecting to wallet...');
 
-
     this.signer = await getSigner();
     this.runNext(this.setupFlow);
-    /*
-    await window.ethereum.enable();
-
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const network = await provider.getNetwork();
-
-    if (network.chainId !== ROOT_CHAIN_ID) {
-      throw new Error(`Wrong Network. Please switch to ${ethers.utils.getNetwork(ROOT_CHAIN_ID).name}.`);
-    }
-
-    const { habitat, rootProvider } = await getProviders();
-    this.signer = await provider.getSigner();
-    this.habitat = habitat;
-
-    const tokenAddress = await this.habitat.approvedToken();
-    this.erc20 = new ethers.Contract(tokenAddress, ERC20_ABI, rootProvider);
-    this.tokenSymbol = await this.erc20.symbol();
-
-    */
   }
 }
 
@@ -448,7 +432,57 @@ export class CreateCommunityFlow extends BaseFlow {
 }
 
 export class CreateTreasuryFlow extends CreateCommunityFlow {
-  constructor (root) {
+  constructor (root, communityId, callback) {
     super(root);
+
+    this.context.communityId = communityId;
+    this.context.callback = callback;
+    this.runNext(this.setupWallet);
+  }
+
+  async setupFlow () {
+    this.ask(
+      `What should be the name of the Treasury?`,
+      'e.g. Marketing 💰',
+      this.confirmName
+    );
+  }
+
+  async confirmName (str) {
+    this.context.name = str;
+    await setupModulelist();
+    this.input.setAttribute('list', 'modulelist');
+
+    this.ask(
+      `Which smart contract is the gatekeeper of this treasury?`,
+      'Choose from the list',
+      this.confirmCondition
+    );
+  }
+
+  async confirmCondition (str) {
+    const [moduleName, address] = str.split('@');
+    this.context.address = address;
+    this.confirm(
+      'Looks Good',
+      `So, you are creating ${this.context.name} which is managed by ${moduleName}?`,
+      this.looksGood
+    );
+  }
+
+  async looksGood () {
+    const args = {
+      communityId: this.context.communityId,
+      condition: this.context.address,
+      metadata: JSON.stringify({ title: this.context.name }),
+    };
+    let tmp = await sendTransaction('CreateVault', args, this.signer, this.habitat);
+
+    this.context.callback(tmp);
+    this.confirm(
+      'Done',
+      'Confirmed! You can now fill your chest with 🍪',
+      this.onDone
+    );
   }
 }

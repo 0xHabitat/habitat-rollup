@@ -262,8 +262,9 @@ describe('HabitatV1', async function () {
         const args = {
           startDate: ~~(Date.now() / 1000),
           vault,
-          title: 'hello world',
           actions: '0x',
+          title: 'hello world',
+          metadata: '{}',
         };
         const { txHash, receipt } = await createTransaction('CreateProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');

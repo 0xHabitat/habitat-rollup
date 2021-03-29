@@ -3,7 +3,7 @@ pragma solidity >=0.6.2;
 
 import './HabitatBase.sol';
 
-/// @notice A Vault holds assets with a custom (contract) condition to unlock them.
+/// @notice Habitat Accounts, basic functionality for delegation and social features.
 contract HabitatAccount is HabitatBase {
   event ClaimUsername(address indexed account, bytes32 indexed shortString);
 

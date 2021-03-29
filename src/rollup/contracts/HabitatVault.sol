@@ -19,6 +19,7 @@ contract HabitatVault is HabitatBase {
       vaultAddress := shr(96, keccak256(0, 64))
     }
 
+    communityOfVault[vaultAddress] = communityId;
     require(tokenOfCommunity[communityId] != address(0));
     // xxx:
     // save

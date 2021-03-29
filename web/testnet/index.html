@@ -15,8 +15,8 @@
     <meta property='og:url' content='https://0xhabitat.org'>
     <meta property='og:description' content='Scaling communities with Rollup technology.'>
     <meta property='og:image' content='/lib/assets/preview.png'>
-    <meta property='og:title' content='Habitat - Propose'>
-    <title>Habitat - Propose</title>
+    <meta property='og:title' content='Habitat - Communities'>
+    <title>Habitat - Communities</title>
     <script src='/lib/common.js'></script>
   </head>
   <body>
@@ -25,48 +25,17 @@
     <habitat-menu></habitat-menu>
     <section class='content'>
       <section style='z-index:9;transform: translateZ(0)'>
-       <section>
-        <h1>Create a Proposal</h1>
         <section>
-          <div class='proposal flexcol'>
-            <input type='text' class='title' placeholder='Proposal Title'></input>
-            <textarea class='textarea' placeholder='Your proposal goes here...'></textarea>
+          <div id='buttons' class='flex row center evenly'>
+            <button class='flow' id='community'>Create Community</button>
           </div>
-
-          <section class='highlight'>
-            <h2>On-chain execution</h2>
-            <space></space>
-            <label>
-              The address of the contract to be called.
-              <input id='addr' type='text' placeholder='0x...'></input>
-            </label>
-            <label>
-              The `calldata` aka the input data for this contract call.
-              <input id='calldata' type='text' placeholder='0x...'></input>
-            </label>
-            <button id='addAction'>Add Action</button>
-
-            <space></space>
-            <h3>Proposal Actions</h3>
-            <sep></sep>
-            <div class='grid-2 proposalActions'>
-              <p>Contract Address</p>
-              <p>Input data</p>
-            </div>
-          </section>
-
-          <div class='actions'>
-            <h1>Looks good?</h1>
-            <button id='submit'>Submit</button>
-          </div>
+          <div id='communities' class='flex row center evenly'></div>
         </section>
-      </section>
       </section>
     </section>
     <script type='module' src='/lib/gradient.js'></script>
     <script type='module' src='/lib/wallet.js'></script>
     <script type='module' src='/lib/menu.js'></script>
-    <script type='module' src='/lib/slider.js'></script>
     <script type='module' src='index.js'></script>
   </body>
 </html>

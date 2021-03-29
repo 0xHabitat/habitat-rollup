@@ -3,6 +3,7 @@ export const RPC_URL = `https://testnet-0xhabitat.fly.dev/`;
 // the root network
 export const ROOT_CHAIN_ID = 1;
 // min stake needed to create proposals. In units of the token, 1 = 1 * 10 ** 18 (if token.decimals = 18)
-export const MIN_PROPOSAL_CREATION_STAKE = 0.1;
+export const MIN_PROPOSAL_CREATION_STAKE = 5000;
 // The execution proxy for on-chain execution
-export const EXECUTION_PROXY_ADDRESS = '0x6e2d343237A258e5a0a19f849Ee23d97386fb20c';
+
+export const EXECUTION_PROXY_ADDRESS = '0xEe3F0b6a9711D9eA1332245a8A0Aee6C7267DfB6';

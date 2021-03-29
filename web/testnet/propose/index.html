@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/assets.css'>
+    <link rel='stylesheet' type='text/css' href='index.css'>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:site' content='@0xHabitat'>
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='https://0xhabitat.org'>
+    <meta property='og:description' content='Scaling communities with Rollup technology.'>
+    <meta property='og:image' content='/lib/assets/preview.png'>
+    <meta property='og:title' content='Habitat - Propose'>
+    <title>Habitat - Propose</title>
+    <script src='/lib/common.js'></script>
+  </head>
+  <body>
+    <habitat-gradient></habitat-gradient>
+    <habitat-nav></habitat-nav>
+    <habitat-menu></habitat-menu>
+    <section class='content'>
+      <section style='z-index:9;transform: translateZ(0)'>
+       <section class='bgwhite padh padv flex col center'>
+         <div style='max-width:48ch;'>
+           <h1>Create a Proposal</h1>
+           <section id='propose'>
+             <input type='text' id='title' placeholder='Proposal Title'></input>
+             <space></space>
+             <textarea placeholder='Your proposal goes here...'></textarea>
+             <space></space>
+
+             <section class='left'>
+               <h2>On-chain execution</h2>
+               <space></space>
+               <label>
+                 The address of the contract to be called.
+                 <input id='addr' type='text' placeholder='0x...'></input>
+               </label>
+               <label>
+                 The `calldata` aka the input data for this contract call.
+                 <input id='calldata' type='text' placeholder='0x...'></input>
+               </label>
+               <button id='addAction'>Add Action</button>
+
+               <space></space>
+               <h3>Proposal Actions</h3>
+               <sep></sep>
+               <div id='proposalActions' class='grid-2'>
+                 <p>Contract Address</p>
+                 <p>Input data</p>
+               </div>
+             </section>
+
+             <div id='actions' class='left'>
+               <h1>Looks good?</h1>
+               <button id='submit'>Submit</button>
+             </div>
+           </section>
+         </div>
+       </section>
+      </section>
+    </section>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/wallet.js'></script>
+    <script type='module' src='/lib/menu.js'></script>
+    <script type='module' src='/lib/slider.js'></script>
+    <script type='module' src='index.js'></script>
+  </body>
+</html>

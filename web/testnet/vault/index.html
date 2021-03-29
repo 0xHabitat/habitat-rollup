@@ -15,8 +15,8 @@
     <meta property='og:url' content='https://0xhabitat.org'>
     <meta property='og:description' content='Scaling communities with Rollup technology.'>
     <meta property='og:image' content='/lib/assets/preview.png'>
-    <meta property='og:title' content='Habitat - Communities'>
-    <title>Habitat - Communities</title>
+    <meta property='og:title' content='Habitat - Vault'>
+    <title>Habitat - Treasury</title>
     <script src='/lib/common.js'></script>
   </head>
   <body>
@@ -25,11 +25,18 @@
     <habitat-menu></habitat-menu>
     <section class='content'>
       <section style='z-index:9;transform: translateZ(0)'>
-        <section>
-          <div id='buttons' class='flex row center evenly'>
-            <button class='flow' id='community'>Create Community</button>
+        <section class='bgwhite'>
+          <div class='flex evenly col center'>
+            <h2>Proposals</h2>
           </div>
-          <div id='communities' class='flex row center evenly'></div>
+          <div id='buttons' class='flex row evenly'>
+            <a id='propose' href='' class='button secondary purple smaller'>Create a Proposal</a>
+            <a id='back' href='' class='button secondary purple smaller'>Community Overview</a>
+          </div>
+          <space></space>
+        </section>
+        <section>
+          <div id='proposals' class='flex row evenly center'></div>
         </section>
       </section>
     </section>
@@ -37,6 +44,7 @@
     <script type='module' src='/lib/wallet.js'></script>
     <script type='module' src='/lib/menu.js'></script>
     <script type='module' src='/lib/slider.js'></script>
+    <script type='module' src='/lib/circle.js'></script>
     <script type='module' src='index.js'></script>
   </body>
 </html>

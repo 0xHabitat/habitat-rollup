@@ -13,11 +13,28 @@
   --color-yellow: #FBDC60;
   --color-text: #202020;
   --color-bg: #ffffff;
+  --color-bg-invert: #202020;
   --color-error: #eb4d62;
   --color-link: #5B3F99;
   --border-radius-frame: 0px;
   --color-frame: none;
   --color-border-box: var(--color-black);
+
+  --gradient-coldhot: linear-gradient(240deg, #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 89.92%);
+}
+
+[data-theme="dark"] {
+  --color-brand1: #504060;
+  --color-brand2: #604050;
+  --color-brand3: #404050;
+  --color-brand4: #604050;
+  --color-text: #ffffff;
+  --color-bg: #202020;
+  --color-bg-invert: #ffffff;
+  --border-radius-frame: 6px;
+  --color-frame: #ffffff50;
+  --color-link: white;
+  --color-border-box: var(--color-white);
 }
 
 /*
@@ -49,16 +66,3 @@
   }
 }
 */
-
-[data-theme="dark"] {
-  --color-brand1: #504060;
-  --color-brand2: #604050;
-  --color-brand3: #404050;
-  --color-brand4: #604050;
-  --color-text: #ffffff;
-  --color-bg: #202020;
-  --border-radius-frame: 6px;
-  --color-frame: #ffffff50;
-  --color-link: white;
-  --color-border-box: var(--color-white);
-}
