@@ -30,7 +30,7 @@
 }
 
 #infobox > div {
-  margin: 1rem;
+  margin: 0;
   padding: 1rem;
   max-width: 42ch;
   background-color: var(--color-bg);

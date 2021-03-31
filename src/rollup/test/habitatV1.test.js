@@ -84,14 +84,14 @@ describe('HabitatV1', async function () {
         await (await erc20.connect(signer).approve(bridge.address, depositAmount)).wait();
 
         const oldBlock = await habitatNode.getBlockNumber();
-        const oldBalance = await habitat.erc20(erc20.address, user);
+        const oldBalance = await habitat.getErc20Balance(erc20.address, user);
 
         const tx = await bridge.connect(signer).deposit(erc20.address, depositAmount, await signer.getAddress());
         const receipt = await tx.wait();
 
         await waitForValueChange(oldBlock, () => habitatNode.getBlockNumber());
 
-        const newBalance = await habitat.erc20(erc20.address, user);
+        const newBalance = await habitat.getErc20Balance(erc20.address, user);
         assert.equal(newBalance.toString(), oldBalance.add(depositAmount).toString(), 'token balance should match');
         cumulativeDeposits += BigInt(depositAmount);
       }

@@ -65,7 +65,7 @@ async function render () {
 
   const { habitat } = await getProviders();
   const totalMembers = Number(await habitat.getTotalMemberCount(communityId));
-  document.querySelector('habitat-circle#members').setValue(100, totalMembers, totalMembers > 1 ? 'Members' : 'Member');
+  document.querySelector('habitat-circle#members').setValue(100, totalMembers, totalMembers !== 1 ? 'Members' : 'Member');
   await fetchVaults(communityId);
 }
 

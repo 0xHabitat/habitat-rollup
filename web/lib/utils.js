@@ -1,4 +1,4 @@
-import { ROOT_CHAIN_ID, WETH } from './config.js';
+import { WETH } from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export { ethers };
@@ -39,8 +39,17 @@ const PERMIT_DAI = new ethers.utils.Interface(
 const PERMIT_EIP_2612 = new ethers.utils.Interface(
   ['function permit(address owner,address spender,uint256 value,uint256 deadline,uint8 v,bytes32 r,bytes32 s)']
 );
+
+let ROOT_CHAIN_ID = window.location.pathname.indexOf('testnet') === -1 ? 1 : 3;
 const _cache = {};
 let _prov;
+
+export function getNetwork () {
+  return ROOT_CHAIN_ID;
+}
+
+export function setNetwork (id) {
+}
 
 export function getProvider () {
   if (!_prov) {
@@ -174,6 +183,7 @@ export function wrapListener (selectorOrElement, func, eventName = 'click') {
 
   async function handler (evt) {
     evt.preventDefault();
+    evt.stopImmediatePropagation();
     if (eventName !== 'keyup') {
       evt.target.disabled = true;
     } else {
@@ -409,8 +419,8 @@ export function renderAddress (str) {
   return str.substring(0, 6) + '...' + str.substring(str.length - 4, str.length);
 }
 
-export function renderAmount (val) {
-  const v = Number(val);
+export function renderAmount (val, decimals) {
+  const v = Number(decimals ? ethers.utils.formatUnits(val, decimals) : val);
 
   if (v < 1e3) {
     return `${v.toFixed(2)}`;

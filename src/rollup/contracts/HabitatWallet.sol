@@ -17,7 +17,8 @@ contract HabitatWallet is HabitatBase {
     if (TokenBridgeBrick.isERC721(token, value)) {
       erc721[token][value] = owner;
     } else {
-      erc20[token][owner] += value;
+      uint256 balance = HabitatBase.getErc20Balance(token, owner);
+      HabitatBase._setErc20Balance(token, owner, balance + value);
     }
   }
 
@@ -32,8 +33,13 @@ contract HabitatWallet is HabitatBase {
         require(erc721[token][value] == msgSender, 'OWNER');
         erc721[token][value] = to;
       } else {
-        erc20[token][msgSender] -= value;
-        erc20[token][to] += value;
+        uint256 tmp = HabitatBase.getErc20Balance(token, msgSender);
+        require (tmp >= value);
+        HabitatBase._setErc20Balance(token, msgSender, tmp - value);
+
+        tmp = HabitatBase.getErc20Balance(token, to);
+        require(tmp + value > tmp);
+        HabitatBase._setErc20Balance(token, to, tmp + value);
       }
     }
 
@@ -50,7 +56,8 @@ contract HabitatWallet is HabitatBase {
       require(erc721[token][value] == msgSender, 'OWNER');
       TokenInventoryBrick._setERC721Exit(token, to, value);
     } else {
-      erc20[token][msgSender] -= value;
+      uint256 balance = HabitatBase.getErc20Balance(token, msgSender);
+      HabitatBase._setErc20Balance(token, msgSender, balance - value);
       TokenInventoryBrick._incrementExit(token, to, value);
     }
   }

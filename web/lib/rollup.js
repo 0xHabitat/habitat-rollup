@@ -1,7 +1,10 @@
-import { ROOT_CHAIN_ID, RPC_URL, EXECUTION_PROXY_ADDRESS } from './rollup-config.js';
+import NETWORKS from './rollup-config.js';
 import { BRICK_ABI, EXECUTION_PROXY_ABI, TYPED_DATA } from './constants.js';
-import { getSigner, getErc20, getTokenSymbol, walletIsConnected, secondsToString, renderAddress } from './utils.js';
+import { getSigner, getProvider, getErc20, getTokenSymbol, walletIsConnected, secondsToString, renderAddress } from './utils.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
+
+const ROOT_CHAIN_ID = Number(localStorage.getItem('chainId')) || 3;
+const { RPC_URL, EXECUTION_PROXY_ADDRESS } = NETWORKS[ROOT_CHAIN_ID];
 
 export async function getProviders () {
   if (document._providers) {
@@ -46,6 +49,22 @@ export async function sendTransaction (primaryType, message) {
   console.log({ receipt });
   receipt.events = [];
 
+  for (const obj of receipt.logs) {
+    try {
+      receipt.events.push(habitat.interface.parseLog(obj));
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  return receipt;
+}
+
+export async function getReceipt (txHash) {
+  const { habitat } = await getProviders();
+  const receipt = await habitat.provider.getTransactionReceipt(txHash);
+
+  receipt.events = [];
   for (const obj of receipt.logs) {
     try {
       receipt.events.push(habitat.interface.parseLog(obj));
@@ -222,9 +241,17 @@ export async function doQuery (name, ...args) {
   return await habitat.provider.send('eth_getLogs', [filter]);
 }
 
+export function getShortString (str) {
+  const buf = ethers.utils.toUtf8Bytes(str);
+  if (buf.length > 32) {
+    throw new Error('name is too long');
+  }
+  return ethers.utils.hexlify(buf).padEnd(66, '0');
+}
+
 export async function getUsername (address) {
   const logs = await doQuery('ClaimUsername', address);
-  let username = '???';
+  let username = address;
 
   if (logs.length) {
     try {
@@ -233,7 +260,18 @@ export async function getUsername (address) {
       console.warn(e);
     }
   }
-  return `${username} (${renderAddress(address)})`;
+  return username ;
+}
+
+export async function resolveUsername (str) {
+  // xxx returns the last claimer of str, address should be double checked
+  const { habitat } = await getProviders();
+  const logs = await doQuery('ClaimUsername', null, getShortString(str));
+
+  if (logs.length) {
+    const evt = habitat.interface.parseLog(logs[logs.length - 1]);
+    return evt.args.account;
+  }
 }
 
 export async function setupModulelist () {
@@ -331,4 +369,55 @@ export async function submitVote (communityId, proposalId, signalStrength) {
   };
 
   return sendTransaction('VoteOnProposal', args);
+}
+
+export async function getCommunityInformation (communityId) {
+  // xxx
+  const { habitat } = await getProviders();
+  const logs = await doQuery('CommunityCreated', null, communityId);
+  const evt = habitat.interface.parseLog(logs[logs.length -1 ]);
+  const metadata = JSON.parse(evt.args.metadata);
+
+  return Object.assign(metadata, { communityId: evt.args.communityId, governanceToken: evt.args.governanceToken });
+}
+
+export async function getTreasuryInformation (vaultAddress) {
+  // xxx
+  const { habitat } = await getProviders();
+  const logs = await doQuery('VaultCreated', null, null, vaultAddress);
+  const evt = habitat.interface.parseLog(logs[logs.length -1 ]);
+  const metadata = JSON.parse(evt.args.metadata);
+
+  return Object.assign(metadata, { });
+}
+
+export async function getProposalInformation (txHash) {
+  // xxx
+  const { habitat } = await getProviders();
+  const receipt = await getReceipt(txHash);
+  const evt = receipt.events[0];
+  const title = evt.args.title;
+  const proposalId = evt.args.proposalId;
+  const startDate = evt.args.startDate;
+  const vaultAddress = evt.args.vault;
+  const communityId = await habitat.communityOfVault(vaultAddress);
+
+  return { title, proposalId, startDate, vaultAddress, communityId };
+}
+
+export async function resolveName (str) {
+  let ret;
+
+  try {
+    ret = await resolveUsername(str);
+  } catch (e) {}
+
+  if (!ret) {
+    try {
+      const provider = await getProvider();
+      ret = await provider.resolveName(str);
+    } catch (e) {}
+  }
+
+  return ret;
 }

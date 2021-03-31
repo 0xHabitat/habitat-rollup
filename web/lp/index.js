@@ -228,7 +228,6 @@ async function getPoolShareFor (amount) {
 
 async function render () {
   const description = document.querySelector('#description');
-  const grid = document.querySelector('div#data');
   const input = document.querySelector('input#amt');
   input.max = MAX_HBT;
 

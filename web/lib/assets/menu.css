@@ -137,6 +137,7 @@ body.with-burger-menu #menu-items:before {
 
 /* Hide borders and shadows */
 body.with-burger-menu #menu-items li {
+  padding: 1px 0;
   border: 0 !important;
   box-shadow: none;
   background: none;

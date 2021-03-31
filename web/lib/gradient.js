@@ -309,9 +309,8 @@ class Gradient {
             this.conf.playing = false
         }), e(this, "play", () => {
             requestAnimationFrame(this.animate), this.conf.playing = true
-        }), e(this,"initGradient", (selector) => {
-          this.el = document.querySelector(selector);
-          this.connect();
+        }), e(this,"initGradient", (el) => {
+          this.el = el;
           return this;
         })
     }
@@ -530,7 +529,7 @@ class HabitatGradient extends HTMLElement {
 
     this.innerHTML = TEMPLATE;
     this.gradient = new Gradient();
-    this.gradient.initGradient("#gradient-canvas");
+    this.gradient.initGradient(this.querySelector('canvas'));
 
     if (window.matchMedia) {
       const self = this;

@@ -28,6 +28,7 @@ class HabitatSlider extends HTMLElement {
 
   handleEvent (evt) {
     evt.preventDefault();
+    evt.stopImmediatePropagation();
     this[evt.type](evt);
   }
 

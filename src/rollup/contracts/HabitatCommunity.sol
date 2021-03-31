@@ -5,7 +5,7 @@ import './HabitatBase.sol';
 
 /// @notice Functionality for Habitat Communities.
 contract HabitatCommunity is HabitatBase {
-  event CommunityCreated(address indexed governanceToken, bytes32 communityId, string metadata);
+  event CommunityCreated(address indexed governanceToken, bytes32 indexed communityId, string metadata);
 
   /// @dev Creates a Habitat Community.
   function onCreateCommunity (address msgSender, uint256 nonce, address governanceToken, string calldata metadata) external {

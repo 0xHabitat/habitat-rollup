@@ -8,7 +8,7 @@ import TYPED_DATA from './../src/rollup/habitatV1.js';
 import { encodeProposalActions } from './../src/rollup/test/utils.js';
 
 const COMMUNITIES = [
-  { title: 'leapDAO', token: '0x78230e69d6e6449db1e11904e0bd81c018454d7a' },
+  { title: 'LeapDAO', token: '0x78230e69d6e6449db1e11904e0bd81c018454d7a' },
   { title: 'Strudel Finance', token: '0x297d33e17e61c2ddd812389c2105193f8348188a' },
   { title: 'Habitat', token: '0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415' },
 ];
@@ -97,11 +97,11 @@ async function main () {
     await startServer(br, { host: '0.0.0.0', rpcPort: 8111 });
     await br.init();
     // edit the config file
-    const path = './web/lib/.rollup-config.js';
-    const config = fs.readFileSync(path).toString().split('\n').filter((e) => e.indexOf('EXECUTION_PROXY_ADDRESS') === -1);
-    config.push(`export const EXECUTION_PROXY_ADDRESS = '${execProxy.address}';`);
-    console.log(config);
-    fs.writeFileSync('./web/lib/rollup-config.js', config.join('\n'));
+    //const path = './web/lib/.rollup-config.js';
+    //const config = fs.readFileSync(path).toString().split('\n').filter((e) => e.indexOf('EXECUTION_PROXY_ADDRESS') === -1);
+    //config.push(`export const EXECUTION_PROXY_ADDRESS = '${execProxy.address}';`);
+    //console.log(config);
+    //fs.writeFileSync('./web/lib/rollup-config.js', config.join('\n'));
 
     // try to forward the chain at a interval
     setInterval(async () => {

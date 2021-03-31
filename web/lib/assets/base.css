@@ -4,6 +4,7 @@
 @import 'wallet.css';
 @import 'menu.css';
 @import 'animations.css';
+@import 'components.css';
 
 #gradient-canvas {
   position:absolute;
@@ -168,6 +169,7 @@ img {
 .flex {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .flexcenter {
@@ -267,6 +269,10 @@ footer a {
   justify-content: space-evenly;
 }
 
+.around {
+  justify-content: space-around;
+}
+
 .flexSpaceBetween {
   display: flex;
   flex-direction: row;
@@ -335,6 +341,12 @@ button:active,
   text-align: right;
 }
 
+.align-right > * {
+  text-align: right;
+  align-self: center;
+  margin: 0;
+}
+
 .padh {
   padding-left: 1rem;
   padding-right: 1rem;
@@ -360,6 +372,7 @@ img.minmax {
   display: grid;
   grid-template-columns: repeat(1, 1fr) repeat(1, 1fr);
   grid-gap: 1rem;
+  padding: 0 .3rem;
 }
 
 /*
@@ -403,9 +416,7 @@ img.minmax {
 */
 
 .overlay {
-  display: flex;
-  flex-direction: column;
-  place-content: space-evenly;
+  display: block;
   position: absolute;
   top: 0;
   right: 0;
@@ -414,6 +425,7 @@ img.minmax {
   z-index: 100;
   background: var(--color-bg);
   animation: opacity .3s ease-in;
+  overflow-y: scroll;
 }
 
 .overlay > .listitem {
@@ -422,9 +434,7 @@ img.minmax {
 
 .error {
   animation: shake 1s ease-in;
-  /*
-   * color: var(--color-error);
-   * */
+  color: var(--color-error);
 }
 
 label {
@@ -569,7 +579,7 @@ textarea {
 
 .flow/*, button, .button*/ {
   margin: 1em;
-  animation: jumpIn 1s;
+  max-width: min(80ch, 100%);
 }
 
 .flow > button {
@@ -634,28 +644,16 @@ kv > p:nth-child(1) {
   width: 100vw;
 }
 
-.circle {
-  width: 10rem;
-  height: 10rem;
-  border-radius: 100%;
-  padding: .1%;
-  box-shadow: inset 0px 0px 4px rgba(0, 0, 0, 0.5);
-  background: linear-gradient(180deg, rgba(27, 177, 134, 0.8) 0%, rgba(64, 208, 142, 0.8) 29.17%, rgba(34, 244, 177, 0.8) 63.02%, rgba(31, 219, 113, 0.8) 100%);
-  background-blend-mode: color-dodge;
+button, .button {
+  display: none;
 }
 
-.circle > .inner {
-  width: 90%;
-  height: 90%;
-  margin: 5%;
-  border-radius: 100%;
-  background-color: var(--color-bg);
+[x-loaded] button, .button {
+  display: revert;
 }
 
-habitat-circle {
-  --circle-gradient: rgba(27, 177, 134, 0.8) 0%, rgba(64, 208, 142, 0.8) 29.17%, rgba(34, 244, 177, 0.8) 63.02%, rgba(31, 219, 113, 0.8) 100%;
-}
-
-habitat-circle.signal {
-  --circle-gradient: #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 57%;
+.alert {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }

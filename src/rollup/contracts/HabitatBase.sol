@@ -27,7 +27,6 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
   mapping (bytes32 => address) proposalVault;
 
   // token balances
-  mapping (address => mapping(address => uint256)) public erc20;
   mapping (address => mapping(uint256 => address)) public erc721;
 
   function _commonChecks () internal {

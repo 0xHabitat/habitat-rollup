@@ -93,8 +93,8 @@ async function updateProposal () {
     const circles = document.querySelector('#circles');
     circles.innerHTML = CIRCLES;
     circles.querySelector('#participation').setValue(participationRate, `${participationRate.toFixed(2)}%`);
-    circles.querySelector('#votes').setValue(100, totalVotes, totalVotes > 1 ? 'Votes' : 'Vote');
-    circles.querySelector('#shares').setValue(signalStrength, renderAmount(totalShares), totalShares > 1 ? 'Shares' : 'Share');
+    circles.querySelector('#votes').setValue(100, totalVotes, totalVotes !== 1 ? 'Votes' : 'Vote');
+    circles.querySelector('#shares').setValue(signalStrength, renderAmount(totalShares), totalShares !== 1 ? 'Shares' : 'Share');
   }
 
   if (userSignal) {

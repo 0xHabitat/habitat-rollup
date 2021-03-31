@@ -22,4 +22,8 @@
     fallback(false);
   };
   img.src = 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEImI6H8gIjIAAA==';
+
+  window.addEventListener('DOMContentLoaded', function () {
+    document.documentElement.setAttribute('x-loaded', '1');
+  }, false);
 })();

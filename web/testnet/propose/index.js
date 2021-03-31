@@ -1,5 +1,4 @@
 import { sendTransaction, getProviders, encodeProposalActions } from '/lib/rollup.js';
-import { MIN_PROPOSAL_CREATION_STAKE } from '/lib/rollup-config.js';
 import {
   getErc20,
   wrapListener,
@@ -85,7 +84,6 @@ async function doSubmit (evt) {
 
 async function render () {
   [vaultAddress, communityId] = window.location.hash.replace('#', '').split(',');
-  console.log({vaultAddress,communityId});
 
   wrapListener('button#submit', doSubmit);
   wrapListener('button#addAction', addAction);
