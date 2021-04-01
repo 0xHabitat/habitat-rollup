@@ -38,30 +38,27 @@ async function renderVault (evt, append = true) {
 
 async function fetchVaults () {
   const { habitat } = await getProviders();
-  const blockNum = await habitat.provider.getBlockNumber();
   const filter = habitat.filters.VaultCreated(communityId);
-
-  filter.toBlock = blockNum;
+  filter.toBlock = await habitat.provider.getBlockNumber();
 
   checkScroll(
     '#vaults',
     async function () {
-      for await (const evt of pullEvents(habitat, filter, 1)) {
+      for await (const evt of pullEvents(habitat, filter)) {
         await renderVault(evt);
       }
     }
   );
 }
 
-async function update (receipt) {
-  console.log(receipt);
+async function update ({ receipt }) {
   const [evt] = receipt.events;
   await renderVault(evt, false);
 };
 
 async function render () {
   communityId = window.location.hash.replace('#', '');
-  wrapListener('button#treasury', (evt) => new CreateTreasuryFlow(evt.target, communityId, update));
+  wrapListener('button#treasury', (evt) => new CreateTreasuryFlow(evt.target, { communityId, callback: update }));
 
   const { habitat } = await getProviders();
   const totalMembers = Number(await habitat.getTotalMemberCount(communityId));

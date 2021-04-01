@@ -198,6 +198,7 @@ export function wrapListener (selectorOrElement, func, eventName = 'click') {
     try {
       await func(evt);
     } catch (e) {
+      console.error(e);
       alertModal((e.error ? e.error.message : '') || e.message || e.toString());
     }
 
@@ -460,6 +461,7 @@ export function checkScroll (selectorOrElement, callback) {
       } catch (e) {
         console.log(e);
       }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     window.requestAnimationFrame(_check);
@@ -536,4 +538,14 @@ export async function getTokenSymbol (address) {
 
 export function getConfig () {
   return CONFIGS[ROOT_CHAIN_ID];
+}
+
+export function getAttributes (ele) {
+  const ret = {};
+
+  for (const name of ele.getAttributeNames()) {
+    ret[name] = ele.getAttribute(name);
+  }
+
+  return ret;
 }

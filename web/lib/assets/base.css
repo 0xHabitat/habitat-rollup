@@ -594,8 +594,8 @@ textarea {
   width: 100%;
 }
 
-button#expanded,
-.button#expanded {
+button.expanded,
+.button.expanded {
   background-color: var(--color-bg);
   color: var(--color-text);
 }

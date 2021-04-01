@@ -78,13 +78,11 @@ async function updateItem (child, proposalId, startDate) {
 
 async function fetchProposals (vaultAddress) {
   const { habitat } = await getProviders();
-  const blockNum = await habitat.provider.getBlockNumber();
   const filter = habitat.filters.ProposalCreated(vaultAddress);
-
-  filter.toBlock = blockNum;
+  filter.toBlock = await habitat.provider.getBlockNumber();
 
   const container = document.querySelector('#proposals');
-  for await (const evt of pullEvents(habitat, filter, 100)) {
+  for await (const evt of pullEvents(habitat, filter)) {
     console.log(evt);
     const { proposalId, startDate, title, actions } = evt.args;
     const proposalLink = `../proposal/#${evt.transactionHash}`;

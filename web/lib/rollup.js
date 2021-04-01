@@ -11,13 +11,16 @@ export async function getProviders () {
     return document._providers;
   }
 
-  const rootProvider = ROOT_CHAIN_ID === 99 ? new ethers.providers.JsonRpcProvider('http://localhost:8222') : new ethers.getDefaultProvider(ROOT_CHAIN_ID);
-  const childProvider = new ethers.providers.JsonRpcProvider(RPC_URL);
+  const rootProvider = await getProvider();
+  const childProvider = new ethers.providers.JsonRpcProvider(RPC_URL, 'any');
+  const network = await childProvider.detectNetwork();
+  childProvider.detectNetwork = async () => network;
+
   const bridgeAddress = await childProvider.send('web3_clientVersion', []);
   const habitat = new ethers.Contract(bridgeAddress, BRICK_ABI, childProvider);
-  const bridgeContract = habitat.connect(rootProvider);
+  const bridge = habitat.connect(rootProvider);
 
-  document._providers = { rootProvider, childProvider, habitat, bridgeContract };
+  document._providers = { rootProvider, childProvider, habitat, bridge };
 
   return document._providers;
 }
@@ -43,10 +46,14 @@ export async function sendTransaction (primaryType, message) {
   const tx = Object.assign({ message, primaryType }, TYPED_DATA);
   const sig = await signer.provider.send('eth_signTypedData_v3', [signerAddress, JSON.stringify(tx)]);
   const { r, s, v } = ethers.utils.splitSignature(sig);
-
   const txHash = await habitat.provider.send('eth_sendRawTransaction', [{ primaryType, message, r, s, v }]);
   const receipt = await habitat.provider.getTransactionReceipt(txHash);
+
   console.log({ receipt });
+  if (receipt.status === 0) {
+    throw new Error('transaction reverted');
+  }
+
   receipt.events = [];
 
   for (const obj of receipt.logs) {
@@ -202,7 +209,7 @@ export function computeVotePercentages (proposal, totalShares) {
   return { yay, nay, participationRate };
 }
 
-export async function* pullEvents (habitat, filter, blocks) {
+export async function* pullEvents (habitat, filter, blocks = 100) {
   if (filter.toBlock === 0) {
     return;
   }

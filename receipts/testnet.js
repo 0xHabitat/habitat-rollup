@@ -1,6 +1,5 @@
 import ethers from 'ethers';
 import fs from 'fs';
-import repl from 'repl';
 
 import TransactionBuilder from '@NutBerry/rollup-bricks/dist/TransactionBuilder.js';
 import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
@@ -76,7 +75,6 @@ async function main () {
   //
   const rootRpcUrl = process.env.ROOT_RPC_URL;
   const rootProvider = new ethers.providers.JsonRpcProvider(process.env.ROOT_RPC_URL);
-  const provider = new ethers.providers.JsonRpcProvider('http://localhost:8111');
   const wallet = new ethers.Wallet(privKey, rootProvider);
   //
   let initd = false;
@@ -114,7 +112,6 @@ async function main () {
     );
     await startServer(br, { host: '0.0.0.0', rpcPort: 8111 });
     await br.init();
-    repl.start().context.bridge = br;
     // edit the config file
     //const path = './web/lib/.rollup-config.js';
     //const config = fs.readFileSync(path).toString().split('\n').filter((e) => e.indexOf('EXECUTION_PROXY_ADDRESS') === -1);
@@ -130,6 +127,7 @@ async function main () {
     }, 3000);
   }
   //
+  const provider = new ethers.providers.JsonRpcProvider('http://localhost:8111');
   const bridgeL2 = bridgeL1.connect(provider);
   if (initd) {
     return;

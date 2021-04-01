@@ -9,6 +9,7 @@ import {
   getTokenName,
   getNetwork,
   getConfig,
+  getAttributes,
 } from './utils.js';
 import {
   doQuery,
@@ -69,6 +70,8 @@ const ACCOUNT_TEMPLATE =
   </div>
   <space></space>
   <div style='width:80ch;max-width:100%'>
+    <div id='exits' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(4, auto);'></div>
+    <space></space>
     <div id='history' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, auto);'></div>
   </div>
   <space></space>
@@ -107,7 +110,8 @@ async function queryTransfers () {
 async function updateErc20 () {
   // xxx
   const slider = document.querySelector('habitat-slider#progress');
-  const { habitat } = await getProviders();
+  slider.parentElement.style.display = 'revert';
+  const { habitat, bridge } = await getProviders();
   const { tokens, transfers } = await queryTransfers();
 
   {
@@ -128,15 +132,55 @@ async function updateErc20 () {
         `;
     }
     container.innerHTML = html;
-    const transferButton = document.querySelector('#transfer');
-    const withdrawButton = document.querySelector('#withdraw');
-    for (const e of container.querySelectorAll('#_transfer')) {
-      wrapListener(e, (evt) => new TransferFlow(transferButton, evt.target.getAttribute('token')));
-      //wrapListener(e, (evt) => new TransferFlow(evt.target, evt.target.getAttribute('token')));
+  }
+
+  {
+    // exits
+    const container = document.querySelector('#exits');
+    let html = '';
+    for (let i = 0, len = tokens.length; i < len; i++) {
+      slider.setRange(i, i, len);
+      const token = tokens[i];
+      const total = await habitat.getERC20Exit(token, account);
+      const availableForExit = await bridge.getERC20Exit(token, account);
+
+      if (total.lt(1) && availableForExit.lt(1)) {
+        continue;
+      }
+
+      const erc = await getErc20(token);
+      const amount = renderAmount(total.sub(availableForExit), erc._decimals);
+      const availableAmount = renderAmount(availableForExit, erc._decimals);
+      const disabled = availableForExit.gt(0) ? '' : 'disabled';
+      html +=
+        `
+        <a target='_blank' href='${getEtherscanTokenLink(token, account)}'>${await getTokenName(token)}</a>
+        <p>${amount} pending</p>
+        <p>${availableAmount} available</p>
+        <button
+        id='_withdraw'
+        token='${token}'
+        amount='${ethers.utils.formatUnits(availableForExit, erc._decimals)}'
+        class='secondary purple'
+        ${disabled}>Withdraw from Bridge</button>
+        `;
     }
-    for (const e of container.querySelectorAll('#_withdraw')) {
-      wrapListener(e, (evt) => new WithdrawFlow(withdrawButton, evt.target.getAttribute('token')));
-      //wrapListener(e, (evt) => new WithdrawFlow(evt.target, evt.target.getAttribute('token')));
+    container.innerHTML = html;
+  }
+
+  {
+    for (const e of document.querySelectorAll('#_transfer')) {
+      wrapListener(e,
+        (evt) => new TransferFlow(document.querySelector('button#transfer'), Object.assign({ callback: maybeUpdateAccount }, getAttributes(evt.target)))
+      );
+    }
+    for (const e of document.querySelectorAll('#_withdraw')) {
+      if (e.disabled) {
+        continue;
+      }
+      wrapListener(e,
+        (evt) => new WithdrawFlow(document.querySelector('button#withdraw'), Object.assign({ callback: maybeUpdateAccount }, getAttributes(evt.target)))
+      );
     }
 
     document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
@@ -221,8 +265,8 @@ async function accountOverlay () {
 
   wrapListener(container.querySelector('#transfer'), (evt) => new TransferFlow(evt.target));
   wrapListener(container.querySelector('#withdraw'), (evt) => new WithdrawFlow(evt.target));
-  wrapListener(container.querySelector('#deposit'), (evt) => new DepositFlow(evt.target, maybeUpdateAccount));
-  wrapListener(container.querySelector('button#name'), (evt) => new UsernameFlow(evt.target, maybeUpdateAccount));
+  wrapListener(container.querySelector('#deposit'), (evt) => new DepositFlow(evt.target, { callback: maybeUpdateAccount }));
+  wrapListener(container.querySelector('button#name'), (evt) => new UsernameFlow(evt.target, { callback: maybeUpdateAccount }));
   await maybeUpdateAccount();
 }
 

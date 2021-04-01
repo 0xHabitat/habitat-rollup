@@ -51,11 +51,13 @@ export function stringDance (ele, str, _childs, idx, _skip) {
 }
 
 export class BaseFlow {
-  constructor (root) {
+  constructor (root, ctx) {
     const existingFlow = root.querySelector('.flow');
     if (existingFlow) {
       existingFlow.remove();
     }
+
+    this.context = ctx || {};
 
     this.container = document.createElement('div');
     this.container.className = 'flow';
@@ -94,7 +96,7 @@ export class BaseFlow {
     root.addEventListener('animationend', animate, false);
     root.style.animation = 'blink 1s';
     root.appendChild(this.container);
-    this.container.parentElement.id = 'expanded';
+    this.container.parentElement.classList.add('expanded');
   }
 
   _trap (evt) {
@@ -102,7 +104,8 @@ export class BaseFlow {
     evt.stopImmediatePropagation();
   }
 
-  ask (str, placeholder, callback) {
+  ask (str, placeholder, key, callback) {
+    this._key = key;
     this._inputCallback = callback;
     this.input.placeholder = placeholder;
     this.input.disabled = false;
@@ -131,7 +134,8 @@ export class BaseFlow {
       this.input.placeholder = '';
       this.input.disabled = true;
 
-      this.handleCallback(this._inputCallback, str);
+      this.context[this._key] = str;
+      this.handleCallback(this._inputCallback, this.context);
     }
   }
 
@@ -153,7 +157,7 @@ export class BaseFlow {
     this.confirmButton.style.animation = 'none';
     this.confirmButton.style.visibility = 'hidden';
 
-    this.handleCallback(this._buttonCallback);
+    this.handleCallback(this._buttonCallback, this.context);
   }
 
   async handleCallback (callback, arg, error) {
@@ -180,11 +184,11 @@ export class BaseFlow {
     }
   }
 
-  async runNext (callback, arg) {
+  async runNext (callback) {
     this.prev = callback;
-    this.prevArg = arg;
+    this.prevArg = this.context;
 
-    await this.handleCallback(callback, arg);
+    await this.handleCallback(callback, this.context);
   }
 
   writeError (str) {
@@ -195,7 +199,7 @@ export class BaseFlow {
     stringDance(this.notifyBox, str);
   }
 
-  onDone () {
+  onDone (ctx) {
     this._destroyed = true;
 
     const root = this.container.parentElement;
@@ -205,12 +209,16 @@ export class BaseFlow {
       root.style.animation = 'none';
       container.removeEventListener('animationend', animate, false);
       container.remove();
-      root.id = '';
+      root.classList.remove('expanded');
     }
 
     container.addEventListener('animationend', animate, false);
     container.style.animation = 'jumpIn 1s reverse';
     root.style.animation = 'blink 1s reverse';
+
+    if (ctx.callback) {
+      ctx.callback(this.context);
+    }
   }
 
   async setupWallet () {
@@ -224,16 +232,15 @@ export class BaseFlow {
   async onSetupWallet () {
     this.write('Connecting to wallet...');
 
-    this.signer = await getSigner();
+    this.context.signer = await getSigner();
     this.runNext(this.setupFlow);
   }
 }
 
 export class DepositFlow extends BaseFlow {
-  constructor (root, callback) {
-    super(root);
+  constructor (root, ctx) {
+    super(root, ctx);
 
-    this.context = { callback };
     this.runNext(this.setupWallet);
   }
 
@@ -244,62 +251,63 @@ export class DepositFlow extends BaseFlow {
     this.ask(
       'Which Token do you like to deposit?',
       'Select',
+      'token',
       this.amountStep
     );
   }
 
-  async amountStep (str) {
+  async amountStep (ctx) {
     this.input.setAttribute('list', '');
-    this.erc20 = await getToken(str);
-    this.tokenSymbol = await getTokenSymbol(this.erc20.address);
+
+    ctx.erc20 = await getToken(ctx.token);
+    ctx.tokenSymbol = await getTokenSymbol(ctx.erc20.address);
 
     this.ask(
-      `How much ${this.tokenSymbol} do you want to deposit?`,
+      `How much ${ctx.tokenSymbol} do you want to deposit?`,
       'Deposit amount',
+      'amount',
       this.confirmDeposit
     );
   }
 
-  confirmDeposit (str) {
-    const number = parseFloat(str);
+  confirmDeposit ({ amount, tokenSymbol }) {
+    const number = parseFloat(amount);
     if (!number || number <= 0) {
       throw new Error('Invalid Amount.');
     }
 
-    this._amount = str;
     this.confirm(
       'Confirm',
-      `Tap 'Confirm' to deposit ${this._amount} ${this.tokenSymbol}.`,
+      `Tap 'Confirm' to deposit ${amount} ${tokenSymbol}.`,
       this.onConfirmDeposit
     );
   }
 
-  async onConfirmDeposit () {
-    const decimals = await this.erc20.decimals();
-    const amount = ethers.utils.parseUnits(this._amount, decimals);
+  async onConfirmDeposit (ctx) {
+    const decimals = await ctx.erc20.decimals();
+    ctx.amount = ethers.utils.parseUnits(ctx.amount, decimals);
 
-    this.runNext(this.deposit, amount);
+    this.runNext(this.deposit);
   }
 
-  async deposit (val) {
+  async deposit (ctx) {
     const signer = await getSigner();
     const { habitat } = await getProviders();
-    const allowance = await this.erc20.allowance(await signer.getAddress(), habitat.address);
-    const erc20 = this.erc20.connect(signer);
+    const allowance = await ctx.erc20.allowance(await signer.getAddress(), habitat.address);
+    const erc20 = ctx.erc20.connect(signer);
 
-    if (allowance.lt(val)) {
+    if (allowance.lt(ctx.amount)) {
       this.write('Allowance too low.\nPlease sign a transaction to increase the token allowance first.');
-      const tx = await erc20.approve(habitat.address, val);
+      const tx = await erc20.approve(habitat.address, ctx.amount);
       this.write(`Waiting for the transaction to be mined...`);
       await tx.wait();
     }
 
     this.write('Waiting for wallet...');
-    const tx = await habitat.connect(signer).deposit(erc20.address, val, await signer.getAddress());
+    const tx = await habitat.connect(signer).deposit(erc20.address, ctx.amount, await signer.getAddress());
     this.write(`Waiting for the transaction to be mined...`);
     await tx.wait();
 
-    this.context.callback();
     this.confirm(
       'Done',
       `Deposit Completed 🙌`,
@@ -310,40 +318,76 @@ export class DepositFlow extends BaseFlow {
 
 // xxx implement and combine Exit & Withdraw steps
 export class WithdrawFlow extends BaseFlow {
-  constructor (root, token) {
-    super(root);
+  constructor (root, ctx) {
+    super(root, ctx);
 
-    if (token) {
-      this.runNext(this.amountStep, token);
+    if (this.context.token && this.context.amount) {
+      this.runNext(this.onConfirmAmount);
+    } else if (this.context.token) {
+      this.runNext(this.amountStep);
     } else {
       this.runNext(this.setupFlow);
     }
   }
 
   async setupFlow () {
-    const signer = await getSigner();
-    const { habitat } = await getProviders();
-    const erc20 = 0;
-    const availableForExit =
-      (await habitat.connect(signer).getERC20Exit(erc20.address, await signer.getAddress())).toHexString();
+    await setupTokenlist();
+    this.input.setAttribute('list', 'tokenlist');
 
-    const str = ethers.utils.formatUnits(availableForExit, await erc20.decimals());
-
-    if (Number(str) === 0) {
-      throw new Error('Nothing to withdraw yet. It can take a while for ragequited shares to become available.');
-    }
-
-    this.confirm(
-      'Confirm',
-      `Tap 'Confirm' to withdraw ${str} ${this.tokenSymbol}.`,
-      this.onConfirmWithdraw
+    this.ask(
+      'Which Token do you want to withdraw?',
+      'Select',
+      'token',
+      this.amountStep
     );
   }
 
-  async onConfirmWithdraw () {
-    this.write('Waiting for wallet...');
+  async amountStep (ctx) {
+    this.input.setAttribute('list', '');
+    const erc20 = await getToken(ctx.token);
+    const tokenSymbol = await getTokenSymbol(erc20.address);
 
-    const tx = await this.habitat.connect(signer).withdraw(this.erc20.address, 0);
+    this.ask(
+      `How much ${tokenSymbol} do you want to withdraw?`,
+      'Withdraw amount',
+      'amount',
+      this.onConfirmAmount
+    );
+  }
+
+  async onConfirmAmount (ctx) {
+    const erc20 = await getToken(ctx.token);
+    const tokenSymbol = await getTokenSymbol(erc20.address);
+    const wanted = ethers.utils.parseUnits(ctx.amount, erc20._decimals);
+    const { habitat, bridge } = await getProviders();
+    const signer = await getSigner();
+    const account = await signer.getAddress();
+    const availableForExit =
+      (await bridge.getERC20Exit(erc20.address, account)).toHexString();
+
+    if (wanted.gt(availableForExit)) {
+      this.write('You have to request an exit first.\nYou can withdraw the amount once it is finalized.');
+      const args = {
+        token: erc20.address,
+        to: account,
+        value: wanted.toHexString(),
+      };
+      ctx.receipt = await sendTransaction('ExitToken', args);
+
+      this.confirm(
+        'Understood',
+        `The Exit is now queued. You can check the status of pending Exits on this page.`,
+        this.onDone
+      );
+      return;
+    }
+
+    // rootnet
+    this.write('Waiting for wallet...');
+    const tx = await habitat.connect(signer).withdraw(erc20.address, 0);
+    this.write(`Waiting for the transaction to be mined...`);
+    await tx.wait();
+
     this.confirm(
       'Done',
       `Withdraw transaction hash: ${tx.hash}.`,
@@ -353,10 +397,9 @@ export class WithdrawFlow extends BaseFlow {
 }
 
 export class CreateCommunityFlow extends BaseFlow {
-  constructor (root) {
-    super(root);
+  constructor (root, ctx) {
+    super(root, ctx);
 
-    this.context = {};
     this.runNext(this.setupWallet);
   }
 
@@ -364,41 +407,42 @@ export class CreateCommunityFlow extends BaseFlow {
     this.ask(
       `What should be the name of your community?`,
       'Community Name',
+      'name',
       this.confirmName
     );
   }
 
-  async confirmName (str) {
-    this.context.name = str;
+  async confirmName (ctx) {
     await setupTokenlist();
     this.input.setAttribute('list', 'tokenlist');
 
     this.ask(
       `What is the Governance Token of the community?`,
       'Governance Token',
+      'governanceToken',
       this.confirmGovernanceToken
     );
   }
 
-  async confirmGovernanceToken (str) {
+  async confirmGovernanceToken (ctx) {
     this.input.setAttribute('list', '');
-    const erc20 = await getToken(str);
-    this.context.governanceToken = erc20.address;
-    const tknName = await erc20.name();
+    ctx.erc20 = await getToken(ctx.governanceToken);
+    ctx.governanceToken = ctx.erc20.address;
+    const tknName = await ctx.erc20.name();
 
     this.confirm(
       'Looks Good',
-      `So, you are creating ${this.context.name} by using ${tknName}?`,
+      `So, you are creating ${ctx.name} by using ${tknName}?`,
       this.looksGood
     );
   }
 
-  async looksGood () {
+  async looksGood (ctx) {
     let args = {
-      governanceToken: this.context.governanceToken,
-      metadata: JSON.stringify({ title: this.context.name }),
+      governanceToken: ctx.governanceToken,
+      metadata: JSON.stringify({ title: ctx.name }),
     };
-    let tmp = await sendTransaction('CreateCommunity', args, this.signer, this.habitat);
+    let tmp = await sendTransaction('CreateCommunity', args);
 
     this.confirm(
       'Done',
@@ -409,11 +453,9 @@ export class CreateCommunityFlow extends BaseFlow {
 }
 
 export class CreateTreasuryFlow extends CreateCommunityFlow {
-  constructor (root, communityId, callback) {
-    super(root);
+  constructor (root, ctx) {
+    super(root, ctx);
 
-    this.context.communityId = communityId;
-    this.context.callback = callback;
     this.runNext(this.setupFlow);
   }
 
@@ -421,41 +463,41 @@ export class CreateTreasuryFlow extends CreateCommunityFlow {
     this.ask(
       `What should be the name of the Treasury?`,
       'e.g. Marketing 💰',
+      'name',
       this.confirmName
     );
   }
 
-  async confirmName (str) {
-    this.context.name = str;
+  async confirmName (ctx) {
     await setupModulelist();
     this.input.setAttribute('list', 'modulelist');
 
     this.ask(
       `Which smart contract is the gatekeeper of this treasury?`,
       'Choose from the list',
+      'module',
       this.confirmCondition
     );
   }
 
-  async confirmCondition (str) {
-    const [moduleName, address] = str.split('@');
-    this.context.address = address;
+  async confirmCondition (ctx) {
+    const [moduleName, address] = ctx.module.split(' @ ');
+    ctx.address = address;
     this.confirm(
       'Looks Good',
-      `So, you are creating ${this.context.name} which is managed by ${moduleName}?`,
+      `So, you are creating ${ctx.name} which is managed by ${moduleName}?`,
       this.looksGood
     );
   }
 
-  async looksGood () {
+  async looksGood (ctx) {
     const args = {
-      communityId: this.context.communityId,
-      condition: this.context.address,
-      metadata: JSON.stringify({ title: this.context.name }),
+      communityId: ctx.communityId,
+      condition: ctx.address,
+      metadata: JSON.stringify({ title: ctx.name }),
     };
-    let tmp = await sendTransaction('CreateVault', args, this.signer, this.habitat);
+    ctx.receipt = await sendTransaction('CreateVault', args);
 
-    this.context.callback(tmp);
     this.confirm(
       'Done',
       'Confirmed! You can now fill your chest with 🍌',
@@ -465,10 +507,9 @@ export class CreateTreasuryFlow extends CreateCommunityFlow {
 }
 
 export class UsernameFlow extends BaseFlow {
-  constructor (root, callback) {
-    super(root);
+  constructor (root, ctx) {
+    super(root, ctx);
 
-    this.context = { callback };
     this.runNext(this.setupFlow);
   }
 
@@ -476,12 +517,13 @@ export class UsernameFlow extends BaseFlow {
     this.ask(
       `What name do you like?`,
       'e.g. Sabrina the 🙀',
+      'username',
       this.confirmName
     );
   }
 
-  async confirmName (username) {
-    this.context.shortString = getShortString(username);
+  async confirmName (ctx) {
+    this.context.shortString = getShortString(ctx.username);
     const logs = await doQuery('ClaimUsername', null, this.context.shortString);
     if (logs.length) {
       throw new Error('Ouch, that one is already taken 😢');
@@ -489,18 +531,17 @@ export class UsernameFlow extends BaseFlow {
 
     this.confirm(
       'Looks Good',
-      `It's not taken! You are about to claim ${username}`,
+      `It's not taken! You are about to claim ${ctx.username}`,
       this.looksGood
     );
   }
 
-  async looksGood () {
+  async looksGood (ctx) {
     const args = {
-      shortString: this.context.shortString,
+      shortString: ctx.shortString,
     };
-    let tmp = await sendTransaction('ClaimUsername', args, this.signer, this.habitat);
+    ctx.receipt = await sendTransaction('ClaimUsername', args);
 
-    this.context.callback(tmp);
     this.confirm(
       'Done',
       'Confirmed! You can now freak out 💃',
@@ -510,12 +551,11 @@ export class UsernameFlow extends BaseFlow {
 }
 
 export class TransferFlow extends BaseFlow {
-  constructor (root, token) {
-    super(root);
+  constructor (root, ctx) {
+    super(root, ctx);
 
-    this.context = {};
-    if (token) {
-      this.runNext(this.amountStep, token);
+    if (this.context.token) {
+      this.runNext(this.amountStep);
     } else {
       this.runNext(this.setupFlow);
     }
@@ -528,61 +568,63 @@ export class TransferFlow extends BaseFlow {
     this.ask(
       'Which Token do you like to Transfer?',
       'Select',
+      'token',
       this.amountStep
     );
   }
 
-  async amountStep (str) {
+  async amountStep (ctx) {
     this.input.setAttribute('list', '');
-    this.context.erc20 = await getToken(str);
-    this.context.tokenSymbol = await getTokenSymbol(this.context.erc20.address);
+    ctx.erc20 = await getToken(ctx.token);
+    ctx.tokenSymbol = await getTokenSymbol(ctx.erc20.address);
 
     this.ask(
-      `How much ${this.context.tokenSymbol} do you want to Transfer?`,
+      `How much ${ctx.tokenSymbol} do you want to Transfer?`,
       'Amount',
+      'amount',
       this.onConfirmAmount
     );
   }
 
-  onConfirmAmount (str) {
-    const number = parseFloat(str);
+  onConfirmAmount (ctx) {
+    const number = parseFloat(ctx.amount);
     if (!number || number <= 0) {
       throw new Error('Invalid Amount.');
     }
 
-    this.context.amount = str;
     this.ask(
       `Who is the Receiver?`,
       'Address, Username or ENS',
+      'receiver',
       this.onConfirmReceiver
     );
   }
 
-  async onConfirmReceiver (str) {
-    this.context.receiver = await resolveName(str);
-    if (!this.context.receiver) {
+  async onConfirmReceiver (ctx) {
+    ctx.receiver = await resolveName(ctx.receiver);
+    if (!ctx.receiver) {
       throw new Error('not found');
     }
 
     this.confirm(
       'Sign',
-      `Please double check the receiver:\n${this.context.receiver}`,
+      `Please double check the receiver:\n${ctx.receiver}`,
       this.doTransfer
     );
   }
 
-  async doTransfer (val) {
-    const amount = ethers.utils.parseUnits(this.context.amount, this.context.erc20._decimals).toHexString();
+  async doTransfer (ctx) {
+    const amount = ethers.utils.parseUnits(ctx.amount, ctx.erc20._decimals).toHexString();
     const args = {
-      token: this.context.erc20.address,
-      to: this.context.receiver,
+      token: ctx.erc20.address,
+      to: ctx.receiver,
       value: amount,
     };
-    const receipt = await sendTransaction('TransferToken', args);
+    ctx.receipt = await sendTransaction('TransferToken', args);
 
     this.confirm(
       'Done',
-      `Transaction hash: ${receipt.transactionHash}`,
+      `and all that's left is glory`,
       this.onDone
     );
   }
