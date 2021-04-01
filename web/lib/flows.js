@@ -175,7 +175,7 @@ export class BaseFlow {
     } catch (e) {
       console.log(e);
       this.notifyBox.textContent = '';
-      this.writeError(e.message);
+      this.writeError((e.error ? e.error.message : '') || e.message || e.toString());
       this.confirm('Retry', '', () => this.handleCallback(oldCallback, oldArg));
     }
   }
@@ -230,9 +230,10 @@ export class BaseFlow {
 }
 
 export class DepositFlow extends BaseFlow {
-  constructor (root) {
+  constructor (root, callback) {
     super(root);
 
+    this.context = { callback };
     this.runNext(this.setupWallet);
   }
 
@@ -288,17 +289,20 @@ export class DepositFlow extends BaseFlow {
 
     if (allowance.lt(val)) {
       this.write('Allowance too low.\nPlease sign a transaction to increase the token allowance first.');
-      let tx = await erc20.approve(habitat.address, val);
-      this.write(`Waiting for Transaction(${tx.hash}) to be mined...`);
+      const tx = await erc20.approve(habitat.address, val);
+      this.write(`Waiting for the transaction to be mined...`);
       await tx.wait();
     }
 
     this.write('Waiting for wallet...');
-
     const tx = await habitat.connect(signer).deposit(erc20.address, val, await signer.getAddress());
+    this.write(`Waiting for the transaction to be mined...`);
+    await tx.wait();
+
+    this.context.callback();
     this.confirm(
       'Done',
-      `Deposit transaction hash: ${tx.hash}`,
+      `Deposit Completed 🙌`,
       this.onDone
     );
   }

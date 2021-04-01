@@ -19,6 +19,7 @@ contract HabitatWallet is HabitatBase {
     } else {
       uint256 balance = HabitatBase.getErc20Balance(token, owner);
       HabitatBase._setErc20Balance(token, owner, balance + value);
+      emit TokenTransfer(token, address(0), owner, value);
     }
   }
 

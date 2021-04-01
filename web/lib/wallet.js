@@ -8,10 +8,8 @@ import {
   getEtherscanTokenLink,
   getTokenName,
   getNetwork,
+  getConfig,
 } from './utils.js';
-import {
-  HBT,
-} from './config.js';
 import {
   doQuery,
   getProviders,
@@ -30,6 +28,7 @@ import './circle.js';
 import './HabitatPath.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
+const { HBT } = getConfig();
 let walletContainer;
 let tokenContract;
 let account;
@@ -53,7 +52,11 @@ const ACCOUNT_TEMPLATE =
   <space></space>
   <space></space>
   <div style='width:80ch;max-width:100%'>
+    <label>
+    Loading...
     <habitat-slider id='progress'></habitat-slider>
+    </label>
+    <space></space>
     <div id='erc20' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(4, auto);'></div>
   </div>
   <space></space>
@@ -65,47 +68,114 @@ const ACCOUNT_TEMPLATE =
   <div class='flex row'>
   </div>
   <space></space>
+  <div style='width:80ch;max-width:100%'>
+    <div id='history' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, auto);'></div>
+  </div>
+  <space></space>
+  <space></space>
 </div>`;
 
-async function updateErc20 () {
-  const slider = document.querySelector('habitat-slider#progress');
-  //const logs = await doQuery('Deposit');
-  const tokens = [HBT, '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9', '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'];
+async function queryTransfers () {
+  // xxx
+  const { habitat } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
+  // to
+  let logs = await doQuery('TokenTransfer', null, null, account);
+  // from
+  logs = logs.concat(await doQuery('TokenTransfer', null, account));
+  // todo sort and filter
+  const tokens = [];
+  const transfers = [];
+
+  for (const log of logs) {
+    const evt = habitat.interface.parseLog(log);
+    const { token, from, to, value } = evt.args;
+    const isDeposit = from === ethers.constants.AddressZero;
+    const isIncoming = to === account;
+    if (tokens.indexOf(token) === -1) {
+      tokens.push(token);
+    }
+    if (transfers.findIndex((e) => e.transactionHash === log.transactionHash) === -1) {
+      transfers.push(Object.assign({ token, from, to, value }, { transactionHash: log.transactionHash }));
+    }
+  }
+
+  return { tokens, transfers: transfers.reverse() };
+}
+
+async function updateErc20 () {
+  // xxx
+  const slider = document.querySelector('habitat-slider#progress');
   const { habitat } = await getProviders();
-  let html = '';
+  const { tokens, transfers } = await queryTransfers();
 
-  //xxx
-  for (let i = 0, len = tokens.length; i < len; i++) {
-    const tokenAddress = tokens[i];
-    const erc = await getErc20(tokenAddress);
-    const balance = await habitat.getErc20Balance(tokenAddress, account);
-    slider.setRange(i, i, len);
-    html +=
-      `
-      <a target='_blank' href='${getEtherscanTokenLink(tokenAddress, account)}'>${await getTokenName(tokenAddress)}</a>
-      <p>${renderAmount(balance, erc._decimals)}</p>
-      <button id='_transfer' class='secondary purple' token='${tokenAddress}'>Transfer</button>
-      <button id='_withdraw' class='secondary purple' token='${tokenAddress}'>Withdraw</button>
-      `;
+  {
+    // render balances
+    const container = document.querySelector('#erc20');
+    let html = '';
+    for (let i = 0, len = tokens.length; i < len; i++) {
+      const tokenAddress = tokens[i];
+      const erc = await getErc20(tokenAddress);
+      const balance = await habitat.getErc20Balance(tokenAddress, account);
+      slider.setRange(i, i, len);
+      html +=
+        `
+        <a target='_blank' href='${getEtherscanTokenLink(tokenAddress, account)}'>${await getTokenName(tokenAddress)}</a>
+        <p>${renderAmount(balance, erc._decimals)}</p>
+        <button id='_transfer' class='secondary purple' token='${tokenAddress}'>Transfer</button>
+        <button id='_withdraw' class='secondary purple' token='${tokenAddress}'>Withdraw</button>
+        `;
+    }
+    container.innerHTML = html;
+    const transferButton = document.querySelector('#transfer');
+    const withdrawButton = document.querySelector('#withdraw');
+    for (const e of container.querySelectorAll('#_transfer')) {
+      wrapListener(e, (evt) => new TransferFlow(transferButton, evt.target.getAttribute('token')));
+      //wrapListener(e, (evt) => new TransferFlow(evt.target, evt.target.getAttribute('token')));
+    }
+    for (const e of container.querySelectorAll('#_withdraw')) {
+      wrapListener(e, (evt) => new WithdrawFlow(withdrawButton, evt.target.getAttribute('token')));
+      //wrapListener(e, (evt) => new WithdrawFlow(evt.target, evt.target.getAttribute('token')));
+    }
+
+    document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
   }
 
-  const container = document.querySelector('#erc20');
-  container.innerHTML = html;
-  const transferButton = document.querySelector('#transfer');
-  const withdrawButton = document.querySelector('#withdraw');
-  for (const e of container.querySelectorAll('#_transfer')) {
-    wrapListener(e, (evt) => new TransferFlow(transferButton, evt.target.getAttribute('token')));
-    //wrapListener(e, (evt) => new TransferFlow(evt.target, evt.target.getAttribute('token')));
-  }
-  for (const e of container.querySelectorAll('#_withdraw')) {
-    wrapListener(e, (evt) => new WithdrawFlow(withdrawButton, evt.target.getAttribute('token')));
-    //wrapListener(e, (evt) => new WithdrawFlow(evt.target, evt.target.getAttribute('token')));
+  {
+    // transfer history
+    const container = document.querySelector('#history');
+    let html = '<p></p><p></p><p></p><p>From</p><p>To</p>';
+    for (let i = 0, len = transfers.length; i < len; i++) {
+      slider.setRange(i, i, len);
+      const { token, from, to, value } = transfers[i];
+      const isDeposit = from === ethers.constants.AddressZero;
+      const isIncoming = to === account;
+      const erc = await getErc20(token);
+      const amount = renderAmount(value, erc._decimals);
+      let type = 'Outgoing';
+
+      if (isDeposit) {
+        type = 'Deposit';
+      } else if (isIncoming) {
+        type = 'Incoming';
+      }
+
+      html +=
+        `
+        <p>${type}</p>
+        <a target='_blank' href='${getEtherscanTokenLink(token, account)}'>${await getTokenName(token)}</a>
+        <p>${amount}</p>
+        <p>${await getUsername(from)}</p>
+        <p>${await getUsername(to)}</p>
+        `;
+    }
+    if (transfers.length) {
+      container.innerHTML = html;
+    }
   }
 
-  document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
-  slider.style.display = 'none';
+  slider.parentElement.style.display = 'none';
 }
 
 const ANIMATION_IN = 'blink .3s ease-in';
@@ -130,6 +200,15 @@ async function updateAccount (container) {
   await updateErc20();
 }
 
+async function maybeUpdateAccount () {
+  const container = document.querySelector('overlay');
+  if (!container) {
+    return;
+  }
+
+  await updateAccount(container);
+}
+
 async function accountOverlay () {
   const container = document.querySelector('overlay') || document.createElement('overlay');
   container.className = 'overlay';
@@ -139,11 +218,12 @@ async function accountOverlay () {
     animatedRemove(container);
   });
   document.body.appendChild(container);
+
   wrapListener(container.querySelector('#transfer'), (evt) => new TransferFlow(evt.target));
   wrapListener(container.querySelector('#withdraw'), (evt) => new WithdrawFlow(evt.target));
-  wrapListener(container.querySelector('#deposit'), (evt) => new DepositFlow(evt.target));
-  wrapListener(container.querySelector('button#name'), (evt) => new UsernameFlow(evt.target, () => updateAccount(container)));
-  await updateAccount(container);
+  wrapListener(container.querySelector('#deposit'), (evt) => new DepositFlow(evt.target, maybeUpdateAccount));
+  wrapListener(container.querySelector('button#name'), (evt) => new UsernameFlow(evt.target, maybeUpdateAccount));
+  await maybeUpdateAccount();
 }
 
 async function update (skipInit) {

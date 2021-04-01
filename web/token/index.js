@@ -11,9 +11,9 @@ import {
   renderAmount,
   setupTokenlist,
   getToken,
+  getConfig,
 } from '/lib/utils.js';
-import {
-  ROOT_CHAIN_ID,
+const {
   TOKEN_TURNER,
   HBT,
   UNISWAP_FACTORY,
@@ -23,7 +23,7 @@ import {
   FUNDING_SUPPLY,
   FUNDING_START_DATE,
   EPOCH_SECONDS,
-} from '/lib/config.js';
+} = getConfig();
 
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 

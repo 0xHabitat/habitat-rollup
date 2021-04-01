@@ -1,5 +1,6 @@
 import ethers from 'ethers';
 import fs from 'fs';
+import repl from 'repl';
 
 import TransactionBuilder from '@NutBerry/rollup-bricks/dist/TransactionBuilder.js';
 import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
@@ -78,9 +79,26 @@ async function main () {
   const provider = new ethers.providers.JsonRpcProvider('http://localhost:8111');
   const wallet = new ethers.Wallet(privKey, rootProvider);
   //
-  const bridgeL1 = await deploy(HabitatV1Testnet, [], wallet);
-  const execProxy = await deploy(ExecutionProxy, [bridgeL1.address], wallet);
-  const erc20 = await deploy(ERC20, [], wallet);
+  let initd = false;
+  let bridgeL1, execProxy, erc20;
+  const configPath = './._simple';
+  if (fs.existsSync(configPath)) {
+    initd = true;
+    const config = JSON.parse(fs.readFileSync(configPath));
+    bridgeL1 = new ethers.Contract(config.bridgeL1, HabitatV1Testnet.abi, wallet);
+    execProxy = new ethers.Contract(config.execProxy, ExecutionProxy.abi, wallet);
+    erc20 = new ethers.Contract(config.erc20, ERC20.abi, wallet);
+  } else {
+    bridgeL1 = await deploy(HabitatV1Testnet, [], wallet);
+    execProxy = await deploy(ExecutionProxy, [bridgeL1.address], wallet);
+    erc20 = await deploy(ERC20, [], wallet);
+    const config = {
+      bridgeL1: bridgeL1.address,
+      execProxy: execProxy.address,
+      erc20: erc20.address,
+    }
+    fs.writeFileSync(configPath, JSON.stringify(config));
+  }
 
   console.log({ bridge: bridgeL1.address, executionProxy: execProxy.address, erc20: erc20.address, privKey });
 
@@ -96,6 +114,7 @@ async function main () {
     );
     await startServer(br, { host: '0.0.0.0', rpcPort: 8111 });
     await br.init();
+    repl.start().context.bridge = br;
     // edit the config file
     //const path = './web/lib/.rollup-config.js';
     //const config = fs.readFileSync(path).toString().split('\n').filter((e) => e.indexOf('EXECUTION_PROXY_ADDRESS') === -1);
@@ -112,6 +131,9 @@ async function main () {
   }
   //
   const bridgeL2 = bridgeL1.connect(provider);
+  if (initd) {
+    return;
+  }
 
   {
     // claim username

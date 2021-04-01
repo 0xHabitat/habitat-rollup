@@ -4,11 +4,12 @@ import {
   getErc20,
   walletIsConnected,
   renderAmount,
+  getConfig,
 } from '/lib/utils.js';
-import {
+const {
   HBT,
   EVOLUTION_ENDPOINT,
-} from '/lib/config.js';
+} = getConfig();
 
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 

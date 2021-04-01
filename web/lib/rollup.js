@@ -3,7 +3,7 @@ import { BRICK_ABI, EXECUTION_PROXY_ABI, TYPED_DATA } from './constants.js';
 import { getSigner, getProvider, getErc20, getTokenSymbol, walletIsConnected, secondsToString, renderAddress } from './utils.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
-const ROOT_CHAIN_ID = Number(localStorage.getItem('chainId')) || 3;
+const ROOT_CHAIN_ID = window.location.hostname === 'localhost' ? 99 : 3;
 const { RPC_URL, EXECUTION_PROXY_ADDRESS } = NETWORKS[ROOT_CHAIN_ID];
 
 export async function getProviders () {
@@ -233,6 +233,8 @@ export async function doQuery (name, ...args) {
   const { habitat } = await getProviders();
   const blockNum = await habitat.provider.getBlockNumber();
   const filter = habitat.filters[name](...args);
+  // xxx: because deposit transaction don't match the message format yet
+  filter.address = null;
 
   filter.toBlock = blockNum;
   filter.fromBlock = 1;
@@ -251,7 +253,7 @@ export function getShortString (str) {
 
 export async function getUsername (address) {
   const logs = await doQuery('ClaimUsername', address);
-  let username = address;
+  let username = renderAddress(address);
 
   if (logs.length) {
     try {

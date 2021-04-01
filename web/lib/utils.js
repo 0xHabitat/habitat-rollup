@@ -1,4 +1,4 @@
-import { WETH } from './config.js';
+import CONFIGS from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export { ethers };
@@ -72,7 +72,12 @@ export function getNetworkName (id) {
 export async function getErc20 (addr) {
   if (!_cache[addr]) {
     const tkn = new ethers.Contract(addr, ERC20_ABI, getProvider());
-    tkn._decimals = await tkn.decimals();
+    tkn._decimals = 18;
+    try {
+      tkn._decimals = await tkn.decimals();
+    } catch (e) {
+      console.error(e);
+    }
     _cache[addr] = tkn;
   }
 
@@ -85,7 +90,7 @@ export function walletIsConnected () {
   return !!document._signer || (!!localStorage.getItem(WALLET_AUTH_KEY) && window.ethereum);
 }
 
-export async function getSigner () {
+export async function getSigner (throwIfWrongChain = true) {
   if (document._signer) {
     return document._signer;
   }
@@ -101,7 +106,7 @@ export async function getSigner () {
   const signer = (new ethers.providers.Web3Provider(window.ethereum, 'any')).getSigner();
   const network = await signer.provider.getNetwork();
 
-  if (network.chainId !== ROOT_CHAIN_ID) {
+  if (throwIfWrongChain && network.chainId !== ROOT_CHAIN_ID) {
     const name = getNetworkName(ROOT_CHAIN_ID);
     throw new Error(`Please switch your wallet network to ${name}`);
   }
@@ -503,12 +508,15 @@ export async function getToken (val) {
 
 async function _getTokenCached (address) {
   const erc20 = await getErc20(address);
+  const t = '??? - invalid';
+  erc20._name = t;
+  erc20._symbol = t;
 
   try {
-    if (erc20._name === undefined) {
+    if (erc20._name === t) {
       erc20._name = await erc20.name();
     }
-    if (erc20._symbol === undefined) {
+    if (erc20._symbol === t) {
       erc20._symbol = await erc20.symbol();
     }
   } catch (e) {
@@ -524,4 +532,8 @@ export async function getTokenName (address) {
 
 export async function getTokenSymbol (address) {
   return (await _getTokenCached(address))._symbol || '???';
+}
+
+export function getConfig () {
+  return CONFIGS[ROOT_CHAIN_ID];
 }

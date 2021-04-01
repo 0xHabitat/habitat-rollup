@@ -16,7 +16,8 @@
 
 .listitem {
   min-width: auto;
-  max-width: 42ch;
+  width: fit-content;
+  max-width: 100%;
   margin: 1rem;
   padding: 1rem;
   background: linear-gradient(135deg, rgba(99, 91, 255, 0.15) 6.42%, rgba(59, 222, 255, 0.15) 53.21%, rgba(28, 219, 158, 0.15) 98.54%);

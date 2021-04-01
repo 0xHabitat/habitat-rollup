@@ -461,6 +461,22 @@
       "decimals": 18,
       "chainId": 42,
       "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xd0A1E359811322d97991E03f863a0C30C2cF029C/logo.png"
+    },
+    {
+      "name": "Free Token",
+      "address": "0x6f32048765c5abDb1c36417c25eb81A2de2d2A34",
+      "symbol": "FREE",
+      "decimals": 18,
+      "chainId": 3,
+      "logoURI": ""
+    },
+    {
+      "name": "Habitat Token",
+      "address": "0x6533Bc5355561cbb841E81eb07056F5EbE4DF413",
+      "symbol": "HBT",
+      "decimals": 10,
+      "chainId": 3,
+      "logoURI": ""
     }
   ]
 }

@@ -7,10 +7,11 @@ import {
   renderAddress,
   getEtherscanLink,
   secondsToString,
+  getConfig,
 } from '/lib/utils.js';
-import {
+const {
   HBT,
-} from '/lib/config.js';
+} = getConfig();
 
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
@@ -50,8 +51,10 @@ async function update () {
 
   let account;
   if (walletIsConnected()) {
-    const signer = await getSigner();
-    account = (await signer.getAddress()).toLowerCase();
+    try {
+      const signer = await getSigner();
+      account = (await signer.getAddress()).toLowerCase();
+    } catch (e) {}
   }
 
   const eventFilter = {
