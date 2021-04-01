@@ -15,9 +15,8 @@ const {
 
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
+const UINT256_ZERO = '0x0000000000000000000000000000000000000000000000000000000000000000';
 const UNISWAP_PAIR = '0xc7a1cb6edc22e94f17c80eb5b959f2ad28511d4e';
-const MINT_TOPIC = '0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f';
-const BURN_TOPIC = '0xdccd412f0b1252819cb1fd330b93224ca42612892bb3f4f789976e6d81936496';
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const START_BLOCK = 12_010_274;
 const PRECISION = 10000;
@@ -57,44 +56,29 @@ async function update () {
     } catch (e) {}
   }
 
-  const eventFilter = {
-    address: UNISWAP_PAIR,
-    topics: [[MINT_TOPIC, BURN_TOPIC, TRANSFER_TOPIC]],
-    fromBlock: `0x${START_BLOCK.toString(16)}`,
-    toBlock: 'latest',
-  };
-  // fetch mint, burn and transfer events of the uniswap pair and gather timestamps
-  const logs = await provider.send('eth_getLogs', [eventFilter]);
   const slider = document.querySelector('#progress habitat-slider');
-
-  // fetch timestamps
   const todo = [];
-  let lastLog;
-  for (let i = 0, len = logs.length; i < len; i++) {
-    slider.setRange(i, i, len);
+  {
+    // fetch transfer events of the uniswap pair and gather timestamps
+    const eventFilter = {
+      address: UNISWAP_PAIR,
+      topics: [TRANSFER_TOPIC],
+      fromBlock: `0x${START_BLOCK.toString(16)}`,
+      toBlock: 'latest',
+    };
+    const logs = await provider.send('eth_getLogs', [eventFilter]);
+    for (let i = 0, len = logs.length; i < len; i++) {
+      slider.setRange(i, i, len);
 
-    const log = logs[i];
-    const { timestamp } = globalBlocks[log.blockHash] || await provider.getBlock(log.blockHash);
-    globalBlocks[log.blockHash] = { timestamp };
+      const log = logs[i];
+      const { timestamp } = globalBlocks[log.blockHash] || await provider.getBlock(log.blockHash);
+      globalBlocks[log.blockHash] = { timestamp };
 
-    if (timestamp > END_DATE) {
-      // done
-      break;
-    }
-
-    if (lastLog && lastLog.transactionHash === log.transactionHash) {
-      lastLog.logs.push(log);
-      if (i === len-1) {
-        todo.push(lastLog);
+      if (timestamp > END_DATE) {
+        // done
+        break;
       }
-    } else {
-      // sortout transactions with no mint or burn events
-      if (lastLog && lastLog.logs.find((e) => e.topics[0] === MINT_TOPIC || e.topics[0] === BURN_TOPIC)) {
-        todo.push(lastLog);
-      } else {
-        console.log('ignoring', lastLog);
-      }
-      lastLog = { transactionHash: log.transactionHash, timestamp, logs: [log] };
+      todo.push({ timestamp, topics: log.topics, data: log.data });
     }
   }
 
@@ -103,65 +87,35 @@ async function update () {
   // save/cache
   localStorage.setItem('gblocks', JSON.stringify(globalBlocks));
 
-  // filter the events and keep track of pool shares for each day
+  // go through the events and keep track of pool shares for each day
   const days = [];
   let prevDay = {};
   let totalPool = BigInt(0);
-  // assuming insertition order
-  for (const { timestamp, logs } of todo) {
+  for (const { timestamp, topics, data } of todo) {
     const day = ~~((timestamp - START_DATE) / ONE_DAY_SECONDS);
     const accountMap = days[day] || Object.assign({}, prevDay);
     prevDay = accountMap;
     days[day] = accountMap;
 
-    let transfers = [];
-    for (const log of logs) {
-      const topic = log.topics[0];
+    const isMint = topics[1] === UINT256_ZERO;
+    const isBurn = topics[2] === UINT256_ZERO;
+    const from = `0x${(topics[1]).slice(-40)}`;
+    const to = `0x${(topics[2]).slice(-40)}`;
+    const transferAmount = BigInt(data);
 
-      if (topic === TRANSFER_TOPIC) {
-        transfers.push(log);
-        continue;
-      }
-
-      const isMint = topic === MINT_TOPIC;
-      const isBurn = topic === BURN_TOPIC;
-      if (!isMint && !isBurn) {
-        continue;
-      }
-
-      const transferAmount = BigInt(transfers[transfers.length - 1].data);
-      // for a burn, we get the owner from the transfer event before the last one
-      // the special case for zapper is looking for the last transfer in case of MINT
-      let dst;
-      if (isMint) {
-        const lastLog = logs[logs.length - 1];
-        // defaults to the last transfer event
-        dst = transfers[transfers.length - 1];
-
-        if (lastLog.topics[0] === TRANSFER_TOPIC && dst.data === lastLog.data) {
-          console.log(logs);
-          dst = lastLog;
-        }
-      } else {
-        dst = transfers[transfers.length - 2];
-      }
-
-      const from =
-        `0x${(isMint ? dst.topics[2] : dst.topics[1]).slice(-40)}`;
-      let balance = accountMap[from] || BigInt(0);
-
-      if (topic === MINT_TOPIC) {
-        totalPool += transferAmount;
-        balance += transferAmount;
-      }
-      if (topic === BURN_TOPIC) {
-        totalPool -= transferAmount;
-        balance -= transferAmount;
-      }
-
-      accountMap[from] = balance;
-      accountMap.total = totalPool;
+    if (!isMint) {
+      accountMap[from] = (accountMap[from] || BigInt(0)) - transferAmount;
     }
+    if (!isBurn) {
+      accountMap[to] = (accountMap[to] || BigInt(0)) + transferAmount;
+    }
+
+    if (isBurn) {
+      totalPool -= transferAmount;
+    } else if (isMint) {
+      totalPool += transferAmount;
+    }
+    accountMap.total = totalPool;
   }
 
   let totalRewards = [];
@@ -184,7 +138,7 @@ async function update () {
 
       let totalReward = totalRewards.find((e) => e.addr === addr);
       if (!totalReward) {
-        totalReward = { reward: 0, share: 0, days: 0, addr: addr };
+        totalReward = { reward: 0, share: 0, days: 0, expectedReward: 0, addr: addr };
         totalRewards.push(totalReward);
       }
       totalReward.days++;
@@ -193,12 +147,16 @@ async function update () {
     }
   }
 
+  for (let i = 0, len = totalRewards.length; i < len; i++) {
+    const obj = totalRewards[i];
+    obj.expectedReward = obj.reward + (((MAX_REWARD_DAY / PRECISION) * obj.share) * (MAX_DAYS - obj.days));
+  }
+
   // now sort this stuff and render it
-  totalRewards = totalRewards.sort((a, b) => b.share - a.share);
+  totalRewards = totalRewards.sort((a, b) => (b.expectedReward - a.expectedReward));
   let html = '<p>Rank</p><p>Address</p><p>Current Reward</p><p>Expected Reward</p><p>Pool Share</p>';
   for (let i = 0, len = totalRewards.length; i < len; i++) {
-    const { addr, reward, days, share } = totalRewards[i];
-    const expectedReward = reward + (((MAX_REWARD_DAY / PRECISION) * share) * (MAX_DAYS - days));
+    const { addr, reward, share, expectedReward } = totalRewards[i];
     const highlight = account && addr === account;
     html +=
       `<p>${highlight ? '<bold>🌟' + (i + 1) + '</bold>' : i + 1}.</p><p>${renderAddress(addr)}</p><p>${renderAmount(reward)} HBT</p><p>${renderAmount(expectedReward)} HBT</p><p>${((share / PRECISION) * 100).toFixed(2)}%</p>`;
