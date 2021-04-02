@@ -158,6 +158,7 @@ async function updateErc20 () {
   document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
 
   if (!tokens.length) {
+    slider.parentElement.style.display = 'none';
     return;
   }
 
@@ -277,7 +278,7 @@ async function updateAccount (container) {
   const signer = await getSigner();
   const account = await signer.getAddress();
   const hbtBalance = await habitat.getErc20Balance(HBT, account);
-  const user = await getUsername(account);
+  const user = await getUsername(account, true);
 
   container.querySelector('#greeting').textContent = user;
   container.querySelector('#hbt').setValue(100, renderAmount(hbtBalance, hbt._decimals), 'HBT');

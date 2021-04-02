@@ -267,8 +267,8 @@ export function getShortString (str) {
   return ethers.utils.hexlify(buf).padEnd(66, '0');
 }
 
-export async function getUsername (address) {
-  let username = getCache(address);
+export async function getUsername (address, force = false) {
+  let username = force ? '' : getCache(address);
   if (username) {
     return username;
   }
