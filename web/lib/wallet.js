@@ -184,7 +184,7 @@ async function updateErc20 () {
       // fastwithdraw
       children[childPtr++].setAttribute('token', token);
     }
-    document.querySelector('#erc20').appendChild(child);
+    document.querySelector('#erc20').replaceChildren(child);
   }
 
   {
@@ -218,7 +218,7 @@ async function updateErc20 () {
       wrapListener(children[childPtr], (evt) => new WithdrawFlow(document.querySelector('button#withdraw'), { callback, amount, token }));
       children[childPtr++].disabled = disabled;
     }
-    document.querySelector('#exits').appendChild(child);
+    document.querySelector('#exits').replaceChildren(child);
   }
 
   {
@@ -227,7 +227,7 @@ async function updateErc20 () {
     child.className = 'align-right';
     child.innerHTML = '<p></p><p></p><p></p><p>From</p><p>To</p>' + ACCOUNT_TRANSFER_TEMPLATE.repeat(transfers.length);
     const children = child.children;
-    let childPtr = 0;
+    let childPtr = 5;
     for (let i = 0, len = transfers.length; i < len; i++) {
       slider.setRange(i, i, len);
       const { token, from, to, value } = transfers[i];
@@ -255,7 +255,7 @@ async function updateErc20 () {
       // to
       children[childPtr++].textContent = await getUsername(to);
     }
-    document.querySelector('#history').appendChild(child);
+    document.querySelector('#history').replaceChildren(child);
   }
 
   slider.parentElement.style.display = 'none';
