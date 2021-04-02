@@ -54,13 +54,12 @@ const ACCOUNT_TEMPLATE =
   <button id='deposit' class='flow'>Deposit</button>
   <space></space>
   <space></space>
+  <div style='width:42ch;max-width:100%'>
+    <label>Loading...<habitat-slider id='progress'></habitat-slider></label>
+  </div>
+  <space></space>
   <div style='width:80ch;max-width:100%'>
-    <label>
-    Loading...
-    <habitat-slider id='progress'></habitat-slider>
-    </label>
-    <space></space>
-    <div id='erc20' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(4, auto);'></div>
+    <div id='erc20' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, auto);'></div>
   </div>
   <space></space>
   <space></space>
@@ -131,6 +130,7 @@ async function updateErc20 () {
         <p>${renderAmount(balance, erc._decimals)}</p>
         <button id='_transfer' class='secondary purple' token='${tokenAddress}'>Transfer</button>
         <button id='_withdraw' class='secondary purple' token='${tokenAddress}'>Withdraw</button>
+        <button id='_fastWithdraw' class='secondary purple' token='${tokenAddress}' disabled>Fast Withdraw</button>
         `;
     }
     container.innerHTML = html;
