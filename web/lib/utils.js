@@ -52,7 +52,7 @@ export function setNetwork (id) {
 }
 
 export function getProvider () {
-  if (!_prov) {
+  if (!_prov || (_prov._network && _prov._network.chainId !== ROOT_CHAIN_ID)) {
     const name = getNetworkName(ROOT_CHAIN_ID);
     const url = `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
     _prov = new ethers.providers.JsonRpcProvider(url, 'any');
@@ -87,12 +87,15 @@ export async function getErc20 (addr) {
 const WALLET_AUTH_KEY = '_utils_wallet_auth';
 
 export function walletIsConnected () {
-  return !!document._signer || (!!localStorage.getItem(WALLET_AUTH_KEY) && window.ethereum);
+  return !!document._signer || (window.ethereum && window.ethereum.selectedAddress);
 }
 
 export async function getSigner (throwIfWrongChain = true) {
   if (document._signer) {
-    return document._signer;
+    const net = document._signer.provider._network;
+    if (net && net.chainId === ROOT_CHAIN_ID) {
+      return document._signer;
+    }
   }
 
   if (!window.ethereum) {

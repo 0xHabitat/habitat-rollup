@@ -165,7 +165,7 @@ async function updateSignal (ele, signal) {
 }
 
 async function updateSignalsFor (container) {
-  const account = walletIsConnected() ? await (await getSigner()).getAddress() : '';
+  const account = walletIsConnected() ? await (await getSigner(false)).getAddress() : '';
   const signals = await fetchWrapper(`${SIGNAL_URL}/${container.getAttribute('repo')}/${account}`);
   for (const signal of signals) {
     let ele = container.querySelector(`[link="${signal.link}"]`);
