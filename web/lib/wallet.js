@@ -30,6 +30,8 @@ import './HabitatPath.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 const { HBT } = getConfig();
+const ANIMATION_IN = 'blink .3s ease-in';
+const ANIMATION_OUT = 'blink reverse .3s ease-out';
 let walletContainer;
 let tokenContract;
 let account;
@@ -222,13 +224,14 @@ async function updateErc20 () {
   slider.parentElement.style.display = 'none';
 }
 
-const ANIMATION_IN = 'blink .3s ease-in';
-const ANIMATION_OUT = 'blink reverse .3s ease-out';
-
 function animatedRemove (element) {
-  element.style.animation = 'none';
-  window.requestAnimationFrame(() => element.style.animation = ANIMATION_OUT);
   element.addEventListener('animationend', () => element.remove(), false);
+  window.requestAnimationFrame(
+    function () {
+      element.style.animation = 'none';
+      window.requestAnimationFrame(() => element.style.animation = ANIMATION_OUT);
+    }
+  );
 }
 
 async function updateAccount (container) {

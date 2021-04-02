@@ -502,7 +502,7 @@ export async function getToken (val) {
     };
   }
 
-  const tokenAddress = await defaultProvider.resolveName(token);
+  const tokenAddress = ethers.utils.isAddress(token) ? token : await defaultProvider.resolveName(token);
   const erc20 = await getErc20(tokenAddress);
 
   return erc20;
@@ -510,19 +510,18 @@ export async function getToken (val) {
 
 async function _getTokenCached (address) {
   const erc20 = await getErc20(address);
-  const t = '??? - invalid';
-  erc20._name = t;
-  erc20._symbol = t;
-
   try {
-    if (erc20._name === t) {
+    if (erc20._name === undefined) {
       erc20._name = await erc20.name();
     }
-    if (erc20._symbol === t) {
+    if (erc20._symbol === undefined) {
       erc20._symbol = await erc20.symbol();
     }
   } catch (e) {
     console.warn(e);
+    const t = '??? - invalid';
+    erc20._name = t;
+    erc20._symbol = t;
   }
 
   return erc20;
@@ -548,4 +547,13 @@ export function getAttributes (ele) {
   }
 
   return ret;
+}
+
+const _globalCache = Object.create(null);
+export function getCache (key) {
+  return _globalCache[key];
+}
+
+export function setCache (key, val) {
+  _globalCache[key] = val;
 }

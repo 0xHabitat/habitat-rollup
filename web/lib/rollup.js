@@ -1,6 +1,16 @@
 import NETWORKS from './rollup-config.js';
 import { BRICK_ABI, EXECUTION_PROXY_ABI, TYPED_DATA } from './constants.js';
-import { getSigner, getProvider, getErc20, getTokenSymbol, walletIsConnected, secondsToString, renderAddress } from './utils.js';
+import {
+  getSigner,
+  getProvider,
+  getErc20,
+  getTokenSymbol,
+  walletIsConnected,
+  secondsToString,
+  renderAddress,
+  getCache,
+  setCache,
+} from './utils.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 const ROOT_CHAIN_ID = window.location.hostname === 'localhost' ? 99 : 3;
@@ -245,7 +255,6 @@ export async function doQuery (name, ...args) {
 
   filter.toBlock = blockNum;
   filter.fromBlock = 1;
-  console.log({filter});
 
   return await habitat.provider.send('eth_getLogs', [filter]);
 }
@@ -259,8 +268,13 @@ export function getShortString (str) {
 }
 
 export async function getUsername (address) {
+  let username = getCache(address);
+  if (username) {
+    return username;
+  }
+
   const logs = await doQuery('ClaimUsername', address);
-  let username = renderAddress(address);
+  username = renderAddress(address);
 
   if (logs.length) {
     try {
@@ -269,7 +283,9 @@ export async function getUsername (address) {
       console.warn(e);
     }
   }
-  return username ;
+
+  setCache(address, username);
+  return username;
 }
 
 export async function resolveUsername (str) {
