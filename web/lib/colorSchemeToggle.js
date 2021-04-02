@@ -22,6 +22,25 @@ function detectColorScheme () {
   setColor(getColor());
 }
 
+function fixNodes (theme) {
+  const nodes = document.querySelectorAll('object');
+  let flag = false;
+  for (const node of nodes) {
+    if (node.contentDocument.documentElement) {
+      node.contentDocument.documentElement.setAttribute('data-theme', theme);
+    }
+
+    if (document.readyState !== 'complete' || node.contentDocument.readyState !== 'complete') {
+      flag = true;
+      continue;
+    }
+  }
+
+  if (flag) {
+    window.requestAnimationFrame(() => fixNodes(theme));
+  }
+}
+
 function setColor (tmp) {
   cur = tmp;
 
@@ -30,22 +49,7 @@ function setColor (tmp) {
   }
 
   document.documentElement.setAttribute('data-theme', tmp);
-
-  const nodes = document.querySelectorAll('object');
-  let flag = false;
-  for (const node of nodes) {
-    if (node.contentDocument.documentElement) {
-      node.contentDocument.documentElement.setAttribute('data-theme', tmp);
-    }
-    if (document.readyState !== 'complete' || node.contentDocument.readyState !== 'complete') {
-      flag = true;
-      continue;
-    }
-  }
-
-  if (flag) {
-    window.requestAnimationFrame(() => setColor(tmp));
-  }
+  fixNodes(tmp);
 
   for (const gradient of document.querySelectorAll('habitat-gradient')) {
     gradient.disconnect();
