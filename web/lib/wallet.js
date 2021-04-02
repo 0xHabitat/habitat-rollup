@@ -36,8 +36,48 @@ let walletContainer;
 let tokenContract;
 let account;
 
+const ACCOUNT_ERC20_TEMPLATE =
+`
+<a target='_blank'></a>
+<p></p>
+<button id='_transfer' class='secondary purple'>Transfer</button>
+<button id='_withdraw' class='secondary purple'>Withdraw</button>
+<button id='_fastWithdraw' class='secondary purple' disabled>Fast Withdraw</button>
+`;
+
+const ACCOUNT_EXITS_TEMPLATE =
+`
+<a target='_blank'></a>
+<p></p>
+<p></p>
+<button id='_withdraw' class='secondary purple'>Withdraw from Bridge</button>
+`;
+
+const ACCOUNT_TRANSFER_TEMPLATE =
+`
+<p></p>
+<a target='_blank'></a>
+<p></p>
+<p></p>
+<p></p>
+`;
+
 const ACCOUNT_TEMPLATE =
 `
+<style>
+#erc20 > div, #history > div, #exits > div {
+  margin:0 auto;
+  font-family:var(--font-family-mono);
+  max-width:fit-content;
+  width:100ch;
+  display:grid;
+  gap:1rem;
+  grid-template-columns:repeat(5, auto);
+}
+#exits > div {
+  grid-template-columns:repeat(4, auto);
+}
+</style>
 <div class='flex col center'>
   <div class='flex row evenly' style='width:100%;'>
   <button id='close' class='flow smaller'>Go Back</button>
@@ -59,7 +99,7 @@ const ACCOUNT_TEMPLATE =
   </div>
   <space></space>
   <div style='width:80ch;max-width:100%'>
-    <div id='erc20' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, auto);'></div>
+    <div id='erc20'></div>
   </div>
   <space></space>
   <space></space>
@@ -71,9 +111,9 @@ const ACCOUNT_TEMPLATE =
   </div>
   <space></space>
   <div style='width:80ch;max-width:100%'>
-    <div id='exits' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(4, auto);'></div>
+    <div id='exits'></div>
     <space></space>
-    <div id='history' class='align-right' style='margin:0 auto;font-family:var(--font-family-mono);max-width:fit-content;width:100ch;display:grid;gap:1rem;grid-template-columns:repeat(5, auto);'></div>
+    <div id='history'></div>
   </div>
   <space></space>
   <space></space>
@@ -114,84 +154,80 @@ async function updateErc20 () {
   slider.parentElement.style.display = 'revert';
   const { habitat, bridge } = await getProviders();
   const { tokens, transfers } = await queryTransfers();
+  const callback = maybeUpdateAccount;
+  document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
+
+  if (!tokens.length) {
+    return;
+  }
 
   {
     // render balances
-    const container = document.querySelector('#erc20');
-    let html = '';
+    const child = document.createElement('div');
+    child.className = 'align-right';
+    child.innerHTML = ACCOUNT_ERC20_TEMPLATE.repeat(tokens.length);
+    const children = child.children;
+    let childPtr = 0;
     for (let i = 0, len = tokens.length; i < len; i++) {
-      const tokenAddress = tokens[i];
-      const erc = await getErc20(tokenAddress);
-      const balance = await habitat.getErc20Balance(tokenAddress, account);
       slider.setRange(i, i, len);
-      html +=
-        `
-        <a target='_blank' href='${getEtherscanTokenLink(tokenAddress, account)}'>${await getTokenName(tokenAddress)}</a>
-        <p>${renderAmount(balance, erc._decimals)}</p>
-        <button id='_transfer' class='secondary purple' token='${tokenAddress}'>Transfer</button>
-        <button id='_withdraw' class='secondary purple' token='${tokenAddress}'>Withdraw</button>
-        <button id='_fastWithdraw' class='secondary purple' token='${tokenAddress}' disabled>Fast Withdraw</button>
-        `;
+      const token = tokens[i];
+      const erc = await getErc20(token);
+      const balance = await habitat.getErc20Balance(token, account);
+      const tokenName = await getTokenName(token);
+      children[childPtr].textContent = tokenName;
+      children[childPtr++].href = getEtherscanTokenLink(token, account);
+      children[childPtr++].textContent = renderAmount(balance, erc._decimals);
+      // transfer
+      wrapListener(children[childPtr++], (evt) => new TransferFlow(document.querySelector('button#transfer'), { callback, token }));
+      // withdraw
+      wrapListener(children[childPtr++], (evt) => new WithdrawFlow(document.querySelector('button#withdraw'), { callback, token }));
+      // fastwithdraw
+      children[childPtr++].setAttribute('token', token);
     }
-    container.innerHTML = html;
+    document.querySelector('#erc20').appendChild(child);
   }
 
   {
     // exits
-    const container = document.querySelector('#exits');
-    let html = '';
+    const child = document.createElement('div');
+    child.className = 'align-right';
+    child.innerHTML = ACCOUNT_EXITS_TEMPLATE.repeat(tokens.length);
+    const children = child.children;
+    let childPtr = 0;
     for (let i = 0, len = tokens.length; i < len; i++) {
       slider.setRange(i, i, len);
       const token = tokens[i];
       const total = await habitat.getERC20Exit(token, account);
       const availableForExit = await bridge.getERC20Exit(token, account);
 
+      /*
       if (total.lt(1) && availableForExit.lt(1)) {
         continue;
       }
+      */
 
       const erc = await getErc20(token);
-      const amount = renderAmount(total.sub(availableForExit), erc._decimals);
-      const availableAmount = renderAmount(availableForExit, erc._decimals);
-      const disabled = availableForExit.gt(0) ? '' : 'disabled';
-      html +=
-        `
-        <a target='_blank' href='${getEtherscanTokenLink(token, account)}'>${await getTokenName(token)}</a>
-        <p>${amount} pending</p>
-        <p>${availableAmount} available</p>
-        <button
-        id='_withdraw'
-        token='${token}'
-        amount='${ethers.utils.formatUnits(availableForExit, erc._decimals)}'
-        class='secondary purple'
-        ${disabled}>Withdraw from Bridge</button>
-        `;
-    }
-    container.innerHTML = html;
-  }
+      const amount = ethers.utils.formatUnits(availableForExit, erc._decimals);
+      const disabled = !availableForExit.gt(0);
 
-  {
-    for (const e of document.querySelectorAll('#_transfer')) {
-      wrapListener(e,
-        (evt) => new TransferFlow(document.querySelector('button#transfer'), Object.assign({ callback: maybeUpdateAccount }, getAttributes(evt.target)))
-      );
+      children[childPtr].textContent = await getTokenName(token);
+      children[childPtr++].href = getEtherscanTokenLink(token, account);
+      children[childPtr++].textContent = `${renderAmount(total.sub(availableForExit), erc._decimals)} pending`;
+      children[childPtr++].textContent = `${renderAmount(availableForExit, erc._decimals)} available`;
+      // withdraw
+      wrapListener(children[childPtr], (evt) => new WithdrawFlow(document.querySelector('button#withdraw'), { callback, amount, token }));
+      children[childPtr++].disabled = disabled;
     }
-    for (const e of document.querySelectorAll('#_withdraw')) {
-      if (e.disabled) {
-        continue;
-      }
-      wrapListener(e,
-        (evt) => new WithdrawFlow(document.querySelector('button#withdraw'), Object.assign({ callback: maybeUpdateAccount }, getAttributes(evt.target)))
-      );
-    }
-
-    document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
+    document.querySelector('#exits').appendChild(child);
   }
 
   {
     // transfer history
-    const container = document.querySelector('#history');
-    let html = '<p></p><p></p><p></p><p>From</p><p>To</p>';
+    const child = document.createElement('div');
+    child.className = 'align-right';
+    child.innerHTML = '<p></p><p></p><p></p><p>From</p><p>To</p>' + ACCOUNT_TRANSFER_TEMPLATE.repeat(transfers.length);
+    const children = child.children;
+    let childPtr = 0;
     for (let i = 0, len = transfers.length; i < len; i++) {
       slider.setRange(i, i, len);
       const { token, from, to, value } = transfers[i];
@@ -207,18 +243,19 @@ async function updateErc20 () {
         type = 'Incoming';
       }
 
-      html +=
-        `
-        <p>${type}</p>
-        <a target='_blank' href='${getEtherscanTokenLink(token, account)}'>${await getTokenName(token)}</a>
-        <p>${amount}</p>
-        <p>${await getUsername(from)}</p>
-        <p>${await getUsername(to)}</p>
-        `;
+      // type
+      children[childPtr++].textContent = type;
+      // token
+      children[childPtr].textContent = await getTokenName(token);
+      children[childPtr++].href = getEtherscanTokenLink(token, account);
+      // amount
+      children[childPtr++].textContent = amount;
+      // from
+      children[childPtr++].textContent = await getUsername(from);
+      // to
+      children[childPtr++].textContent = await getUsername(to);
     }
-    if (transfers.length) {
-      container.innerHTML = html;
-    }
+    document.querySelector('#history').appendChild(child);
   }
 
   slider.parentElement.style.display = 'none';

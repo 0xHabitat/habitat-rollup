@@ -21,10 +21,11 @@ async function renderCommunity (evt) {
     <sep></sep>
     <label>
     Governance Token:
-    <a target='_blank' class='smaller' href='${getEtherscanLink(governanceToken)}'>${tokenName}</a>
+    <a id='t' target='_blank' class='smaller' href='${getEtherscanLink(governanceToken)}'></a>
     </label>
     `;
-  child.querySelector('a').textContent = (metadata ? metadata.title : '') || '???';
+  child.children[0].textContent = (metadata ? metadata.title : '') || '???';
+  child.querySelector('a#t').textContent = tokenName;
   container.appendChild(child);
 }
 
