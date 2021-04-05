@@ -90,77 +90,10 @@ case 0 {
 }
 // end of TransferToken
 
-// start of ExitToken
-// typeHash: 0x280db1a18159ff0dba5229472289dbde248095bb34cc33278bee768af6cb8338
-// function: onExitToken(address,uint256,address,address,uint256)
-case 1 {
-  let headSize := 160
-  let typeLen := 0
-  let txPtr := 384
-  let endOfSlot := add(txPtr, 160)
-
-  txPtr := 416
-  // typeHash of ExitToken
-  mstore(0, 0x280db1a18159ff0dba5229472289dbde248095bb34cc33278bee768af6cb8338)
-  // uint256 ExitToken.nonce
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(32, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // address ExitToken.token
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(64, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // address ExitToken.to
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(96, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // uint256 ExitToken.value
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(128, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // typeHash
-  let structHash := keccak256(0, 160)
-  // prefix
-  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
-  // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
-  // transactionStructHash
-  mstore(34, structHash)
-  mstore(0, keccak256(0, 66))
-  mstore(32, v)
-  mstore(64, r)
-  mstore(96, s)
-  mstore(128, 0)
-  success := staticcall(gas(), 1, 0, 128, 128, 32)
-  // functionSig
-  mstore(352, 0xe8614f53)
-  mstore(384, mload(128))
-
-  success := call(sub(gas(), 5000), address(), 0, 380, sub(endOfSlot, 380), 0, 0)
-  success := or(success, returndatasize())
-}
-// end of ExitToken
-
 // start of ClaimUsername
 // typeHash: 0x8b505a1c00897e3b1949f8e114b8f1a4cdeed6d6a26926931f57f885f33f6cfa
 // function: onClaimUsername(address,uint256,bytes32)
-case 2 {
+case 1 {
   let headSize := 96
   let typeLen := 0
   let txPtr := 256
@@ -211,7 +144,7 @@ case 2 {
 // start of SetDelegate
 // typeHash: 0x0976e4734b23f68e97fb754289639f7cde00c4a9f7421cbb59eab25341131dab
 // function: onSetDelegate(address,uint256,address)
-case 3 {
+case 2 {
   let headSize := 96
   let typeLen := 0
   let txPtr := 256
@@ -262,7 +195,7 @@ case 3 {
 // start of CreateCommunity
 // typeHash: 0x444a86b501cf5285015cf7d602819c806ff2b6d3e9a36753c81e1bf24abaa94b
 // function: onCreateCommunity(address,uint256,address,string)
-case 4 {
+case 3 {
   let headSize := 128
   let typeLen := 0
   let txPtr := 320
@@ -326,7 +259,7 @@ case 4 {
 // start of CreateVault
 // typeHash: 0x6f70797b7bf84e5eb6136f9bba812b553d6bfd37e9b86a9016c12a59a9b58eaf
 // function: onCreateVault(address,uint256,bytes32,address,string)
-case 5 {
+case 4 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -398,7 +331,7 @@ case 5 {
 // start of SubmitModule
 // typeHash: 0x93bc8b942cd55880fdda01bec4a1c33a292820f03e3e05a2465f868a5bf787de
 // function: onSubmitModule(address,uint256,address)
-case 6 {
+case 5 {
   let headSize := 96
   let typeLen := 0
   let txPtr := 256
@@ -449,7 +382,7 @@ case 6 {
 // start of ActivateModule
 // typeHash: 0x0bf485f0f9090f0baf2ad8ca67e39f883400e7d9ac7e650c5d5881244c934901
 // function: onActivateModule(address,uint256,bytes32,address)
-case 7 {
+case 6 {
   let headSize := 128
   let typeLen := 0
   let txPtr := 320
@@ -508,7 +441,7 @@ case 7 {
 // start of CreateProposal
 // typeHash: 0xb4dd5870399af19082da41c7baee72e65d3b390ffcbddf786660a22664c474b7
 // function: onCreateProposal(address,uint256,uint256,address,bytes,string,string)
-case 8 {
+case 7 {
   let headSize := 224
   let typeLen := 0
   let txPtr := 512
@@ -606,7 +539,7 @@ case 8 {
 // start of VoteOnProposal
 // typeHash: 0x001e27b96c1221fb96254fb844764eb25fc577cf4096af724925367ecaedb608
 // function: onVoteOnProposal(address,uint256,bytes32,uint256,uint256,address,uint8)
-case 9 {
+case 8 {
   let headSize := 224
   let typeLen := 0
   let txPtr := 512
@@ -689,7 +622,7 @@ case 9 {
 // start of ProcessProposal
 // typeHash: 0x024338bd68ba5784bd123e92f046e06bc764ec440ec3d3b2a5873f45933e03fc
 // function: onProcessProposal(address,bytes32)
-case 10 {
+case 9 {
   let headSize := 64
   let typeLen := 0
   let txPtr := 192

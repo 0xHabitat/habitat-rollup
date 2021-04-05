@@ -13,16 +13,23 @@ contract HabitatWallet is HabitatBase {
     // xxx check under/overflows
     if (from != to) {
       if (TokenBridgeBrick.isERC721(token, value)) {
-        require(erc721[token][value] == from, 'OWNER');
-        erc721[token][value] = to;
+        require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
+        HabitatBase._setErc721Owner(token, value, to);
+        if (to == address(0)) {
+          TokenInventoryBrick._setERC721Exit(token, to, value);
+        }
       } else {
-        uint256 tmp = getErc20Balance(token, from);
+        uint256 tmp = HabitatBase.getErc20Balance(token, from);
         require (tmp >= value);
-        _setErc20Balance(token, from, tmp - value);
+        HabitatBase._setErc20Balance(token, from, tmp - value);
 
-        tmp = getErc20Balance(token, to);
-        require(tmp + value > tmp);
-        _setErc20Balance(token, to, tmp + value);
+        if (to == address(0)) {
+          TokenInventoryBrick._incrementExit(token, to, value);
+        } else {
+          tmp = HabitatBase.getErc20Balance(token, to);
+          require(tmp + value > tmp);
+          HabitatBase._setErc20Balance(token, to, tmp + value);
+        }
       }
     }
 
@@ -35,7 +42,7 @@ contract HabitatWallet is HabitatBase {
 
     // xxx check under/overflows
     if (TokenBridgeBrick.isERC721(token, value)) {
-      erc721[token][value] = owner;
+      HabitatBase._setErc721Owner(token, value, owner);
     } else {
       uint256 oldBalance = HabitatBase.getErc20Balance(token, owner);
       uint256 newBalance = oldBalance + value;
@@ -52,21 +59,5 @@ contract HabitatWallet is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
     _transferToken(token, msgSender, to, value);
-  }
-
-  /// @dev State transition when a user exits a token.
-  function onExitToken (address msgSender, uint256 nonce, address token, address to, uint256 value) external {
-    HabitatBase._commonChecks();
-    HabitatBase._checkUpdateNonce(msgSender, nonce);
-
-    // xxx check under/overflows
-    if (TokenBridgeBrick.isERC721(token, value)) {
-      require(erc721[token][value] == msgSender, 'OWNER');
-      TokenInventoryBrick._setERC721Exit(token, to, value);
-    } else {
-      uint256 balance = HabitatBase.getErc20Balance(token, msgSender);
-      HabitatBase._setErc20Balance(token, msgSender, balance - value);
-      TokenInventoryBrick._incrementExit(token, to, value);
-    }
   }
 }

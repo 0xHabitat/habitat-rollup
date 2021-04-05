@@ -112,17 +112,12 @@ describe('HabitatV1', async function () {
 
         await waitForValueChange(oldBlock, () => habitatNode.getBlockNumber());
 
-        const newOwner = await habitat.erc721(erc721.address, value);
+        const newOwner = await habitat.getErc721Owner(erc721.address, value);
         assert.equal(newOwner, user, 'nft owner should match');
       }
 
       it('init', async () => {
         round++;
-      });
-
-      it('allowance', async () => {
-        const tx = await erc20.approve(bridge.address, depositAmount);
-        const receipt = await tx.wait();
       });
 
       it('deposit: alice', async () => {
@@ -133,27 +128,113 @@ describe('HabitatV1', async function () {
         await doNftDeposit(alice);
       });
 
-      it('transfer: alice > bob', async () => {
-        const amount = '0xf';
+      it('exit nft: bob - should fail', async () => {
         const args = {
-          token: erc20.address,
+          token: erc721.address,
+          to: ethers.constants.AddressZero,
+          value: nftId - 1,
+        };
+        const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
+        assert.equal(receipt.status, '0x0', 'receipt.status');
+      });
+
+      it('transfer erc721: alice > bob', async () => {
+        const args = {
+          token: erc721.address,
           to: bob.address,
-          value: amount,
+          value: nftId - 1,
         };
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, alice, habitat);
-
         assert.equal(receipt.status, '0x1', 'receipt.status');
         assert.equal(receipt.logs.length, 1, 'should emit');
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.token, args.token);
         assert.equal(evt.from, alice.address);
         assert.equal(evt.to, args.to);
-        assert.equal(evt.value.toString(), BigInt(amount).toString());
+        assert.equal(evt.value.toString(), BigInt(args.value).toString());
+      });
+
+      it('exit nft: bob', async () => {
+        const args = {
+          token: erc721.address,
+          to: ethers.constants.AddressZero,
+          value: nftId - 1,
+        };
+
+        const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
+        assert.equal(receipt.status, '0x1', 'receipt.status');
+        assert.equal(receipt.logs.length, 1, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(evt.token, args.token);
+        assert.equal(evt.from, bob.address);
+        assert.equal(evt.to, args.to);
+        assert.equal(evt.value.toString(), BigInt(args.value).toString());
+      });
+
+      it('exit erc20: bob - should fail', async () => {
+        const args = {
+          token: erc20.address,
+          to: ethers.constants.AddressZero,
+          value: '0x1',
+        };
+        const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
+        assert.equal(receipt.status, '0x0', 'receipt.status');
+      });
+
+      it('transfer erc20: alice > bob', async () => {
+        const args = {
+          token: erc20.address,
+          to: bob.address,
+          value: '0x1',
+        };
+
+        const { txHash, receipt } = await createTransaction('TransferToken', args, alice, habitat);
+        assert.equal(receipt.status, '0x1', 'receipt.status');
+        assert.equal(receipt.logs.length, 1, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(evt.token, args.token);
+        assert.equal(evt.from, alice.address);
+        assert.equal(evt.to, args.to);
+        assert.equal(evt.value.toString(), BigInt(args.value).toString());
+      });
+
+      it('exit erc20: bob', async () => {
+        const args = {
+          token: erc20.address,
+          to: ethers.constants.AddressZero,
+          value: '0x1',
+        };
+
+        const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
+        assert.equal(receipt.status, '0x1', 'receipt.status');
+        assert.equal(receipt.logs.length, 1, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(evt.token, args.token);
+        assert.equal(evt.from, bob.address);
+        assert.equal(evt.to, args.to);
+        assert.equal(evt.value.toString(), BigInt(args.value).toString());
       });
 
       it('deposit: bob', async () => {
         await doDeposit(bob);
+      });
+
+      it('exit erc20: bob', async () => {
+        const args = {
+          token: erc20.address,
+          to: ethers.constants.AddressZero,
+          value: (await habitat.getErc20Balance(erc20.address, bob.address)).toHexString(),
+        };
+
+        const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
+        assert.equal(receipt.status, '0x1', 'receipt.status');
+        assert.equal(receipt.logs.length, 1, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(evt.token, args.token);
+        assert.equal(evt.from, bob.address);
+        assert.equal(evt.to, args.to);
+        assert.equal(evt.value.toString(), BigInt(args.value).toString());
       });
 
       it('alice: claim user name', async () => {
@@ -295,7 +376,6 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.logs.length, 2);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         proposalId = evt.proposalId;
-        console.log({evt});
       });
 
       it('vote on proposal', async () => {
@@ -310,7 +390,7 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.status, '0x1');
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        console.log({evt});
+        assert.equal(evt.account, alice.address);
       });
     });
   }

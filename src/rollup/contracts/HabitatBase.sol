@@ -13,8 +13,6 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
   mapping (uint256 => bytes32) public executionPermits;
   // modules
   mapping (bytes32 => mapping (address => uint256)) public activeModule;
-  // token balances
-  mapping (address => mapping(uint256 => address)) public erc721;
 
   function INSPECTION_PERIOD () public view virtual override returns (uint16) {
     // ~84 hours
@@ -82,6 +80,31 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     uint256 key = _ERC20_KEY(tkn, account);
     assembly {
       sstore(key, amount)
+    }
+  }
+
+  function _ERC721_KEY (address tkn, uint256 b) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x0b0adec1d909ec867fdb1853ca8d859f7b8137ab9c01f734b3fbfc40d9061ded)
+      mstore(32, tkn)
+      let tmp := mload(64)
+      mstore(64, b)
+      ret := keccak256(0, 96)
+      mstore(64, tmp)
+    }
+  }
+
+  function getErc721Owner (address tkn, uint256 b) public virtual view returns (address ret) {
+    uint256 key = _ERC721_KEY(tkn, b);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  function _setErc721Owner (address tkn, uint256 b, address owner) internal {
+    uint256 key = _ERC721_KEY(tkn, b);
+    assembly {
+      sstore(key, owner)
     }
   }
 

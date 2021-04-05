@@ -12,12 +12,6 @@ export default {
       { name: 'to', type: 'address' },
       { name: 'value', type: 'uint256' },
     ],
-    ExitToken: [
-      { name: 'nonce', 'type': 'uint256' },
-      { name: 'token', type: 'address' },
-      { name: 'to', type: 'address' },
-      { name: 'value', type: 'uint256' },
-    ],
     ClaimUsername: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'shortString', type: 'bytes32' },
@@ -76,7 +70,6 @@ export default {
   },
   primaryTypes: [
     'TransferToken',
-    'ExitToken',
     'ClaimUsername',
     'SetDelegate',
     'CreateCommunity',
