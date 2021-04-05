@@ -30,9 +30,9 @@ const CIRCLES = `
 
 let communityId, proposalId, proposer, tx;
 
-async function processProposal (proposalIndex) {
+async function processProposal (proposalId) {
   const args = {
-    proposalIndex,
+    proposalId,
   };
 
   await sendTransaction('ProcessProposal', args);

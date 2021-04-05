@@ -12,9 +12,9 @@ contract HabitatAccount is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    require(nameToAddress[shortString] == address(0), 'SET');
+    require(HabitatBase.nameToAddress(shortString) == address(0), 'SET');
 
-    nameToAddress[shortString] = msgSender;
+    HabitatBase._setNameToAddress(shortString, msgSender);
     emit ClaimUsername(msgSender, shortString);
   }
 
@@ -23,6 +23,6 @@ contract HabitatAccount is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    accountDelegate[msgSender] = delegatee;
+    HabitatBase._setAccountDelegate(msgSender, delegatee);
   }
 }

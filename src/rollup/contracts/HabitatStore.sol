@@ -20,7 +20,7 @@ contract HabitatStore is HabitatBase {
       codeHash := 1
     }
 
-    moduleHash[src] = codeHash;
+    HabitatBase._setModuleHash(src, codeHash);
 
     emit ModuleSubmitted(src);
   }
@@ -29,7 +29,7 @@ contract HabitatStore is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    require(moduleHash[condition] != bytes32(0), 'HASH');
+    require(moduleHash(condition) != bytes32(0), 'HASH');
     // xxx. buy
     activeModule[communityId][condition] = 1;
 

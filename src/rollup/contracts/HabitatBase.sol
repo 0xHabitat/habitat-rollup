@@ -11,34 +11,10 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
 
   // global habitat rollup related state
   mapping (uint256 => bytes32) public executionPermits;
-  mapping (address => uint256) public txNonces;
-  // social features
-  mapping (bytes32 => address) public nameToAddress;
-  mapping (address => address) public accountDelegate;
-  // communities
-  mapping (bytes32 => address) public tokenOfCommunity;
-  mapping (address => bytes32) public communityOfVault;
   // modules
-  mapping (address => bytes32) public moduleHash;
   mapping (bytes32 => mapping (address => uint256)) public activeModule;
-  // tracks proposalId > startDate
-  mapping (bytes32 => uint256) proposalStartDate;
-  // tracks proposalId > vault
-  mapping (bytes32 => address) proposalVault;
-
   // token balances
   mapping (address => mapping(uint256 => address)) public erc721;
-
-  function _commonChecks () internal {
-    // all power the core protocol
-    require(msg.sender == address(this));
-  }
-
-  function _checkUpdateNonce (address msgSender, uint256 nonce) internal {
-    require(nonce == txNonces[msgSender], 'NONCE');
-
-    txNonces[msgSender] = nonce + 1;
-  }
 
   function INSPECTION_PERIOD () public view virtual override returns (uint16) {
     // ~84 hours
@@ -47,6 +23,41 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
 
   function PROPOSAL_DELAY () public view virtual returns (uint256) {
     return 3600 * 32;
+  }
+
+  function _commonChecks () internal {
+    // all power the core protocol
+    require(msg.sender == address(this));
+  }
+
+  function _checkUpdateNonce (address msgSender, uint256 nonce) internal {
+    require(nonce == txNonces(msgSender), 'NONCE');
+
+    _setTxNonces(msgSender, nonce + 1);
+  }
+
+  function _TX_NONCE_KEY (address a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x1baf1b358a7f0088724e8c8008c24c8182cafadcf6b7d0da2db2b55b40320fbf)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice The nonce of account `a`.
+  function txNonces (address a) public virtual view returns (uint256 ret) {
+    uint256 key = _TX_NONCE_KEY(a);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `txNonces`.
+  function _setTxNonces (address a, uint256 b) internal {
+    uint256 key = _TX_NONCE_KEY(a);
+    assembly {
+      sstore(key, b)
+    }
   }
 
   function _ERC20_KEY (address tkn, address account) internal view returns (uint256 ret) {
@@ -191,10 +202,173 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
+  function _NAME_TO_ADDRESS_KEY (bytes32 shortString) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x09ec9a99acfe90ba324ac042a90e28c5458cfd65beba073b0a92ea7457cdfc56)
+      mstore(32, shortString)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  function nameToAddress (bytes32 shortString) public virtual view returns (address ret) {
+    uint256 key = _NAME_TO_ADDRESS_KEY(shortString);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  function _setNameToAddress (bytes32 shortString, address addr) internal {
+    uint256 key = _NAME_TO_ADDRESS_KEY(shortString);
+    assembly {
+      sstore(key, addr)
+    }
+  }
+
+  function _ACCOUNT_DELEGATE_KEY (address a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0xa4cf686a12e967d8e7bd65750e2f83e9462cafbc9c0d8faf956478a83b935c62)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  function accountDelegate (address a) public virtual view returns (address ret) {
+    uint256 key = _ACCOUNT_DELEGATE_KEY(a);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  function _setAccountDelegate (address a, address b) internal {
+    uint256 key = _ACCOUNT_DELEGATE_KEY(a);
+    assembly {
+      sstore(key, b)
+    }
+  }
+
+  function _PROPOSAL_VAULT_KEY (bytes32 a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x622061f2b694ba7aa754d63e7f341f02ac8341e2b36ccbb1d3fc1bf00b57162d)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice tracks proposalId > vault
+  function proposalVault (bytes32 a) public virtual view returns (address ret) {
+    uint256 key = _PROPOSAL_VAULT_KEY(a);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `proposalVault`.
+  function _setProposalVault (bytes32 a, address b) internal {
+    uint256 key = _PROPOSAL_VAULT_KEY(a);
+    assembly {
+      sstore(key, b)
+    }
+  }
+
+  function _PROPOSAL_START_DATE_KEY (bytes32 a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x539a579b21c2852f7f3a22630162ab505d3fd0b33d6b46f926437d8082d494c1)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice tracks proposalId > startDate
+  function proposalStartDate (bytes32 a) public virtual view returns (uint256 ret) {
+    uint256 key = _PROPOSAL_START_DATE_KEY(a);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `proposalStartDate`.
+  function _setProposalStartDate (bytes32 a, uint256 b) internal {
+    uint256 key = _PROPOSAL_START_DATE_KEY(a);
+    assembly {
+      sstore(key, b)
+    }
+  }
+
+  function _TOKEN_OF_COMMUNITY_KEY (bytes32 a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0xeadaeda4a4005f296730d16d047925edeb6f21ddc028289ebdd9904f9d65a662)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice Governance Token of community.
+  function tokenOfCommunity (bytes32 a) public virtual view returns (address ret) {
+    uint256 key = _TOKEN_OF_COMMUNITY_KEY(a);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `tokenOfCommunity`.
+  function _setTokenOfCommunity (bytes32 a, address b) internal {
+    uint256 key = _TOKEN_OF_COMMUNITY_KEY(a);
+    assembly {
+      sstore(key, b)
+    }
+  }
+
+  function _COMMUNITY_OF_VAULT_KEY (address a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0xf659eca1f5df040d1f35ff0bac6c4cd4017c26fe0dbe9317b2241af59edbfe06)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice The community of `vault`.
+  function communityOfVault (address vault) public virtual view returns (bytes32 ret) {
+    uint256 key = _COMMUNITY_OF_VAULT_KEY(vault);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `communityOfVault`.
+  function _setCommunityOfVault (address vault, bytes32 b) internal {
+    uint256 key = _COMMUNITY_OF_VAULT_KEY(vault);
+    assembly {
+      sstore(key, b)
+    }
+  }
+
+  function _MODULE_HASH_KEY (address a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0xe6ab7761f522dca2c6f74f7f7b1083a1b184fec6b893cb3418cb3121c5eda5aa)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice The (codehash) of the module at `a`.
+  function moduleHash (address a) public virtual view returns (bytes32 ret) {
+    uint256 key = _MODULE_HASH_KEY(a);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `moduleHash`.
+  function _setModuleHash (address a, bytes32 b) internal {
+    uint256 key = _MODULE_HASH_KEY(a);
+    assembly {
+      sstore(key, b)
+    }
+  }
 
   function _maybeUpdateMemberCount (bytes32 proposalId, address account) internal {
-    address vault = proposalVault[proposalId];
-    bytes32 communityId = communityOfVault[vault];
+    address vault = proposalVault(proposalId);
+    bytes32 communityId = communityOfVault(vault);
     if (!getIsMemberOfCommunity(communityId, account)) {
       _setIsMemberOfCommunity(communityId, account);
       _incrementTotalMemberCount(communityId);

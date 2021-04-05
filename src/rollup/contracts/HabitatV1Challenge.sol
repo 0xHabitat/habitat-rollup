@@ -604,17 +604,17 @@ case 8 {
 // end of CreateProposal
 
 // start of VoteOnProposal
-// typeHash: 0xcd0d2ed69cafe403ad5d62cea78fc2ff2fbb6b25e6f5cf7b7f8404431a9308c7
-// function: onVoteOnProposal(address,uint256,bytes32,uint8,uint256,uint256)
+// typeHash: 0x001e27b96c1221fb96254fb844764eb25fc577cf4096af724925367ecaedb608
+// function: onVoteOnProposal(address,uint256,bytes32,uint256,uint256,address,uint8)
 case 9 {
-  let headSize := 192
+  let headSize := 224
   let typeLen := 0
-  let txPtr := 448
-  let endOfSlot := add(txPtr, 192)
+  let txPtr := 512
+  let endOfSlot := add(txPtr, 224)
 
-  txPtr := 480
+  txPtr := 544
   // typeHash of VoteOnProposal
-  mstore(0, 0xcd0d2ed69cafe403ad5d62cea78fc2ff2fbb6b25e6f5cf7b7f8404431a9308c7)
+  mstore(0, 0x001e27b96c1221fb96254fb844764eb25fc577cf4096af724925367ecaedb608)
   // uint256 VoteOnProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -631,7 +631,7 @@ case 9 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // uint8 VoteOnProposal.signalStrength
+  // uint256 VoteOnProposal.shares
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
@@ -639,7 +639,7 @@ case 9 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // uint256 VoteOnProposal.shares
+  // uint256 VoteOnProposal.timestamp
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
@@ -647,7 +647,7 @@ case 9 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // uint256 VoteOnProposal.timestamp
+  // address VoteOnProposal.delegatedFor
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
@@ -655,8 +655,16 @@ case 9 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
+  // uint8 VoteOnProposal.signalStrength
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(192, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
   // typeHash
-  let structHash := keccak256(0, 192)
+  let structHash := keccak256(0, 224)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -670,17 +678,17 @@ case 9 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(416, 0xf2f4279b)
-  mstore(448, mload(128))
+  mstore(480, 0xbb816f3a)
+  mstore(512, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 444, sub(endOfSlot, 444), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 508, sub(endOfSlot, 508), 0, 0)
   success := or(success, returndatasize())
 }
 // end of VoteOnProposal
 
 // start of ProcessProposal
-// typeHash: 0x3d97852889670d5742fbda05f411e1657839476a097126030b1579df018c2374
-// function: onProcessProposal(address,uint256)
+// typeHash: 0x024338bd68ba5784bd123e92f046e06bc764ec440ec3d3b2a5873f45933e03fc
+// function: onProcessProposal(address,bytes32)
 case 10 {
   let headSize := 64
   let typeLen := 0
@@ -689,8 +697,8 @@ case 10 {
 
   txPtr := 224
   // typeHash of ProcessProposal
-  mstore(0, 0x3d97852889670d5742fbda05f411e1657839476a097126030b1579df018c2374)
-  // uint256 ProcessProposal.proposalIndex
+  mstore(0, 0x024338bd68ba5784bd123e92f046e06bc764ec440ec3d3b2a5873f45933e03fc)
+  // bytes32 ProcessProposal.proposalId
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
@@ -713,7 +721,7 @@ case 10 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(160, 0x0a625af4)
+  mstore(160, 0xa229bbbc)
   mstore(192, mload(128))
 
   success := call(sub(gas(), 5000), address(), 0, 188, sub(endOfSlot, 188), 0, 0)

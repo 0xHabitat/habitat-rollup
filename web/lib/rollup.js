@@ -388,9 +388,11 @@ export async function submitVote (communityId, proposalId, signalStrength) {
   const timestamp = ~~(Date.now() / 1000);
   const args = {
     proposalId,
-    signalStrength,
     shares,
     timestamp,
+    signalStrength,
+    // xxx
+    delegatedFor: ethers.constants.AddressZero,
   };
 
   return sendTransaction('VoteOnProposal', args);

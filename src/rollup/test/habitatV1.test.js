@@ -27,13 +27,14 @@ async function createTransaction (primaryType, message, signer, habitat) {
 }
 
 describe('HabitatV1', async function () {
-  const { HabitatV1Mock, ExecutionProxy, TestERC20, ExecutionTest, OneShareOneVote } = Artifacts;
+  const { HabitatV1Mock, ExecutionProxy, TestERC20, TestERC721, ExecutionTest, OneShareOneVote } = Artifacts;
   const { rootProvider, alice, bob, charlie } = getDefaultWallets();
   let bridge;
   let habitat;
   let habitatNode;
   let executionProxy;
   let erc20;
+  let erc721;
   let cumulativeDeposits = BigInt(0);
   let proposalIndex;
   let executionTestContract;
@@ -44,9 +45,11 @@ describe('HabitatV1', async function () {
   let invalidAction;
   let validAction;
   let conditions = {};
+  let nftId = 0;
 
   before('Prepare contracts', async () => {
     erc20 = await deploy(TestERC20, alice);
+    erc721 = await deploy(TestERC721, alice, 'NFT', 'NFT');
 
     bridge = await deploy(HabitatV1Mock, alice);
     habitatNode = await startNode('../../bricked/lib/index.js', 9999, 0, bridge.address, TYPED_DATA);
@@ -96,6 +99,23 @@ describe('HabitatV1', async function () {
         cumulativeDeposits += BigInt(depositAmount);
       }
 
+      async function doNftDeposit (signer) {
+        const value = nftId++;
+        const user = await signer.getAddress();
+
+        await (await erc721.mint(user, value)).wait();
+        await (await erc721.connect(signer).approve(bridge.address, value)).wait();
+
+        const oldBlock = await habitatNode.getBlockNumber();
+        const tx = await bridge.connect(signer).deposit(erc721.address, value, user);
+        const receipt = await tx.wait();
+
+        await waitForValueChange(oldBlock, () => habitatNode.getBlockNumber());
+
+        const newOwner = await habitat.erc721(erc721.address, value);
+        assert.equal(newOwner, user, 'nft owner should match');
+      }
+
       it('init', async () => {
         round++;
       });
@@ -107,6 +127,10 @@ describe('HabitatV1', async function () {
 
       it('deposit: alice', async () => {
         await doDeposit(alice);
+      });
+
+      it('deposit nft: alice ', async () => {
+        await doNftDeposit(alice);
       });
 
       it('transfer: alice > bob', async () => {
@@ -280,6 +304,7 @@ describe('HabitatV1', async function () {
           signalStrength: 100,
           shares: 0xff,
           timestamp: ~~(Date.now() / 1000),
+          delegatedFor: ethers.constants.AddressZero,
         };
         const { txHash, receipt } = await createTransaction('VoteOnProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');

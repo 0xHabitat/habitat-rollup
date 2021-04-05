@@ -61,12 +61,13 @@ export default {
       // xxx add account because of delegate?
       { name: 'nonce', 'type': 'uint256' },
       { name: 'proposalId', type: 'bytes32' },
-      { name: 'signalStrength', type: 'uint8' },
       { name: 'shares', type: 'uint256' },
       { name: 'timestamp', type: 'uint256' },
+      { name: 'delegatedFor', type: 'address' },
+      { name: 'signalStrength', type: 'uint8' },
     ],
     ProcessProposal: [
-      { name: 'proposalIndex', type: 'uint256' },
+      { name: 'proposalId', type: 'bytes32' },
     ],
   },
   domain: {
