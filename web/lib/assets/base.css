@@ -657,3 +657,9 @@ button, .button {
   flex-direction: column;
   justify-content: center;
 }
+
+.noHover:hover,
+.noHover:focus,
+.noHover:active {
+  transform: none;
+}
