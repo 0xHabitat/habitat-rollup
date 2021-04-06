@@ -1,5 +1,0 @@
-ignore:
-  - "**/mocks/*.sol"
-  - "**/test/*.sol"
-  - "src/**/**/test/**.sol"
-  - "src/**/**/mocks/**.sol"
