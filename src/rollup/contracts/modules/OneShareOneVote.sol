@@ -19,8 +19,8 @@ contract OneShareOneVote is IModule {
     }
 
     uint256 PRECISION = 10000;
-    uint256 THRESHOLD = PRECISION  - PRECISION / 3;
-    uint256 averageSignal = totalVotingShares / totalVoteCount;
+    uint256 THRESHOLD = PRECISION - PRECISION / 3;
+    uint256 averageSignal = totalVotingSignal / totalVoteCount;
     uint256 participation = (totalVoteCount * PRECISION) / totalMemberCount;
 
     if (participation > THRESHOLD) {
