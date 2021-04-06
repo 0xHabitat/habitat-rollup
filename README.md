@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/0xHabitat/habitat/branch/master/graph/badge.svg)](https://codecov.io/gh/0xHabitat/habitat)
+[![Coverage Status](https://coveralls.io/repos/github/0xHabitat/habitat/badge.svg?branch=master)](https://coveralls.io/github/0xHabitat/habitat?branch=master)
 
 # Development
 
