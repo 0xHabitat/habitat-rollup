@@ -26,6 +26,7 @@ contract HabitatVault is HabitatBase {
     // vaultsOfCommunity[communityId] = vaultAddress;
     //
     // check if `condition` is activated for `communityId`
+    HabitatBase._setVaultCondition(vaultAddress, condition);
 
     emit VaultCreated(communityId, condition, vaultAddress, metadata);
   }

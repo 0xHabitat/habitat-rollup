@@ -365,7 +365,7 @@ describe('HabitatV1', async function () {
       let proposalId;
       it('create proposal for first vault', async () => {
         const args = {
-          startDate: ~~(Date.now() / 1000),
+          startDate: ~~(Date.now() / 1000) - 2,
           vault,
           actions: '0x',
           title: 'hello world',
@@ -376,6 +376,17 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.logs.length, 2);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         proposalId = evt.proposalId;
+      });
+
+      it('process proposal - should remain open', async () => {
+        const args = {
+          proposalId,
+        };
+        const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
+        assert.equal(receipt.status, '0x1');
+        assert.equal(receipt.logs.length, 1);
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(Number(evt.votingStatus), 1);
       });
 
       it('vote on proposal', async () => {
@@ -391,6 +402,17 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.account, alice.address);
+      });
+
+      it('process proposal - should pass', async () => {
+        const args = {
+          proposalId,
+        };
+        const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
+        assert.equal(receipt.status, '0x1');
+        assert.equal(receipt.logs.length, 1);
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(Number(evt.votingStatus), 3);
       });
     });
   }

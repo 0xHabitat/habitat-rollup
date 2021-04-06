@@ -133,6 +133,31 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
+  function _VOTING_SIGNAL_KEY (bytes32 proposalId, address account) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x12bc1ed237026cb917edecf1ca641d1047e3fc382300e8b3fab49ae10095e490)
+      mstore(32, proposalId)
+      let tmp := mload(64)
+      mstore(64, account)
+      ret := keccak256(0, 96)
+      mstore(64, tmp)
+    }
+  }
+
+  function getVoteSignal (bytes32 proposalId, address account) public view returns (uint256 ret) {
+    uint256 key = _VOTING_SIGNAL_KEY(proposalId, account);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  function _setVoteSignal (bytes32 proposalId, address account, uint256 signal) internal {
+    uint256 key = _VOTING_SIGNAL_KEY(proposalId, account);
+    assembly {
+      sstore(key, signal)
+    }
+  }
+
   function _VOTING_COUNT_KEY (bytes32 proposalId) internal view returns (uint256 ret) {
     assembly {
       mstore(0, 0x637730e93bbd8200299f72f559c841dfae36a36f86ace777eac8fe48f977a46d)
@@ -172,6 +197,28 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
 
   function _setTotalVotingShares (bytes32 proposalId, uint256 val) internal {
     uint256 key = _VOTING_TOTAL_SHARE_KEY(proposalId);
+    assembly {
+      sstore(key, val)
+    }
+  }
+
+  function _VOTING_TOTAL_SIGNAL_KEY (bytes32 proposalId) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x3a5afbb81b36a1a15e90db8cc0deb491bf6379592f98c129fd8bdf0b887f82dc)
+      mstore(32, proposalId)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  function getTotalVotingSignal (bytes32 proposalId) public view returns (uint256 ret) {
+    uint256 key = _VOTING_TOTAL_SIGNAL_KEY(proposalId);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  function _setTotalVotingSignal (bytes32 proposalId, uint256 val) internal {
+    uint256 key = _VOTING_TOTAL_SIGNAL_KEY(proposalId);
     assembly {
       sstore(key, val)
     }
@@ -384,6 +431,54 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
   /// @dev Setter for `moduleHash`.
   function _setModuleHash (address a, bytes32 b) internal {
     uint256 key = _MODULE_HASH_KEY(a);
+    assembly {
+      sstore(key, b)
+    }
+  }
+
+  function _VAULT_CONDITION_KEY (address a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x615e61b2f7f9d8ca18a90a9b0d27a62ae27581219d586cb9aeb7c695bc7b92c8)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice The condition of `vault`.
+  function vaultCondition (address vault) public virtual view returns (address ret) {
+    uint256 key = _VAULT_CONDITION_KEY(vault);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `vaultCondition`.
+  function _setVaultCondition (address vault, address b) internal {
+    uint256 key = _VAULT_CONDITION_KEY(vault);
+    assembly {
+      sstore(key, b)
+    }
+  }
+
+  function _PROPOSAL_STATUS_KEY (bytes32 a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x40e11895caf89e87d4485af91bd7e72b6a6e56b94f6ea4b7edb16e869adb7fe9)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice Returns the voting status of proposal id `a`.
+  function getProposalStatus (bytes32 a) public virtual view returns (uint256 ret) {
+    uint256 key = _PROPOSAL_STATUS_KEY(a);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `getProposalStatus`.
+  function _setProposalStatus (bytes32 a, uint256 b) internal {
+    uint256 key = _PROPOSAL_STATUS_KEY(a);
     assembly {
       sstore(key, b)
     }
