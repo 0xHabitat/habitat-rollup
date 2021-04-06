@@ -518,9 +518,9 @@ define-properties@^1.1.2, define-properties@^1.1.3:
   dependencies:
     object-keys "^1.0.12"
 
-"develatus-apparatus@https://github.com/pinkiebell/develatus-apparatus.git#v0.3.2":
-  version "0.3.2"
-  resolved "https://github.com/pinkiebell/develatus-apparatus.git#d78a44057cc36faeb560a008b18d89298a3f64b8"
+"develatus-apparatus@https://github.com/pinkiebell/develatus-apparatus.git#v0.3.4":
+  version "0.3.4"
+  resolved "https://github.com/pinkiebell/develatus-apparatus.git#e56a00a03acde6f54cd46a3d4d45811cdf6d0929"
 
 diff@3.5.0:
   version "3.5.0"
