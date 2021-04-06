@@ -4,7 +4,7 @@ export default {
   proxyPort: 8333,
   rpcUrl: process.env.ROOT_RPC_URL,
   fuzzyMatchFactor: 0.8,
-  ignore: /(mocks|test)\/.*\.sol/,
+  ignore: /(node_modules|mocks|test)\/.*\.sol/,
   solcSettings: {
     evmVersion: 'berlin',
     optimizer: {
