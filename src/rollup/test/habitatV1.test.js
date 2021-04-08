@@ -389,7 +389,7 @@ describe('HabitatV1', async function () {
         assert.equal(Number(evt.votingStatus), 1);
       });
 
-      it('vote on proposal', async () => {
+      it('alice: vote on proposal', async () => {
         const args = {
           proposalId,
           signalStrength: 100,
@@ -398,6 +398,21 @@ describe('HabitatV1', async function () {
           delegatedFor: ethers.constants.AddressZero,
         };
         const { txHash, receipt } = await createTransaction('VoteOnProposal', args, alice, habitat);
+        assert.equal(receipt.status, '0x1');
+        assert.equal(receipt.logs.length, 1);
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(evt.account, alice.address);
+      });
+
+      it('bob: vote on proposal as a delegate for alice', async () => {
+        const args = {
+          proposalId,
+          signalStrength: 100,
+          shares: 0xff,
+          timestamp: ~~(Date.now() / 1000),
+          delegatedFor: alice.address,
+        };
+        const { txHash, receipt } = await createTransaction('VoteOnProposal', args, bob, habitat);
         assert.equal(receipt.status, '0x1');
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;

@@ -7,6 +7,7 @@ import './HabitatBase.sol';
 contract HabitatWallet is HabitatBase {
   event TokenTransfer(address indexed token, address indexed from, address indexed to, uint256 value);
   // xxx: add something like a approve function?
+  // xxx add total balance of asset
 
   /// @dev State transition when a user transfers a token.
   function _transferToken (address token, address from, address to, uint256 value) internal {

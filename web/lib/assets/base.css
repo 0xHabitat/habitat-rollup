@@ -343,7 +343,13 @@ button:active,
 
 .align-right > * {
   text-align: right;
-  align-self: center;
+  align-self: baseline;
+  margin: 0;
+}
+
+.align-left > * {
+  text-align: left;
+  align-self: baseline;
   margin: 0;
 }
 
@@ -381,6 +387,17 @@ img.minmax {
   margin: 0;
 }
 */
+
+.grid-col {
+  font-family: var(--font-family-mono);
+  max-width: fit-content;
+  display: grid;
+  gap: 1em;
+}
+
+.grid-col-2 {
+  grid-template-columns: repeat(2, auto);
+}
 
 .small {
   font-size: .8rem;

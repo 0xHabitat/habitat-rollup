@@ -42,7 +42,7 @@ const PERMIT_EIP_2612 = new ethers.utils.Interface(
 
 let ROOT_CHAIN_ID = window.location.pathname.indexOf('testnet') === -1 ? 1 : 3;
 const _cache = {};
-let _prov;
+const _providers = {};
 
 export function getNetwork () {
   return ROOT_CHAIN_ID;
@@ -51,17 +51,23 @@ export function getNetwork () {
 export function setNetwork (id) {
 }
 
-export function getProvider () {
-  if (!_prov || (_prov._network && _prov._network.chainId !== ROOT_CHAIN_ID)) {
-    const name = getNetworkName(ROOT_CHAIN_ID);
-    const url = `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
-    _prov = new ethers.providers.JsonRpcProvider(url, 'any');
+export function getProvider (chainId) {
+  if (chainId === undefined) {
+    chainId = ROOT_CHAIN_ID;
+  }
+  let provider = _providers[chainId];
+
+  if (!provider || (provider._network && provider._network.chainId !== chainId)) {
+    const name = getNetworkName(chainId);
+    const url = name === 'unknown' ? 'http://localhost:8222' : `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
+    provider = new ethers.providers.JsonRpcProvider(url, 'any');
     // workaround that ethers.js requests eth_chainId for almost any call.
-    const network = ethers.providers.getNetwork(ROOT_CHAIN_ID);
-    _prov.detectNetwork = async () => network;
+    const network = ethers.providers.getNetwork(chainId);
+    provider.detectNetwork = async () => network;
+    _providers[chainId] = provider;
   }
 
-  return _prov;
+  return provider;
 }
 
 export function getNetworkName (id) {
@@ -186,6 +192,8 @@ export function secondsToString (val) {
   return str;
 }
 
+const INTERACTION_DELAY = 500;
+let _lastInteraction = 0;
 export function wrapListener (selectorOrElement, func, eventName = 'click') {
   const el = typeof selectorOrElement === 'string' ? document.querySelector(selectorOrElement) : selectorOrElement;
 
@@ -195,7 +203,13 @@ export function wrapListener (selectorOrElement, func, eventName = 'click') {
     if (eventName !== 'keyup') {
       evt.target.disabled = true;
     } else {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const now = Date.now();
+      const delta = now - _lastInteraction;
+      _lastInteraction = now;
+
+      if (delta < INTERACTION_DELAY) {
+        await new Promise((resolve) => setTimeout(resolve, INTERACTION_DELAY - delta));
+      }
     }
 
     try {
@@ -459,12 +473,15 @@ export function checkScroll (selectorOrElement, callback) {
       || (el.scrollHeight - el.scrollTop) < window.innerHeight * 1.5;
 
     if (fetchMore) {
+      let ret = false;
       try {
-        await callback();
+        ret = await callback();
       } catch (e) {
         console.log(e);
       }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (!ret) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     }
 
     window.requestAnimationFrame(_check);
@@ -559,4 +576,52 @@ export function getCache (key) {
 
 export function setCache (key, val) {
   _globalCache[key] = val;
+}
+
+export function stringDance (ele, str, _childs, idx, _skip) {
+  if (_skip) {
+    window.requestAnimationFrame(
+      function ()  {
+        stringDance(ele, str, _childs, idx, !_skip);
+      }
+    );
+    return;
+  }
+
+  const len = str.length;
+
+  if (!_childs) {
+    ele.textContent = '';
+    for (let i = 0; i < len; i++) {
+      let c = document.createElement('span');
+      let val = str[i];
+      let x = '#';
+      if (val === '.' || val === ' ' || val === '\n') {
+        x = val;
+      }
+      c.textContent = x;
+      ele.appendChild(c);
+    }
+    _childs = ele.children;
+    idx = 0;
+  }
+
+  if (_childs.length !== len) {
+    console.log('stringDance skip');
+    return;
+  }
+
+  if (idx < len) {
+    _childs[idx].textContent = str[idx];
+    idx++;
+  }
+
+  const done = idx === len;
+  if (!done) {
+      window.requestAnimationFrame(
+      function ()  {
+        stringDance(ele, str, _childs, idx, !_skip);
+      }
+    );
+  }
 }

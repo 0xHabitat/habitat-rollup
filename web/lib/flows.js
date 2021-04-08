@@ -1,54 +1,6 @@
-import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected } from './utils.js';
+import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected, stringDance } from './utils.js';
 import { getProviders, sendTransaction, setupModulelist, doQuery, resolveName, getShortString } from './rollup.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
-
-export function stringDance (ele, str, _childs, idx, _skip) {
-  if (_skip) {
-    window.requestAnimationFrame(
-      function ()  {
-        stringDance(ele, str, _childs, idx, !_skip);
-      }
-    );
-    return;
-  }
-
-  const len = str.length;
-
-  if (!_childs) {
-    ele.textContent = '';
-    for (let i = 0; i < len; i++) {
-      let c = document.createElement('span');
-      let val = str[i];
-      let x = '#';
-      if (val === '.' || val === ' ' || val === '\n') {
-        x = val;
-      }
-      c.textContent = x;
-      ele.appendChild(c);
-    }
-    _childs = ele.children;
-    idx = 0;
-  }
-
-  if (_childs.length !== len) {
-    console.log('stringDance skip');
-    return;
-  }
-
-  if (idx < len) {
-    _childs[idx].textContent = str[idx];
-    idx++;
-  }
-
-  const done = idx === len;
-  if (!done) {
-      window.requestAnimationFrame(
-      function ()  {
-        stringDance(ele, str, _childs, idx, !_skip);
-      }
-    );
-  }
-}
 
 export class BaseFlow {
   constructor (root, ctx) {

@@ -21,11 +21,11 @@ export async function getProviders () {
     return document._providers;
   }
 
-  const rootProvider = await getProvider();
   const childProvider = new ethers.providers.JsonRpcProvider(RPC_URL, 'any');
   const network = await childProvider.detectNetwork();
   childProvider.detectNetwork = async () => network;
 
+  const rootProvider = await getProvider(network.chainId);
   const bridgeAddress = await childProvider.send('web3_clientVersion', []);
   const habitat = new ethers.Contract(bridgeAddress, BRICK_ABI, childProvider);
   const bridge = habitat.connect(rootProvider);
