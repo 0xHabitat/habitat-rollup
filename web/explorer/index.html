@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/assets.css'>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:site' content='@0xHabitat'>
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='https://0xhabitat.org'>
+    <meta property='og:description' content='Scaling communities with Rollup technology.'>
+    <meta property='og:image' content='/lib/assets/preview.png'>
+    <meta property='og:title' content='Habitat - Block Explorer'>
+    <title>Habitat - Block Explorer</title>
+    <script src='/lib/common.js'></script>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/wallet.js'></script>
+    <script type='module' src='/lib/menu.js'></script>
+    <script type='module' src='index.js'></script>
+  </head>
+  <body>
+    <habitat-gradient></habitat-gradient>
+    <habitat-nav></habitat-nav>
+    <habitat-menu></habitat-menu>
+    <section class='content'>
+      <section style='z-index:9;transform: translateZ(0)'>
+        <section class='center' style='width: calc(100% - 1em);'>
+          <space></space>
+          <div class='flex col evenly listitem' style='place-items:flex-start;'>
+            <h3>Information</h3>
+            <sep></sep>
+            <p id='status' style='margin:0;'> </p>
+          </div>
+          <space></space>
+          <section class='center' style='width:80ch;max-width:100%;'>
+            <input id='search' style='max-width:100%;width:100%;' class='purple secondary shadow' placeholder='Search by Transaction Hash / Block'>
+            <section id='results' class='listitem shadow' style='visibility:hidden;'></section>
+            <space></space>
+            <h3 class='left'>Pending</h3>
+            <space></space>
+            <div id='pending' class='grid-col align-right' style='grid-template-columns: repeat(4, auto);'>
+              <p>#</p>
+              <p>Timestamp</p>
+              <p>#Txs</p>
+              <p>Blockhash</p>
+              <p></p>
+              <p></p>
+              <p></p>
+              <p></p>
+            </div>
+            <space></space>
+            <h3 class='left'>Proposed</h3>
+            <space></space>
+            <div id='proposed' class='grid-col align-right' style='grid-template-columns: repeat(4, auto);'>
+              <p>#</p>
+              <p>Timestamp</p>
+              <p>#Txs</p>
+              <p>Blockhash</p>
+            </div>
+            <space></space>
+          </section>
+        </section>
+      </section>
+    </section>
+  </body>
+</html>

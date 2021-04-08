@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/assets.css'>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:site' content='@0xHabitat'>
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='https://0xhabitat.org'>
+    <meta property='og:description' content='Scaling communities with Rollup technology.'>
+    <meta property='og:image' content='/lib/assets/preview.png'>
+    <meta property='og:title' content='Habitat - Block Explorer'>
+    <title>Habitat - Block Explorer</title>
+    <script src='/lib/common.js'></script>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/wallet.js'></script>
+    <script type='module' src='/lib/menu.js'></script>
+    <script type='module' src='index.js'></script>
+  </head>
+  <body>
+    <habitat-gradient></habitat-gradient>
+    <habitat-nav></habitat-nav>
+    <habitat-menu></habitat-menu>
+    <section class='content'>
+      <section style='z-index:9;transform: translateZ(0)'>
+        <section class='center' style='width: calc(100% - 1em);'>
+          <space></space>
+          <div id='tx' class='flex col evenly listitem' style='place-items:flex-start;'>
+            <p id='status' style='margin:0;'> </p>
+          </div>
+          <space></space>
+        </section>
+      </section>
+    </section>
+  </body>
+</html>
