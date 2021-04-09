@@ -3,7 +3,7 @@
 import fs from 'fs';
 import defaultCodeTemplates from '@NutBerry/rollup-bricks/src/bricked/lib/defaultCodeTemplates.js';
 
-for (const typedDataPath of ['../govBrick.js', '../habitatV1.js']) {
+for (const typedDataPath of ['../habitatV1.js']) {
   const typedData = (await import(typedDataPath)).default;
   const contractName = typedData.domain.name.split(' ').join('');
   const { builder, challengeCode, debugCode } = await defaultCodeTemplates({ typedData, contractName });

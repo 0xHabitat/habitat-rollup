@@ -441,6 +441,42 @@ describe('HabitatV1', async function () {
     _doRound();
   }
 
+  function doExecutionTest () {
+    describe('on-chain execution tests', () => {
+      it('check execution permit and execute', async () => {
+        for (const { args, proposalIndex, txHash, valid } of proposals) {
+          const ok = await bridge.executionPermits(proposalIndex);
+
+          assert.equal(!!Number(ok), valid, 'execution permit only for valid proposals');
+
+          let expected = valid && args.actions === validAction;
+          // try to execute
+          let result;
+          if (expected) {
+            const tx = await executionProxy.execute(proposalIndex, args.actions);
+            const receipt = await tx.wait();
+            result = !!receipt.status;
+          } else {
+            await assertRevert(executionProxy.execute(proposalIndex, args.actions, { gasLimit: GAS_LIMIT }));
+            result = false;
+          }
+
+          assert.equal(result, expected, 'expected execution result via proxy');
+          console.log({ proposalIndex, expected });
+
+          if (expected) {
+            // a second time should fail
+            await assertRevert(executionProxy.execute(proposalIndex, args.actions, { gasLimit: GAS_LIMIT }));
+          }
+        }
+      });
+
+      it('non existent permits', async () => {
+        await assertRevert(executionProxy.execute(0xff, '0x', { gasLimit: GAS_LIMIT }));
+      });
+    });
+  }
+
   describe('chain - forward', function () {
     doRound();
     describe('finalize', function () {

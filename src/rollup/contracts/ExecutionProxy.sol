@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity >=0.6.2;
 
-import './GovBase.sol';
+interface IBridge {
+  function executionPermits (uint256 proposalId) external view returns (bytes32);
+}
 
 contract ExecutionProxy {
   /// @notice The contract that ...brrrr... prints permits.
@@ -18,7 +20,7 @@ contract ExecutionProxy {
   function execute (uint256 proposalIndex, bytes memory actions) external {
     require(executed[proposalIndex] == false, 'already executed');
     require(
-      GovBase(delegate).executionPermits(proposalIndex) == keccak256(abi.encode(proposalIndex, actions)),
+      IBridge(delegate).executionPermits(proposalIndex) == keccak256(abi.encode(proposalIndex, actions)),
       'wrong permit'
     );
 
