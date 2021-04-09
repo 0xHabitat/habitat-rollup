@@ -296,11 +296,14 @@ section {
   width: 100%;
 }
 
-button:hover,
 button:focus,
+.button:focus {
+  outline: 1px solid;
+}
+
+button:hover,
 button:active,
 .button:hover,
-.button:focus,
 .button:active {
   transform: translateY(-6px);
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
@@ -390,7 +393,7 @@ img.minmax {
 
 .grid-col {
   font-family: var(--font-family-mono);
-  max-width: fit-content;
+  max-width: 100%;
   display: grid;
   gap: 1em;
 }

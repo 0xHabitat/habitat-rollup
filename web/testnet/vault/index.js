@@ -4,7 +4,8 @@ import {
   pullEvents,
   fetchProposalStats,
   humanProposalTime,
-  submitVote
+  submitVote,
+  VotingStatus,
 } from '/lib/rollup.js';
 
 const PROPOSAL_TEMPLATE =
@@ -31,7 +32,7 @@ const PROPOSAL_TEMPLATE =
 You can replace your vote any time.
 </label>
 <div class='flex row'>
-<button id='vote' class='bold green'>Vote</button>
+<button id='vote' class='bold green' disabled>Vote</button>
 <a target='_blank' id='open' class='button smaller purple'>View Proposal</a>
 </div>
 `;
@@ -50,19 +51,12 @@ async function updateItem (child, proposalId, startDate) {
     totalVotes,
     participationRate,
     tokenSymbol,
+    proposalStatus,
   } = await fetchProposalStats({ communityId, proposalId });
-  let proposal = {};
-  let expired = false;
-  let status = expired ? 'Voting Ended' : humanProposalTime(startDate);
-  let votingDisabled = false;
-  if (proposal.aborted) {
-    status = 'aborted by proposer';
-  } else if (proposal.didPass) {
-    status = 'passed';
-  } else if (proposal.processed) {
-    status = 'processed';
-  }
+  const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
+  const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(startDate);
 
+  child.querySelector('#vote').disabled = votingDisabled;
   child.querySelector('#time').textContent = status;
   child.querySelector('habitat-circle').setValue(signalStrength, renderAmount(totalShares), tokenSymbol);
 

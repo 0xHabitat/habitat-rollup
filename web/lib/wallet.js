@@ -111,6 +111,7 @@ const ACCOUNT_TEMPLATE =
   </div>
   <space></space>
   <div style='width:80ch;max-width:100%'>
+    <h3>Withdraw from Habitat</h3>
     <div id='exits'></div>
     <space></space>
     <div id='history'></div>
@@ -147,6 +148,8 @@ async function queryTransfers () {
   let logs = await doQuery('TokenTransfer', null, null, account);
   // from
   logs = logs.concat(await doQuery('TokenTransfer', null, account));
+  // sort
+  logs = logs.sort((a, b) => b.blockNumber - a.blockNumber);
   // todo sort and filter
   const tokens = [];
   const transfers = [];
@@ -174,6 +177,16 @@ async function updateErc20 () {
   const { habitat, bridge } = await getProviders();
   const { tokens, transfers } = await queryTransfers();
   const callback = maybeUpdateAccount;
+
+  {
+    // testnet
+    if (habitat.provider._network && habitat.provider._network !== 1) {
+      if (tokens.indexOf(HBT) === -1) {
+        tokens.push(HBT);
+      }
+    }
+  }
+
   document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
 
   if (!tokens.length) {
@@ -241,7 +254,7 @@ async function updateErc20 () {
     document.querySelector('#exits').replaceChildren(child);
   }
 
-  {
+  if (transfers.length) {
     // transfer history
     const child = document.createElement('div');
     child.className = 'align-right';
@@ -250,15 +263,18 @@ async function updateErc20 () {
     let childPtr = 5;
     for (let i = 0, len = transfers.length; i < len; i++) {
       slider.setRange(i, i, len);
-      const { token, from, to, value } = transfers[i];
+      const { token, from, to, value } = transfers[(len - 1) - i];
       const isDeposit = from === ethers.constants.AddressZero;
       const isIncoming = to === account;
+      const isExit = to === ethers.constants.AddressZero;
       const erc = await getErc20(token);
       const amount = renderAmount(value, erc._decimals);
       let type = 'Outgoing';
 
       if (isDeposit) {
         type = 'Deposit';
+      } else if (isExit) {
+        type = 'Exit';
       } else if (isIncoming) {
         type = 'Incoming';
       }

@@ -129,7 +129,7 @@ export class BaseFlow {
       this.prev = callback;
       this.prevArg = arg;
     } catch (e) {
-      console.log(e);
+      console.warn(e);
       this.notifyBox.textContent = '';
       this.writeError((e.error ? e.error.message : '') || e.message || e.toString());
       this.confirm('Retry', '', () => this.handleCallback(oldCallback, oldArg));
@@ -321,10 +321,10 @@ export class WithdrawFlow extends BaseFlow {
       this.write('You have to request an exit first.\nYou can withdraw the amount once it is finalized.');
       const args = {
         token: erc20.address,
-        to: account,
+        to: ethers.constants.AddressZero,
         value: wanted.toHexString(),
       };
-      ctx.receipt = await sendTransaction('ExitToken', args);
+      ctx.receipt = await sendTransaction('TransferToken', args);
 
       this.confirm(
         'Understood',

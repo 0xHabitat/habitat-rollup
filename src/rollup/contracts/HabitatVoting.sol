@@ -77,7 +77,8 @@ contract HabitatVoting is HabitatBase {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     require(signalStrength > 0 && signalStrength < 101);
-    _validateTimestamp(timestamp);
+    // xxx: Required? Basically only used as metadata at the moment
+    //_validateTimestamp(timestamp);
 
     address account = msgSender;
     if (delegatedFor != address(0)) {

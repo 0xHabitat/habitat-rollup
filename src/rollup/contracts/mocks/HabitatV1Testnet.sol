@@ -12,6 +12,34 @@ contract HabitatV1Testnet is HabitatV1 {
     return 10;
   }
 
+  /// @dev State transition when a user transfers a token.
+  function _transferToken (address token, address from, address to, uint256 value) internal override {
+    // xxx check under/overflows
+    if (from != to) {
+      if (TokenBridgeBrick.isERC721(token, value)) {
+        require(getErc721Owner(token, value) == from, 'OWNER');
+        _setErc721Owner(token, value, to);
+        if (to == address(0)) {
+          TokenInventoryBrick._setERC721Exit(token, from, value);
+        }
+      } else {
+        uint256 tmp = getErc20Balance(token, from);
+        require (tmp >= value);
+        _setErc20Balance(token, from, tmp - value);
+
+        if (to == address(0)) {
+          TokenInventoryBrick._incrementExit(token, from, value);
+        } else {
+          tmp = getErc20Balance(token, to);
+          require(tmp + value > tmp);
+          _setErc20Balance(token, to, tmp + value);
+        }
+      }
+    }
+
+    emit TokenTransfer(token, from, to, value);
+  }
+
   function getErc20Balance (address tkn, address account) public override view returns (uint256 ret) {
     uint256 key = _ERC20_KEY(tkn, account);
     assembly {

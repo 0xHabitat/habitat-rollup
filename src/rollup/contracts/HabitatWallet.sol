@@ -10,14 +10,14 @@ contract HabitatWallet is HabitatBase {
   // xxx add total balance of asset
 
   /// @dev State transition when a user transfers a token.
-  function _transferToken (address token, address from, address to, uint256 value) internal {
+  function _transferToken (address token, address from, address to, uint256 value) internal virtual {
     // xxx check under/overflows
     if (from != to) {
       if (TokenBridgeBrick.isERC721(token, value)) {
         require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
         HabitatBase._setErc721Owner(token, value, to);
         if (to == address(0)) {
-          TokenInventoryBrick._setERC721Exit(token, to, value);
+          TokenInventoryBrick._setERC721Exit(token, from, value);
         }
       } else {
         uint256 tmp = HabitatBase.getErc20Balance(token, from);
@@ -25,7 +25,7 @@ contract HabitatWallet is HabitatBase {
         HabitatBase._setErc20Balance(token, from, tmp - value);
 
         if (to == address(0)) {
-          TokenInventoryBrick._incrementExit(token, to, value);
+          TokenInventoryBrick._incrementExit(token, from, value);
         } else {
           tmp = HabitatBase.getErc20Balance(token, to);
           require(tmp + value > tmp);

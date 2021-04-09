@@ -259,6 +259,18 @@ export async function doQuery (name, ...args) {
   return await habitat.provider.send('eth_getLogs', [filter]);
 }
 
+export async function doQueryByPrimaryTypes (primaryTypes) {
+  const { habitat } = await getProviders();
+  const blockNum = await habitat.provider.getBlockNumber();
+  const filter = {
+    fromBlock: 1,
+    toBlock: blockNum,
+    primaryTypes,
+  };
+
+  return await habitat.provider.send('eth_getLogs', [filter]);
+}
+
 export function getShortString (str) {
   const buf = ethers.utils.toUtf8Bytes(str);
   if (buf.length > 32) {
@@ -304,13 +316,22 @@ export async function setupModulelist () {
     return;
   }
 
-  function randomAddress () {
-    return ethers.utils.hexlify(ethers.utils.randomBytes(20));
+  const modules = [];
+  // query transactions with the `SubmitModule` type
+  for (const tx of await doQueryByPrimaryTypes(['SubmitModule'])) {
+    try {
+      const { contractAddress, metadata } = tx.message;
+      const meta = JSON.parse(metadata);
+
+      modules.push({ name: meta.name || '<unknown>', address: contractAddress });
+    } catch (e) {
+      console.warn(e);
+      // skip
+      continue;
+    }
   }
 
-  const modules = [{ name: 'Multisig', 'address': randomAddress() }, { name: 'One share,  One Vote', 'address': randomAddress() }];
   const datalist = document.createElement('datalist');
-
   for (const module of modules) {
     const opt = document.createElement('option');
     opt.value = `${module.name} @ ${module.address}`;
@@ -346,6 +367,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   const totalShares = ethers.utils.formatUnits(await habitat.getTotalVotingShares(proposalId), erc20._decimals);
   const totalMembers = Number(await habitat.getTotalMemberCount(communityId));
   const participationRate = (totalVotes / totalMembers) * 100;
+  const proposalStatus = await habitat.getProposalStatus(proposalId);
   console.log({totalVotes, totalShares});
 
   let userShares = ethers.BigNumber.from(0);
@@ -374,7 +396,8 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     signalStrength,
     userShares,
     userSignal,
-    tokenSymbol
+    tokenSymbol,
+    proposalStatus,
   };
 }
 
@@ -447,4 +470,11 @@ export async function resolveName (str) {
   }
 
   return ret;
+}
+
+export const VotingStatus = {
+  UNKNOWN: 0,
+  OPEN: 1,
+  CLOSED: 2,
+  PASSED: 3,
 }

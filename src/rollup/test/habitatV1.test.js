@@ -324,13 +324,14 @@ describe('HabitatV1', async function () {
       it('submit OneShareOneVote module', async () => {
         vaultCondition = conditions.OneShareOneVote;
         const args = {
-          src: vaultCondition,
+          contractAddress: vaultCondition,
+          metadata: '{}',
         };
         const { txHash, receipt } = await createTransaction('SubmitModule', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.src, args.src);
+        assert.equal(evt.contractAddress, args.contractAddress);
       });
 
       it('activate OneShareOneVote', async () => {

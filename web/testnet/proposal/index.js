@@ -5,7 +5,6 @@ import {
   renderAmount,
   walletIsConnected,
   getTokenSymbol,
-  getSigner,
   getErc20,
   ethers,
 } from '/lib/utils.js';
@@ -20,6 +19,7 @@ import {
   doQuery,
   fetchProposalStats,
   submitVote,
+  VotingStatus,
 } from '/lib/rollup.js';
 
 const CIRCLES = `
@@ -36,9 +36,7 @@ async function processProposal (proposalId) {
   };
 
   await sendTransaction('ProcessProposal', args);
-
-  // lazy, reload page
-  window.location.reload();
+  await updateProposal();
 }
 
 async function executeProposal (proposalId, actionBytes) {
@@ -60,18 +58,14 @@ async function updateProposal () {
     totalVotes,
     participationRate,
     tokenSymbol,
+    proposalStatus,
   } = await fetchProposalStats({ communityId, proposalId });
-  let proposal = {};
-  let expired = false;
-  let status = expired ? 'Voting Ended' : humanProposalTime(tx.message.startDate);
-  let votingDisabled = false;
-  if (proposal.aborted) {
-    status = 'aborted by proposer';
-  } else if (proposal.didPass) {
-    status = 'passed';
-  } else if (proposal.processed) {
-    status = 'processed';
-  }
+  const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
+  const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(tx.message.startDate);
+
+  document.querySelector('#vote').disabled = votingDisabled;
+  document.querySelector('#finalize').disabled = votingDisabled;
+  document.querySelector('#execProposal').disabled = !proposalStatus.eq(VotingStatus.PASSED);
 
   // some metadata below the proposal
   {
@@ -105,18 +99,6 @@ async function updateProposal () {
   if (slider.value == slider.defaultValue) {
     slider.setRange(1, 100, 100, defaultSliderValue);
   }
-
-  if (votingDisabled) {
-    //wrapListener('button#finalize', () => processProposal(proposalId));
-  } else {
-    //wrapListener('button#vote', () => submitVote(communityId, proposalId, slider.value));
-
-    // any actions we can execute?
-    // TODO: calculate estimate of bridge finalization time
-    if (proposal.didPass && proposalActions.length) {
-      //wrapListener('button#execProposal', () => executeProposal(proposalId, tx.message.actions));
-    }
-  }
 }
 
 async function render () {
@@ -142,8 +124,8 @@ async function render () {
   document.querySelector('#title').textContent = tx.message.title;
   document.querySelector('#proposal').textContent = metadata.details || '<no information>';
 
+  const proposalActions = decodeProposalActions(tx.message.actions);
   {
-    const proposalActions = decodeProposalActions(tx.message.actions);
     // proposal actions
     const grid = document.querySelector('.proposalActions');
     grid.innerHTML = '';
@@ -171,10 +153,11 @@ async function render () {
       await submitVote(communityId, proposalId, slider.value);
       await updateProposal();
     });
+    wrapListener('button#finalize', () => processProposal(proposalId));
 
     // any actions we can execute?
     // TODO: calculate estimate of bridge finalization time
-    if (proposal.didPass && proposalActions.length) {
+    if (proposalActions.length) {
       wrapListener('button#execProposal', () => executeProposal(proposalId, tx.message.actions));
     }
   }

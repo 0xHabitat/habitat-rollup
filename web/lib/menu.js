@@ -8,7 +8,7 @@ const TEMPLATE =
     <li><a href="/evolution/" class="lightgreen"><span class="icon">🌱</span> Evolution</a></li>
     <li><a href="/token/" class="lightstraw"><span class="icon">🌞</span> Token</a></li>
     <li><a href="/lp/" class="lightblue"><span class="icon">💎</span> Mining</a></li>
-    <!--<li><a href="/testnet/" class="lightgrey"><span class="icon">🎮</span> Testnet</a></li>-->
+    <li><a href="/testnet/" class="lightgrey"><span class="icon">🎮</span> Testnet</a></li>
   </ul>
 </nav>`;
 

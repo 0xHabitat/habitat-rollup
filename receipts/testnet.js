@@ -1,5 +1,6 @@
 import ethers from 'ethers';
 import fs from 'fs';
+import assert from 'assert';
 
 import TransactionBuilder from '@NutBerry/rollup-bricks/dist/TransactionBuilder.js';
 import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
@@ -10,7 +11,7 @@ import { encodeProposalActions } from './../src/rollup/test/utils.js';
 const COMMUNITIES = [
   { title: 'LeapDAO', token: '0x78230e69d6e6449db1e11904e0bd81c018454d7a' },
   { title: 'Strudel Finance', token: '0x297d33e17e61c2ddd812389c2105193f8348188a' },
-  { title: 'Habitat', token: '0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415' },
+  { title: 'Habitat', token: '0x6533Bc5355561cbb841E81eb07056F5EbE4DF413' },
 ];
 const LOREM_IPSUM = `
 Earum commodi voluptas mollitia recusandae odit labore dolorem voluptatem. Molestiae quo consequuntur quia veniam et. Aspernatur veritatis est porro iure numquam voluptas deleniti aut. Est sit cupiditate quia. Eius aut architecto consectetur in a. Consequuntur consectetur expedita dolor.
@@ -72,13 +73,14 @@ async function main () {
   const HabitatV1Testnet = JSON.parse(fs.readFileSync('./build/contracts/HabitatV1Testnet.json'));
   const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
   const ERC20 = JSON.parse(fs.readFileSync('./build/contracts/TestERC20.json'));
+  const OneShareOneVote = JSON.parse(fs.readFileSync('./build/contracts/OneShareOneVote.json'));
   //
   const rootRpcUrl = process.env.ROOT_RPC_URL;
   const rootProvider = new ethers.providers.JsonRpcProvider(process.env.ROOT_RPC_URL);
   const wallet = new ethers.Wallet(privKey, rootProvider);
   //
   let initd = false;
-  let bridgeL1, execProxy, erc20;
+  let bridgeL1, execProxy, erc20, oneShareOneVote;
   const configPath = './._simple';
   if (fs.existsSync(configPath)) {
     initd = true;
@@ -86,14 +88,17 @@ async function main () {
     bridgeL1 = new ethers.Contract(config.bridgeL1, HabitatV1Testnet.abi, wallet);
     execProxy = new ethers.Contract(config.execProxy, ExecutionProxy.abi, wallet);
     erc20 = new ethers.Contract(config.erc20, ERC20.abi, wallet);
+    oneShareOneVote = new ethers.Contract(config.oneShareOneVote, OneShareOneVote.abi, wallet);
   } else {
     bridgeL1 = await deploy(HabitatV1Testnet, [], wallet);
     execProxy = await deploy(ExecutionProxy, [bridgeL1.address], wallet);
     erc20 = await deploy(ERC20, [], wallet);
+    oneShareOneVote = await deploy(OneShareOneVote, [], wallet);
     const config = {
       bridgeL1: bridgeL1.address,
       execProxy: execProxy.address,
       erc20: erc20.address,
+      oneShareOneVote: oneShareOneVote.address,
     }
     fs.writeFileSync(configPath, JSON.stringify(config));
   }
@@ -123,7 +128,7 @@ async function main () {
     setInterval(async () => {
       await br.forwardChain();
       // forward
-      await br.directReplay(BigInt((await bridgeL1.finalizedHeight()).add(1)));
+      //await br.directReplay(BigInt((await bridgeL1.finalizedHeight()).add(1)));
     }, 3000);
   }
   //
@@ -137,6 +142,19 @@ async function main () {
     // claim username
     await sendTransaction('ClaimUsername', { shortString: '0x53616272696e612074686520f09f9980' }, wallet, bridgeL2);
   }
+
+  {
+    // register modules
+    for (const [name, addr] of [['One Share One Vote', oneShareOneVote.address]]) {
+      const args = {
+        contractAddress: addr,
+        metadata: JSON.stringify({ name }),
+      };
+      const { txHash, receipt } = await sendTransaction('SubmitModule', args, wallet, bridgeL2);
+      assert.equal(receipt.status, '0x1');
+    }
+  }
+
   {
     for (const obj of COMMUNITIES) {
       let args = {
@@ -147,7 +165,7 @@ async function main () {
 
       args = {
         communityId: tmp.events[0].args.communityId,
-        condition: ethers.constants.AddressZero,
+        condition: oneShareOneVote.address,
         metadata: JSON.stringify({ title: `Treasure Chest` }),
       };
       tmp = await sendTransaction('CreateVault', args, wallet, bridgeL2);

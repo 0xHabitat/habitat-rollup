@@ -329,17 +329,17 @@ case 4 {
 // end of CreateVault
 
 // start of SubmitModule
-// typeHash: 0x93bc8b942cd55880fdda01bec4a1c33a292820f03e3e05a2465f868a5bf787de
-// function: onSubmitModule(address,uint256,address)
+// typeHash: 0xc0ec083f7dd76c7db4e97877703b9199cd5d2e4c952c43c35e87e4ce4f3635b3
+// function: onSubmitModule(address,uint256,address,string)
 case 5 {
-  let headSize := 96
+  let headSize := 128
   let typeLen := 0
-  let txPtr := 256
-  let endOfSlot := add(txPtr, 96)
+  let txPtr := 320
+  let endOfSlot := add(txPtr, 128)
 
-  txPtr := 288
+  txPtr := 352
   // typeHash of SubmitModule
-  mstore(0, 0x93bc8b942cd55880fdda01bec4a1c33a292820f03e3e05a2465f868a5bf787de)
+  mstore(0, 0xc0ec083f7dd76c7db4e97877703b9199cd5d2e4c952c43c35e87e4ce4f3635b3)
   // uint256 SubmitModule.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -348,7 +348,7 @@ case 5 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // address SubmitModule.src
+  // address SubmitModule.contractAddress
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
@@ -356,8 +356,21 @@ case 5 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
+  // string SubmitModule.metadata
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(96, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
   // typeHash
-  let structHash := keccak256(0, 96)
+  let structHash := keccak256(0, 128)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -371,10 +384,10 @@ case 5 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(224, 0x69dafa9c)
-  mstore(256, mload(128))
+  mstore(288, 0x551cf0f9)
+  mstore(320, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
   success := or(success, returndatasize())
 }
 // end of SubmitModule

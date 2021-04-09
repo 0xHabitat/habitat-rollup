@@ -35,7 +35,8 @@ export default {
     SubmitModule: [
       // xxx: args
       { name: 'nonce', 'type': 'uint256' },
-      { name: 'src', type: 'address' },
+      { name: 'contractAddress', type: 'address' },
+      { name: 'metadata', type: 'string' },
     ],
     ActivateModule: [
       { name: 'nonce', 'type': 'uint256' },
