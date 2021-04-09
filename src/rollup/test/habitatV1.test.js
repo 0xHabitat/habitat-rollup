@@ -259,6 +259,14 @@ describe('HabitatV1', async function () {
         names[alice.address] = args.shortString;
       });
 
+      it('alice: claim random user name', async () => {
+        const args = {
+          shortString: Array.from(ethers.utils.randomBytes(32)),
+        };
+        const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
+        assert.equal(receipt.status, '0x1', 'success');
+      });
+
       it('alice: setDelegate', async () => {
         const args = {
           to: bob.address,
@@ -293,7 +301,6 @@ describe('HabitatV1', async function () {
         assert.equal(evt.communityId, communityId, 'communityId');
       });
 
-      // xxx: activate a simple condition for community
       it('alice: create a vault', async () => {
         const vaultCondition = ethers.constants.AddressZero;
         const args = {
