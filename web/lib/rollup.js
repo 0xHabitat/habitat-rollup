@@ -483,7 +483,7 @@ const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
 
 export async function getErc20Exit (tokenAddr, accountAddr) {
   const { bridge } = await getProviders();
-  return bridge.getERC20Exit(tokenAddr, accounAddr, { from: ADDRESS_ONE });
+  return bridge.getERC20Exit(tokenAddr, accountAddr, { from: ADDRESS_ONE });
 }
 
 export async function getExitStatus (tokenAddr, accountAddr) {
