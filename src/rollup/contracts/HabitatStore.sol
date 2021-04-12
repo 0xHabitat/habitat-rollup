@@ -7,7 +7,7 @@ contract HabitatStore is HabitatBase {
   event ModuleSubmitted(address contractAddress, string metadata);
   event ModuleActivated(bytes32 communityId, address condition);
 
-  /// @dev Submits a module to the store.
+  /// @notice Submits a module to the store.
   /// AppReview? 😬
   function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, string calldata metadata) external {
     HabitatBase._commonChecks();
@@ -25,6 +25,8 @@ contract HabitatStore is HabitatBase {
     emit ModuleSubmitted(contractAddress, metadata);
   }
 
+  /// @notice Activates a module for `communityId`.
+  /// Modules only needs to be activated/bought once for a community.
   function onActivateModule (address msgSender, uint256 nonce, bytes32 communityId, address condition) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);

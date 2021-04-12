@@ -128,8 +128,9 @@ contract HabitatVoting is HabitatBase {
     emit VotedOnProposal(account, proposalId, signalStrength, shares, timestamp);
   }
 
-  function onProcessProposal (address msgSender, bytes32 proposalId) external {
+  function onProcessProposal (address msgSender, uint256 nonce, bytes32 proposalId) external {
     HabitatBase._commonChecks();
+    HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
     require(previousVotingStatus < 2);

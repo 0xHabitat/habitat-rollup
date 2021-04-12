@@ -62,6 +62,7 @@ export default {
       { name: 'signalStrength', type: 'uint8' },
     ],
     ProcessProposal: [
+      { name: 'nonce', 'type': 'uint256' },
       { name: 'proposalId', type: 'bytes32' },
     ],
   },

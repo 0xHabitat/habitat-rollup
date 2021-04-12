@@ -633,18 +633,18 @@ case 8 {
 // end of VoteOnProposal
 
 // start of ProcessProposal
-// typeHash: 0x024338bd68ba5784bd123e92f046e06bc764ec440ec3d3b2a5873f45933e03fc
-// function: onProcessProposal(address,bytes32)
+// typeHash: 0xda077a5b0178b4b7765f6d69c5f0e9e03f23ceff1d9569e3f7e6125673c720c2
+// function: onProcessProposal(address,uint256,bytes32)
 case 9 {
-  let headSize := 64
+  let headSize := 96
   let typeLen := 0
-  let txPtr := 192
-  let endOfSlot := add(txPtr, 64)
+  let txPtr := 256
+  let endOfSlot := add(txPtr, 96)
 
-  txPtr := 224
+  txPtr := 288
   // typeHash of ProcessProposal
-  mstore(0, 0x024338bd68ba5784bd123e92f046e06bc764ec440ec3d3b2a5873f45933e03fc)
-  // bytes32 ProcessProposal.proposalId
+  mstore(0, 0xda077a5b0178b4b7765f6d69c5f0e9e03f23ceff1d9569e3f7e6125673c720c2)
+  // uint256 ProcessProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
@@ -652,8 +652,16 @@ case 9 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
+  // bytes32 ProcessProposal.proposalId
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(64, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
   // typeHash
-  let structHash := keccak256(0, 64)
+  let structHash := keccak256(0, 96)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -667,10 +675,10 @@ case 9 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(160, 0xa229bbbc)
-  mstore(192, mload(128))
+  mstore(224, 0xb70594c8)
+  mstore(256, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 188, sub(endOfSlot, 188), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
   success := or(success, returndatasize())
 }
 // end of ProcessProposal
@@ -678,31 +686,57 @@ default { success := 1 }
 }
 
 
-      // 0x412c6d50
-      // function onDeposit (address token, address owner, uint256 value) external
+      let blockSize := calldataload(36)
+      let startOfBlockData := sub(calldatasize(), blockSize)
+      let endOfBlockData := add(startOfBlockData, blockSize)
+      challengeOffset := add(challengeOffset, startOfBlockData)
+
+      // block-data is everything after the
+      // function signature (4 bytes)
+      // + block type (32 bytes)
+      // + block size
+      // + rounds
+      // + witness
+      // + block data
+
       // TODO: add batchDeposit support
       if eq(calldataload(4), 1) {
+        // function onDeposit (address token, address owner, uint256 value) external
         mstore(0, 0x412c6d50)
         // owner
-        mstore(64, shr(96, calldataload(36)))
+        mstore(64, shr(96, calldataload(startOfBlockData)))
         // token
-        mstore(32, shr(96, calldataload(56)))
+        mstore(32, shr(96, calldataload(add(startOfBlockData, 20))))
         // value
-        mstore(96, calldataload(76))
+        mstore(96, calldataload(add(startOfBlockData, 40)))
+
         let success := call(gas(), address(), 0, 28, 100, 0, 0)
-        mstore(0, calldatasize())
+
+        // block complete
+        mstore(0, endOfBlockData)
         return(0, 32)
       }
 
-      // block-data is everything after the function signature (4 bytes) + block type (32 bytes)
-      // let blockSize := sub(calldatasize(), 36)
 
-      if iszero(challengeOffset) {
-        challengeOffset := 36
+      // TODO: witness
+      let witnessOffset := 100
+      let npairs := calldataload(witnessOffset)
+      for { let i := 0 } lt(i, npairs) { i := add(i, 1) } {
+        let key := calldataload(witnessOffset)
+        witnessOffset := add(witnessOffset, 32)
+        let val := calldataload(witnessOffset)
+        witnessOffset := add(witnessOffset, 32)
+        //sstore(key, val)
       }
 
       // iterate over the block data
-      for { } lt(challengeOffset, calldatasize()) { } {
+      let rounds := calldataload(68)
+      for { } lt(challengeOffset, endOfBlockData) { } {
+        if iszero(rounds) {
+          break
+        }
+        rounds := sub(rounds, 1)
+
         // if returndatasize > 0
         //   success; even if reverted
         // else
@@ -712,8 +746,7 @@ default { success := 1 }
         let success, nextOffset := _parseTransaction(challengeOffset)
 
         if iszero(success) {
-          mstore(0, challengeOffset)
-          return(0, 32)
+          break
         }
         challengeOffset := nextOffset
       }
@@ -722,7 +755,7 @@ default { success := 1 }
       // then you can return false here. You have to keep track of progression.
       // Be aware, you may potentially miss the finalization deadline if this takes too long.
       // done
-      mstore(0, challengeOffset)
+      mstore(0, sub(challengeOffset, startOfBlockData))
       return(0, 32)
     }
   }

@@ -134,8 +134,7 @@ describe('HabitatV1', async function () {
           to: ethers.constants.AddressZero,
           value: nftId - 1,
         };
-        const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
-        assert.equal(receipt.status, '0x0', 'receipt.status');
+        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /evm errno: 7/);
       });
 
       it('transfer erc721: alice > bob', async () => {
@@ -164,8 +163,8 @@ describe('HabitatV1', async function () {
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
-        assert.equal(receipt.logs.length, 1, 'should emit');
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(receipt.logs.length, 2, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[1]).args;
         assert.equal(evt.token, args.token);
         assert.equal(evt.from, bob.address);
         assert.equal(evt.to, args.to);
@@ -178,8 +177,7 @@ describe('HabitatV1', async function () {
           to: ethers.constants.AddressZero,
           value: '0x1',
         };
-        const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
-        assert.equal(receipt.status, '0x0', 'receipt.status');
+        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /evm errno: 7/);
       });
 
       it('transfer erc20: alice > bob', async () => {
@@ -208,8 +206,8 @@ describe('HabitatV1', async function () {
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
-        assert.equal(receipt.logs.length, 1, 'should emit');
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(receipt.logs.length, 2, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[1]).args;
         assert.equal(evt.token, args.token);
         assert.equal(evt.from, bob.address);
         assert.equal(evt.to, args.to);
@@ -229,8 +227,8 @@ describe('HabitatV1', async function () {
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
-        assert.equal(receipt.logs.length, 1, 'should emit');
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(receipt.logs.length, 2, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[1]).args;
         assert.equal(evt.token, args.token);
         assert.equal(evt.from, bob.address);
         assert.equal(evt.to, args.to);
@@ -242,21 +240,19 @@ describe('HabitatV1', async function () {
         const args = {
           shortString: Array.from((new TextEncoder()).encode('alice')),
         };
-        const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
         if (alreadyClaimed) {
-          // expect revert
-          assert.equal(receipt.status, '0x0', 'should revert');
-          return;
+          await assert.rejects(createTransaction('ClaimUsername', args, alice, habitat), /evm errno: 7/);
+        } else {
+          const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
+          assert.equal(receipt.status, '0x1', 'success');
+          assert.equal(receipt.logs.length, 1, '# events');
+
+          const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+          assert.equal(evt.account, alice.address);
+          assert.equal(BigInt(evt.shortString), BigInt(ethers.utils.hexlify(args.shortString)));
+          assert.equal(await habitat.nameToAddress(evt.shortString), alice.address);
+          names[alice.address] = args.shortString;
         }
-
-        assert.equal(receipt.status, '0x1', 'success');
-        assert.equal(receipt.logs.length, 1, '# events');
-
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.account, alice.address);
-        assert.equal(BigInt(evt.shortString), BigInt(ethers.utils.hexlify(args.shortString)));
-        assert.equal(await habitat.nameToAddress(evt.shortString), alice.address);
-        names[alice.address] = args.shortString;
       });
 
       it('alice: claim random user name', async () => {
@@ -322,9 +318,7 @@ describe('HabitatV1', async function () {
           communityId,
           condition: vaultCondition,
         };
-        const { txHash, receipt } = await createTransaction('ActivateModule', args, alice, habitat);
-        assert.equal(receipt.status, '0x0');
-        assert.equal(receipt.logs.length, 0);
+        await assert.rejects(createTransaction('ActivateModule', args, alice, habitat), /evm errno: 7/);
       });
 
       let vaultCondition;
