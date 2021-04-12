@@ -9,9 +9,9 @@ import TYPED_DATA from './../src/rollup/habitatV1.js';
 import { encodeProposalActions } from './../src/rollup/test/utils.js';
 
 const COMMUNITIES = [
-  { title: 'LeapDAO', token: '0x78230e69d6e6449db1e11904e0bd81c018454d7a' },
-  { title: 'Strudel Finance', token: '0x297d33e17e61c2ddd812389c2105193f8348188a' },
-  { title: 'Habitat', token: '0x6533Bc5355561cbb841E81eb07056F5EbE4DF413' },
+  //{ title: 'LeapDAO', token: '0x78230e69d6e6449db1e11904e0bd81c018454d7a' },
+  //{ title: 'Strudel Finance', token: '0x297d33e17e61c2ddd812389c2105193f8348188a' },
+  { title: 'Habitat', token: '0x1170fc4d4a1b8e4d5498be7429a9ec3920f8f114' },
 ];
 const LOREM_IPSUM = `
 Earum commodi voluptas mollitia recusandae odit labore dolorem voluptatem. Molestiae quo consequuntur quia veniam et. Aspernatur veritatis est porro iure numquam voluptas deleniti aut. Est sit cupiditate quia. Eius aut architecto consectetur in a. Consequuntur consectetur expedita dolor.

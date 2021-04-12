@@ -48,3 +48,7 @@
 #wallet.connected > #right {
   width: 12ch;
 }
+
+#wallet.connected > .connect {
+  text-decoration: underline;
+}

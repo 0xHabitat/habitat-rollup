@@ -478,3 +478,23 @@ export const VotingStatus = {
   CLOSED: 2,
   PASSED: 3,
 }
+
+export async function getExitStatus (tokenAddr, accountAddr) {
+  // query transfer to zero from finalizedBlock + 1 - latest
+  const { habitat, bridge } = await getProviders();
+  const latest = await habitat.provider.getBlockNumber();
+  const pending = Number(await bridge.finalizedHeight()) + 1;
+  const filter = habitat.filters.TokenTransfer(tokenAddr, accountAddr, ethers.constants.AddressZero);
+  filter.fromBlock = pending;
+  filter.toBlock = latest;
+
+  let pendingAmount = ethers.BigNumber.from(0);
+  const logs = await habitat.provider.send('eth_getLogs', [filter]);
+  for (const log of logs) {
+    const evt = habitat.interface.parseLog(log);
+    pendingAmount = pendingAmount.add(evt.args.value);
+  }
+
+  const availableAmount = await bridge.getERC20Exit(tokenAddr, accountAddr);
+  return { pendingAmount, availableAmount };
+}

@@ -22,7 +22,7 @@ class Locations {
     const [treasuryAddress, communityId] = args;
     return [
       ...(await this.vault(args)),
-      { title: '✍️Proposal', href: `${ROOT.href}propose/#${treasuryAddress},${communityId}` }
+      { title: 'Proposal', href: `${ROOT.href}propose/#${treasuryAddress},${communityId}` }
     ];
   }
 
@@ -31,7 +31,7 @@ class Locations {
     const info = await getProposalInformation(proposalTxHash);
     return [
       ...(await this.vault([info.vaultAddress, info.communityId])),
-      { title: `📜${info.title}`, href: `${ROOT.href}proposal/#${proposalTxHash}` }
+      { title: `${info.title}`, href: `${ROOT.href}proposal/#${proposalTxHash}` }
     ];
   }
 
@@ -40,7 +40,7 @@ class Locations {
     const info = await getTreasuryInformation(treasuryAddress);
     return [
       ...(await this.community([communityId])),
-      { title: `🍌${info.title}`, href: `${ROOT.href}vault/#${treasuryAddress},${communityId}` }
+      { title: `${info.title}`, href: `${ROOT.href}vault/#${treasuryAddress},${communityId}` }
     ];
   }
 
@@ -49,7 +49,7 @@ class Locations {
     const info = await getCommunityInformation(communityId);
     return [
       ROOT,
-      { title: `⛺️${info.title}`, href: `${ROOT.href}community/#${communityId}` }
+      { title: `${info.title}`, href: `${ROOT.href}community/#${communityId}` }
     ];
   }
 }

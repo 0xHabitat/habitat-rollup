@@ -15,6 +15,7 @@ import {
   doQuery,
   getProviders,
   getUsername,
+  getExitStatus,
 } from './rollup.js';
 import {
   DepositFlow,
@@ -217,7 +218,10 @@ async function updateErc20 () {
       // fastwithdraw
       children[childPtr++].setAttribute('token', token);
     }
-    document.querySelector('#erc20').replaceChildren(child);
+    const container = document.querySelector('#erc20');
+    if (container) {
+      container.replaceChildren(child);
+    }
   }
 
   {
@@ -230,28 +234,24 @@ async function updateErc20 () {
     for (let i = 0, len = tokens.length; i < len; i++) {
       slider.setRange(i, i, len);
       const token = tokens[i];
-      const total = await habitat.getERC20Exit(token, account);
-      const availableForExit = await bridge.getERC20Exit(token, account);
-
-      /*
-      if (total.lt(1) && availableForExit.lt(1)) {
-        continue;
-      }
-      */
+      const { pendingAmount, availableAmount } = await getExitStatus(token, account);
 
       const erc = await getErc20(token);
-      const amount = ethers.utils.formatUnits(availableForExit, erc._decimals);
-      const disabled = !availableForExit.gt(0);
+      const amount = ethers.utils.formatUnits(availableAmount, erc._decimals);
+      const disabled = !availableAmount.gt(0);
 
       children[childPtr].textContent = await getTokenName(token);
       children[childPtr++].href = getEtherscanTokenLink(token, account);
-      children[childPtr++].textContent = `${renderAmount(total.sub(availableForExit), erc._decimals)} pending`;
-      children[childPtr++].textContent = `${renderAmount(availableForExit, erc._decimals)} available`;
+      children[childPtr++].textContent = `${renderAmount(pendingAmount, erc._decimals)} pending`;
+      children[childPtr++].textContent = `${renderAmount(availableAmount, erc._decimals)} available`;
       // withdraw
       wrapListener(children[childPtr], (evt) => new WithdrawFlow(document.querySelector('button#withdraw'), { callback, amount, token }));
       children[childPtr++].disabled = disabled;
     }
-    document.querySelector('#exits').replaceChildren(child);
+    const container = document.querySelector('#exits');
+    if (container) {
+      container.replaceChildren(child);
+    }
   }
 
   if (transfers.length) {

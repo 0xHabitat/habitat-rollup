@@ -40,7 +40,7 @@ const PERMIT_EIP_2612 = new ethers.utils.Interface(
   ['function permit(address owner,address spender,uint256 value,uint256 deadline,uint8 v,bytes32 r,bytes32 s)']
 );
 
-let ROOT_CHAIN_ID = window.location.pathname.indexOf('testnet') === -1 ? 1 : 3;
+let ROOT_CHAIN_ID = window.location.pathname.indexOf('testnet') === -1 ? 1 : 4;
 const _cache = {};
 const _providers = {};
 

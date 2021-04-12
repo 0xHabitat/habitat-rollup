@@ -415,6 +415,14 @@
       "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xc778417E063141139Fce010982780140Aa0cD5Ab/logo.png"
     },
     {
+      "name": "Habitat Token",
+      "address": "0x1170FC4D4A1b8e4D5498BE7429a9eC3920F8f114",
+      "symbol": "HBT",
+      "decimals": 10,
+      "chainId": 4,
+      "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xc778417E063141139Fce010982780140Aa0cD5Ab/logo.png"
+    },
+    {
       "name": "Uniswap",
       "address": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
       "symbol": "UNI",
