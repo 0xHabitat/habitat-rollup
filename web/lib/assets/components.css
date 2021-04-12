@@ -2,7 +2,6 @@ habitat-path {
   display: block;
   z-index: 9;
   transition: .3s ease-in;
-  border-bottom: 1px solid var(--color-bg-invert);
 }
 
 habitat-path a {
