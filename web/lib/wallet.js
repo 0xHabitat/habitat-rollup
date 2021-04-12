@@ -83,7 +83,6 @@ const ACCOUNT_TEMPLATE =
   <div class='flex row evenly' style='width:100%;'>
   <button id='close' class='flow smaller'>Go Back</button>
     <p> </p>
-    <h2>👋</h2>
     <h6 id='greeting'> </h6>
     <button id='name' class='flow smaller'>Change Username</button>
   </div>
