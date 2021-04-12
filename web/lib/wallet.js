@@ -291,7 +291,10 @@ async function updateErc20 () {
       // to
       children[childPtr++].textContent = await getUsername(to);
     }
-    document.querySelector('#history').replaceChildren(child);
+    const container = document.querySelector('#history');
+    if (container) {
+      container.replaceChildren(child);
+    }
   }
 
   slider.parentElement.style.display = 'none';
