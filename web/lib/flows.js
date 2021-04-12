@@ -1,5 +1,5 @@
 import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected, stringDance } from './utils.js';
-import { getProviders, sendTransaction, setupModulelist, doQuery, resolveName, getShortString } from './rollup.js';
+import { getProviders, sendTransaction, setupModulelist, doQuery, resolveName, getShortString, getErc20Exit } from './rollup.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export class BaseFlow {
@@ -311,11 +311,11 @@ export class WithdrawFlow extends BaseFlow {
     const erc20 = await getToken(ctx.token);
     const tokenSymbol = await getTokenSymbol(erc20.address);
     const wanted = ethers.utils.parseUnits(ctx.amount, erc20._decimals);
-    const { habitat, bridge } = await getProviders();
+    const { habitat } = await getProviders();
     const signer = await getSigner();
     const account = await signer.getAddress();
     const availableForExit =
-      (await bridge.getERC20Exit(erc20.address, account)).toHexString();
+      (await getErc20Exit(erc20.address, account)).toHexString();
 
     if (wanted.gt(availableForExit)) {
       this.write('You have to request an exit first.\nYou can withdraw the amount once it is finalized.');

@@ -479,6 +479,13 @@ export const VotingStatus = {
   PASSED: 3,
 }
 
+const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
+
+export async function getErc20Exit (tokenAddr, accountAddr) {
+  const { bridge } = await getProviders();
+  return bridge.getERC20Exit(tokenAddr, accounAddr, { from: ADDRESS_ONE });
+}
+
 export async function getExitStatus (tokenAddr, accountAddr) {
   // query transfer to zero from finalizedBlock + 1 - latest
   const { habitat, bridge } = await getProviders();
@@ -495,6 +502,6 @@ export async function getExitStatus (tokenAddr, accountAddr) {
     pendingAmount = pendingAmount.add(evt.args.value);
   }
 
-  const availableAmount = await bridge.getERC20Exit(tokenAddr, accountAddr);
+  const availableAmount = await getErc20Exit(tokenAddr, accountAddr);
   return { pendingAmount, availableAmount };
 }
