@@ -2,7 +2,7 @@ version: '3'
 
 services:
   geth:
-    image: ethereum/client-go:v1.10.1
+    image: ethereum/client-go:v1.10.2
     tty: true
     volumes:
       - ./scripts:/scripts

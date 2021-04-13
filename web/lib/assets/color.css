@@ -19,6 +19,7 @@
   --border-radius-frame: 0px;
   --color-frame: none;
   --color-border-box: var(--color-black);
+  --color-bg-item: rgba(255, 255, 255, .3);
 
   --gradient-coldhot: linear-gradient(240deg, #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 89.92%);
 }
@@ -35,6 +36,7 @@
   --color-frame: #ffffff50;
   --color-link: white;
   --color-border-box: var(--color-white);
+  --color-bg-item: rgba(0, 0, 0, .3);
 }
 
 /*
