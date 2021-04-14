@@ -37,6 +37,9 @@ contract HabitatVoting is HabitatBase {
   }
 
   /// xxx: change this to support the convention: community > (vault w/ condition). {proposal,vote,finalize}
+  /// todo
+  /// internal transfers
+  /// metadata updates - only for 'primary' vault?
   function onCreateProposal (
     address msgSender,
     uint256 nonce,

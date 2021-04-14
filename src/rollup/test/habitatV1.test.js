@@ -47,6 +47,7 @@ describe('HabitatV1', async function () {
   let erc20;
   let erc721;
   let cumulativeDeposits = BigInt(0);
+  let cumulativeNft = BigInt(0);
   let proposalIndex;
   let executionTestContract;
 
@@ -114,6 +115,7 @@ describe('HabitatV1', async function () {
         const newBalance = await habitat.getErc20Balance(erc20.address, user);
         assert.equal(newBalance.toString(), oldBalance.add(depositAmount).toString(), 'token balance should match');
         cumulativeDeposits += BigInt(depositAmount);
+        assert.equal((await habitat.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
       }
 
       async function doNftDeposit (signer) {
@@ -131,6 +133,8 @@ describe('HabitatV1', async function () {
 
         const newOwner = await habitat.getErc721Owner(erc721.address, value);
         assert.equal(newOwner, user, 'nft owner should match');
+        cumulativeNft++;
+        assert.equal((await habitat.getTotalValueLocked(erc721.address)).toString(), cumulativeNft.toString(), 'tvl');
       }
 
       it('init', async () => {
@@ -180,12 +184,14 @@ describe('HabitatV1', async function () {
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
-        assert.equal(receipt.logs.length, 2, 'should emit');
-        const evt = habitat.interface.parseLog(receipt.logs[1]).args;
+        assert.equal(receipt.logs.length, 1, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.token, args.token);
         assert.equal(evt.from, bob.address);
         assert.equal(evt.to, args.to);
         assert.equal(evt.value.toString(), BigInt(args.value).toString());
+        cumulativeNft--;
+        assert.equal((await habitat.getTotalValueLocked(erc721.address)).toString(), cumulativeNft.toString(), 'tvl');
       });
 
       it('exit erc20: bob - should fail', async () => {
@@ -223,12 +229,14 @@ describe('HabitatV1', async function () {
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
-        assert.equal(receipt.logs.length, 2, 'should emit');
-        const evt = habitat.interface.parseLog(receipt.logs[1]).args;
+        assert.equal(receipt.logs.length, 1, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.token, args.token);
         assert.equal(evt.from, bob.address);
         assert.equal(evt.to, args.to);
         assert.equal(evt.value.toString(), BigInt(args.value).toString());
+        cumulativeDeposits -= BigInt(args.value);
+        assert.equal((await habitat.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
       });
 
       it('deposit: bob', async () => {
@@ -244,12 +252,14 @@ describe('HabitatV1', async function () {
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
-        assert.equal(receipt.logs.length, 2, 'should emit');
-        const evt = habitat.interface.parseLog(receipt.logs[1]).args;
+        assert.equal(receipt.logs.length, 1, 'should emit');
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.token, args.token);
         assert.equal(evt.from, bob.address);
         assert.equal(evt.to, args.to);
         assert.equal(evt.value.toString(), BigInt(args.value).toString());
+        cumulativeDeposits -= BigInt(args.value);
+        assert.equal((await habitat.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
       });
 
       it('alice: claim user name', async () => {
@@ -392,7 +402,7 @@ describe('HabitatV1', async function () {
         };
         const { txHash, receipt } = await createTransaction('CreateProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 2);
+        assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         proposalId = evt.proposalId;
       });

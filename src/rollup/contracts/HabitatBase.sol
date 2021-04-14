@@ -492,4 +492,33 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
       _incrementTotalMemberCount(communityId);
     }
   }
+
+  function _TOKEN_TVL_KEY (address a) internal view returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x4e7484f055e36257052a570831d7e3114ad145e0c8d8de63ded89925c7e17cb6)
+      mstore(32, a)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  function _incrementTotalValueLocked (address token, uint256 value) internal {
+    uint256 key = _TOKEN_TVL_KEY(token);
+    assembly {
+      sstore(key, add(sload(key), value))
+    }
+  }
+
+  function _decrementTotalValueLocked (address token, uint256 value) internal {
+    uint256 key = _TOKEN_TVL_KEY(token);
+    assembly {
+      sstore(key, sub(sload(key), value))
+    }
+  }
+
+  function getTotalValueLocked (address token) public view returns (uint256 value) {
+    uint256 key = _TOKEN_TVL_KEY(token);
+    assembly {
+      value := sload(key)
+    }
+  }
 }
