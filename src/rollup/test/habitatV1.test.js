@@ -3,6 +3,7 @@ import ethers from 'ethers';
 import TransactionBuilder from '@NutBerry/rollup-bricks/src/bricked/lib/TransactionBuilder.js';
 import TYPED_DATA from '../habitatV1.js';
 import { encodeProposalActions } from './utils.js';
+import { getDeployCode } from '../lib/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
@@ -27,9 +28,19 @@ async function createTransaction (primaryType, message, signer, habitat) {
 }
 
 describe('HabitatV1', async function () {
-  const { HabitatV1Mock, ExecutionProxy, TestERC20, TestERC721, ExecutionTest, OneShareOneVote } = Artifacts;
+  const {
+    HabitatV1Mock,
+    ExecutionProxy,
+    TestERC20,
+    TestERC721,
+    ExecutionTest,
+    OneShareOneVote,
+    UpgradableRollupTestnet,
+  } = Artifacts;
   const { rootProvider, alice, bob, charlie } = getDefaultWallets();
   let bridge;
+  let upgradableRollup;
+  let rollupImplementation;
   let habitat;
   let habitatNode;
   let executionProxy;
@@ -51,7 +62,12 @@ describe('HabitatV1', async function () {
     erc20 = await deploy(TestERC20, alice);
     erc721 = await deploy(TestERC721, alice, 'NFT', 'NFT');
 
-    bridge = await deploy(HabitatV1Mock, alice);
+    upgradableRollup = await deploy(UpgradableRollupTestnet, alice);
+    rollupImplementation = await deploy(HabitatV1Mock, alice);
+    bridge = new ethers.Contract(upgradableRollup.address, HabitatV1Mock.abi, alice);
+
+    await (await upgradableRollup.upgradeRollup(rollupImplementation.address)).wait();
+
     habitatNode = await startNode('../../bricked/lib/index.js', 9999, 0, bridge.address, TYPED_DATA);
     habitat = bridge.connect(habitatNode);
 
@@ -59,7 +75,8 @@ describe('HabitatV1', async function () {
     executionTestContract = await deploy(ExecutionTest, alice, executionProxy.address);
 
     for (const condition of [OneShareOneVote]) {
-      conditions[condition.contractName] = (await deploy(condition, alice)).address;
+      const bytecode = getDeployCode(condition.deployedBytecode);
+      conditions[condition.contractName] = (await deploy({ bytecode, abi: [] }, alice)).address;
     }
 
     invalidAction = encodeProposalActions(

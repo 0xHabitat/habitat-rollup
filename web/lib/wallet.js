@@ -16,6 +16,7 @@ import {
   getProviders,
   getUsername,
   getExitStatus,
+  getBlockExplorerLink,
 } from './rollup.js';
 import {
   DepositFlow,
@@ -61,6 +62,7 @@ const ACCOUNT_TRANSFER_TEMPLATE =
 <p></p>
 <p></p>
 <p></p>
+<a target='_blank'></a>
 `;
 
 const ACCOUNT_TEMPLATE =
@@ -74,6 +76,9 @@ const ACCOUNT_TEMPLATE =
   display:grid;
   gap:1rem;
   grid-template-columns:repeat(5, auto);
+}
+#history > div {
+  grid-template-columns:repeat(6, auto);
 }
 #exits > div {
   grid-template-columns:repeat(4, auto);
@@ -257,12 +262,12 @@ async function updateErc20 () {
     // transfer history
     const child = document.createElement('div');
     child.className = 'align-right';
-    child.innerHTML = '<p></p><p></p><p></p><p>From</p><p>To</p>' + ACCOUNT_TRANSFER_TEMPLATE.repeat(transfers.length);
+    child.innerHTML = '<p></p><p></p><p></p><p>From</p><p>To</p><p>Transaction</p>' + ACCOUNT_TRANSFER_TEMPLATE.repeat(transfers.length);
     const children = child.children;
-    let childPtr = 5;
+    let childPtr = 6;
     for (let i = 0, len = transfers.length; i < len; i++) {
       slider.setRange(i, i, len);
-      const { token, from, to, value } = transfers[(len - 1) - i];
+      const { token, from, to, value, transactionHash } = transfers[(len - 1) - i];
       const isDeposit = from === ethers.constants.AddressZero;
       const isIncoming = to === account;
       const isExit = to === ethers.constants.AddressZero;
@@ -289,6 +294,9 @@ async function updateErc20 () {
       children[childPtr++].textContent = await getUsername(from);
       // to
       children[childPtr++].textContent = await getUsername(to);
+      // block explorer link
+      children[childPtr].textContent = renderAddress(transactionHash);
+      children[childPtr++].href = getBlockExplorerLink(transactionHash);
     }
     const container = document.querySelector('#history');
     if (container) {

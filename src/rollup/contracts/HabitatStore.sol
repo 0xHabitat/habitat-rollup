@@ -7,19 +7,97 @@ contract HabitatStore is HabitatBase {
   event ModuleSubmitted(address contractAddress, string metadata);
   event ModuleActivated(bytes32 communityId, address condition);
 
+  function _verifyModule (address contractAddress) internal returns (bytes32 codehash) {
+    assembly {
+      function doRevert () {
+        // xxx add error message?
+        revert(0, 0)
+      }
+
+      let size := extcodesize(contractAddress)
+      if iszero(size) {
+        doRevert()
+      }
+
+      let ptr := mload(64)
+      let end := add(ptr, size)
+      extcodecopy(contractAddress, ptr, 0, size)
+      codehash := keccak256(ptr, size)
+
+      for { } lt(ptr, end) { ptr := add(ptr, 1) } {
+        let opcode := byte(0, mload(ptr))
+
+        // PUSH opcodes
+        if and(gt(opcode, 95), lt(opcode, 128)) {
+          let len := sub(opcode, 95)
+          ptr := add(ptr, len)
+          continue
+        }
+
+        // DUPx and SWAPx
+        if and(gt(opcode, 127), lt(opcode, 160)) {
+          continue
+        }
+
+        // everything from 0x0 to 0x20 (inclusive)
+        if lt(opcode, 0x21) {
+          continue
+        }
+
+        // another set of allowed opcodes
+        switch opcode
+        // CALLVALUE
+        case 0x34 {}
+        // CALLDATALOAD
+        case 0x35 {}
+        // CALLDATASIZE
+        case 0x36 {}
+        // CALLDATACOPY
+        case 0x37 {}
+        // CODESIZE
+        case 0x38 {}
+        // CODECOPY
+        case 0x39 {}
+        // POP
+        case 0x50 {}
+        // MLOAD
+        case 0x51 {}
+        // MSTORE
+        case 0x52 {}
+        // MSTORE8
+        case 0x53 {}
+        // JUMP
+        case 0x56 {}
+        // JUMPI
+        case 0x57 {}
+        // PC
+        case 0x58 {}
+        // MSIZE
+        case 0x59 {}
+        // JUMPDEST
+        case 0x5b {}
+        // RETURN
+        case 0xf3 {}
+        // REVERT
+        case 0xfd {}
+        // INVALID
+        case 0xfe {}
+        default {
+          // everything else is not allowed
+          doRevert()
+        }
+      }
+    }
+  }
+
   /// @notice Submits a module to the store.
   /// AppReview? 😬
   function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, string calldata metadata) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    // xxx: more checks
-    bytes32 codeHash;
-    assembly {
-      //codeHash := extcodehash(contractAddress)
-      codeHash := 1
-    }
-
+    // verify the contract code and returns the keccak256(bytecode) (reverts if invalid)
+    bytes32 codeHash = _verifyModule(contractAddress);
     HabitatBase._setModuleHash(contractAddress, codeHash);
 
     emit ModuleSubmitted(contractAddress, metadata);
@@ -32,7 +110,7 @@ contract HabitatStore is HabitatBase {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     require(moduleHash(condition) != bytes32(0), 'HASH');
-    // xxx. buy
+    // xxx acquire/buy flow
     activeModule[communityId][condition] = 1;
 
     emit ModuleActivated(communityId, condition);

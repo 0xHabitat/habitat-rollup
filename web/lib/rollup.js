@@ -505,3 +505,8 @@ export async function getExitStatus (tokenAddr, accountAddr) {
   const availableAmount = await getErc20Exit(tokenAddr, accountAddr);
   return { pendingAmount, availableAmount };
 }
+
+export function getBlockExplorerLink (txHash) {
+  const pre = window.location.pathname.indexOf('testnet') === -1 ? 'mainnet' : 'testnet';
+  return `/${pre}/explorer/tx/#${txHash}`;
+}
