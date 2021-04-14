@@ -7,6 +7,10 @@ contract HabitatStore is HabitatBase {
   event ModuleSubmitted(address contractAddress, string metadata);
   event ModuleActivated(bytes32 communityId, address condition);
 
+  /// @dev Verifies that the bytecode at `contractAddress` can not
+  /// introduce side effects on the rollup at will.
+  /// The convention for Modules is that they handle a known set of callbacks
+  /// without handling their own state. Thus, opcodes for state handling etc are not allowed.
   function _verifyModule (address contractAddress) internal returns (bytes32 codehash) {
     assembly {
       function doRevert () {

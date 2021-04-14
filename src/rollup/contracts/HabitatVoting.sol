@@ -23,6 +23,19 @@ contract HabitatVoting is HabitatBase {
     }
   }
 
+  /// @dev Lookup condition (module) and verify the codehash
+  function getVaultCondition (address vault) internal returns (address) {
+    address contractAddress = HabitatBase.vaultCondition(vault);
+    bytes32 expectedHash = HabitatBase.moduleHash(contractAddress);
+    bool valid;
+    assembly {
+      valid := eq( extcodehash(contractAddress), expectedHash )
+    }
+
+    require(expectedHash != bytes32(0) && valid == true, 'CODE');
+    return contractAddress;
+  }
+
   /// xxx: change this to support the convention: community > (vault w/ condition). {proposal,vote,finalize}
   function onCreateProposal (
     address msgSender,
@@ -137,7 +150,7 @@ contract HabitatVoting is HabitatBase {
     address vault = HabitatBase.proposalVault(proposalId);
     require(vault != address(0));
     bytes32 communityId = HabitatBase.communityOfVault(vault);
-    address vaultCondition = HabitatBase.vaultCondition(vault);
+    address vaultCondition = getVaultCondition(vault);
     // statistics
     uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
     uint256 totalVotingShares = HabitatBase.getTotalVotingShares(proposalId);
