@@ -12,6 +12,7 @@ contract HabitatVault is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
+    // xxx: generate unique address
     address vaultAddress;
     assembly {
       mstore(0, communityId)

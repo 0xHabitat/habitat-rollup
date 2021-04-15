@@ -17,6 +17,7 @@ import {
   getUsername,
   getExitStatus,
   getBlockExplorerLink,
+  queryTransfers,
 } from './rollup.js';
 import {
   DepositFlow,
@@ -144,43 +145,14 @@ const NAV_TEMPLATE =
   </div>
 </div>`;
 
-async function queryTransfers () {
-  // xxx
-  const { habitat } = await getProviders();
-  const signer = await getSigner();
-  const account = await signer.getAddress();
-  // to
-  let logs = await doQuery('TokenTransfer', null, null, account);
-  // from
-  logs = logs.concat(await doQuery('TokenTransfer', null, account));
-  // sort
-  logs = logs.sort((a, b) => b.blockNumber - a.blockNumber);
-  // todo sort and filter
-  const tokens = [];
-  const transfers = [];
-
-  for (const log of logs) {
-    const evt = habitat.interface.parseLog(log);
-    const { token, from, to, value } = evt.args;
-    const isDeposit = from === ethers.constants.AddressZero;
-    const isIncoming = to === account;
-    if (tokens.indexOf(token) === -1) {
-      tokens.push(token);
-    }
-    if (transfers.findIndex((e) => e.transactionHash === log.transactionHash) === -1) {
-      transfers.push(Object.assign({ token, from, to, value }, { transactionHash: log.transactionHash }));
-    }
-  }
-
-  return { tokens, transfers: transfers.reverse() };
-}
-
 async function updateErc20 () {
   // xxx
   const slider = document.querySelector('habitat-slider#progress');
   slider.parentElement.style.display = 'revert';
   const { habitat, bridge } = await getProviders();
-  const { tokens, transfers } = await queryTransfers();
+  const signer = await getSigner();
+  const account = await signer.getAddress();
+  const { tokens, transfers } = await queryTransfers(account);
   const callback = maybeUpdateAccount;
 
   {

@@ -9,6 +9,14 @@ contract HabitatVoting is HabitatBase {
   event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares, uint256 timestamp);
   event ProposalProcessed(bytes32 indexed proposalId, uint256 indexed votingStatus);
 
+  // Types, related to actionable proposal items on L2.
+  // L1 has no such items and only provides an array of [<address><calldata] for on-chain execution.
+  enum L2ProposalActions {
+    RESERVED,
+    TRANSFER_TOKEN,
+    UPDATE_COMMUNITY_METADATA
+  }
+
   /// @dev Validates if `timestamp` is inside a valid range.
   /// `timestamp` should not be under/over now +- `PROPOSAL_DELAY`.
   function _validateTimestamp (uint256 timestamp) internal {
@@ -169,15 +177,18 @@ contract HabitatVoting is HabitatBase {
       }
     }
 
+    address governanceToken = HabitatBase.tokenOfCommunity(communityId);
+    uint256 totalValueLocked = HabitatBase.getTotalValueLocked(governanceToken);
     // call vault with all the statistics
     bytes memory _calldata = abi.encodeWithSelector(
-      0x81532358,
+      0xf8d8ade6,
       proposalId,
       communityId,
       totalMemberCount,
       totalVoteCount,
       totalVotingShares,
       totalVotingSignal,
+      totalValueLocked,
       secondsPassed
     );
     uint256 MAX_GAS = 90000;
@@ -185,7 +196,7 @@ contract HabitatVoting is HabitatBase {
     assembly {
       mstore(0, 0)
       let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 32)
-      if iszero(iszero(success)) {
+      if success {
         votingStatus := mload(0)
       }
     }

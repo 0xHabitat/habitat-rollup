@@ -20,7 +20,7 @@ contract UpgradableRollup is RollupUtils {
 
       returndatacopy(zero, zero, returndatasize())
 
-      if iszero(iszero(success)) {
+      if success {
         return(zero, returndatasize())
       }
       revert(zero, returndatasize())

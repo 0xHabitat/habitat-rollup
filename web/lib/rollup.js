@@ -510,3 +510,42 @@ export function getBlockExplorerLink (txHash) {
   const pre = window.location.pathname.indexOf('testnet') === -1 ? 'mainnet' : 'testnet';
   return `/${pre}/explorer/tx/#${txHash}`;
 }
+
+export async function queryTransfers (account) {
+  const { habitat } = await getProviders();
+  // to
+  let logs = await doQuery('TokenTransfer', null, null, account);
+  // from
+  logs = logs.concat(await doQuery('TokenTransfer', null, account));
+  // sort
+  logs = logs.sort((a, b) => b.blockNumber - a.blockNumber);
+  // todo sort and filter
+  const tokens = [];
+  const transfers = [];
+
+  for (const log of logs) {
+    const evt = habitat.interface.parseLog(log);
+    const { token, from, to, value } = evt.args;
+    const isDeposit = from === ethers.constants.AddressZero;
+    const isIncoming = to === account;
+    if (tokens.indexOf(token) === -1) {
+      tokens.push(token);
+    }
+    if (transfers.findIndex((e) => e.transactionHash === log.transactionHash) === -1) {
+      transfers.push(Object.assign({ token, from, to, value }, { transactionHash: log.transactionHash }));
+    }
+  }
+
+  return { tokens, transfers: transfers.reverse() };
+}
+
+export async function fetchModuleInformation (_condition) {
+  // query transactions with the `SubmitModule` type
+  // xxx filter only by `condition`
+  const condition = _condition.toLowerCase();
+  for (const tx of await doQueryByPrimaryTypes(['SubmitModule'])) {
+    if (tx.message.contractAddress.toLowerCase() === condition) {
+      return JSON.parse(tx.message.metadata);
+    }
+  }
+}
