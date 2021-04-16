@@ -9,6 +9,7 @@ import './HabitatCommunity.sol';
 import './HabitatVault.sol';
 import './HabitatVoting.sol';
 import './HabitatStore.sol';
+import './UpgradableRollup.sol';
 
 /// @notice Composition of the full Habitat Rollup contracts
 contract HabitatV1 is
@@ -19,7 +20,8 @@ contract HabitatV1 is
   HabitatVault,
   HabitatVoting,
   HabitatStore,
-  HabitatV1Challenge
+  HabitatV1Challenge,
+  UpgradableRollup
 {
   /// @dev Challenge the lowest pending block.
   function onChallenge () external returns (uint256) {

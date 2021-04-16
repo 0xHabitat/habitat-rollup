@@ -35,11 +35,11 @@ describe('HabitatV1', async function () {
     TestERC721,
     ExecutionTest,
     OneShareOneVote,
-    UpgradableRollupTestnet,
+    RollupProxy,
   } = Artifacts;
   const { rootProvider, alice, bob, charlie } = getDefaultWallets();
   let bridge;
-  let upgradableRollup;
+  let rollupProxy;
   let rollupImplementation;
   let habitat;
   let habitatNode;
@@ -63,11 +63,9 @@ describe('HabitatV1', async function () {
     erc20 = await deploy(TestERC20, alice);
     erc721 = await deploy(TestERC721, alice, 'NFT', 'NFT');
 
-    upgradableRollup = await deploy(UpgradableRollupTestnet, alice);
     rollupImplementation = await deploy(HabitatV1Mock, alice);
-    bridge = new ethers.Contract(upgradableRollup.address, HabitatV1Mock.abi, alice);
-
-    await (await upgradableRollup.upgradeRollup(rollupImplementation.address)).wait();
+    rollupProxy = await deploy(RollupProxy, alice, rollupImplementation.address);
+    bridge = new ethers.Contract(rollupProxy.address, HabitatV1Mock.abi, alice);
 
     habitatNode = await startNode('../../bricked/lib/index.js', 9999, 0, bridge.address, TYPED_DATA);
     habitat = bridge.connect(habitatNode);

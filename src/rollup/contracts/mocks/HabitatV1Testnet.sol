@@ -12,6 +12,10 @@ contract HabitatV1Testnet is HabitatV1 {
     return 10;
   }
 
+  function ROLLUP_MANAGER () public override view returns (address) {
+    return 0xDf08F82De32B8d460adbE8D72043E3a7e25A3B39;
+  }
+
   /// @dev State transition when a user transfers a token.
   function _transferToken (address token, address from, address to, uint256 value) internal override {
     // xxx check under/overflows
