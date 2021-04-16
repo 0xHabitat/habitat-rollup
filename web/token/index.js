@@ -12,6 +12,7 @@ import {
   setupTokenlist,
   getToken,
   getConfig,
+  ethers,
 } from '/lib/utils.js';
 const {
   TOKEN_TURNER,
@@ -24,8 +25,6 @@ const {
   FUNDING_START_DATE,
   EPOCH_SECONDS,
 } = getConfig();
-
-import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 const TOKEN_TURNER_ABI = [
   'function inflowOutflow (uint256, address) public view returns (uint128 inflow, uint128 outflow)',

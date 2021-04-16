@@ -8,12 +8,11 @@ import {
   getEtherscanLink,
   secondsToString,
   getConfig,
+  ethers,
 } from '/lib/utils.js';
 const {
   HBT,
 } = getConfig();
-
-import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 const UINT256_ZERO = '0x0000000000000000000000000000000000000000000000000000000000000000';
 const UNISWAP_PAIR = '0xc7a1cb6edc22e94f17c80eb5b959f2ad28511d4e';
