@@ -588,6 +588,7 @@ habitat-slider button:active {
 }
 
 textarea {
+  display: block;
   width: 64ch;
   max-width: 99%;
   min-height: 23em;

@@ -16,8 +16,14 @@ contract HabitatVault is HabitatBase {
     address vaultAddress;
     assembly {
       mstore(0, communityId)
-      mstore (32, condition)
-      vaultAddress := shr(96, keccak256(0, 64))
+      mstore(32, condition)
+      let backup := mload(64)
+      mstore(64, msgSender)
+      mstore(96, nonce)
+      // restore
+      mstore(64, backup)
+      mstore(96, 0)
+      vaultAddress := shr(96, keccak256(0, 128))
     }
 
     require(tokenOfCommunity(communityId) != address(0));

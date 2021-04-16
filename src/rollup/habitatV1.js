@@ -33,7 +33,6 @@ export default {
       { name: 'metadata', type: 'string' },
     ],
     SubmitModule: [
-      // xxx: args
       { name: 'nonce', 'type': 'uint256' },
       { name: 'contractAddress', type: 'address' },
       { name: 'metadata', type: 'string' },
@@ -48,12 +47,11 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'startDate', 'type': 'uint256' },
       { name: 'vault', type: 'address' },
-      { name: 'actions', type: 'bytes' },
-      { name: 'title', type: 'string' },
+      { name: 'internalActions', type: 'bytes' },
+      { name: 'externalActions', type: 'bytes' },
       { name: 'metadata', type: 'string' },
     ],
     VoteOnProposal: [
-      // xxx add account because of delegate?
       { name: 'nonce', 'type': 'uint256' },
       { name: 'proposalId', type: 'bytes32' },
       { name: 'shares', type: 'uint256' },

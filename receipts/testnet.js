@@ -4,9 +4,9 @@ import assert from 'assert';
 
 import TransactionBuilder from '@NutBerry/rollup-bricks/dist/TransactionBuilder.js';
 import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
-
 import TYPED_DATA from './../src/rollup/habitatV1.js';
-import { encodeProposalActions } from './../src/rollup/test/utils.js';
+import { encodeInternalProposalActions, encodeExternalProposalActions } from './../src/rollup/test/utils.js';
+import { getDeployCode } from './../src/rollup/lib/utils.js';
 
 const COMMUNITIES = [
   //{ title: 'LeapDAO', token: '0x78230e69d6e6449db1e11904e0bd81c018454d7a' },
@@ -74,6 +74,7 @@ async function main () {
   const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
   const ERC20 = JSON.parse(fs.readFileSync('./build/contracts/TestERC20.json'));
   const OneShareOneVote = JSON.parse(fs.readFileSync('./build/contracts/OneShareOneVote.json'));
+  const RollupProxy = JSON.parse(fs.readFileSync('./build/contracts/RollupProxy.json'));
   //
   const rootRpcUrl = process.env.ROOT_RPC_URL;
   const rootProvider = new ethers.providers.JsonRpcProvider(process.env.ROOT_RPC_URL);
@@ -90,10 +91,12 @@ async function main () {
     erc20 = new ethers.Contract(config.erc20, ERC20.abi, wallet);
     oneShareOneVote = new ethers.Contract(config.oneShareOneVote, OneShareOneVote.abi, wallet);
   } else {
-    bridgeL1 = await deploy(HabitatV1Testnet, [], wallet);
+    const implementation = await deploy(HabitatV1Testnet, [], wallet);
+    const proxy = await deploy(RollupProxy, [implementation.address], wallet);
+    bridgeL1 = new ethers.Contract(proxy.address, HabitatV1Testnet.abi, wallet);
     execProxy = await deploy(ExecutionProxy, [bridgeL1.address], wallet);
     erc20 = await deploy(ERC20, [], wallet);
-    oneShareOneVote = await deploy(OneShareOneVote, [], wallet);
+    oneShareOneVote = await deploy({ bytecode: getDeployCode(OneShareOneVote.deployedBytecode), abi: [] }, [], wallet);
     const config = {
       bridgeL1: bridgeL1.address,
       execProxy: execProxy.address,
@@ -173,9 +176,9 @@ async function main () {
       args = {
         startDate: ~~(Date.now() / 1000),
         vault: tmp.events[0].args.vaultAddress,
-        actions: encodeProposalActions(['0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415', '0xc0ffebabe17da53158']),
-        title: 'Re: Evolution 🌱',
-        metadata: JSON.stringify({ details: LOREM_IPSUM }),
+        internalActions: encodeInternalProposalActions(['0x01', erc20.address, wallet.address, '0xffffffffffff']),
+        externalActions: encodeExternalProposalActions(['0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415', '0xc0ffebabe17da53158']),
+        metadata: JSON.stringify({ title: 'Re: Evolution 🌱', details: LOREM_IPSUM }),
       };
       tmp = await sendTransaction('CreateProposal', args, wallet, bridgeL2);
     }
@@ -183,7 +186,7 @@ async function main () {
 
   {
     // deposit
-    const amount = '0xffffffff';
+    const amount = '0xffffffffffffffffff';
     const oldBlock = await provider.getBlockNumber();
     let tx = await erc20.approve(bridgeL1.address, amount);
     let receipt = await tx.wait();

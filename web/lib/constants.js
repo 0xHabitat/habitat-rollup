@@ -10,7 +10,7 @@ export const BRICK_ABI = [
   'event ModuleActivated(bytes32 communityId, address condition)',
   'event ModuleSubmitted(address contractAddress, string metadata)',
   'event NewSolution(uint256 blockNumber, bytes32 solutionHash)',
-  'event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string title, bytes actions)',
+  'event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string metadata)',
   'event ProposalProcessed(bytes32 indexed proposalId, uint256 indexed votingStatus)',
   'event TokenTransfer(address indexed token, address indexed from, address indexed to, uint256 value)',
   'event VaultCreated(bytes32 indexed communityId, address indexed condition, address indexed vaultAddress, string metadata)',

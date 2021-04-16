@@ -1,27 +1,53 @@
-import { sendTransaction, getProviders, encodeProposalActions } from '/lib/rollup.js';
+import {
+  sendTransaction,
+  getProviders,
+  encodeExternalProposalActions,
+  encodeInternalProposalActions,
+  fetchVaultInformation,
+} from '/lib/rollup.js';
 import {
   getErc20,
   wrapListener,
   getSigner,
+  getTokenName,
+  renderAmount,
   ethers,
 } from '/lib/utils.js';
+import {
+  AddExecutionFlow,
+  AddTransferFlow,
+} from '/lib/flows.js';
 
 let vaultAddress, communityId;
+const externalActions = [];
+const internalActions = [];
 
-function getAndReset (selector) {
-  const ele = document.querySelector(selector);
-  const val = ele.value;
-
-  ele.value = '';
-  return val;
-}
-
-async function addAction () {
+async function addAction (obj) {
   const grid = document.querySelector('#proposalActions');
-  const args = [
-    ethers.utils.getAddress(getAndReset('#addr')),
-    ethers.utils.hexlify(getAndReset('#calldata').toLowerCase()),
-  ];
+  let args = [];
+
+  if (obj.contractAddress) {
+    // on-chain execution
+    args = [
+      'On-chain Execution',
+      obj.contractAddress,
+      obj.calldata,
+    ];
+    externalActions.push(obj.contractAddress);
+    externalActions.push(obj.calldata);
+  }
+
+  if (obj.erc20) {
+    args = [
+      'Token Transfer',
+      obj.receiver,
+      `${obj.amount} ${obj.erc20._symbol}`,
+    ];
+    internalActions.push('0x1');
+    internalActions.push(obj.erc20.address);
+    internalActions.push(obj.receiver);
+    internalActions.push(ethers.utils.parseUnits(obj.amount, obj.erc20._decimals).toHexString());
+  }
 
   for (const arg of args) {
     const p = document.createElement('p');
@@ -36,57 +62,41 @@ async function doSubmit (evt) {
   const input = container.querySelector('input');
   const textarea = container.querySelector('textarea');
   const actions = document.querySelector('.actions');
-  const btn = document.querySelector('button#submit');
+  const inputs = document.querySelectorAll('button input textarea');
 
-  btn.disabled = true;
-  input.disabled = true;
-  textarea.disabled = true;
+  for (const ele of inputs) {
+    ele.disabled = true;
+  }
 
-  {
-    /*
-    const tokenAddress = await habitat.tokenOfCommunity(communityId);
-    const token = await getErc20(tokenAddress);
-    const decimals = await token.decimals();
-    const signer = await getSigner();
-    const { shares } = await habitat.members(await signer.getAddress());
-    if (shares.lt(ethers.utils.parseUnits(MIN_PROPOSAL_CREATION_STAKE.toString(), decimals))) {
-      throw new Error(`You need at least ${MIN_PROPOSAL_CREATION_STAKE} shares to create Proposals`);
+  try {
+    const args = {
+      // xxx query contract
+      startDate: ~~(Date.now() / 1000),
+      vault: vaultAddress,
+      externalActions: encodeExternalProposalActions(externalActions),
+      internalActions: encodeInternalProposalActions(internalActions),
+      metadata: JSON.stringify({ title: input.value, details: textarea.value }),
+    };
+    const receipt = await sendTransaction('CreateProposal', args);
+    window.location.href = `../proposal/#${receipt.transactionHash}`;
+  } finally {
+    for (const ele of inputs) {
+      ele.disabled = false;
     }
-    */
   }
-
-  const childs = document.querySelector('#proposalActions').children;
-  const proposalActions = [];
-
-  // skip the first 2 elements (descriptors)
-  for (let i = 2, len = childs.length; i < len;) {
-    // to
-    proposalActions.push(childs[i++].textContent);
-    // calldata
-    proposalActions.push(childs[i++].textContent);
-  }
-
-  const args = {
-    // xxx query contract
-    startDate: ~~(Date.now() / 1000),
-    vault: vaultAddress,
-    title: input.value,
-    actions: encodeProposalActions(proposalActions),
-    metadata: JSON.stringify({ details: textarea.value }),
-  };
-  const receipt = await sendTransaction('CreateProposal', args);
-  window.location.href = `../proposal/#${receipt.transactionHash}`;
-
-  btn.disabled = false;
-  input.disabled = false;
-  textarea.disabled = false;
 }
 
 async function render () {
   [vaultAddress, communityId] = window.location.hash.replace('#', '').split(',');
 
   wrapListener('button#submit', doSubmit);
-  wrapListener('button#addAction', addAction);
+  wrapListener('button#execution', (evt) => new AddExecutionFlow(evt.target, { callback: addAction }));
+  wrapListener('button#transfer', (evt) => new AddTransferFlow(evt.target, { callback: addAction }));
+
+  const vaultInfo = await fetchVaultInformation(vaultAddress);
+  if (vaultInfo) {
+    document.querySelector('#vaultName').textContent = `For Treasury: ${vaultInfo.name}`;
+  }
 }
 
 window.addEventListener('DOMContentLoaded', render, false);

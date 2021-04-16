@@ -1,17 +1,19 @@
 import {
   wrapListener,
   getEtherscanLink,
+  getEtherscanTokenLink,
   secondsToString,
   renderAmount,
   walletIsConnected,
   getTokenSymbol,
-  getErc20,
+  getToken,
   ethers,
 } from '/lib/utils.js';
 import {
   getProviders,
   sendTransaction,
-  decodeProposalActions,
+  decodeExternalProposalActions,
+  decodeInternalProposalActions,
   executeProposalActions,
   formatObject,
   humanProposalTime,
@@ -124,27 +126,36 @@ async function render () {
   document.querySelector('#title').textContent = tx.message.title;
   document.querySelector('#proposal').textContent = metadata.details || '<no information>';
 
-  const proposalActions = decodeProposalActions(tx.message.actions);
+  const internalActions = decodeInternalProposalActions(tx.message.internalActions);
+  const externalActions = decodeExternalProposalActions(tx.message.externalActions);
   {
-    // proposal actions
     const grid = document.querySelector('.proposalActions');
-    grid.innerHTML = '';
-    for (let i = 0, len = proposalActions.length; i < len; i++) {
-      const str = proposalActions[i];
-      let e;
+    grid.innerHTML = '<p></p><a target="_blank"></a><p></p>'.repeat(internalActions.length + externalActions.length);
+    const childs = grid.children;
+    let childPtr = 0;
 
-      if (i % 2 === 0) {
-        // the contract address
-        e = document.createElement('a');
-        e.href = getEtherscanLink(str);
-        e.target = '_blank';
-      } else {
-        // calldata
-        e = document.createElement('p');
-      }
+    for (let i = 0, len = externalActions.length; i < len;) {
+      const contractAddress = externalActions[i++];
+      const calldata = externalActions[i++];
 
-      e.textContent = str;
-      grid.appendChild(e);
+      // type
+      childs[childPtr++].textContent = 'On-chain Contract call';
+      // address
+      childs[childPtr].textContent = contractAddress;
+      childs[childPtr++].href = getEtherscanLink(contractAddress);
+      // calldata
+      childs[childPtr++].textContent = calldata;
+    }
+
+    for (let i = 0, len = internalActions.length; i < len;) {
+      const action = internalActions[i++];
+      // type
+      childs[childPtr++].textContent = action.type;
+      // xxx check if token is nft
+      const erc = await getToken(action.token);
+      childs[childPtr].href = getEtherscanTokenLink(erc.address);
+      childs[childPtr++].textContent = `${renderAmount(action.value, erc._decimals)} ${erc._symbol}`;
+      childs[childPtr++].textContent = action.receiver;
     }
   }
 
@@ -157,8 +168,8 @@ async function render () {
 
     // any actions we can execute?
     // TODO: calculate estimate of bridge finalization time
-    if (proposalActions.length) {
-      wrapListener('button#execProposal', () => executeProposal(proposalId, tx.message.actions));
+    if (externalActions.length) {
+      wrapListener('button#execProposal', () => executeProposal(proposalId, tx.message.externalActions));
     }
   }
 

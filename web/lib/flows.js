@@ -421,6 +421,12 @@ export class CreateTreasuryFlow extends CreateCommunityFlow {
   }
 
   async confirmName (ctx) {
+    if (ctx.name.length === 0) {
+      throw new Error('name too short');
+    }
+    if (ctx.name.length > 32) {
+      throw new Error('name too long');
+    }
     await setupModulelist();
     this.input.setAttribute('list', 'modulelist');
 
@@ -579,5 +585,69 @@ export class TransferFlow extends BaseFlow {
       `and all that's left is glory`,
       this.onDone
     );
+  }
+}
+
+export class AddTransferFlow extends TransferFlow {
+  constructor (root, ctx) {
+    super(root, ctx);
+  }
+
+  async onConfirmReceiver (ctx) {
+    ctx.receiver = await resolveName(ctx.receiver);
+    if (!ctx.receiver) {
+      throw new Error('not found');
+    }
+
+    this.confirm(
+      'Confirm',
+      `Please double check the receiver:\n${ctx.receiver}`,
+      this.doTransfer
+    );
+  }
+
+  async doTransfer (ctx) {
+    this.onDone(ctx);
+  }
+}
+
+export class AddExecutionFlow extends BaseFlow {
+  constructor (root, ctx) {
+    super(root, ctx);
+
+    this.runNext(this.setupFlow);
+  }
+
+  async setupFlow () {
+    this.ask(
+      'Enter the address of the contract to be called.',
+      'Contract Address',
+      'contractAddress',
+      this.onAddress
+    );
+  }
+
+  async onAddress (ctx) {
+    const { rootProvider } = await getProviders();
+    ctx.contractAddress = await resolveName(ctx.contractAddress);
+    const codeHexStr = await rootProvider.send('eth_getCode', [ctx.contractAddress, 'latest']);
+    if (codeHexStr.length < 4) {
+      throw new Error('This seems not to be a contract.');
+    }
+
+    this.ask(
+      `The 'calldata' aka the input data for this contract call`,
+      '0x',
+      'calldata',
+      this.onCalldata
+    );
+  }
+
+  async onCalldata (ctx) {
+    if (!ethers.utils.isBytesLike(ctx.calldata)) {
+      throw new Error('invalid value');
+    }
+
+    this.onDone(ctx);
   }
 }

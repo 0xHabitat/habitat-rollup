@@ -452,8 +452,8 @@ case 6 {
 // end of ActivateModule
 
 // start of CreateProposal
-// typeHash: 0xb4dd5870399af19082da41c7baee72e65d3b390ffcbddf786660a22664c474b7
-// function: onCreateProposal(address,uint256,uint256,address,bytes,string,string)
+// typeHash: 0x0a2fe2e0a2527ed37d3563b490e75c737df97f6a03d02840e5a1a5aaaf3e93f2
+// function: onCreateProposal(address,uint256,uint256,address,bytes,bytes,string)
 case 7 {
   let headSize := 224
   let typeLen := 0
@@ -462,7 +462,7 @@ case 7 {
 
   txPtr := 544
   // typeHash of CreateProposal
-  mstore(0, 0xb4dd5870399af19082da41c7baee72e65d3b390ffcbddf786660a22664c474b7)
+  mstore(0, 0x0a2fe2e0a2527ed37d3563b490e75c737df97f6a03d02840e5a1a5aaaf3e93f2)
   // uint256 CreateProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -487,7 +487,7 @@ case 7 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // bytes CreateProposal.actions
+  // bytes CreateProposal.internalActions
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -500,7 +500,7 @@ case 7 {
   endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
   offset := add(offset, typeLen)
 
-  // string CreateProposal.title
+  // bytes CreateProposal.externalActions
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -541,7 +541,7 @@ case 7 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(480, 0x07045db4)
+  mstore(480, 0x9f91e940)
   mstore(512, mload(128))
 
   success := call(sub(gas(), 5000), address(), 0, 508, sub(endOfSlot, 508), 0, 0)

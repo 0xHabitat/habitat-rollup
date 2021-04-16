@@ -78,7 +78,14 @@ async function fetchProposals (vaultAddress) {
   const container = document.querySelector('#proposals');
   for await (const evt of pullEvents(habitat, filter)) {
     console.log(evt);
-    const { proposalId, startDate, title, actions } = evt.args;
+    const { proposalId, startDate, metadata } = evt.args;
+    let title = '???';
+    try {
+      const obj = JSON.parse(metadata);
+      title = obj.title || title;
+    } catch (e) {
+      console.warn(e);
+    }
     const proposalLink = `../proposal/#${evt.transactionHash}`;
     const child = document.createElement('div');
     child.className = 'listitem';

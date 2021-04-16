@@ -2,7 +2,7 @@ import ethers from 'ethers';
 
 import TransactionBuilder from '@NutBerry/rollup-bricks/src/bricked/lib/TransactionBuilder.js';
 import TYPED_DATA from '../habitatV1.js';
-import { encodeProposalActions } from './utils.js';
+import { encodeExternalProposalActions } from './utils.js';
 import { getDeployCode } from '../lib/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
@@ -78,13 +78,13 @@ describe('HabitatV1', async function () {
       conditions[condition.contractName] = (await deploy({ bytecode, abi: [] }, alice)).address;
     }
 
-    invalidAction = encodeProposalActions(
+    invalidAction = encodeExternalProposalActions(
       [
         executionTestContract.address,
         '0xbadc0ffe',
       ]
     );
-    validAction = encodeProposalActions(
+    validAction = encodeExternalProposalActions(
       [
         executionTestContract.address,
         executionTestContract.interface.encodeFunctionData('changeSomething', ['0xbadbeef']),
@@ -394,9 +394,9 @@ describe('HabitatV1', async function () {
         const args = {
           startDate: ~~(Date.now() / 1000) - 2,
           vault,
-          actions: '0x',
-          title: 'hello world',
-          metadata: '{}',
+          internalActions: '0x',
+          externalActions: '0x',
+          metadata: JSON.stringify({ title: 'hello world' }),
         };
         const { txHash, receipt } = await createTransaction('CreateProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');

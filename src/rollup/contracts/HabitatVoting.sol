@@ -5,7 +5,7 @@ import './HabitatBase.sol';
 
 /// @notice Voting Functionality.
 contract HabitatVoting is HabitatBase {
-  event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string title, bytes actions);
+  event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string metadata);
   event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares, uint256 timestamp);
   event ProposalProcessed(bytes32 indexed proposalId, uint256 indexed votingStatus);
 
@@ -53,9 +53,8 @@ contract HabitatVoting is HabitatBase {
     uint256 nonce,
     uint256 startDate,
     address vault,
-    bytes memory actions,
-    // xxx this could also go into metadata
-    string calldata title,
+    bytes memory internalActions,
+    bytes memory externalActions,
     string calldata metadata
   ) external {
     HabitatBase._commonChecks();
@@ -82,7 +81,7 @@ contract HabitatVoting is HabitatBase {
     // update member count
     HabitatBase._maybeUpdateMemberCount(proposalId, msgSender);
 
-    emit ProposalCreated(vault, proposalId, startDate, title, actions);
+    emit ProposalCreated(vault, proposalId, startDate, metadata);
     // internal event for submission deadlines
     UtilityBrick._emitTransactionDeadline(startDate);
   }

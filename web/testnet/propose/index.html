@@ -33,33 +33,33 @@
     <section class='content'>
       <section style='z-index:9;transform: translateZ(0)'>
        <section class='bgwhite padh padv flex col center'>
-         <div style='max-width:48ch;'>
+         <div style='width:80ch;max-width:100%;'>
            <h1>Create a Proposal</h1>
+           <h6 class='left' id='vaultName'> </h6>
+           <space></space>
            <section id='propose'>
-             <input type='text' id='title' placeholder='Proposal Title'></input>
+             <label>
+               Title of this Proposal
+               <input type='text' id='title'></input>
+             </label>
              <space></space>
-             <textarea placeholder='Your proposal goes here...'></textarea>
+             <label>
+               The body of your proposal
+               <textarea placeholder='Your proposal goes here...'></textarea>
+             </label>
              <space></space>
 
              <section class='left'>
-               <h2>On-chain execution</h2>
-               <space></space>
-               <label>
-                 The address of the contract to be called.
-                 <input id='addr' type='text' placeholder='0x...'></input>
-               </label>
-               <label>
-                 The `calldata` aka the input data for this contract call.
-                 <input id='calldata' type='text' placeholder='0x...'></input>
-               </label>
-               <button id='addAction'>Add Action</button>
-
-               <space></space>
-               <h3>Proposal Actions</h3>
+               <h3>Optional Actions</h3>
                <sep></sep>
-               <div id='proposalActions' class='grid-2'>
-                 <p>Contract Address</p>
-                 <p>Input data</p>
+               <div>
+                 <div id='proposalActions' class='grid-col align-left' style='grid-template-columns:repeat(3, auto)'>
+                 </div>
+               </div>
+               <div>
+                 <space></space>
+                 <button id='transfer' class='flow'>Add Token Transfer</button>
+                 <button id='execution' class='flow'>Add On-chain execution</button>
                </div>
              </section>
 

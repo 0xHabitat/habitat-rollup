@@ -101,7 +101,7 @@ export async function executeProposalActions (proposalIndex, actions) {
   return execProxy.execute(proposalIndex, actions);
 }
 
-export function encodeProposalActions (ary) {
+export function encodeExternalProposalActions (ary) {
   let res = '0x';
 
   for (let i = 0, len = ary.length; i < len;) {
@@ -115,7 +115,27 @@ export function encodeProposalActions (ary) {
   return res;
 }
 
-export function decodeProposalActions (hexString) {
+export function encodeInternalProposalActions (ary) {
+  let res = '0x';
+
+  for (let i = 0, len = ary.length; i < len;) {
+    const type = ary[i++].replace('0x', '').padStart(2, '0');
+
+    if (type === '01') {
+      const token = ary[i++].replace('0x', '').padStart(40, '0');
+      const receiver = ary[i++].replace('0x', '').padStart(40, '0');
+      const value = ary[i++].replace('0x', '').padStart(64, '0');
+      res += type + token + receiver + value;
+      continue;
+    }
+
+    throw new Error('unsupported type');
+  }
+
+  return res;
+}
+
+export function decodeExternalProposalActions (hexString) {
   const res = [];
 
   for (let i = hexString[1] === 'x' ? 2 : 0, len = hexString.length; i < len;) {
@@ -125,8 +145,6 @@ export function decodeProposalActions (hexString) {
 
     // 32 bytes calldata size
     const dataSize = parseInt(hexString.substring(i, i += 64), 16);
-    console.log({i,dataSize});
-
     if (dataSize) {
       // calldata
       const data = hexString.substring(i, i += (dataSize * 2));
@@ -136,7 +154,30 @@ export function decodeProposalActions (hexString) {
     }
   }
 
-  console.log(res);
+  return res;
+}
+
+export function decodeInternalProposalActions (hexString) {
+  // xxx support all types
+  const TYPES = [
+    'reserved',
+    'token transfer',
+    'update metadata',
+  ];
+  const res = [];
+  for (let i = hexString[1] === 'x' ? 2 : 0, len = hexString.length; i < len;) {
+    const type = TYPES[Number(hexString.substring(i, i += 2))] || 'invalid type';
+    const obj = { type };
+
+    if (type === TYPES[1]) {
+      obj.token = '0x' + hexString.substring(i, i += 40);
+      obj.receiver = '0x' + hexString.substring(i, i += 40);
+      obj.value = '0x' + hexString.substring(i, i += 64);
+    }
+
+    res.push(obj);
+  }
+
   return res;
 }
 
@@ -435,7 +476,7 @@ export async function getTreasuryInformation (vaultAddress) {
   // xxx
   const { habitat } = await getProviders();
   const logs = await doQuery('VaultCreated', null, null, vaultAddress);
-  const evt = habitat.interface.parseLog(logs[logs.length -1 ]);
+  const evt = habitat.interface.parseLog(logs[logs.length - 1]);
   const metadata = JSON.parse(evt.args.metadata);
 
   return Object.assign(metadata, { });
@@ -444,13 +485,20 @@ export async function getTreasuryInformation (vaultAddress) {
 export async function getProposalInformation (txHash) {
   // xxx
   const { habitat } = await getProviders();
+  const tx = await habitat.provider.send('eth_getTransactionByHash', [txHash]);
   const receipt = await getReceipt(txHash);
   const evt = receipt.events[0];
-  const title = evt.args.title;
   const proposalId = evt.args.proposalId;
   const startDate = evt.args.startDate;
   const vaultAddress = evt.args.vault;
   const communityId = await habitat.communityOfVault(vaultAddress);
+  let title = '???';
+  try {
+    const obj = JSON.parse(tx.message.metadata);
+    title = obj.title || title;
+  } catch (e) {
+    console.warn(e);
+  }
 
   return { title, proposalId, startDate, vaultAddress, communityId };
 }
@@ -548,4 +596,29 @@ export async function fetchModuleInformation (_condition) {
       return JSON.parse(tx.message.metadata);
     }
   }
+}
+
+export async function fetchVaultInformation (vaultAddress) {
+  const { habitat } = await getProviders();
+  const filter = habitat.filters.VaultCreated(null, null, vaultAddress);
+  // xxx: because deposit transaction don't match the message format yet
+  filter.address = null;
+  filter.fromBlock = 1;
+
+  const logs = await habitat.provider.send('eth_getLogs', [filter]);
+  if (!logs.length) {
+    // no information
+    return;
+  }
+
+  const event = habitat.interface.parseLog(logs[logs.length - 1]);
+  const ret = {};
+  try {
+    const metadata = JSON.parse(event.args.metadata);
+    ret.name = metadata.title || '???';
+  } catch (e) {
+    console.warn(e);
+  }
+
+  return ret;
 }
