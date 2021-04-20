@@ -28,7 +28,7 @@ contract HabitatV1Testnet is HabitatV1 {
         }
       } else {
         uint256 tmp = getErc20Balance(token, from);
-        require (tmp >= value);
+        require (tmp >= value, 'BALANCE');
         _setErc20Balance(token, from, tmp - value);
 
         if (to == address(0)) {

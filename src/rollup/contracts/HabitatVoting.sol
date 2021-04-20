@@ -2,20 +2,13 @@
 pragma solidity >=0.6.2;
 
 import './HabitatBase.sol';
+import './HabitatWallet.sol';
 
 /// @notice Voting Functionality.
-contract HabitatVoting is HabitatBase {
+contract HabitatVoting is HabitatBase, HabitatWallet {
   event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string metadata);
-  event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares, uint256 timestamp);
+  event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
   event ProposalProcessed(bytes32 indexed proposalId, uint256 indexed votingStatus);
-
-  // Types, related to actionable proposal items on L2.
-  // L1 has no such items and only provides an array of [<address><calldata] for on-chain execution.
-  enum L2ProposalActions {
-    RESERVED,
-    TRANSFER_TOKEN,
-    UPDATE_COMMUNITY_METADATA
-  }
 
   /// @dev Validates if `timestamp` is inside a valid range.
   /// `timestamp` should not be under/over now +- `PROPOSAL_DELAY`.
@@ -32,16 +25,73 @@ contract HabitatVoting is HabitatBase {
   }
 
   /// @dev Lookup condition (module) and verify the codehash
-  function getVaultCondition (address vault) internal returns (address) {
+  function _getVaultCondition (address vault) internal returns (address) {
     address contractAddress = HabitatBase.vaultCondition(vault);
+    require(contractAddress != address(0), 'VAULT');
+
     bytes32 expectedHash = HabitatBase.moduleHash(contractAddress);
+    require(expectedHash != bytes32(0), 'HASH');
+
     bool valid;
     assembly {
       valid := eq( extcodehash(contractAddress), expectedHash )
     }
 
     require(expectedHash != bytes32(0) && valid == true, 'CODE');
+
     return contractAddress;
+  }
+
+  /// @dev Parses and executes `internalActions`.
+  /// xxx Only `TRANSFER_TOKEN` is currently implemented
+  function _executeInternalActions (address vaultAddress, bytes memory internalActions) internal {
+    // Types, related to actionable proposal items on L2.
+    // L1 has no such items and only provides an array of [<address><calldata] for on-chain execution.
+    // enum L2ProposalActions {
+    //  RESERVED,
+    //  TRANSFER_TOKEN,
+    //  UPDATE_COMMUNITY_METADATA
+    // }
+
+    uint256 ptr;
+    uint256 end;
+    assembly {
+      let len := mload(internalActions)
+      ptr := add(internalActions, 32)
+      end := add(ptr, len)
+    }
+
+    while (ptr < end) {
+      uint256 actionType;
+
+      assembly {
+        actionType := byte(0, mload(ptr))
+        ptr := add(ptr, 1)
+      }
+
+      // TRANSFER_TOKEN
+      if (actionType == 1) {
+        address token;
+        address receiver;
+        uint256 value;
+        assembly {
+          token := shr(96, mload(ptr))
+          ptr := add(ptr, 20)
+          receiver := shr(96, mload(ptr))
+          ptr := add(ptr, 20)
+          value := mload(ptr)
+          ptr := add(ptr, 32)
+        }
+        _transferToken(token, vaultAddress, receiver, value);
+        continue;
+      }
+
+      revert('ACTION');
+    }
+
+    if (ptr > end) {
+      revert('INVALID');
+    }
   }
 
   /// xxx: change this to support the convention: community > (vault w/ condition). {proposal,vote,finalize}
@@ -92,7 +142,6 @@ contract HabitatVoting is HabitatBase {
     uint256 nonce,
     bytes32 proposalId,
     uint256 shares,
-    uint256 timestamp,
     address delegatedFor,
     uint8 signalStrength
   ) external {
@@ -100,8 +149,6 @@ contract HabitatVoting is HabitatBase {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     require(signalStrength > 0 && signalStrength < 101);
-    // xxx: Required? Basically only used as metadata at the moment
-    //_validateTimestamp(timestamp);
 
     address account = msgSender;
     if (delegatedFor != address(0)) {
@@ -124,7 +171,6 @@ contract HabitatVoting is HabitatBase {
     // check proposalId
     // replace any existing votes
     // check token balances, shares, signalStrength
-    // check timestamp
     uint256 previousVote = HabitatBase.getVote(proposalId, account);
     uint256 previousSignal = HabitatBase.getVoteSignal(proposalId, account);
     if (previousVote == 0) {
@@ -148,61 +194,74 @@ contract HabitatVoting is HabitatBase {
       HabitatBase._setTotalVotingSignal(proposalId, totalSignal + (signalStrength - previousSignal));
     }
 
-    emit VotedOnProposal(account, proposalId, signalStrength, shares, timestamp);
+    emit VotedOnProposal(account, proposalId, signalStrength, shares);
   }
 
-  function onProcessProposal (address msgSender, uint256 nonce, bytes32 proposalId) external {
+  function onProcessProposal (
+    address msgSender,
+    uint256 nonce,
+    bytes32 proposalId,
+    bytes memory internalActions
+  ) external returns (uint256 votingStatus) {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
-    require(previousVotingStatus < 2);
     address vault = HabitatBase.proposalVault(proposalId);
-    require(vault != address(0));
-    bytes32 communityId = HabitatBase.communityOfVault(vault);
-    address vaultCondition = getVaultCondition(vault);
-    // statistics
-    uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
-    uint256 totalVotingShares = HabitatBase.getTotalVotingShares(proposalId);
-    uint256 totalVotingSignal = HabitatBase.getTotalVotingSignal(proposalId);
-    uint256 totalVoteCount = HabitatBase.getVoteCount(proposalId);
-    uint256 secondsPassed;
+    require(vault != address(0), 'VAULT');
+    uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
+    require(previousVotingStatus < 2, 'CLOSED');
+
     {
-      uint256 now = RollupCoreBrick._getTime();
-      uint256 proposalStartDate = HabitatBase.proposalStartDate(proposalId);
+      bytes32 communityId = HabitatBase.communityOfVault(vault);
+      address vaultCondition = _getVaultCondition(vault);
 
-      if (now > proposalStartDate) {
-        secondsPassed = now - proposalStartDate;
+      // statistics
+      uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
+      uint256 totalVotingShares = HabitatBase.getTotalVotingShares(proposalId);
+      uint256 totalVotingSignal = HabitatBase.getTotalVotingSignal(proposalId);
+      uint256 totalVoteCount = HabitatBase.getVoteCount(proposalId);
+      uint256 secondsPassed;
+      {
+        uint256 now = RollupCoreBrick._getTime();
+        uint256 proposalStartDate = HabitatBase.proposalStartDate(proposalId);
+
+        if (now > proposalStartDate) {
+          secondsPassed = now - proposalStartDate;
+        }
       }
-    }
 
-    address governanceToken = HabitatBase.tokenOfCommunity(communityId);
-    uint256 totalValueLocked = HabitatBase.getTotalValueLocked(governanceToken);
-    // call vault with all the statistics
-    bytes memory _calldata = abi.encodeWithSelector(
-      0xf8d8ade6,
-      proposalId,
-      communityId,
-      totalMemberCount,
-      totalVoteCount,
-      totalVotingShares,
-      totalVotingSignal,
-      totalValueLocked,
-      secondsPassed
-    );
-    uint256 MAX_GAS = 90000;
-    uint256 votingStatus;
-    assembly {
-      mstore(0, 0)
-      let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 32)
-      if success {
-        votingStatus := mload(0)
+      address governanceToken = HabitatBase.tokenOfCommunity(communityId);
+      uint256 totalValueLocked = HabitatBase.getTotalValueLocked(governanceToken);
+      // call vault with all the statistics
+      bytes memory _calldata = abi.encodeWithSelector(
+        0xf8d8ade6,
+        proposalId,
+        communityId,
+        totalMemberCount,
+        totalVoteCount,
+        totalVotingShares,
+        totalVotingSignal,
+        totalValueLocked,
+        secondsPassed
+      );
+      uint256 MAX_GAS = 90000;
+      assembly {
+        mstore(0, 0)
+        let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 32)
+        if success {
+          votingStatus := mload(0)
+        }
       }
     }
 
     // update proposal status (if needed)
     if (votingStatus != 0 && votingStatus != previousVotingStatus) {
       HabitatBase._setProposalStatus(proposalId, votingStatus);
+
+      // PASSED
+      if (votingStatus == 3) {
+        _executeInternalActions(vault, internalActions);
+      }
       emit ProposalProcessed(proposalId, votingStatus);
     }
   }

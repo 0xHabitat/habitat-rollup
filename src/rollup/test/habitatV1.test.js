@@ -2,7 +2,7 @@ import ethers from 'ethers';
 
 import TransactionBuilder from '@NutBerry/rollup-bricks/src/bricked/lib/TransactionBuilder.js';
 import TYPED_DATA from '../habitatV1.js';
-import { encodeExternalProposalActions } from './utils.js';
+import { encodeExternalProposalActions, encodeInternalProposalActions } from './utils.js';
 import { getDeployCode } from '../lib/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
@@ -92,6 +92,7 @@ describe('HabitatV1', async function () {
     );
   });
 
+  let vaultCondition;
   function _doRound (abortProposal = false) {
     const depositAmount = '0xffffffff';
 
@@ -153,7 +154,7 @@ describe('HabitatV1', async function () {
           to: ethers.constants.AddressZero,
           value: nftId - 1,
         };
-        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /evm errno: 7/);
+        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /OWNER/);
       });
 
       it('transfer erc721: alice > bob', async () => {
@@ -198,7 +199,7 @@ describe('HabitatV1', async function () {
           to: ethers.constants.AddressZero,
           value: '0x1',
         };
-        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /evm errno: 7/);
+        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /BALANCE/);
       });
 
       it('transfer erc20: alice > bob', async () => {
@@ -266,7 +267,7 @@ describe('HabitatV1', async function () {
           shortString: Array.from((new TextEncoder()).encode('alice')),
         };
         if (alreadyClaimed) {
-          await assert.rejects(createTransaction('ClaimUsername', args, alice, habitat), /evm errno: 7/);
+          await assert.rejects(createTransaction('ClaimUsername', args, alice, habitat), /SET/);
         } else {
           const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
           assert.equal(receipt.status, '0x1', 'success');
@@ -322,19 +323,14 @@ describe('HabitatV1', async function () {
         assert.equal(evt.communityId, communityId, 'communityId');
       });
 
-      it('alice: create a vault', async () => {
+      it('alice: create a vault - should fail', async () => {
         const vaultCondition = ethers.constants.AddressZero;
         const args = {
           communityId,
           condition: vaultCondition,
           metadata: '{}',
         };
-        const { txHash, receipt } = await createTransaction('CreateVault', args, alice, habitat);
-        assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.communityId, args.communityId);
-        assert.equal(evt.condition, args.condition);
+        await assert.rejects(createTransaction('CreateVault', args, alice, habitat), 'ACTIVE');
       });
 
       it('activate condition should fail - not submitted yet', async () => {
@@ -343,16 +339,23 @@ describe('HabitatV1', async function () {
           communityId,
           condition: vaultCondition,
         };
-        await assert.rejects(createTransaction('ActivateModule', args, alice, habitat), /evm errno: 7/);
+        await assert.rejects(createTransaction('ActivateModule', args, alice, habitat), /HASH/);
       });
 
-      let vaultCondition;
       it('submit OneShareOneVote module', async () => {
+        const expectRevert = !!vaultCondition;
+
         vaultCondition = conditions.OneShareOneVote;
         const args = {
           contractAddress: vaultCondition,
           metadata: '{}',
         };
+
+        if (expectRevert) {
+          await assert.rejects(createTransaction('SubmitModule', args, alice, habitat), /EXISTS/);
+          return;
+        }
+
         const { txHash, receipt } = await createTransaction('SubmitModule', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
         assert.equal(receipt.logs.length, 1);
@@ -390,12 +393,17 @@ describe('HabitatV1', async function () {
       });
 
       let proposalId;
+      let internalActions;
+      let externalActions = '0x';
       it('create proposal for first vault', async () => {
+        // token transfer
+        internalActions = encodeInternalProposalActions(['0x01', erc20.address, charlie.address, '0xfa']);
+
         const args = {
           startDate: ~~(Date.now() / 1000) - 2,
           vault,
-          internalActions: '0x',
-          externalActions: '0x',
+          internalActions,
+          externalActions,
           metadata: JSON.stringify({ title: 'hello world' }),
         };
         const { txHash, receipt } = await createTransaction('CreateProposal', args, alice, habitat);
@@ -408,6 +416,7 @@ describe('HabitatV1', async function () {
       it('process proposal - should remain open', async () => {
         const args = {
           proposalId,
+          internalActions,
         };
         const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
@@ -446,15 +455,43 @@ describe('HabitatV1', async function () {
         assert.equal(evt.account, alice.address);
       });
 
+      it('process proposal - should revert, vault has no balance', async () => {
+        const args = {
+          proposalId,
+          internalActions,
+        };
+        await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /BALANCE/);
+      });
+
+      it('transfer to vault', async () => {
+        const args = {
+          token: erc20.address,
+          to: vault,
+          value: '0xff',
+        };
+        const { txHash, receipt } = await createTransaction('TransferToken', args, alice, habitat);
+        assert.equal(receipt.status, '0x1', 'receipt.status');
+      });
+
       it('process proposal - should pass', async () => {
         const args = {
           proposalId,
+          internalActions,
         };
         const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(Number(evt.votingStatus), 3);
+        assert.equal(receipt.logs.length, 2);
+        {
+          // should be a transfer
+          const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+          assert.equal(evt.token, erc20.address);
+          assert.equal(evt.to, charlie.address);
+          assert.equal(evt.value.toHexString(), '0xfa');
+        }
+        {
+          const evt = habitat.interface.parseLog(receipt.logs[1]).args;
+          assert.equal(Number(evt.votingStatus), 3);
+        }
       });
     });
   }

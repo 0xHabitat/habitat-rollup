@@ -6,20 +6,17 @@ import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
 
 /// @notice Global state and public utiltiy functions for the Habitat Rollup
 contract HabitatBase is TokenBridgeBrick, UtilityBrick {
-  // xxx: implement storage getters and setters manually with fixed storage keys
-  // xxx: default community voting condition?
-
-  // global habitat rollup related state
-  mapping (uint256 => bytes32) public executionPermits;
-  // modules
-  mapping (bytes32 => mapping (address => uint256)) public activeModule;
+  // xxx
+  // - default community voting condition?
+  // - execution permits
 
   function INSPECTION_PERIOD () public view virtual override returns (uint16) {
-    // ~84 hours
+    // in blocks - ~84 hours
     return 21600;
   }
 
   function PROPOSAL_DELAY () public view virtual returns (uint256) {
+    // in seconds
     return 3600 * 32;
   }
 
@@ -32,6 +29,17 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     require(nonce == txNonces(msgSender), 'NONCE');
 
     _setTxNonces(msgSender, nonce + 1);
+  }
+
+  function _calculateAddress (address msgSender, uint256 nonce, bytes32 salt) internal returns (address ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, msgSender)
+      mstore(32, nonce)
+      mstore(64, salt)
+      ret := shr(96, keccak256(0, 96) )
+      mstore(64, backup)
+    }
   }
 
   function _TX_NONCE_KEY (address a) internal view returns (uint256 ret) {
@@ -519,6 +527,31 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     uint256 key = _TOKEN_TVL_KEY(token);
     assembly {
       value := sload(key)
+    }
+  }
+
+  function _ACTIVATOR_OF_MODULE_KEY (bytes32 communityId, address condition) internal view returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x447e3208ee953b940a0bd72b048754d7ee641b55c9d01ead253a9cb91f3442db)
+      mstore(32, communityId)
+      mstore(64, condition)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  function _setActivatorOfModule (bytes32 communityId, address condition, address val) internal {
+    uint256 key = _ACTIVATOR_OF_MODULE_KEY(communityId, condition);
+    assembly {
+      sstore(key, val)
+    }
+  }
+
+  function activatorOfModule (bytes32 communityId, address condition) internal returns (address ret) {
+    uint256 key = _ACTIVATOR_OF_MODULE_KEY(communityId, condition);
+    assembly {
+      ret := sload(key)
     }
   }
 }

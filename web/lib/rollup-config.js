@@ -9,6 +9,6 @@ export default {
     RPC_URL: `https://testnet-0xhabitat.fly.dev/`,
   },
   99: {
-    RPC_URL: `http://localhost:8111/`,
+    RPC_URL: `http://${window.location.hostname}:8111/`,
   },
 }

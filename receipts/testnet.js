@@ -165,9 +165,16 @@ async function main () {
         metadata: JSON.stringify({ title: obj.title }),
       };
       let tmp = await sendTransaction('CreateCommunity', args, wallet, bridgeL2);
+      const communityId = tmp.events[0].args.communityId;
 
       args = {
-        communityId: tmp.events[0].args.communityId,
+        communityId,
+        condition: oneShareOneVote.address,
+      };
+      tmp = await sendTransaction('ActivateModule', args, wallet, bridgeL2);
+
+      args = {
+        communityId,
         condition: oneShareOneVote.address,
         metadata: JSON.stringify({ title: `Treasure Chest` }),
       };
@@ -176,7 +183,7 @@ async function main () {
       args = {
         startDate: ~~(Date.now() / 1000),
         vault: tmp.events[0].args.vaultAddress,
-        internalActions: encodeInternalProposalActions(['0x01', erc20.address, wallet.address, '0xffffffffffff']),
+        internalActions: encodeInternalProposalActions(['0x01', obj.token, wallet.address, '0xfffffffffffff']),
         externalActions: encodeExternalProposalActions(['0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415', '0xc0ffebabe17da53158']),
         metadata: JSON.stringify({ title: 'Re: Evolution 🌱', details: LOREM_IPSUM }),
       };

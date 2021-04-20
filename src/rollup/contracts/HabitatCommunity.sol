@@ -24,8 +24,10 @@ contract HabitatCommunity is HabitatBase {
       mstore(64, tmp)
     }
 
-    // this should actually not happen but check it anyway
+    // checks if the community was already created
     require(HabitatBase.tokenOfCommunity(communityId) == address(0));
+
+    // save
     HabitatBase._setTokenOfCommunity(communityId, governanceToken);
     HabitatBase._setIsMemberOfCommunity(communityId, msgSender);
     HabitatBase._incrementTotalMemberCount(communityId);

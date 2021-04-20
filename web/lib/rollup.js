@@ -13,7 +13,7 @@ import {
 } from './utils.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
-const ROOT_CHAIN_ID = window.location.hostname === 'localhost' ? 99 : 3;
+const ROOT_CHAIN_ID = window.location.hostname.indexOf('localhost') === -1 ? 3 : 99;
 const { RPC_URL, EXECUTION_PROXY_ADDRESS } = NETWORKS[ROOT_CHAIN_ID];
 
 export async function getProviders () {
@@ -621,4 +621,25 @@ export async function fetchVaultInformation (vaultAddress) {
   }
 
   return ret;
+}
+
+export async function simulateProcessProposal ({ proposalId, internalActions }) {
+  let votingStatus = VotingStatus.UNKNOWN;
+  try {
+    const { habitat } = await getProviders();
+    const ret = await habitat.provider.send(
+      'eth_call',
+      [{
+        from: ethers.constants.AddressZero,
+        primaryType: 'ProcessProposal',
+        message: { nonce: '0x0', proposalId, internalActions: internalActions }
+      }]
+    );
+
+    votingStatus = Number(ret) || VotingStatus.UNKNOWN;
+  } catch (e) {
+    console.warn(e);
+  }
+
+  return votingStatus;
 }

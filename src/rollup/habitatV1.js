@@ -55,13 +55,13 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'proposalId', type: 'bytes32' },
       { name: 'shares', type: 'uint256' },
-      { name: 'timestamp', type: 'uint256' },
       { name: 'delegatedFor', type: 'address' },
       { name: 'signalStrength', type: 'uint8' },
     ],
     ProcessProposal: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'proposalId', type: 'bytes32' },
+      { name: 'internalActions', type: 'bytes' },
     ],
   },
   domain: {

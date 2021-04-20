@@ -3,7 +3,7 @@ pragma solidity >=0.6.2;
 
 import './HabitatBase.sol';
 
-contract HabitatStore is HabitatBase {
+contract HabitatModule is HabitatBase {
   event ModuleSubmitted(address contractAddress, string metadata);
   event ModuleActivated(bytes32 communityId, address condition);
 
@@ -99,6 +99,7 @@ contract HabitatStore is HabitatBase {
   function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, string calldata metadata) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
+    require(HabitatBase.moduleHash(contractAddress) == bytes32(0), 'EXISTS');
 
     // verify the contract code and returns the keccak256(bytecode) (reverts if invalid)
     bytes32 codeHash = _verifyModule(contractAddress);
@@ -113,9 +114,17 @@ contract HabitatStore is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    require(moduleHash(condition) != bytes32(0), 'HASH');
+    // checks if the module of submitted and verified
+    require(HabitatBase.moduleHash(condition) != bytes32(0), 'HASH');
+    require(HabitatBase.activatorOfModule(communityId, condition) == address(0));
+
     // xxx acquire/buy flow
-    activeModule[communityId][condition] = 1;
+    //uint256 modulePrice = HabitatBase.modulePriceOf(condition);
+    //if (modulePrice != 0) {
+    //}
+
+    // activate
+    HabitatBase._setActivatorOfModule(communityId, condition, msgSender);
 
     emit ModuleActivated(communityId, condition);
   }

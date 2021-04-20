@@ -22,6 +22,7 @@ import {
   fetchProposalStats,
   submitVote,
   VotingStatus,
+  simulateProcessProposal,
 } from '/lib/rollup.js';
 
 const CIRCLES = `
@@ -32,9 +33,10 @@ const CIRCLES = `
 
 let communityId, proposalId, proposer, tx;
 
-async function processProposal (proposalId) {
+async function processProposal (proposalId, originTx) {
   const args = {
     proposalId,
+    internalActions: originTx.message.internalActions,
   };
 
   await sendTransaction('ProcessProposal', args);
@@ -49,7 +51,6 @@ async function executeProposal (proposalId, actionBytes) {
 
 async function updateProposal () {
   const { habitat } = await getProviders();
-
   const {
     totalShares,
     defaultSliderValue,
@@ -64,10 +65,11 @@ async function updateProposal () {
   } = await fetchProposalStats({ communityId, proposalId });
   const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
   const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(tx.message.startDate);
+  const nextStatus = await simulateProcessProposal({ proposalId, internalActions: tx.message.internalActions });
 
   document.querySelector('#vote').disabled = votingDisabled;
-  document.querySelector('#finalize').disabled = votingDisabled;
-  document.querySelector('#execProposal').disabled = !proposalStatus.eq(VotingStatus.PASSED);
+  document.querySelector('#finalize').disabled = !(nextStatus > VotingStatus.OPEN);
+  document.querySelector('#execProposal').disabled = !(proposalStatus.eq(VotingStatus.PASSED) && tx.message.externalActions !== '0x');
 
   // some metadata below the proposal
   {
@@ -154,7 +156,7 @@ async function render () {
       // xxx check if token is nft
       const erc = await getToken(action.token);
       childs[childPtr].href = getEtherscanTokenLink(erc.address);
-      childs[childPtr++].textContent = `${renderAmount(action.value, erc._decimals)} ${erc._symbol}`;
+      childs[childPtr++].textContent = `${renderAmount(action.value, erc._decimals)} ${await getTokenSymbol(erc.address)}`;
       childs[childPtr++].textContent = action.receiver;
     }
   }
@@ -164,7 +166,7 @@ async function render () {
       await submitVote(communityId, proposalId, slider.value);
       await updateProposal();
     });
-    wrapListener('button#finalize', () => processProposal(proposalId));
+    wrapListener('button#finalize', () => processProposal(proposalId, tx));
 
     // any actions we can execute?
     // TODO: calculate estimate of bridge finalization time

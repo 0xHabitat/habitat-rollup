@@ -22,7 +22,7 @@ contract HabitatWallet is HabitatBase {
         }
       } else {
         uint256 tmp = HabitatBase.getErc20Balance(token, from);
-        require (tmp >= value);
+        require (tmp >= value, 'BALANCE');
         HabitatBase._setErc20Balance(token, from, tmp - value);
 
         if (to == address(0)) {
