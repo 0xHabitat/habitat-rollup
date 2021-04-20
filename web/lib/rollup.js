@@ -623,7 +623,7 @@ export async function fetchVaultInformation (vaultAddress) {
   return ret;
 }
 
-export async function simulateProcessProposal ({ proposalId, internalActions }) {
+export async function simulateProcessProposal ({ proposalId, internalActions, externalActions }) {
   let votingStatus = VotingStatus.UNKNOWN;
   try {
     const { habitat } = await getProviders();
@@ -632,7 +632,7 @@ export async function simulateProcessProposal ({ proposalId, internalActions }) 
       [{
         from: ethers.constants.AddressZero,
         primaryType: 'ProcessProposal',
-        message: { nonce: '0x0', proposalId, internalActions: internalActions }
+        message: { nonce: '0x0', proposalId, internalActions, externalActions }
       }]
     );
 

@@ -37,6 +37,7 @@ async function processProposal (proposalId, originTx) {
   const args = {
     proposalId,
     internalActions: originTx.message.internalActions,
+    externalActions: originTx.message.externalActions,
   };
 
   await sendTransaction('ProcessProposal', args);
@@ -65,7 +66,8 @@ async function updateProposal () {
   } = await fetchProposalStats({ communityId, proposalId });
   const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
   const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(tx.message.startDate);
-  const nextStatus = await simulateProcessProposal({ proposalId, internalActions: tx.message.internalActions });
+  const { internalActions, externalActions } = tx.message;
+  const nextStatus = await simulateProcessProposal({ proposalId, internalActions, externalActions });
 
   document.querySelector('#vote').disabled = votingDisabled;
   document.querySelector('#finalize').disabled = !(nextStatus > VotingStatus.OPEN);
