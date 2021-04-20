@@ -1,5 +1,5 @@
 import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected, stringDance } from './utils.js';
-import { getProviders, sendTransaction, setupModulelist, doQuery, resolveName, getShortString, getErc20Exit } from './rollup.js';
+import { getProviders, sendTransaction, simulateTransaction, setupModulelist, doQuery, resolveName, getShortString, getErc20Exit } from './rollup.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export class BaseFlow {
@@ -454,6 +454,15 @@ export class CreateTreasuryFlow extends CreateCommunityFlow {
       condition: ctx.address,
       metadata: JSON.stringify({ title: ctx.name }),
     };
+    try {
+      await simulateTransaction('CreateVault', args);
+    } catch (e) {
+      if (e.toString().indexOf('ACTIVE') !== -1) {
+        // activate the module first
+        this.write('You have activate the module first...');
+        await sendTransaction('ActivateModule', { communityId: ctx.communityId, condition: ctx.address });
+      }
+    }
     ctx.receipt = await sendTransaction('CreateVault', args);
 
     this.confirm(

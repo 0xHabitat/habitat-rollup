@@ -35,6 +35,19 @@ export async function getProviders () {
   return document._providers;
 }
 
+export async function simulateTransaction (primaryType, _message) {
+  const { habitat } = await getProviders();
+  const signer = await getSigner();
+  const signerAddress = await signer.getAddress();
+  const message = Object.assign({}, _message);
+
+  if (message.nonce === undefined && TYPED_DATA.types[primaryType][0].name === 'nonce') {
+    message.nonce = (await habitat.txNonces(signerAddress)).toHexString();
+  }
+
+  return await habitat.provider.send('eth_call', [{ from: signerAddress, primaryType, message }]);
+}
+
 export async function sendTransaction (primaryType, message) {
   const { habitat } = await getProviders();
   const signer = await getSigner();
@@ -466,7 +479,7 @@ export async function getCommunityInformation (communityId) {
   // xxx
   const { habitat } = await getProviders();
   const logs = await doQuery('CommunityCreated', null, communityId);
-  const evt = habitat.interface.parseLog(logs[logs.length -1 ]);
+  const evt = habitat.interface.parseLog(logs[logs.length - 1]);
   const metadata = JSON.parse(evt.args.metadata);
 
   return Object.assign(metadata, { communityId: evt.args.communityId, governanceToken: evt.args.governanceToken });
