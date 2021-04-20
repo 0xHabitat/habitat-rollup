@@ -625,17 +625,17 @@ case 8 {
 // end of VoteOnProposal
 
 // start of ProcessProposal
-// typeHash: 0x7df23218b58946cfb28fbedb03b53659965879a8c6e163a4f2c65b411a03fc5c
-// function: onProcessProposal(address,uint256,bytes32,bytes)
+// typeHash: 0xb4da110edbcfa262bdf7849c0e02e03ed15ced328922eca5a0bc1c547451b4af
+// function: onProcessProposal(address,uint256,bytes32,bytes,bytes)
 case 9 {
-  let headSize := 128
+  let headSize := 160
   let typeLen := 0
-  let txPtr := 320
-  let endOfSlot := add(txPtr, 128)
+  let txPtr := 384
+  let endOfSlot := add(txPtr, 160)
 
-  txPtr := 352
+  txPtr := 416
   // typeHash of ProcessProposal
-  mstore(0, 0x7df23218b58946cfb28fbedb03b53659965879a8c6e163a4f2c65b411a03fc5c)
+  mstore(0, 0xb4da110edbcfa262bdf7849c0e02e03ed15ced328922eca5a0bc1c547451b4af)
   // uint256 ProcessProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -665,8 +665,21 @@ case 9 {
   endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
   offset := add(offset, typeLen)
 
+  // bytes ProcessProposal.externalActions
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(128, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
   // typeHash
-  let structHash := keccak256(0, 128)
+  let structHash := keccak256(0, 160)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -680,10 +693,10 @@ case 9 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(288, 0xbe885c71)
-  mstore(320, mload(128))
+  mstore(352, 0x36b54032)
+  mstore(384, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 380, sub(endOfSlot, 380), 0, 0)
   success := or(success, returndatasize())
 }
 // end of ProcessProposal

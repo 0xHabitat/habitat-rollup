@@ -62,6 +62,7 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'proposalId', type: 'bytes32' },
       { name: 'internalActions', type: 'bytes' },
+      { name: 'externalActions', type: 'bytes' },
     ],
   },
   domain: {

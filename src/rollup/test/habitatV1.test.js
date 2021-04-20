@@ -417,6 +417,7 @@ describe('HabitatV1', async function () {
         const args = {
           proposalId,
           internalActions,
+          externalActions,
         };
         const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
@@ -459,6 +460,7 @@ describe('HabitatV1', async function () {
         const args = {
           proposalId,
           internalActions,
+          externalActions,
         };
         await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /BALANCE/);
       });
@@ -477,6 +479,7 @@ describe('HabitatV1', async function () {
         const args = {
           proposalId,
           internalActions,
+          externalActions,
         };
         const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
