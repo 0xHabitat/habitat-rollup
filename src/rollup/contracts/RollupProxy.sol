@@ -8,6 +8,8 @@ contract RollupProxy is RollupUtils {
   constructor (address initialImplementation) {
     assembly {
       sstore(not(returndatasize()), initialImplementation)
+      // created at block
+      sstore(0x319a610c8254af7ecb1f669fb64fa36285b80cad26faf7087184ce1dceb114df, number())
     }
     emit RollupUtils.RollupUpgrade(initialImplementation);
   }

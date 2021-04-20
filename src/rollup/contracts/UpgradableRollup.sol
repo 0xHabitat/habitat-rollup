@@ -4,13 +4,6 @@ pragma solidity >=0.6.2;
 import '@NutBerry/rollup-bricks/src/tsm/contracts/RollupUtils.sol';
 
 contract UpgradableRollup is RollupUtils {
-  constructor () {
-    assembly {
-      // created at block
-      sstore(0x319a610c8254af7ecb1f669fb64fa36285b80cad26faf7087184ce1dceb114df, number())
-    }
-  }
-
   /// @notice Returns the address who is in charge of changing the rollup implementation.
   function ROLLUP_MANAGER () public virtual view returns (address) {
   }
