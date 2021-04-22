@@ -231,15 +231,20 @@ export class DepositFlow extends BaseFlow {
     );
   }
 
-  confirmDeposit ({ amount, tokenSymbol }) {
-    const number = parseFloat(amount);
+  async confirmDeposit (ctx) {
+    const number = parseFloat(ctx.amount);
     if (!number || number <= 0) {
       throw new Error('Invalid Amount.');
     }
 
+    const available = await ctx.erc20.balanceOf(await ctx.signer.getAddress());
+    if (available.lt(ethers.utils.parseUnits(number.toString(), ctx.erc20._decimals))) {
+      throw new Error(`You only have ${ethers.utils.formatUnits(available, ctx.erc20._decimals)} available.`);
+    }
+
     this.confirm(
       'Confirm',
-      `Tap 'Confirm' to deposit ${amount} ${tokenSymbol}.`,
+      `Tap 'Confirm' to deposit ${ctx.amount} ${ctx.tokenSymbol}.`,
       this.onConfirmDeposit
     );
   }
