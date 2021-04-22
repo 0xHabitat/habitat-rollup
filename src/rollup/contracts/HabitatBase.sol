@@ -42,7 +42,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _TX_NONCE_KEY (address a) internal view returns (uint256 ret) {
+  function _TX_NONCE_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x1baf1b358a7f0088724e8c8008c24c8182cafadcf6b7d0da2db2b55b40320fbf)
       mstore(32, a)
@@ -66,7 +66,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _ERC20_KEY (address tkn, address account) internal view returns (uint256 ret) {
+  function _ERC20_KEY (address tkn, address account) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x24de14bddef9089376483557827abada7f1c6135d6d379c3519e56e7bc9067b9)
       mstore(32, tkn)
@@ -91,7 +91,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _ERC721_KEY (address tkn, uint256 b) internal view returns (uint256 ret) {
+  function _ERC721_KEY (address tkn, uint256 b) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x0b0adec1d909ec867fdb1853ca8d859f7b8137ab9c01f734b3fbfc40d9061ded)
       mstore(32, tkn)
@@ -116,7 +116,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _VOTING_SHARES_KEY (bytes32 proposalId, address account) internal view returns (uint256 ret) {
+  function _VOTING_SHARES_KEY (bytes32 proposalId, address account) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x24ce236379086842ae19f4302972c7dd31f4c5054826cd3e431fd503205f3b67)
       mstore(32, proposalId)
@@ -141,7 +141,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _VOTING_SIGNAL_KEY (bytes32 proposalId, address account) internal view returns (uint256 ret) {
+  function _VOTING_SIGNAL_KEY (bytes32 proposalId, address account) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x12bc1ed237026cb917edecf1ca641d1047e3fc382300e8b3fab49ae10095e490)
       mstore(32, proposalId)
@@ -166,7 +166,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _VOTING_COUNT_KEY (bytes32 proposalId) internal view returns (uint256 ret) {
+  function _VOTING_COUNT_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x637730e93bbd8200299f72f559c841dfae36a36f86ace777eac8fe48f977a46d)
       mstore(32, proposalId)
@@ -188,7 +188,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _VOTING_TOTAL_SHARE_KEY (bytes32 proposalId) internal view returns (uint256 ret) {
+  function _VOTING_TOTAL_SHARE_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x847f5cbc41e438ef8193df4d65950ec6de3a1197e7324bffd84284b7940b2d4a)
       mstore(32, proposalId)
@@ -210,7 +210,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _VOTING_TOTAL_SIGNAL_KEY (bytes32 proposalId) internal view returns (uint256 ret) {
+  function _VOTING_TOTAL_SIGNAL_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x3a5afbb81b36a1a15e90db8cc0deb491bf6379592f98c129fd8bdf0b887f82dc)
       mstore(32, proposalId)
@@ -232,7 +232,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _MEMBER_OF_COMMUNITY_KEY (bytes32 communityId, address account) internal view returns (uint256 ret) {
+  function _MEMBER_OF_COMMUNITY_KEY (bytes32 communityId, address account) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x0ff6c2ccfae404e7ec55109209ac7c793d30e6818af453a7c519ca59596ccde1)
       mstore(32, communityId)
@@ -257,7 +257,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _MEMBERS_TOTAL_COUNT_KEY (bytes32 communityId) internal view returns (uint256 ret) {
+  function _MEMBERS_TOTAL_COUNT_KEY (bytes32 communityId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xe1338c6a5be626513cff1cb54a827862ae2ab4810a79c8dfd1725e69363f4247)
       mstore(32, communityId)
@@ -280,7 +280,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _NAME_TO_ADDRESS_KEY (bytes32 shortString) internal view returns (uint256 ret) {
+  function _NAME_TO_ADDRESS_KEY (bytes32 shortString) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x09ec9a99acfe90ba324ac042a90e28c5458cfd65beba073b0a92ea7457cdfc56)
       mstore(32, shortString)
@@ -302,7 +302,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _ACCOUNT_DELEGATE_KEY (address a) internal view returns (uint256 ret) {
+  function _ACCOUNT_DELEGATE_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xa4cf686a12e967d8e7bd65750e2f83e9462cafbc9c0d8faf956478a83b935c62)
       mstore(32, a)
@@ -324,7 +324,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _PROPOSAL_VAULT_KEY (bytes32 a) internal view returns (uint256 ret) {
+  function _PROPOSAL_VAULT_KEY (bytes32 a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x622061f2b694ba7aa754d63e7f341f02ac8341e2b36ccbb1d3fc1bf00b57162d)
       mstore(32, a)
@@ -348,7 +348,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _PROPOSAL_START_DATE_KEY (bytes32 a) internal view returns (uint256 ret) {
+  function _PROPOSAL_START_DATE_KEY (bytes32 a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x539a579b21c2852f7f3a22630162ab505d3fd0b33d6b46f926437d8082d494c1)
       mstore(32, a)
@@ -372,7 +372,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _TOKEN_OF_COMMUNITY_KEY (bytes32 a) internal view returns (uint256 ret) {
+  function _TOKEN_OF_COMMUNITY_KEY (bytes32 a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xeadaeda4a4005f296730d16d047925edeb6f21ddc028289ebdd9904f9d65a662)
       mstore(32, a)
@@ -396,7 +396,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _COMMUNITY_OF_VAULT_KEY (address a) internal view returns (uint256 ret) {
+  function _COMMUNITY_OF_VAULT_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xf659eca1f5df040d1f35ff0bac6c4cd4017c26fe0dbe9317b2241af59edbfe06)
       mstore(32, a)
@@ -420,7 +420,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _MODULE_HASH_KEY (address a) internal view returns (uint256 ret) {
+  function _MODULE_HASH_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xe6ab7761f522dca2c6f74f7f7b1083a1b184fec6b893cb3418cb3121c5eda5aa)
       mstore(32, a)
@@ -444,7 +444,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _VAULT_CONDITION_KEY (address a) internal view returns (uint256 ret) {
+  function _VAULT_CONDITION_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x615e61b2f7f9d8ca18a90a9b0d27a62ae27581219d586cb9aeb7c695bc7b92c8)
       mstore(32, a)
@@ -468,7 +468,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _PROPOSAL_STATUS_KEY (bytes32 a) internal view returns (uint256 ret) {
+  function _PROPOSAL_STATUS_KEY (bytes32 a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x40e11895caf89e87d4485af91bd7e72b6a6e56b94f6ea4b7edb16e869adb7fe9)
       mstore(32, a)
@@ -501,7 +501,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _TOKEN_TVL_KEY (address a) internal view returns (uint256 ret) {
+  function _TOKEN_TVL_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x4e7484f055e36257052a570831d7e3114ad145e0c8d8de63ded89925c7e17cb6)
       mstore(32, a)
@@ -530,7 +530,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _ACTIVATOR_OF_MODULE_KEY (bytes32 communityId, address condition) internal view returns (uint256 ret) {
+  function _ACTIVATOR_OF_MODULE_KEY (bytes32 communityId, address condition) internal pure returns (uint256 ret) {
     assembly {
       let backup := mload(64)
       mstore(0, 0x447e3208ee953b940a0bd72b048754d7ee641b55c9d01ead253a9cb91f3442db)
@@ -603,7 +603,7 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     }
   }
 
-  function _EXECUTION_PERMIT_KEY (address vault, bytes32 proposalId) internal view returns (uint256 ret) {
+  function _EXECUTION_PERMIT_KEY (address vault, bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       let backup := mload(64)
       mstore(0, 0x8d47e278a5e048b636a1e1724246c4617684aff8b922d0878d0da2fb553d104e)
