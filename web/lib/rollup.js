@@ -477,7 +477,7 @@ export async function submitVote (communityId, proposalId, signalStrength) {
 export async function getCommunityInformation (communityId) {
   // xxx
   const { habitat } = await getProviders();
-  const logs = await doQueryWithOptions({ maxResults: 1 }, 'CommunityCreated', null, communityId);
+  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'CommunityCreated', null, communityId);
   const evt = habitat.interface.parseLog(logs[logs.length - 1]);
   const metadata = JSON.parse(evt.args.metadata);
 
@@ -487,7 +487,7 @@ export async function getCommunityInformation (communityId) {
 export async function getTreasuryInformation (vaultAddress) {
   // xxx
   const { habitat } = await getProviders();
-  const logs = await doQueryWithOptions({ maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
+  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
   const evt = habitat.interface.parseLog(logs[logs.length - 1]);
   const metadata = JSON.parse(evt.args.metadata);
 
