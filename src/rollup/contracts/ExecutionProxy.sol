@@ -2,14 +2,14 @@
 pragma solidity >=0.6.2;
 
 interface IBridge {
-  function executionPermits (uint256 proposalId) external view returns (bytes32);
+  function executionPermit (address vault, bytes32 proposalId) external view returns (bytes32);
 }
 
 contract ExecutionProxy {
   /// @notice The contract that ...brrrr... prints permits.
   address public delegate;
   /// @notice keeps track of already executed permits
-  mapping (uint256 => bool) public executed;
+  mapping (bytes32 => bool) public executed;
 
   constructor (address _delegate) public {
     delegate = _delegate;
@@ -17,15 +17,15 @@ contract ExecutionProxy {
 
   /// @notice Executes a set of contract calls `actions` if there is a valid
   /// permit on `delegate` for `proposalIndex` and `actions`.
-  function execute (uint256 proposalIndex, bytes memory actions) external {
-    require(executed[proposalIndex] == false, 'already executed');
+  function execute (address vault, bytes32 proposalId, bytes memory actions) external {
+    require(executed[proposalId] == false, 'already executed');
     require(
-      IBridge(delegate).executionPermits(proposalIndex) == keccak256(abi.encode(proposalIndex, actions)),
+      IBridge(delegate).executionPermit(vault, proposalId) == keccak256(actions),
       'wrong permit'
     );
 
     // mark it as executed
-    executed[proposalIndex] = true;
+    executed[proposalId] = true;
     // execute
     assembly {
       // Note: we use `callvalue()` instead of `0`

@@ -394,7 +394,7 @@ describe('HabitatV1', async function () {
 
       let proposalId;
       let internalActions;
-      let externalActions = '0x';
+      let externalActions = encodeExternalProposalActions([charlie.address, '0x']);
       it('create proposal for first vault', async () => {
         // token transfer
         internalActions = encodeInternalProposalActions(['0x01', erc20.address, charlie.address, '0xfa']);
@@ -411,6 +411,8 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         proposalId = evt.proposalId;
+
+        proposals.push({ vault, proposalId, internalActions, externalActions, valid: true });
       });
 
       it('process proposal - should remain open', async () => {
@@ -475,6 +477,24 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.status, '0x1', 'receipt.status');
       });
 
+      it('process proposal - should revert, invalid internalActons', async () => {
+        const args = {
+          proposalId,
+          internalActions: '0xfafa',
+          externalActions,
+        };
+        await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /IHASH/);
+      });
+
+      it('process proposal - should revert, invalid externalActions', async () => {
+        const args = {
+          proposalId,
+          internalActions,
+          externalActions: '0xfafa',
+        };
+        await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /EHASH/);
+      });
+
       it('process proposal - should pass', async () => {
         const args = {
           proposalId,
@@ -508,37 +528,39 @@ describe('HabitatV1', async function () {
   }
 
   function doExecutionTest () {
+    const GAS_LIMIT = 10_000_000;
+
     describe('on-chain execution tests', () => {
       it('check execution permit and execute', async () => {
-        for (const { args, proposalIndex, txHash, valid } of proposals) {
-          const ok = await bridge.executionPermits(proposalIndex);
+        for (const { vault, proposalId, externalActions, valid } of proposals) {
+          const ok = await bridge.executionPermit(vault, proposalId);
 
           assert.equal(!!Number(ok), valid, 'execution permit only for valid proposals');
 
-          let expected = valid && args.actions === validAction;
+          let expected = valid; //args.actions === validAction;
           // try to execute
           let result;
           if (expected) {
-            const tx = await executionProxy.execute(proposalIndex, args.actions);
+            const tx = await executionProxy.execute(vault, proposalId, externalActions);
             const receipt = await tx.wait();
             result = !!receipt.status;
           } else {
-            await assertRevert(executionProxy.execute(proposalIndex, args.actions, { gasLimit: GAS_LIMIT }));
+            await assertRevert(executionProxy.execute(vault, proposalId, externalActions, { gasLimit: GAS_LIMIT }));
             result = false;
           }
 
           assert.equal(result, expected, 'expected execution result via proxy');
-          console.log({ proposalIndex, expected });
+          console.log({ proposalId, expected });
 
           if (expected) {
             // a second time should fail
-            await assertRevert(executionProxy.execute(proposalIndex, args.actions, { gasLimit: GAS_LIMIT }));
+            await assertRevert(executionProxy.execute(vault, proposalId, externalActions, { gasLimit: GAS_LIMIT }));
           }
         }
       });
 
       it('non existent permits', async () => {
-        await assertRevert(executionProxy.execute(0xff, '0x', { gasLimit: GAS_LIMIT }));
+        await assertRevert(executionProxy.execute(charlie.address, ethers.utils.keccak256('0xff'), '0x', { gasLimit: GAS_LIMIT }));
       });
     });
   }
@@ -550,6 +572,7 @@ describe('HabitatV1', async function () {
       it('doForward', () => doForward(bridge, rootProvider, habitatNode));
       it('debugStorage', () => debugStorage(bridge, rootProvider, habitatNode));
     });
+    doExecutionTest();
   });
 
   describe('chain - challenge', function () {
@@ -559,6 +582,7 @@ describe('HabitatV1', async function () {
       it('doChallenge', () => doChallenge(bridge, rootProvider, habitatNode));
       it('debugStorage', () => debugStorage(bridge, rootProvider, habitatNode));
     });
+    doExecutionTest();
   });
 
   describe('kill node', () => {

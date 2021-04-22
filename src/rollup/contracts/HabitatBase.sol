@@ -554,4 +554,78 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
       ret := sload(key)
     }
   }
+
+  function _PROPOSAL_HASH_INTERNAL_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x9f6ffbe6bd26bda84ec854c7775d819340fd4340bc8fa1ab853cdee0d60e7141)
+      mstore(32, proposalId)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice Getter for the proposalId > keccak256(internalActions).
+  function proposalHashInternal (bytes32 proposalId) internal virtual view returns (bytes32 ret) {
+    uint256 key = _PROPOSAL_HASH_INTERNAL_KEY(proposalId);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `proposalHashInternal`.
+  function _setProposalHashInternal (bytes32 proposalId, bytes32 hash) internal {
+    uint256 key = _PROPOSAL_HASH_INTERNAL_KEY(proposalId);
+    assembly {
+      sstore(key, hash)
+    }
+  }
+
+  function _PROPOSAL_HASH_EXTERNAL_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
+    assembly {
+      mstore(0, 0xcd566f7f1fd69d79df8b7e0a3e28a2b559ab3e7f081db4a0c0640de4db78de9a)
+      mstore(32, proposalId)
+      ret := keccak256(0, 64)
+    }
+  }
+
+  /// @notice Getter for the proposalId > keccak256(externalActions).
+  function proposalHashExternal (bytes32 proposalId) internal virtual view returns (bytes32 ret) {
+    uint256 key = _PROPOSAL_HASH_EXTERNAL_KEY(proposalId);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `proposalHashExternal`.
+  function _setProposalHashExternal (bytes32 proposalId, bytes32 hash) internal {
+    uint256 key = _PROPOSAL_HASH_EXTERNAL_KEY(proposalId);
+    assembly {
+      sstore(key, hash)
+    }
+  }
+
+  function _EXECUTION_PERMIT_KEY (address vault, bytes32 proposalId) internal view returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x8d47e278a5e048b636a1e1724246c4617684aff8b922d0878d0da2fb553d104e)
+      mstore(32, vault)
+      mstore(64, proposalId)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  /// @notice Execution permit for <vault, proposalId> = keccak256(actions).
+  function executionPermit (address vault, bytes32 proposalId) external virtual view returns (bytes32 ret) {
+    uint256 key = _EXECUTION_PERMIT_KEY(vault, proposalId);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Setter for `executionPermit`.
+  /// Reflects the storage slot for `executionPermit` on L1.
+  function _setExecutionPermit (address vault, bytes32 proposalId, bytes32 hash) internal {
+    bytes32 key = bytes32(_EXECUTION_PERMIT_KEY(vault, proposalId));
+    RollupStorage._setStorageL1(key, uint256(hash));
+  }
 }

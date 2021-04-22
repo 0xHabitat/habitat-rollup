@@ -128,6 +128,8 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // store
     HabitatBase._setProposalStartDate(proposalId, startDate);
     HabitatBase._setProposalVault(proposalId, vault);
+    HabitatBase._setProposalHashInternal(proposalId, keccak256(internalActions));
+    HabitatBase._setProposalHashExternal(proposalId, keccak256(externalActions));
     // update member count
     HabitatBase._maybeUpdateMemberCount(proposalId, msgSender);
 
@@ -264,7 +266,15 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
 
       // PASSED
       if (votingStatus == 3) {
+        bytes32 hash = keccak256(internalActions);
+        require(HabitatBase.proposalHashInternal(proposalId) == hash, 'IHASH');
         _executeInternalActions(vault, internalActions);
+
+        hash = keccak256(externalActions);
+        require(HabitatBase.proposalHashExternal(proposalId) == hash, 'EHASH');
+        if (externalActions.length != 0) {
+          HabitatBase._setExecutionPermit(vault, proposalId, hash);
+        }
       }
       emit ProposalProcessed(proposalId, votingStatus);
     }
