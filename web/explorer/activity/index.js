@@ -1,13 +1,24 @@
 import { getProviders } from '/lib/rollup.js';
 import { TYPED_DATA } from '/lib/constants.js';
 
+function sortFunc (a, b) {
+  const blockA = Number(a.blockNumber);
+  const blockB = Number(b.blockNumber);
+
+  if (blockA === blockB) {
+    return Number(b.transactionIndex) - Number(a.transactionIndex);
+  }
+
+  return blockB - blockA;
+}
+
 async function render () {
   const { childProvider } = await getProviders();
   const filter = {
-    toBlock: 1,
+    fromBlock: 1,
     primaryTypes: TYPED_DATA.primaryTypes,
   };
-  const txs = await childProvider.send('eth_getLogs', [filter]);
+  const txs = (await childProvider.send('eth_getLogs', [filter])).sort(sortFunc);
   const container = document.querySelector('.transactions');
 
   for (let i = 0, len = txs.length; i < len; i++) {
