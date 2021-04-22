@@ -1,5 +1,14 @@
 import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected, stringDance } from './utils.js';
-import { getProviders, sendTransaction, simulateTransaction, setupModulelist, doQuery, resolveName, getShortString, getErc20Exit } from './rollup.js';
+import {
+  getProviders,
+  sendTransaction,
+  simulateTransaction,
+  setupModulelist,
+  doQueryWithOptions,
+  resolveName,
+  getShortString,
+  getErc20Exit,
+} from './rollup.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export class BaseFlow {
@@ -491,7 +500,7 @@ export class UsernameFlow extends BaseFlow {
 
   async confirmName (ctx) {
     this.context.shortString = getShortString(ctx.username);
-    const logs = await doQuery('ClaimUsername', null, this.context.shortString);
+    const logs = await doQueryWithOptions({ maxResults: 1 }, 'ClaimUsername', null, this.context.shortString);
     if (logs.length) {
       throw new Error('Ouch, that one is already taken 😢');
     }

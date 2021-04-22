@@ -18,7 +18,6 @@ import {
   formatObject,
   humanProposalTime,
   getUsername,
-  doQuery,
   fetchProposalStats,
   submitVote,
   VotingStatus,

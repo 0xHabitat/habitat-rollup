@@ -300,25 +300,24 @@ export function humanProposalTime (startDate) {
   return `open since ${secondsToString(now - startDate)}`;
 }
 
-export async function doQuery (name, ...args) {
+export async function doQueryWithOptions (options, name, ...args) {
   const { habitat } = await getProviders();
-  const blockNum = await habitat.provider.getBlockNumber();
   const filter = habitat.filters[name](...args);
   // xxx: because deposit transaction don't match the message format yet
   filter.address = null;
-
-  filter.toBlock = blockNum;
-  filter.fromBlock = 1;
+  Object.assign(filter, options);
 
   return await habitat.provider.send('eth_getLogs', [filter]);
 }
 
+export async function doQuery (name, ...args) {
+  return doQueryWithOptions({ fromBlock: 1 }, name, ...args);
+}
+
 export async function doQueryByPrimaryTypes (primaryTypes) {
   const { habitat } = await getProviders();
-  const blockNum = await habitat.provider.getBlockNumber();
   const filter = {
     fromBlock: 1,
-    toBlock: blockNum,
     primaryTypes,
   };
 
@@ -339,7 +338,7 @@ export async function getUsername (address, force = false) {
     return username;
   }
 
-  const logs = await doQuery('ClaimUsername', address);
+  const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'ClaimUsername', address);
   username = renderAddress(address);
 
   if (logs.length) {
@@ -357,7 +356,7 @@ export async function getUsername (address, force = false) {
 export async function resolveUsername (str) {
   // xxx returns the last claimer of str, address should be double checked
   const { habitat } = await getProviders();
-  const logs = await doQuery('ClaimUsername', null, getShortString(str));
+  const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'ClaimUsername', null, getShortString(str));
 
   if (logs.length) {
     const evt = habitat.interface.parseLog(logs[logs.length - 1]);
@@ -478,7 +477,7 @@ export async function submitVote (communityId, proposalId, signalStrength) {
 export async function getCommunityInformation (communityId) {
   // xxx
   const { habitat } = await getProviders();
-  const logs = await doQuery('CommunityCreated', null, communityId);
+  const logs = await doQueryWithOptions({ maxResults: 1 }, 'CommunityCreated', null, communityId);
   const evt = habitat.interface.parseLog(logs[logs.length - 1]);
   const metadata = JSON.parse(evt.args.metadata);
 
@@ -488,7 +487,7 @@ export async function getCommunityInformation (communityId) {
 export async function getTreasuryInformation (vaultAddress) {
   // xxx
   const { habitat } = await getProviders();
-  const logs = await doQuery('VaultCreated', null, null, vaultAddress);
+  const logs = await doQueryWithOptions({ maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
   const evt = habitat.interface.parseLog(logs[logs.length - 1]);
   const metadata = JSON.parse(evt.args.metadata);
 
@@ -550,11 +549,9 @@ export async function getErc20Exit (tokenAddr, accountAddr) {
 export async function getExitStatus (tokenAddr, accountAddr) {
   // query transfer to zero from finalizedBlock + 1 - latest
   const { habitat, bridge } = await getProviders();
-  const latest = await habitat.provider.getBlockNumber();
   const pending = Number(await bridge.finalizedHeight()) + 1;
   const filter = habitat.filters.TokenTransfer(tokenAddr, accountAddr, ethers.constants.AddressZero);
   filter.fromBlock = pending;
-  filter.toBlock = latest;
 
   let pendingAmount = ethers.BigNumber.from(0);
   const logs = await habitat.provider.send('eth_getLogs', [filter]);
