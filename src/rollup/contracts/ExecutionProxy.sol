@@ -1,18 +1,28 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity >=0.6.2;
 
+import './MetaProxyFactory.sol';
+
 interface IBridge {
   function executionPermit (address vault, bytes32 proposalId) external view returns (bytes32);
 }
 
-contract ExecutionProxy {
+contract ExecutionProxy is MetaProxyFactory {
   /// @notice The contract that ...brrrr... prints permits.
   address public delegate;
   /// @notice keeps track of already executed permits
   mapping (bytes32 => bool) public executed;
 
+  event NewProxyCreated(address addr);
+
   constructor (address _delegate) public {
     delegate = _delegate;
+  }
+
+  // @notice MetaProxy construction via calldata.
+  function create (address vault) external returns (address addr) {
+    addr = MetaProxyFactory._metaProxyFromCalldata();
+    emit NewProxyCreated(addr);
   }
 
   /// @notice Executes a set of contract calls `actions` if there is a valid
