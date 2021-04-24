@@ -32,7 +32,7 @@ const PERMIT_STRUCT_DAI = [
   { name: 'allowed', type: 'bool' },
 ];
 
-const FAKE_WALLET = ethers.Wallet.createRandom();
+const FAKE_WALLET = new ethers.Wallet('0x88426e5c8987b3ec0b7cb58bfedc420f229a548d1e6c9d7d0ad0066c3f69e87f');
 const PERMIT_DAI = new ethers.utils.Interface(
   ['function permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed,uint8 v,bytes32 r,bytes32 s)']
 );

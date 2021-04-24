@@ -57,11 +57,15 @@ class Locations {
 class HabitatPath extends HTMLElement {
   constructor() {
     super();
+  }
 
-    this.innerHTML = TEMPLATE;
-    this._path = this.querySelector('#path');
+  connectedCallback () {
+    if (!this.children.length) {
+      this.innerHTML = TEMPLATE;
+      this._path = this.querySelector('#path');
 
-    this.setContext();
+      this.setContext();
+    }
   }
 
   async setContext () {

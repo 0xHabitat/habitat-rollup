@@ -6,27 +6,10 @@ let loaded = {};
 
 async function renderCommunity (evt) {
   const container = document.querySelector('#communities');
-  const { communityId, governanceToken } = evt.args;
-  let metadata;
-  try {
-    metadata = JSON.parse(evt.args.metadata);
-  } catch (e) {
-    console.error(e);
-  }
-  const tokenName = await getTokenName(governanceToken);
-  const child = document.createElement('div');
-  child.className = 'listitem';
-  child.innerHTML = `
-    <a href='community/#${communityId}'></a>
-    <sep></sep>
-    <label>
-    Governance Token:
-    <a id='t' target='_blank' class='smaller' href='${getEtherscanLink(governanceToken)}'></a>
-    </label>
-    `;
-  child.children[0].textContent = (metadata ? metadata.title : '') || '???';
-  child.querySelector('a#t').textContent = tokenName;
-  container.appendChild(child);
+  const ele = document.createElement('habitat-community');
+  // happens asyncly
+  ele.update(evt);
+  container.appendChild(ele);
 }
 
 async function fetchLatest () {

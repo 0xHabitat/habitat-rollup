@@ -7,8 +7,6 @@
 }
 
 .listitem {
-  min-width: auto;
-  max-width: fit-content;
   margin: 1rem;
   padding: 1rem;
   background: var(--color-bg-item);
