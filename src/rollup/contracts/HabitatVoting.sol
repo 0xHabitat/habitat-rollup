@@ -94,6 +94,44 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     }
   }
 
+  /// @dev Invokes IModule.onCreateProposal(...) on `vault`
+  function _callCreateProposal (
+    address vault,
+    address proposer,
+    uint256 startDate,
+    bytes memory internalActions,
+    bytes memory externalActions
+  ) internal {
+    bytes32 communityId = HabitatBase.communityOfVault(vault);
+    // statistics
+    uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
+    address governanceToken = HabitatBase.tokenOfCommunity(communityId);
+    uint256 totalValueLocked = HabitatBase.getTotalValueLocked(governanceToken);
+    uint256 proposerBalance = HabitatBase.getErc20Balance(governanceToken, proposer);
+    // call vault with all the statistics
+    bytes memory _calldata = abi.encodeWithSelector(
+      0x5e79ee45,
+      communityId,
+      totalMemberCount,
+      totalValueLocked,
+      proposer,
+      proposerBalance,
+      startDate,
+      internalActions,
+      externalActions
+    );
+    uint256 MAX_GAS = 90000;
+    address vaultCondition = _getVaultCondition(vault);
+    assembly {
+      let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 0)
+      // revert and forward any returndata
+      if iszero(success) {
+        returndatacopy(0, 0, returndatasize())
+        revert(0, returndatasize())
+      }
+    }
+  }
+
   /// xxx: change this to support the convention: community > (vault w/ condition). {proposal,vote,finalize}
   /// todo
   /// internal transfers
@@ -124,6 +162,8 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
 
     // assuming startDate is never 0 (see validateTimestamp) then this should suffice
     require(proposalStartDate(proposalId) == 0, 'EXISTS');
+
+    _callCreateProposal(vault, msgSender, startDate, internalActions, externalActions);
 
     // store
     HabitatBase._setProposalStartDate(proposalId, startDate);

@@ -9,6 +9,17 @@ interface IModule {
     PASSED
   }
 
+  function onCreateProposal (
+    bytes32 communityId,
+    uint256 totalMemberCount,
+    uint256 totalValueLocked,
+    address proposer,
+    uint256 proposerBalance,
+    uint256 startDate,
+    bytes calldata internalActions,
+    bytes calldata externalActions
+  ) external view;
+
   function onProcessProposal (
     bytes32 proposalId,
     bytes32 communityId,
