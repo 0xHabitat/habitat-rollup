@@ -82,8 +82,9 @@ async function main () {
   //
   let initd = false;
   let bridgeL1, execProxy, erc20, oneShareOneVote;
-  const configPath = './._simple';
-  if (fs.existsSync(configPath)) {
+  const configPath = process.argv[2];
+  console.log(configPath);
+  if (configPath && fs.existsSync(configPath)) {
     initd = true;
     const config = JSON.parse(fs.readFileSync(configPath));
     bridgeL1 = new ethers.Contract(config.bridgeL1, HabitatV1Testnet.abi, wallet);
