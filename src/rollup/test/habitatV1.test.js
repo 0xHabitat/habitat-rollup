@@ -36,6 +36,8 @@ describe('HabitatV1', async function () {
     ExecutionTest,
     OneShareOneVote,
     RollupProxy,
+    SevenDayVoting,
+    FeatureFarmSignaling,
   } = Artifacts;
   const { rootProvider, alice, bob, charlie } = getDefaultWallets();
   let bridge;
@@ -73,7 +75,7 @@ describe('HabitatV1', async function () {
     executionProxy = await deploy(ExecutionProxy, alice, bridge.address);
     executionTestContract = await deploy(ExecutionTest, alice, executionProxy.address);
 
-    for (const condition of [OneShareOneVote]) {
+    for (const condition of [OneShareOneVote, SevenDayVoting, FeatureFarmSignaling]) {
       const bytecode = getDeployCode(condition.deployedBytecode);
       conditions[condition.contractName] = (await deploy({ bytecode, abi: [] }, alice)).address;
     }
@@ -342,10 +344,10 @@ describe('HabitatV1', async function () {
         await assert.rejects(createTransaction('ActivateModule', args, alice, habitat), /HASH/);
       });
 
-      it('submit OneShareOneVote module', async () => {
+      it('submit SevenDayVoting module', async () => {
         const expectRevert = !!vaultCondition;
 
-        vaultCondition = conditions.OneShareOneVote;
+        vaultCondition = conditions.SevenDayVoting;
         const args = {
           contractAddress: vaultCondition,
           metadata: '{}',
@@ -363,7 +365,7 @@ describe('HabitatV1', async function () {
         assert.equal(evt.contractAddress, args.contractAddress);
       });
 
-      it('activate OneShareOneVote', async () => {
+      it('activate SevenDayVoting', async () => {
         const args = {
           communityId,
           condition: vaultCondition,
@@ -398,9 +400,9 @@ describe('HabitatV1', async function () {
       it('create proposal for first vault', async () => {
         // token transfer
         internalActions = encodeInternalProposalActions(['0x01', erc20.address, charlie.address, '0xfa']);
-
         const args = {
-          startDate: ~~(Date.now() / 1000) - 2,
+          // almost seven days
+          startDate: ~~(Date.now() / 1000) - ((3600*24*7) - 3),
           vault,
           internalActions,
           externalActions,
@@ -432,7 +434,7 @@ describe('HabitatV1', async function () {
         const args = {
           proposalId,
           signalStrength: 100,
-          shares: 0xff,
+          shares: 0xffffff00,
           timestamp: ~~(Date.now() / 1000),
           delegatedFor: ethers.constants.AddressZero,
         };
@@ -447,7 +449,7 @@ describe('HabitatV1', async function () {
         const args = {
           proposalId,
           signalStrength: 100,
-          shares: 0xff,
+          shares: 0xffffff00,
           timestamp: ~~(Date.now() / 1000),
           delegatedFor: alice.address,
         };
@@ -456,6 +458,26 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.account, alice.address);
+      });
+
+      it('process proposal - should still be open', async () => {
+        const args = {
+          proposalId,
+          internalActions,
+          externalActions,
+        };
+        const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
+        assert.equal(receipt.status, '0x1');
+        assert.equal(receipt.logs.length, 1);
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(Number(evt.votingStatus), 1);
+      });
+
+      // we are submitting this block to avoid time-based errors later in the timestamp checks
+      it('submitBlock', () => submitBlock(bridge, rootProvider, habitatNode));
+
+      it('sleep', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       });
 
       it('process proposal - should revert, vault has no balance', async () => {

@@ -12,7 +12,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
 
   /// @dev Validates if `timestamp` is inside a valid range.
   /// `timestamp` should not be under/over now +- `PROPOSAL_DELAY`.
-  function _validateTimestamp (uint256 timestamp) internal {
+  function _validateTimestamp (uint256 timestamp) internal virtual {
     uint256 time = RollupCoreBrick._getTime();
     uint256 delay = PROPOSAL_DELAY();
     require(
@@ -301,7 +301,8 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     votingStatus = _callProcessProposal(proposalId, vault);
 
     // update proposal status (if needed)
-    if (votingStatus != 0 && votingStatus != previousVotingStatus) {
+    //if (votingStatus != 0 && votingStatus != previousVotingStatus) {
+    {
       HabitatBase._setProposalStatus(proposalId, votingStatus);
 
       // PASSED

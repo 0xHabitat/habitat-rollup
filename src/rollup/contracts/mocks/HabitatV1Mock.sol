@@ -11,4 +11,7 @@ contract HabitatV1Mock is HabitatV1 {
   function INSPECTION_PERIOD () public view virtual override returns (uint16) {
     return 10;
   }
+
+  function _validateTimestamp (uint256 timestamp) internal override {
+  }
 }
