@@ -15,7 +15,7 @@ Governance Token:
 </div>
 `;
 
-class HabitatCommunity extends HTMLElement {
+export default class HabitatCommunity extends HTMLElement {
   constructor() {
     super();
   }

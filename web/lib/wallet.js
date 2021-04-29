@@ -28,7 +28,7 @@ import {
 
 import './colorSchemeToggle.js';
 import './slider.js';
-import './circle.js';
+import './HabitatCircle.js';
 import './HabitatPath.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 

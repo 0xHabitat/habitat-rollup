@@ -54,7 +54,7 @@ class Locations {
   }
 }
 
-class HabitatPath extends HTMLElement {
+export default class HabitatPath extends HTMLElement {
   constructor() {
     super();
   }

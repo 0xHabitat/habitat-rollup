@@ -8,7 +8,7 @@ const TEMPLATE =
 </div>
 `;
 
-class HabitatCircle extends HTMLElement {
+export default class HabitatCircle extends HTMLElement {
   constructor() {
     super();
 
