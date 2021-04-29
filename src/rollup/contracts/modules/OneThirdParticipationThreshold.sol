@@ -3,7 +3,7 @@ pragma solidity >=0.6.2;
 
 import '../IModule.sol';
 
-contract OneShareOneVote is IModule {
+contract OneThirdParticipationThreshold is IModule {
   function onCreateProposal (
     bytes32 communityId,
     uint256 totalMemberCount,
@@ -15,9 +15,9 @@ contract OneShareOneVote is IModule {
     bytes calldata externalActions
   ) external view override
   {
-    // need at least 0.333..%
+    uint256 minProposerBalance = totalValueLocked / 10000;
     require(
-      proposerBalance > 0 && ((totalValueLocked / totalMemberCount) / proposerBalance) <= 300,
+      proposerBalance >= minProposerBalance,
       'Not enough balance'
     );
   }

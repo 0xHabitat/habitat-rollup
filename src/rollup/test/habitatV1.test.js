@@ -34,8 +34,8 @@ describe('HabitatV1', async function () {
     TestERC20,
     TestERC721,
     ExecutionTest,
-    OneShareOneVote,
     RollupProxy,
+    OneThirdParticipationThreshold,
     SevenDayVoting,
     FeatureFarmSignaling,
   } = Artifacts;
@@ -75,7 +75,7 @@ describe('HabitatV1', async function () {
     executionProxy = await deploy(ExecutionProxy, alice, bridge.address);
     executionTestContract = await deploy(ExecutionTest, alice, executionProxy.address);
 
-    for (const condition of [OneShareOneVote, SevenDayVoting, FeatureFarmSignaling]) {
+    for (const condition of [OneThirdParticipationThreshold, SevenDayVoting, FeatureFarmSignaling]) {
       const bytecode = getDeployCode(condition.deployedBytecode);
       conditions[condition.contractName] = (await deploy({ bytecode, abi: [] }, alice)).address;
     }

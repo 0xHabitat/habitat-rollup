@@ -73,7 +73,7 @@ async function main () {
   const HabitatV1Testnet = JSON.parse(fs.readFileSync('./build/contracts/HabitatV1Testnet.json'));
   const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
   const ERC20 = JSON.parse(fs.readFileSync('./build/contracts/TestERC20.json'));
-  const OneShareOneVote = JSON.parse(fs.readFileSync('./build/contracts/OneShareOneVote.json'));
+  const OneThirdParticipationThreshold = JSON.parse(fs.readFileSync('./build/contracts/OneThirdParticipationThreshold.json'));
   const RollupProxy = JSON.parse(fs.readFileSync('./build/contracts/RollupProxy.json'));
   //
   const rootRpcUrl = process.env.ROOT_RPC_URL;
@@ -81,7 +81,7 @@ async function main () {
   const wallet = new ethers.Wallet(privKey, rootProvider);
   //
   let initd = false;
-  let bridgeL1, execProxy, erc20, oneShareOneVote;
+  let bridgeL1, execProxy, erc20, votingModule;
   const configPath = process.argv[2];
   console.log(configPath);
   if (configPath && fs.existsSync(configPath)) {
@@ -90,19 +90,19 @@ async function main () {
     bridgeL1 = new ethers.Contract(config.bridgeL1, HabitatV1Testnet.abi, wallet);
     execProxy = new ethers.Contract(config.execProxy, ExecutionProxy.abi, wallet);
     erc20 = new ethers.Contract(config.erc20, ERC20.abi, wallet);
-    oneShareOneVote = new ethers.Contract(config.oneShareOneVote, OneShareOneVote.abi, wallet);
+    votingModule = new ethers.Contract(config.votingModule, OneThirdParticipationThreshold.abi, wallet);
   } else {
     const implementation = await deploy(HabitatV1Testnet, [], wallet);
     const proxy = await deploy(RollupProxy, [implementation.address], wallet);
     bridgeL1 = new ethers.Contract(proxy.address, HabitatV1Testnet.abi, wallet);
     execProxy = await deploy(ExecutionProxy, [bridgeL1.address], wallet);
     erc20 = await deploy(ERC20, [], wallet);
-    oneShareOneVote = await deploy({ bytecode: getDeployCode(OneShareOneVote.deployedBytecode), abi: [] }, [], wallet);
+    votingModule = await deploy({ bytecode: getDeployCode(OneThirdParticipationThreshold.deployedBytecode), abi: [] }, [], wallet);
     const config = {
       bridgeL1: bridgeL1.address,
       execProxy: execProxy.address,
       erc20: erc20.address,
-      oneShareOneVote: oneShareOneVote.address,
+      votingModule: votingModule.address,
     }
     fs.writeFileSync(configPath, JSON.stringify(config));
   }
@@ -149,7 +149,7 @@ async function main () {
 
   {
     // register modules
-    for (const [name, addr] of [['One Share One Vote', oneShareOneVote.address]]) {
+    for (const [name, addr] of [['One Share One Vote', votingModule.address]]) {
       const args = {
         contractAddress: addr,
         metadata: JSON.stringify({ name }),
@@ -170,13 +170,13 @@ async function main () {
 
       args = {
         communityId,
-        condition: oneShareOneVote.address,
+        condition: votingModule.address,
       };
       tmp = await sendTransaction('ActivateModule', args, wallet, bridgeL2);
 
       args = {
         communityId,
-        condition: oneShareOneVote.address,
+        condition: votingModule.address,
         metadata: JSON.stringify({ title: `Treasure Chest` }),
       };
       tmp = await sendTransaction('CreateVault', args, wallet, bridgeL2);
