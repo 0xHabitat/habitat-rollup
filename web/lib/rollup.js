@@ -653,3 +653,35 @@ export async function simulateProcessProposal ({ proposalId, internalActions, ex
 
   return votingStatus;
 }
+
+export function getDeployCode (codeStr) {
+  let ret = codeStr;
+  // cut after the last match of the INVALID opcode
+  const i = ret.lastIndexOf('fe');
+  if (i !== -1) {
+    ret = ret.substring(0, i + 2);
+  }
+
+  // PUSH1 11;
+  // CODESIZE;
+  // SUB;
+  // DUP1;
+  // PUSH1 11;
+  // RETURNDATASIZE;
+  // CODECOPY;
+  // RETURNDATASIZE;
+  // RETURN;
+  const DEPLOY_CODE = '0x600b380380600b3d393df3';
+  return ret.replace('0x', DEPLOY_CODE);
+}
+
+export async function deployModule (deployedBytecode) {
+  const bytecode = getDeployCode(deployedBytecode);
+  const signer = await getSigner();
+  const _factory = new ethers.ContractFactory([], bytecode, signer);
+  const contract = await _factory.deploy();
+
+  await contract.deployTransaction.wait();
+
+  return contract;
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='referrer' content='no-referrer'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/base.css'>
+    <link rel='stylesheet' type='text/css' href='/lib/assets/assets.css'>
+    <link rel='stylesheet' type='text/css' href='index.css'>
+    <link rel='icon' type='image/png' href='/lib/assets/logo.png'>
+    <link rel='apple-touch-icon' href='/lib/assets/logo.png'>
+    <meta name='twitter:card' content='summary_large_image'>
+    <meta name='twitter:site' content='@0xHabitat'>
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='https://0xhabitat.org'>
+    <meta property='og:description' content='Scaling communities with Rollup technology.'>
+    <meta property='og:image' content='/lib/assets/preview.jpg'>
+    <meta property='og:title' content='Habitat - Module Submission'>
+    <title>Habitat - Module Submission</title>
+    <script src='/lib/common.js'></script>
+    <script type='module' src='/lib/gradient.js'></script>
+    <script type='module' src='/lib/wallet.js'></script>
+    <script type='module' src='/lib/menu.js'></script>
+    <script type='module' src='/lib/slider.js'></script>
+    <script type='module' src='/lib/HabitatPath.js'></script>
+    <script type='module' src='index.js'></script>
+  </head>
+  <body>
+    <habitat-gradient></habitat-gradient>
+    <habitat-nav></habitat-nav>
+    <habitat-path class='bgwhite'></habitat-path>
+    <habitat-menu></habitat-menu>
+    <section class='content'>
+      <section style='z-index:9;transform: translateZ(0)'>
+       <section class='bgwhite padh padv flex col center'>
+         <div style='width:80ch;max-width:100%;'>
+           <h1>Submit a Module</h1>
+           <space></space>
+           <section id='propose'>
+             <label>
+               Please provide the Solidity Standard JSON build artefact of the contract.
+               <input type='file' id='json' accept='application/json'>
+             </label>
+             <label>
+               Title - What's the name of this Module
+               <input type='text' id='title'></input>
+             </label>
+             <space></space>
+             <label>
+               A helpful description what this module does and how.
+               <textarea placeholder='...'></textarea>
+             </label>
+             <space></space>
+
+             <div id='actions' class='left'>
+               <h1>Looks good?</h1>
+               <button id='submit'>Submit</button>
+             </div>
+           </section>
+         </div>
+       </section>
+      </section>
+    </section>
+  </body>
+</html>
