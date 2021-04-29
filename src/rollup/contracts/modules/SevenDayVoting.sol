@@ -43,7 +43,6 @@ contract SevenDayVoting is IModule {
     if (secondsPassed < 604800) {
       return VotingStatus.OPEN;
     }
-    //require(secondsPassed >= 604800, 'MIN_TIME');
 
     uint256 minQuorum = totalValueLocked / 10;
     if (totalVotingShares < minQuorum) {
