@@ -13,12 +13,13 @@ contract HabitatWallet is HabitatBase {
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
     // xxx check under/overflows
     if (from != to) {
-      if (TokenBridgeBrick.isERC721(token, value)) {
+      bool isERC721 = TokenBridgeBrick.isERC721(token, value);
+
+      if (isERC721) {
         require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
         HabitatBase._setErc721Owner(token, value, to);
         if (to == address(0)) {
           TokenInventoryBrick._setERC721Exit(token, from, value);
-          HabitatBase._decrementTotalValueLocked(token, 1);
         }
       } else {
         uint256 tmp = HabitatBase.getErc20Balance(token, from);
@@ -27,11 +28,26 @@ contract HabitatWallet is HabitatBase {
 
         if (to == address(0)) {
           TokenInventoryBrick._incrementExit(token, from, value);
-          HabitatBase._decrementTotalValueLocked(token, value);
         } else {
           tmp = HabitatBase.getErc20Balance(token, to);
           require(tmp + value > tmp);
           HabitatBase._setErc20Balance(token, to, tmp + value);
+        }
+      }
+      {
+        // TVL
+        bool fromVault = HabitatBase.vaultCondition(from) != address(0);
+        bool toVault = !fromVault && HabitatBase.vaultCondition(to) != address(0);
+        uint256 totalValueChange = isERC721 ? 1 : value;
+
+        // transfer from vault to vault
+        // exits (to == 0)
+        // transfer from user to vault
+        // transfer from vault to user
+        if (toVault || !fromVault && to == address(0)) {
+          HabitatBase._decrementTotalValueLocked(token, totalValueChange);
+        } else if (fromVault) {
+          HabitatBase._incrementTotalValueLocked(token, totalValueChange);
         }
       }
     }
@@ -44,16 +60,24 @@ contract HabitatWallet is HabitatBase {
     HabitatBase._commonChecks();
 
     // xxx check under/overflows
-    if (TokenBridgeBrick.isERC721(token, value)) {
+    bool isERC721 = TokenBridgeBrick.isERC721(token, value);
+
+    if (isERC721) {
       HabitatBase._setErc721Owner(token, value, owner);
-      HabitatBase._incrementTotalValueLocked(token, 1);
     } else {
       uint256 oldBalance = HabitatBase.getErc20Balance(token, owner);
       uint256 newBalance = oldBalance + value;
       require(newBalance >= oldBalance);
 
       HabitatBase._setErc20Balance(token, owner, newBalance);
-      HabitatBase._incrementTotalValueLocked(token, value);
+    }
+
+    // TVL
+    {
+      bool notAVault = HabitatBase.vaultCondition(owner) == address(0);
+      if (notAVault) {
+        HabitatBase._incrementTotalValueLocked(token, isERC721 ? 1 : value);
+      }
     }
 
     emit TokenTransfer(token, address(0), owner, value);

@@ -497,6 +497,8 @@ describe('HabitatV1', async function () {
         };
         const { txHash, receipt } = await createTransaction('TransferToken', args, alice, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
+        // transfer from user to vault
+        cumulativeDeposits -= 0xffn;
       });
 
       it('process proposal - should revert, invalid internalActons', async () => {
@@ -537,6 +539,9 @@ describe('HabitatV1', async function () {
           const evt = habitat.interface.parseLog(receipt.logs[1]).args;
           assert.equal(Number(evt.votingStatus), 3);
         }
+
+        // transfer from vault to user
+        cumulativeDeposits += 0xfan;
       });
     });
   }
