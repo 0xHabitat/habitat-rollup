@@ -90,7 +90,6 @@ async function main () {
     bridgeL1 = new ethers.Contract(config.bridgeL1, HabitatV1Testnet.abi, wallet);
     execProxy = new ethers.Contract(config.execProxy, ExecutionProxy.abi, wallet);
     erc20 = new ethers.Contract(config.erc20, ERC20.abi, wallet);
-    votingModule = new ethers.Contract(config.votingModule, OneThirdParticipationThreshold.abi, wallet);
   } else {
     const implementation = await deploy(HabitatV1Testnet, [], wallet);
     const proxy = await deploy(RollupProxy, [implementation.address], wallet);

@@ -418,7 +418,7 @@ img.minmax {
   font-size: 1rem;
 }
 
-.item, .listitem {
+.item {
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 3px;
   padding: 1rem;
@@ -426,6 +426,19 @@ img.minmax {
   background-color: var(--color-bg);
   width: auto;
   max-width: 80ch;
+}
+
+.listitem {
+  min-width: auto;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1rem;
+  padding: 1rem;
+  background: var(--color-bg-item);
+  border: 1px solid #C4C4C4;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  animation: opacity .3s ease-in;
 }
 
 /*
