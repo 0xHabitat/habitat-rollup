@@ -43,6 +43,7 @@ const ACCOUNT_ERC20_TEMPLATE =
 `
 <a target='_blank'></a>
 <p></p>
+<p></p>
 <button id='_transfer' class='secondary purple'>Transfer</button>
 <button id='_withdraw' class='secondary purple'>Withdraw</button>
 <button id='_fastWithdraw' class='secondary purple' disabled>Fast Withdraw</button>
@@ -77,6 +78,9 @@ const ACCOUNT_TEMPLATE =
   display:grid;
   gap:1rem;
   grid-template-columns:repeat(5, auto);
+}
+#erc20 > div {
+  grid-template-columns:repeat(6, auto);
 }
 #history > div {
   grid-template-columns:repeat(6, auto);
@@ -184,9 +188,11 @@ async function updateErc20 () {
       const erc = await getErc20(token);
       const balance = await habitat.getErc20Balance(token, account);
       const tokenName = await getTokenName(token);
+      const stakedBalance = await habitat.getActiveVotingStake(token, account);
       children[childPtr].textContent = tokenName;
       children[childPtr++].href = getEtherscanTokenLink(token, account);
       children[childPtr++].textContent = renderAmount(balance, erc._decimals);
+      children[childPtr++].textContent = `${renderAmount(stakedBalance, erc._decimals)} Staked`;
       // transfer
       wrapListener(children[childPtr++], (evt) => new TransferFlow(document.querySelector('button#transfer'), { callback, token }));
       // withdraw

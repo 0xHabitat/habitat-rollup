@@ -438,11 +438,18 @@ describe('HabitatV1', async function () {
           timestamp: ~~(Date.now() / 1000),
           delegatedFor: ethers.constants.AddressZero,
         };
+        const previousStake = await habitat.getActiveVotingStake(erc20.address, alice.address);
         const { txHash, receipt } = await createTransaction('VoteOnProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.account, alice.address);
+        assert.equal(evt.account, alice.address, 'account');
+
+        {
+          // check stake
+          const stake = await habitat.getActiveVotingStake(erc20.address, evt.account);
+          assert.equal(stake.toString(), previousStake.add(args.shares).toString(), 'stake');
+        }
       });
 
       it('bob: vote on proposal as a delegate for alice', async () => {
@@ -453,11 +460,19 @@ describe('HabitatV1', async function () {
           timestamp: ~~(Date.now() / 1000),
           delegatedFor: alice.address,
         };
+        const previousStake = await habitat.getActiveVotingStake(erc20.address, args.delegatedFor);
         const { txHash, receipt } = await createTransaction('VoteOnProposal', args, bob, habitat);
         assert.equal(receipt.status, '0x1');
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.account, alice.address);
+
+        {
+          // check stake
+          const stake = await habitat.getActiveVotingStake(erc20.address, evt.account);
+          // only replaces the vote with the same amount, should have the same stake
+          assert.equal(stake.toString(), previousStake.toString(), 'stake');
+        }
       });
 
       it('process proposal - should still be open', async () => {

@@ -190,8 +190,10 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    require(signalStrength > 0 && signalStrength < 101);
+    // requires that the signal is in a specific range...
+    require(signalStrength > 0 && signalStrength < 101, 'SIGNAL');
 
+    // voter account
     address account = msgSender;
     if (delegatedFor != address(0)) {
       require(HabitatBase.accountDelegate(delegatedFor) == msgSender, 'DELEGATE');
@@ -221,12 +223,17 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._setVote(proposalId, account, shares);
     HabitatBase._setVoteSignal(proposalId, account, signalStrength);
 
-    // update total share count
+    // xxx check for discrepancy between balance and stake
+    // update total share count and staking amount
     uint256 t = HabitatBase.getTotalVotingShares(proposalId);
     if (previousVote >= shares) {
-      HabitatBase._setTotalVotingShares(proposalId, t - (previousVote - shares));
+      uint256 delta = previousVote - shares;
+      HabitatBase._setTotalVotingShares(proposalId, t - delta);
+      HabitatBase._decrementActiveVotingStake(token, account, delta);
     } else {
-      HabitatBase._setTotalVotingShares(proposalId, t + (shares - previousVote));
+      uint256 delta = shares - previousVote;
+      HabitatBase._setTotalVotingShares(proposalId, t + delta);
+      HabitatBase._incrementActiveVotingStake(token, account, delta);
     }
 
     uint256 totalSignal = HabitatBase.getTotalVotingSignal(proposalId);

@@ -12,6 +12,7 @@ contract HabitatWallet is HabitatBase {
   /// @dev State transition when a user transfers a token.
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
     // xxx check under/overflows
+    // take getActiveVotingStake() into account
     if (from != to) {
       bool isERC721 = TokenBridgeBrick.isERC721(token, value);
 

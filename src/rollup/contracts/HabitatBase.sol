@@ -628,4 +628,36 @@ contract HabitatBase is TokenBridgeBrick, UtilityBrick {
     bytes32 key = bytes32(_EXECUTION_PERMIT_KEY(vault, proposalId));
     RollupStorage._setStorageL1(key, uint256(hash));
   }
+
+  function _VOTING_ACTIVE_STAKE_KEY (address token, address account) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x2a8a915836beef625eda7be8c32e4f94152e89551893f0eae870e80cab73c496)
+      mstore(32, token)
+      mstore(64, account)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  function getActiveVotingStake (address token, address account) public view returns (uint256 ret) {
+    uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  function _incrementActiveVotingStake (address token, address account, uint256 val) internal {
+    uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
+    assembly {
+      sstore(key, add( sload(key), val ))
+    }
+  }
+
+  function _decrementActiveVotingStake (address token, address account, uint256 val) internal {
+    uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
+    assembly {
+      sstore(key, sub( sload(key), val ))
+    }
+  }
 }
