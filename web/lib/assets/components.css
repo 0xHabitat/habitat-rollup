@@ -38,3 +38,19 @@ habitat-circle {
 habitat-circle.signal {
   --circle-gradient: #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 57%;
 }
+
+#labels > p {
+  border: 1px solid;
+  border-radius: 1rem;
+  padding: .2rem;
+  margin: 0 .3rem 0 0;
+  font-size: .7rem;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+#labels {
+  display: flex;
+  flex-direction: row;
+  margin: .5rem 0;
+}

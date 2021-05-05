@@ -23,6 +23,7 @@ import {
   VotingStatus,
   simulateProcessProposal,
   fetchIssue,
+  renderLabels,
 } from '/lib/rollup.js';
 
 const CIRCLES = `
@@ -128,6 +129,8 @@ async function render () {
 
   document.querySelector('#visitVault').href = `../vault/#${tx.message.vault},${communityId}`;
   {
+    renderLabels(metadata.labels || [], document.querySelector('#labels'));
+
     const titleElement = document.querySelector('#title');
     const bodyElement = document.querySelector('#proposal');
 

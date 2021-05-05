@@ -8,6 +8,7 @@ import {
   submitVote,
   VotingStatus,
   humanProposalTime,
+  renderLabels,
 } from './rollup.js';
 import HabitatCircle from '/lib/HabitatCircle.js';
 
@@ -59,11 +60,12 @@ export default class HabitatProposal extends HTMLElement {
   async update (evt) {
     this.init();
 
-    const { proposalId, startDate, metadata, vault } = evt.args;
+    const { proposalId, startDate, vault } = evt.args;
+    let metadata = {};
     let title = '???';
     try {
-      const obj = JSON.parse(metadata);
-      title = obj.title || title;
+      metadata = JSON.parse(evt.args.metadata);
+      title = metadata.title || title;
     } catch (e) {
       console.warn(e);
     }
@@ -76,6 +78,10 @@ export default class HabitatProposal extends HTMLElement {
       titleElement.textContent = title;
       titleElement.href = proposalLink;
       this.querySelector('#open').href = proposalLink;
+    }
+    {
+      const labels = metadata.labels || [];
+      renderLabels(labels, this.querySelector('#labels'));
     }
 
     const { habitat } = await getProviders();

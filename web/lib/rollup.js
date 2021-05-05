@@ -695,3 +695,13 @@ export async function fetchIssue (url) {
 
   return issue;
 }
+
+export async function renderLabels (labels, labelContainer) {
+  labelContainer.innerHTML = '';
+  for (const label of labels) {
+    const tmp = document.createElement('p');
+    tmp.textContent = label.name;
+    tmp.style['border-color'] = `#${label.color}`;
+    labelContainer.appendChild(tmp);
+  }
+}

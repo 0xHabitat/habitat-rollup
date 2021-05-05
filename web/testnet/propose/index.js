@@ -5,6 +5,7 @@ import {
   encodeInternalProposalActions,
   fetchVaultInformation,
   fetchIssue,
+  renderLabels,
 } from '/lib/rollup.js';
 import {
   getErc20,
@@ -19,7 +20,7 @@ import {
   AddTransferFlow,
 } from '/lib/flows.js';
 
-let vaultAddress, communityId;
+let vaultAddress, communityId, githubIssue;
 const externalActions = [];
 const internalActions = [];
 
@@ -63,6 +64,7 @@ async function doSubmit (evt) {
   const actions = document.querySelector('.actions');
   const inputs = document.querySelectorAll('button input textarea');
   const src = document.querySelector('input#url').value;
+  const labels = [];
   let title = '';
   let details = '';
 
@@ -77,10 +79,14 @@ async function doSubmit (evt) {
     }
   }
   // github
-  {
+  if (githubIssue) {
     const titleSrc = container.querySelector('h1#title');
     if (titleSrc) {
       title = titleSrc.textContent;
+    }
+
+    for (const label of githubIssue.labels) {
+      labels.push({ name: label.name, color: label.color });
     }
   }
 
@@ -95,7 +101,7 @@ async function doSubmit (evt) {
       vault: vaultAddress,
       externalActions: encodeExternalProposalActions(externalActions),
       internalActions: encodeInternalProposalActions(internalActions),
-      metadata: JSON.stringify({ title, details, src }),
+      metadata: JSON.stringify({ title, details, src, labels }),
     };
     const receipt = await sendTransaction('CreateProposal', args);
     window.location.href = `../proposal/#${receipt.transactionHash}`;
@@ -110,9 +116,12 @@ async function renderIssue (evt) {
   const url = evt.target.value;
   const issue = await fetchIssue(url);
 
+  // cache
+  githubIssue = issue;
   document.querySelector('#title').textContent = issue.title;
   // xxx: consider using an iframe for embedding
   document.querySelector('#body').innerHTML = issue.body_html;
+  renderLabels(issue.labels, document.querySelector('#labels'));
 }
 
 async function render () {
