@@ -4,6 +4,7 @@ import {
   encodeExternalProposalActions,
   encodeInternalProposalActions,
   fetchVaultInformation,
+  fetchIssue,
 } from '/lib/rollup.js';
 import {
   getErc20,
@@ -59,10 +60,29 @@ async function addAction (obj) {
 async function doSubmit (evt) {
   const { habitat, rootProvider } = await getProviders();
   const container = document.querySelector('#propose');
-  const input = container.querySelector('input');
-  const textarea = container.querySelector('textarea');
   const actions = document.querySelector('.actions');
   const inputs = document.querySelectorAll('button input textarea');
+  const src = document.querySelector('input#url').value;
+  let title = '';
+  let details = '';
+
+  {
+    const titleSrc = container.querySelector('input#title');
+    if (titleSrc) {
+      title = titleSrc.value;
+    }
+    const textarea = container.querySelector('textarea');
+    if (textarea) {
+      details = textarea.value;
+    }
+  }
+  // github
+  {
+    const titleSrc = container.querySelector('h1#title');
+    if (titleSrc) {
+      title = titleSrc.textContent;
+    }
+  }
 
   for (const ele of inputs) {
     ele.disabled = true;
@@ -75,7 +95,7 @@ async function doSubmit (evt) {
       vault: vaultAddress,
       externalActions: encodeExternalProposalActions(externalActions),
       internalActions: encodeInternalProposalActions(internalActions),
-      metadata: JSON.stringify({ title: input.value, details: textarea.value }),
+      metadata: JSON.stringify({ title, details, src }),
     };
     const receipt = await sendTransaction('CreateProposal', args);
     window.location.href = `../proposal/#${receipt.transactionHash}`;
@@ -86,9 +106,19 @@ async function doSubmit (evt) {
   }
 }
 
+async function renderIssue (evt) {
+  const url = evt.target.value;
+  const issue = await fetchIssue(url);
+
+  document.querySelector('#title').textContent = issue.title;
+  // xxx: consider using an iframe for embedding
+  document.querySelector('#body').innerHTML = issue.body_html;
+}
+
 async function render () {
   [vaultAddress, communityId] = window.location.hash.replace('#', '').split(',');
 
+  wrapListener('input#url', renderIssue, 'change');
   wrapListener('button#submit', doSubmit);
   wrapListener('button#execution', (evt) => new AddExecutionFlow(evt.target, { callback: addAction }));
   wrapListener('button#transfer', (evt) => new AddTransferFlow(evt.target, { callback: addAction }));

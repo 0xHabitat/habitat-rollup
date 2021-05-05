@@ -1,1 +1,5 @@
 /* custom page styles goes here */
+
+#body * {
+  padding: .5rem 0;
+}

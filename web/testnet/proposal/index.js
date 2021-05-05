@@ -22,6 +22,7 @@ import {
   submitVote,
   VotingStatus,
   simulateProcessProposal,
+  fetchIssue,
 } from '/lib/rollup.js';
 
 const CIRCLES = `
@@ -126,8 +127,35 @@ async function render () {
   proposalId = proposalEvent.args.proposalId;
 
   document.querySelector('#visitVault').href = `../vault/#${tx.message.vault},${communityId}`;
-  document.querySelector('#title').textContent = tx.message.title;
-  document.querySelector('#proposal').textContent = metadata.details || '<no information>';
+  {
+    const titleElement = document.querySelector('#title');
+    const bodyElement = document.querySelector('#proposal');
+
+    titleElement.textContent = metadata.title || '<no title>';
+    // proposal body
+    if (metadata.src) {
+      try {
+        const issue = await fetchIssue(metadata.src);
+        // xxx: consider using an iframe for embedding
+        bodyElement.innerHTML = issue.body_html;
+        // update title
+        titleElement.textContent = issue.title;
+
+        // add link to issue
+        const link = document.createElement('a');
+        link.target = '_blank';
+        link.href = metadata.src;
+        link.className = 'button secondary purple smaller';
+        link.textContent = metadata.src;
+        document.querySelector('#container').insertBefore(link, bodyElement.parentElement);
+      } catch (e) {
+        console.warn(e);
+      }
+    } else {
+      const details = metadata.details || '<no information>';
+      bodyElement.textContent = details;
+    }
+  }
 
   const internalActions = decodeInternalProposalActions(tx.message.internalActions);
   const externalActions = decodeExternalProposalActions(tx.message.externalActions);

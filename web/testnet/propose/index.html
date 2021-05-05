@@ -33,19 +33,29 @@
     <section class='content'>
       <section style='z-index:9;transform: translateZ(0)'>
        <section class='bgwhite padh padv flex col center'>
-         <div style='width:80ch;max-width:100%;'>
+         <div style='width:80ch;max-width:100%;min-height:100vh;'>
            <h1>Create a Proposal</h1>
            <h6 class='left' id='vaultName'> </h6>
            <space></space>
            <section id='propose'>
              <label>
-               Title of this Proposal
-               <input type='text' id='title'></input>
+               GitHub Issue Link
+               <input type='text' id='url'></input>
              </label>
-             <space></space>
+             <label>
+               Title of this Proposal
+               <!--
+               <input type='text' id='title'></input>
+               -->
+               <h1 id='title'> </h1>
+               <sep></sep>
+             </label>
              <label>
                The body of your proposal
+               <!--
                <textarea placeholder='Your proposal goes here...'></textarea>
+               -->
+               <div id='body'></div>
              </label>
              <space></space>
 
@@ -67,6 +77,7 @@
                <h1>Looks good?</h1>
                <button id='submit'>Submit</button>
              </div>
+             <space></space>
            </section>
          </div>
        </section>
