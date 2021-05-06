@@ -106,14 +106,14 @@ describe('HabitatV1', async function () {
         await (await erc20.connect(signer).approve(bridge.address, depositAmount)).wait();
 
         const oldBlock = await habitatNode.getBlockNumber();
-        const oldBalance = await habitat.getErc20Balance(erc20.address, user);
+        const oldBalance = await habitat.getBalance(erc20.address, user);
 
         const tx = await bridge.connect(signer).deposit(erc20.address, depositAmount, await signer.getAddress());
         const receipt = await tx.wait();
 
         await waitForValueChange(oldBlock, () => habitatNode.getBlockNumber());
 
-        const newBalance = await habitat.getErc20Balance(erc20.address, user);
+        const newBalance = await habitat.getBalance(erc20.address, user);
         assert.equal(newBalance.toString(), oldBalance.add(depositAmount).toString(), 'token balance should match');
         cumulativeDeposits += BigInt(depositAmount);
         assert.equal((await habitat.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
@@ -127,6 +127,7 @@ describe('HabitatV1', async function () {
         await (await erc721.connect(signer).approve(bridge.address, value)).wait();
 
         const oldBlock = await habitatNode.getBlockNumber();
+        const oldBalance = await habitat.getBalance(erc721.address, user);
         const tx = await bridge.connect(signer).deposit(erc721.address, value, user);
         const receipt = await tx.wait();
 
@@ -134,6 +135,8 @@ describe('HabitatV1', async function () {
 
         const newOwner = await habitat.getErc721Owner(erc721.address, value);
         assert.equal(newOwner, user, 'nft owner should match');
+        const newBalance = await habitat.getBalance(erc721.address, user);
+        assert.equal(newBalance.toString(), oldBalance.add(1).toString(), 'token balance should match');
         cumulativeNft++;
         assert.equal((await habitat.getTotalValueLocked(erc721.address)).toString(), cumulativeNft.toString(), 'tvl');
       }
@@ -201,7 +204,7 @@ describe('HabitatV1', async function () {
           to: ethers.constants.AddressZero,
           value: '0x1',
         };
-        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /BALANCE/);
+        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /STAKE/);
       });
 
       it('transfer erc20: alice > bob', async () => {
@@ -248,7 +251,7 @@ describe('HabitatV1', async function () {
         const args = {
           token: erc20.address,
           to: ethers.constants.AddressZero,
-          value: (await habitat.getErc20Balance(erc20.address, bob.address)).toHexString(),
+          value: (await habitat.getBalance(erc20.address, bob.address)).toHexString(),
         };
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
@@ -434,7 +437,7 @@ describe('HabitatV1', async function () {
         const args = {
           proposalId,
           signalStrength: 100,
-          shares: 0xffffff00,
+          shares: 0xffffff00 - 1,
           timestamp: ~~(Date.now() / 1000),
           delegatedFor: ethers.constants.AddressZero,
         };
@@ -456,7 +459,7 @@ describe('HabitatV1', async function () {
         const args = {
           proposalId,
           signalStrength: 100,
-          shares: 0xffffff00,
+          shares: 0xffffff00 - 1,
           timestamp: ~~(Date.now() / 1000),
           delegatedFor: alice.address,
         };
@@ -501,10 +504,11 @@ describe('HabitatV1', async function () {
           internalActions,
           externalActions,
         };
-        await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /BALANCE/);
+        await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /STAKE/);
       });
 
       it('transfer to vault', async () => {
+        console.log(await habitat.getBalance(erc20.address, alice.address));
         const args = {
           token: erc20.address,
           to: vault,

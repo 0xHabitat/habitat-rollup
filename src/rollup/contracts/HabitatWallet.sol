@@ -9,6 +9,15 @@ contract HabitatWallet is HabitatBase {
   // xxx: add something like a approve function?
   // xxx add total balance of asset
 
+  /// @notice Returns the balance (amount of `token`) for `account`.
+  /// Supports ERC-20 and ERC-721 and takes staked balances into account.
+  function _getUnstakedBalance (address token, address account) internal view returns (uint256 ret) {
+    uint256 staked = HabitatBase.getActiveVotingStake(token, account);
+    ret = HabitatBase.getBalance(token, account);
+    require(staked <= ret, 'BUG1');
+    ret = ret - staked;
+  }
+
   /// @dev State transition when a user transfers a token.
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
     // xxx check under/overflows
@@ -16,39 +25,50 @@ contract HabitatWallet is HabitatBase {
     if (from != to) {
       bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
 
+      // update from
       if (isERC721) {
         require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
         HabitatBase._setErc721Owner(token, value, to);
-        if (to == address(0)) {
-          TokenInventoryBrick._setERC721Exit(token, from, value);
+      }
+
+      uint256 balanceDelta = isERC721 ? 1 : value;
+      // both ERC-20 & ERC-721
+      {
+        // check stake
+        // xxx: nfts are currently not separately tracked - probably not needed?
+        {
+          uint256 unstakedBalance = _getUnstakedBalance(token, from);
+          require(unstakedBalance >= balanceDelta, 'STAKE');
         }
-      } else {
-        uint256 tmp = HabitatBase.getErc20Balance(token, from);
-        require (tmp >= value, 'BALANCE');
-        HabitatBase._setErc20Balance(token, from, tmp - value);
+
+        // can throw
+        HabitatBase._decrementBalance(token, from, balanceDelta);
 
         if (to == address(0)) {
-          TokenInventoryBrick._incrementExit(token, from, value);
+          if (isERC721) {
+            TokenInventoryBrick._setERC721Exit(token, from, value);
+          } else {
+            TokenInventoryBrick._incrementExit(token, from, value);
+          }
         } else {
-          tmp = HabitatBase.getErc20Balance(token, to);
-          require(tmp + value > tmp);
-          HabitatBase._setErc20Balance(token, to, tmp + value);
+          // can throw
+          HabitatBase._incrementBalance(token, to, balanceDelta);
         }
       }
+
       {
         // TVL
         bool fromVault = HabitatBase.vaultCondition(from) != address(0);
         bool toVault = !fromVault && HabitatBase.vaultCondition(to) != address(0);
-        uint256 totalValueChange = isERC721 ? 1 : value;
 
         // transfer from vault to vault
         // exits (to == 0)
         // transfer from user to vault
         // transfer from vault to user
         if (toVault || !fromVault && to == address(0)) {
-          HabitatBase._decrementTotalValueLocked(token, totalValueChange);
+          HabitatBase._decrementTotalValueLocked(token, balanceDelta);
         } else if (fromVault) {
-          HabitatBase._incrementTotalValueLocked(token, totalValueChange);
+          HabitatBase._incrementTotalValueLocked(token, balanceDelta);
         }
       }
     }
@@ -62,22 +82,20 @@ contract HabitatWallet is HabitatBase {
 
     // xxx check under/overflows
     bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
+    uint256 incrementBy = isERC721 ? 1 : value;
 
     if (isERC721) {
       HabitatBase._setErc721Owner(token, value, owner);
-    } else {
-      uint256 oldBalance = HabitatBase.getErc20Balance(token, owner);
-      uint256 newBalance = oldBalance + value;
-      require(newBalance >= oldBalance);
-
-      HabitatBase._setErc20Balance(token, owner, newBalance);
     }
+
+    // both ERC-20 and ERC-721
+    HabitatBase._incrementBalance(token, owner, incrementBy);
 
     // TVL
     {
       bool notAVault = HabitatBase.vaultCondition(owner) == address(0);
       if (notAVault) {
-        HabitatBase._incrementTotalValueLocked(token, isERC721 ? 1 : value);
+        HabitatBase._incrementTotalValueLocked(token, incrementBy);
       }
     }
 

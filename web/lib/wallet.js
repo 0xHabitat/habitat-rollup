@@ -186,7 +186,7 @@ async function updateErc20 () {
       slider.setRange(i, i, len);
       const token = tokens[i];
       const erc = await getErc20(token);
-      const balance = await habitat.getErc20Balance(token, account);
+      const balance = await habitat.getBalance(token, account);
       const tokenName = await getTokenName(token);
       const stakedBalance = await habitat.getActiveVotingStake(token, account);
       children[childPtr].textContent = tokenName;
@@ -300,7 +300,7 @@ async function updateAccount (container) {
   const hbt = await getErc20(HBT);
   const signer = await getSigner();
   const account = await signer.getAddress();
-  const hbtBalance = await habitat.getErc20Balance(HBT, account);
+  const hbtBalance = await habitat.getBalance(HBT, account);
   const user = await getUsername(account, true);
 
   container.querySelector('#greeting').textContent = user;

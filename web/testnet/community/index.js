@@ -28,7 +28,7 @@ async function appendInformation (container, vaultAddress) {
   for (let i = 0, len = tokens.length; i < len; i++) {
     const token = tokens[i];
     const erc = await getErc20(token);
-    const balance = await habitat.getErc20Balance(token, vaultAddress);
+    const balance = await habitat.getBalance(token, vaultAddress);
     const tokenName = await getTokenName(token);
     children[childPtr++].textContent = renderAmount(balance, erc._decimals);
     children[childPtr].textContent = erc._symbol;

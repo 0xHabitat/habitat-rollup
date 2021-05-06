@@ -107,7 +107,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
     address governanceToken = HabitatBase.tokenOfCommunity(communityId);
     uint256 totalValueLocked = HabitatBase.getTotalValueLocked(governanceToken);
-    uint256 proposerBalance = HabitatBase.getErc20Balance(governanceToken, proposer);
+    uint256 proposerBalance = getBalance(governanceToken, proposer);
     // call vault with all the statistics
     bytes memory _calldata = abi.encodeWithSelector(
       0x5e79ee45,
@@ -205,11 +205,6 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     address token = HabitatBase.tokenOfCommunity(communityId);
     // only check token here, assuming any invalid vault will end with having a zero address
     require(token != address(0), 'VAULT');
-    //
-    require(shares > 0 && getErc20Balance(token, account) >= shares, 'SHARE');
-
-    // update member count first
-    HabitatBase._maybeUpdateMemberCount(proposalId, account);
 
     // xxx
     // check proposalId
@@ -220,19 +215,28 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     if (previousVote == 0) {
       HabitatBase._incrementVoteCount(proposalId);
     }
+    // check for discrepancy between balance and stake
+    {
+      uint256 stakableBalance = _getUnstakedBalance(token, account) + previousVote;
+      require(shares > 0 && stakableBalance >= shares, 'SHARE');
+    }
+
+    // update member count first
+    HabitatBase._maybeUpdateMemberCount(proposalId, account);
     HabitatBase._setVote(proposalId, account, shares);
     HabitatBase._setVoteSignal(proposalId, account, signalStrength);
 
-    // xxx check for discrepancy between balance and stake
     // update total share count and staking amount
     uint256 t = HabitatBase.getTotalVotingShares(proposalId);
     if (previousVote >= shares) {
       uint256 delta = previousVote - shares;
       HabitatBase._setTotalVotingShares(proposalId, t - delta);
+      // decrease stake
       HabitatBase._decrementActiveVotingStake(token, account, delta);
     } else {
       uint256 delta = shares - previousVote;
       HabitatBase._setTotalVotingShares(proposalId, t + delta);
+      // increase stake
       HabitatBase._incrementActiveVotingStake(token, account, delta);
     }
 

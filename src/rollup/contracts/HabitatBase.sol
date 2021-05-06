@@ -77,17 +77,36 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function getErc20Balance (address tkn, address account) public virtual view returns (uint256 ret) {
+  function getBalance (address tkn, address account) public virtual view returns (uint256 ret) {
     uint256 key = _ERC20_KEY(tkn, account);
     assembly {
       ret := sload(key)
     }
   }
 
-  function _setErc20Balance (address tkn, address account, uint256 amount) internal {
+  function _incrementBalance (address tkn, address account, uint256 amount) internal {
     uint256 key = _ERC20_KEY(tkn, account);
+    uint256 oldBalance;
     assembly {
-      sstore(key, amount)
+      oldBalance := sload(key)
+    }
+    uint256 newBalance = oldBalance + amount;
+    require(newBalance > oldBalance, 'INCR');
+    assembly {
+      sstore(key, newBalance)
+    }
+  }
+
+  function _decrementBalance (address tkn, address account, uint256 amount) internal {
+    uint256 key = _ERC20_KEY(tkn, account);
+    uint256 oldBalance;
+    assembly {
+      oldBalance := sload(key)
+    }
+    uint256 newBalance = oldBalance - amount;
+    require(newBalance < oldBalance, 'DECR');
+    assembly {
+      sstore(key, newBalance)
     }
   }
 

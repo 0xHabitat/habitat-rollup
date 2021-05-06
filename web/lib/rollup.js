@@ -459,7 +459,7 @@ export async function submitVote (communityId, proposalId, signalStrength) {
   const signer = await getSigner();
   const account = await signer.getAddress();
   const governanceToken = await habitat.tokenOfCommunity(communityId);
-  const balance = await habitat.getErc20Balance(governanceToken, account);
+  const balance = await habitat.getBalance(governanceToken, account);
   const shares = balance.div(100).mul(signalStrength).toHexString();
   const timestamp = ~~(Date.now() / 1000);
   const args = {
