@@ -148,7 +148,7 @@ async function update () {
 
   for (let i = 0, len = totalRewards.length; i < len; i++) {
     const obj = totalRewards[i];
-    obj.expectedReward = obj.reward + (((MAX_REWARD_DAY / PRECISION) * obj.share) * (MAX_DAYS - obj.days));
+    obj.expectedReward = obj.reward + (((MAX_REWARD_DAY / PRECISION) * obj.share) * (MAX_DAYS - (MAX_DAYS - obj.days)));
   }
 
   // now sort this stuff and render it
