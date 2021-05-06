@@ -1,6 +1,6 @@
 FROM node:14-alpine AS base
 WORKDIR /app
-COPY package.json yarn.lock .
+COPY package.json yarn.lock ./
 RUN mkdir data
 RUN yarn
 COPY index.mjs .

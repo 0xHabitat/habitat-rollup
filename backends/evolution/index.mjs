@@ -103,11 +103,32 @@ async function fetchIssues (repo, labels) {
   return issues;
 }
 
+function replaceAll (str, a, b) {
+  let ret = str;
+
+  while (true) {
+    const tmp = ret.replace(a, b)
+
+    if (ret === tmp) {
+      break;
+    }
+
+    ret = tmp;
+  }
+
+  return ret;
+}
+
 async function fetchTokenHolders (tokenAddress) {
+  // (From a total of N,NNN holders)
+  // or
+  // A total of N token holders
   const url = `https://etherscan.io/token/generic-tokenholders2?m=normal&a=${tokenAddress}`;
   const html = await fetch(url);
-  let i = html.indexOf('A total of ');
-  return Number(html.substring(i + 11, html.indexOf(' token holders', i))) | 0;
+  const prologue = 'total of ';
+  const epilogue = ' ';
+  let i = html.indexOf(prologue) + prologue.length;
+  return Number(replaceAll(html.substring(i, html.indexOf(epilogue, i)), ',', '')) | 0;
 }
 
 async function updateConfig () {
