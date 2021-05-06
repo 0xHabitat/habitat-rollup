@@ -20,7 +20,7 @@ contract HabitatV1Testnet is HabitatV1 {
   function _transferToken (address token, address from, address to, uint256 value) internal override {
     // xxx check under/overflows
     if (from != to) {
-      if (TokenBridgeBrick.isERC721(token, value)) {
+      if (NutBerryTokenBridge.isERC721(token, value)) {
         require(getErc721Owner(token, value) == from, 'OWNER');
         _setErc721Owner(token, value, to);
         if (to == address(0)) {

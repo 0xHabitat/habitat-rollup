@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity >=0.6.2;
 
-import '@NutBerry/rollup-bricks/src/tsm/contracts/TokenBridgeBrick.sol';
+import '@NutBerry/rollup-bricks/src/tsm/contracts/NutBerryTokenBridge.sol';
 import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
 
 /// @notice Global state and public utiltiy functions for the Habitat Rollup
-contract HabitatBase is TokenBridgeBrick, UtilityBrick {
+contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
   // xxx
   // - default community voting condition?
   // - execution permits

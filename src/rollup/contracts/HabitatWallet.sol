@@ -14,7 +14,7 @@ contract HabitatWallet is HabitatBase {
     // xxx check under/overflows
     // take getActiveVotingStake() into account
     if (from != to) {
-      bool isERC721 = TokenBridgeBrick.isERC721(token, value);
+      bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
 
       if (isERC721) {
         require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
@@ -61,7 +61,7 @@ contract HabitatWallet is HabitatBase {
     HabitatBase._commonChecks();
 
     // xxx check under/overflows
-    bool isERC721 = TokenBridgeBrick.isERC721(token, value);
+    bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
 
     if (isERC721) {
       HabitatBase._setErc721Owner(token, value, owner);
