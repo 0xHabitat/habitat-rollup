@@ -18,8 +18,8 @@ https://roadmap.zerion.io/b/token-requests/please-add-hbt-habitat
 #### Zapper.fi
 https://features.zapper.fi/feature-requests/p/please-add-hbt-habitat
 
-## MVP
-https://mvp.0xhabitat.org/ -- [How To Use The Habitat MVP](https://0xhabitat.substack.com/p/how-to-use-the-habitat-mvp)
+## Testnet
+https://0xhabitat.org/testnet/
 
 -- You will need Ropsten ETH to interact !
 
@@ -82,8 +82,12 @@ https://github.com/0x-vic
 ## UNISWAP
 **HBT-ETH SWAP**
 
--- https://app.uniswap.org/#/swap?outputCurrency=0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415
+-- https://app.uniswap.org/#/swap?use=V2&outputCurrency=0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415
 
 **HBT-ETH Uniswap Pair Info**
 
--- https://info.uniswap.org/pair/0xc7a1cb6edc22e94f17c80eb5b959f2ad28511d4e
+-- https://v2.info.uniswap.org/pair/0xc7a1cb6edc22e94f17c80eb5b959f2ad28511d4e
+
+**HBT-ETH Add Liquidity**
+
+-- https://app.uniswap.org/#/add/v2/0x0ace32f6e87ac1457a5385f8eb0208f37263b415/ETH
