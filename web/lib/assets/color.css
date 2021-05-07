@@ -34,7 +34,7 @@
   --color-bg-invert: #ffffff;
   --border-radius-frame: 6px;
   --color-frame: #ffffff50;
-  --color-link: white;
+  --color-link: #af8aff;
   --color-border-box: var(--color-white);
   --color-bg-item: rgba(0, 0, 0, .3);
 }
@@ -50,7 +50,7 @@
     --color-bg: #202020;
     --border-radius-frame: 6px;
     --color-frame: #ffffff50;
-    --color-link: white;
+    --color-link: #af8aff;
     --color-border-box: var(--color-white);
   }
 
