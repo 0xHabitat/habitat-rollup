@@ -456,7 +456,7 @@ img.minmax {
   bottom: 0;
   left: 0;
   z-index: 100;
-  background: var(--color-bg);
+  background: #404040aa;
   animation: opacity .3s ease-in;
   overflow-y: scroll;
   overflow-x: hidden;
