@@ -88,47 +88,85 @@ const ACCOUNT_TEMPLATE =
 #exits > div {
   grid-template-columns:repeat(4, auto);
 }
+.tabs > div {
+  border-bottom: 3px solid transparent;
+}
+.tabs > div.active {
+  border-bottom-color: var(--color-bg-invert);
+}
 </style>
-<div class='flex col center'>
-  <div class='flex row evenly' style='width:100%;'>
+<div class='flex row evenly' style='width:100%;'>
   <button id='close' class='flow smaller'>Go Back</button>
-    <p> </p>
-    <h6 id='greeting'> </h6>
-    <button id='name' class='flow smaller'>Change Username</button>
+  <p> </p>
+  <h6 id='greeting'> </h6>
+  <button id='name' class='flow smaller'>Change Username</button>
+</div>
+<sep></sep>
+<section>
+  <div class='flex row center tabs' style='gap:.5em;'>
+    <div class='active'>
+      <a target='#wallet-overview' class='bold secondary purple'>Overview</a>
+    </div>
+    <div>
+      <a target='#wallet-activity' class='bold secondary purple'>Activity</a>
+    </div>
+    <div>
+      <a target='#wallet-delegation' class='bold secondary purple'>Delegation</a>
+    </div>
   </div>
-  <sep></sep>
-  <h3>Rollup Balances</h3>
-  <space></space>
-  <habitat-circle id='hbt' class='smaller'></habitat-circle>
-  <space></space>
-  <button id='deposit' class='flow'>Deposit</button>
-  <space></space>
-  <space></space>
-  <div style='width:42ch;max-width:100%'>
-    <label>Loading...<habitat-slider id='progress'></habitat-slider></label>
-  </div>
-  <space></space>
-  <div style='width:80ch;max-width:100%'>
-    <div id='erc20'></div>
-  </div>
-  <space></space>
-  <space></space>
-  <div id='tokenActions' class='flex row' style='visibility:hidden'>
-    <button id='transfer' class='flow'>⏩</button>
-    <button id='withdraw' class='flow'>⏬</button>
-  </div>
-  <div class='flex row'>
-  </div>
-  <space></space>
-  <div style='width:80ch;max-width:100%'>
-    <h3>Withdraw from Habitat</h3>
-    <div id='exits'></div>
-    <space></space>
-    <div id='history'></div>
-  </div>
-  <space></space>
-  <space></space>
-</div>`;
+</section>
+
+<space></space>
+
+<section class='tabcontainer'>
+  <section class='tab' id='wallet-overview'>
+    <div class='flex col center'>
+      <h3>Rollup Balances</h3>
+      <space></space>
+      <habitat-circle id='hbt' class='smaller'></habitat-circle>
+      <space></space>
+      <button id='deposit' class='flow'>Deposit</button>
+      <space></space>
+      <space></space>
+      <div style='width:42ch;max-width:100%'>
+        <label>Loading...<habitat-slider id='progress'></habitat-slider></label>
+      </div>
+      <space></space>
+      <div style='width:80ch;max-width:100%'>
+        <div id='erc20'></div>
+      </div>
+      <space></space>
+      <space></space>
+      <div id='tokenActions' class='flex row' style='visibility:hidden'>
+        <button id='transfer' class='flow'>⏩</button>
+        <button id='withdraw' class='flow'>⏬</button>
+      </div>
+      <div class='flex row'>
+      </div>
+      <space></space>
+      <div style='width:80ch;max-width:100%'>
+        <h3>Withdraw from Habitat</h3>
+        <div id='exits'></div>
+        <space></space>
+      </div>
+      <space></space>
+      <space></space>
+    </div>
+  </section>
+
+  <section class='tab' id='wallet-activity'>
+    <div class='flex col evenly center left padh'>
+      <div style='width:80ch;max-width:100%'>
+        <div id='history'></div>
+      </div>
+    </div>
+  </section>
+
+  <section class='tab' id='wallet-delegation'>
+    <h3>Nothing to see here yet</h3>
+  </section>
+</section>
+`;
 
 const NAV_TEMPLATE =
 `
@@ -325,6 +363,10 @@ async function accountOverlay () {
   wrapListener(container.querySelector('button#close'), (evt) => {
     animatedRemove(container);
   });
+  for (const e of container.querySelectorAll('.tabs div')) {
+    wrapListener(e, onTab);
+  }
+
   document.body.appendChild(container);
 
   wrapListener(container.querySelector('#transfer'), (evt) => new TransferFlow(evt.target));
@@ -377,6 +419,23 @@ async function connect (evt) {
 
   await getSigner();
   update(true);
+}
+
+function onTab (evt) {
+  const target = evt.target.getAttribute('target');
+  const ACTIVE = 'active';
+  evt.target.parentElement.parentElement.querySelector('.active').classList.remove(ACTIVE);
+  evt.target.parentElement.classList.add(ACTIVE);
+  const targetSection = document.querySelector(target);
+  const parentContainer = targetSection.parentElement;
+
+  for (let i = 0, len = parentContainer.children.length; i < len; i++) {
+    const section = parentContainer.children[i];
+    if (section === targetSection) {
+      parentContainer.style.transform = `translateX(-${100 * i}vw)`;
+      break;
+    }
+  }
 }
 
 async function render () {

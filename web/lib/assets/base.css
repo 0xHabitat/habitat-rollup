@@ -459,6 +459,7 @@ img.minmax {
   background: var(--color-bg);
   animation: opacity .3s ease-in;
   overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .overlay > .listitem {
