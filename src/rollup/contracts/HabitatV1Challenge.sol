@@ -700,6 +700,65 @@ case 9 {
   success := or(success, returndatasize())
 }
 // end of ProcessProposal
+
+// start of TributeForOperator
+// typeHash: 0xf1fbac3f7a338f2d311f65117ace344ce27659545697922b63c217ff83eecb98
+// function: onTributeForOperator(address,uint256,address,uint256)
+case 10 {
+  let headSize := 128
+  let typeLen := 0
+  let txPtr := 320
+  let endOfSlot := add(txPtr, 128)
+
+  txPtr := 352
+  // typeHash of TributeForOperator
+  mstore(0, 0xf1fbac3f7a338f2d311f65117ace344ce27659545697922b63c217ff83eecb98)
+  // uint256 TributeForOperator.nonce
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(32, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // address TributeForOperator.operator
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(64, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // uint256 TributeForOperator.amount
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(96, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // typeHash
+  let structHash := keccak256(0, 128)
+  // prefix
+  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
+  // DOMAIN struct hash
+  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  // transactionStructHash
+  mstore(34, structHash)
+  mstore(0, keccak256(0, 66))
+  mstore(32, v)
+  mstore(64, r)
+  mstore(96, s)
+  mstore(128, 0)
+  success := staticcall(gas(), 1, 0, 128, 128, 32)
+  // functionSig
+  mstore(288, 0x35c48e63)
+  mstore(320, mload(128))
+
+  success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
+  success := or(success, returndatasize())
+}
+// end of TributeForOperator
 default { success := 1 }
 }
 

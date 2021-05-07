@@ -234,11 +234,13 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     if (previousVote >= shares) {
       uint256 delta = previousVote - shares;
       HabitatBase._setTotalVotingShares(proposalId, t - delta);
+      // xxx claim any acquired fees
       // decrease stake
       HabitatBase._decrementActiveVotingStake(token, account, delta);
     } else {
       uint256 delta = shares - previousVote;
       HabitatBase._setTotalVotingShares(proposalId, t + delta);
+      // xxx claim any acquired fees
       // increase stake
       HabitatBase._incrementActiveVotingStake(token, account, delta);
     }

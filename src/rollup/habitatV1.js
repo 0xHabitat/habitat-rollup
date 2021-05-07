@@ -64,6 +64,11 @@ export default {
       { name: 'internalActions', type: 'bytes' },
       { name: 'externalActions', type: 'bytes' },
     ],
+    TributeForOperator: [
+      { name: 'nonce', 'type': 'uint256' },
+      { name: 'operator', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
   },
   domain: {
     name: 'Habitat V1',
@@ -80,5 +85,6 @@ export default {
     'CreateProposal',
     'VoteOnProposal',
     'ProcessProposal',
+    'TributeForOperator',
   ],
 }

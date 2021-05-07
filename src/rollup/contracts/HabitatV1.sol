@@ -9,6 +9,7 @@ import './HabitatCommunity.sol';
 import './HabitatVault.sol';
 import './HabitatVoting.sol';
 import './HabitatModule.sol';
+import './HabitatStakingPool.sol';
 import './UpgradableRollup.sol';
 
 /// @notice Composition of the full Habitat Rollup contracts
@@ -20,6 +21,7 @@ contract HabitatV1 is
   HabitatVault,
   HabitatVoting,
   HabitatModule,
+  HabitatStakingPool,
   HabitatV1Challenge,
   UpgradableRollup
 {
