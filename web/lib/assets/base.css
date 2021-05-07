@@ -456,10 +456,14 @@ img.minmax {
   bottom: 0;
   left: 0;
   z-index: 100;
-  background: #404040aa;
+  background: var(--color-bg);
   animation: opacity .3s ease-in;
   overflow-y: scroll;
   overflow-x: hidden;
+}
+
+.overlay.alert {
+  background: #404040aa;
 }
 
 .overlay > .listitem {
