@@ -171,7 +171,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function getVoteSignal (bytes32 proposalId, address account) public view returns (uint256 ret) {
+  function getVoteSignal (bytes32 proposalId, address account) internal view returns (uint256 ret) {
     uint256 key = _VOTING_SIGNAL_KEY(proposalId, account);
     assembly {
       ret := sload(key)
@@ -237,7 +237,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function getTotalVotingSignal (bytes32 proposalId) public view returns (uint256 ret) {
+  function getTotalVotingSignal (bytes32 proposalId) internal view returns (uint256 ret) {
     uint256 key = _VOTING_TOTAL_SIGNAL_KEY(proposalId);
     assembly {
       ret := sload(key)
@@ -262,7 +262,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function getIsMemberOfCommunity (bytes32 communityId, address account) public view returns (bool ret) {
+  function getIsMemberOfCommunity (bytes32 communityId, address account) internal view returns (bool ret) {
     uint256 key = _MEMBER_OF_COMMUNITY_KEY(communityId, account);
     assembly {
       ret := sload(key)
@@ -329,7 +329,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function accountDelegate (address a) public virtual view returns (address ret) {
+  function accountDelegate (address a) internal virtual view returns (address ret) {
     uint256 key = _ACCOUNT_DELEGATE_KEY(a);
     assembly {
       ret := sload(key)
@@ -352,7 +352,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
   }
 
   /// @notice tracks proposalId > vault
-  function proposalVault (bytes32 a) public virtual view returns (address ret) {
+  function proposalVault (bytes32 a) internal virtual view returns (address ret) {
     uint256 key = _PROPOSAL_VAULT_KEY(a);
     assembly {
       ret := sload(key)
@@ -376,7 +376,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
   }
 
   /// @notice tracks proposalId > startDate
-  function proposalStartDate (bytes32 a) public virtual view returns (uint256 ret) {
+  function proposalStartDate (bytes32 a) internal virtual view returns (uint256 ret) {
     uint256 key = _PROPOSAL_START_DATE_KEY(a);
     assembly {
       ret := sload(key)
@@ -448,7 +448,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
   }
 
   /// @notice The (codehash) of the module at `a`.
-  function moduleHash (address a) public virtual view returns (bytes32 ret) {
+  function moduleHash (address a) internal virtual view returns (bytes32 ret) {
     uint256 key = _MODULE_HASH_KEY(a);
     assembly {
       ret := sload(key)
@@ -472,7 +472,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
   }
 
   /// @notice The condition of `vault`.
-  function vaultCondition (address vault) public virtual view returns (address ret) {
+  function vaultCondition (address vault) internal virtual view returns (address ret) {
     uint256 key = _VAULT_CONDITION_KEY(vault);
     assembly {
       ret := sload(key)

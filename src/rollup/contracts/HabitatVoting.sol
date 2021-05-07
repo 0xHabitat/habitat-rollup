@@ -149,7 +149,6 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
     _validateTimestamp(startDate);
 
-    // xxx Should the vault condition receive a callback at creation?
     bytes32 proposalId;
     assembly {
       mstore(0, msgSender)
@@ -163,6 +162,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // assuming startDate is never 0 (see validateTimestamp) then this should suffice
     require(proposalStartDate(proposalId) == 0, 'EXISTS');
 
+    // The vault module receives a callback at creation
     _callCreateProposal(vault, msgSender, startDate, internalActions, externalActions);
 
     // store
@@ -203,11 +203,10 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     address vault = HabitatBase.proposalVault(proposalId);
     bytes32 communityId = HabitatBase.communityOfVault(vault);
     address token = HabitatBase.tokenOfCommunity(communityId);
-    // only check token here, assuming any invalid vault will end with having a zero address
+    // only check token here, assuming any invalid proposalId / vault will end with having a zero address
     require(token != address(0), 'VAULT');
 
     // xxx
-    // check proposalId
     // replace any existing votes
     // check token balances, shares, signalStrength
     uint256 previousVote = HabitatBase.getVote(proposalId, account);
@@ -215,6 +214,10 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     if (previousVote == 0) {
       HabitatBase._incrementVoteCount(proposalId);
     }
+    if (shares == 0) {
+      //HabitatBase._decrementVoteCount(proposalId);
+    }
+
     // check for discrepancy between balance and stake
     {
       uint256 stakableBalance = _getUnstakedBalance(token, account) + previousVote;

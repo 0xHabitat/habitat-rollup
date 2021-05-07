@@ -3,6 +3,7 @@ pragma solidity >=0.6.2;
 
 import './HabitatBase.sol';
 
+/// @notice Functionality for Habitat Modules
 contract HabitatModule is HabitatBase {
   event ModuleSubmitted(address contractAddress, string metadata);
   event ModuleActivated(bytes32 communityId, address condition);
