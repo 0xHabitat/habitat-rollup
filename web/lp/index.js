@@ -117,6 +117,8 @@ async function update () {
     accountMap.total = totalPool;
   }
 
+  const now = ~~(Date.now() / 1000);
+  const remainingDays = END_DATE > now ? Math.ceil((END_DATE - now) / ONE_DAY_SECONDS) : 0;
   let totalRewards = [];
   prevDay = undefined;
   for (let i = 0, len = days.length; i < len; i++) {
@@ -148,7 +150,7 @@ async function update () {
 
   for (let i = 0, len = totalRewards.length; i < len; i++) {
     const obj = totalRewards[i];
-    obj.expectedReward = obj.reward + (((MAX_REWARD_DAY / PRECISION) * obj.share) * (MAX_DAYS - (MAX_DAYS - obj.days)));
+    obj.expectedReward = obj.reward + (((MAX_REWARD_DAY / PRECISION) * obj.share) * remainingDays);
   }
 
   // now sort this stuff and render it
