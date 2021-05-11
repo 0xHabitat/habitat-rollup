@@ -28,7 +28,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
   function _checkUpdateNonce (address msgSender, uint256 nonce) internal {
     require(nonce == txNonces(msgSender), 'NONCE');
 
-    _setTxNonces(msgSender, nonce + 1);
+    _incrementStorage(_TX_NONCE_KEY(msgSender));
   }
 
   function _calculateAddress (address msgSender, uint256 nonce, bytes32 salt) internal returns (address ret) {
@@ -41,6 +41,58 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
       mstore(64, backup)
     }
   }
+
+  // Storage helpers, functions will be replaced with special getters/setters to retrieve/store on the rollup
+  function _incrementStorage (uint256 key, uint256 value) internal {
+    uint256 oldValue;
+    uint256 newValue;
+    assembly {
+      oldValue := sload(key)
+      newValue := add(oldValue, value)
+      sstore(key, newValue)
+    }
+    require(newValue >= oldValue, 'INCR');
+  }
+
+  function _incrementStorage (uint256 key) internal {
+    _incrementStorage(key, 1);
+  }
+
+  function _decrementStorage (uint256 key, uint256 value) internal {
+    uint256 oldValue;
+    uint256 newValue;
+    assembly {
+      oldValue := sload(key)
+      newValue := sub(oldValue, value)
+      sstore(key, newValue)
+    }
+    require(newValue <= oldValue, 'DECR');
+  }
+
+  function _getStorage (uint256 key) internal returns (uint256 ret) {
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  function _setStorage (uint256 key, uint256 value) internal {
+    assembly {
+      sstore(key, value)
+    }
+  }
+
+  function _setStorage (uint256 key, bytes32 value) internal {
+    assembly {
+      sstore(key, value)
+    }
+  }
+
+  function _setStorage (uint256 key, address value) internal {
+    assembly {
+      sstore(key, value)
+    }
+  }
+  // end of storage helpers
 
   function _TX_NONCE_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
@@ -55,14 +107,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     uint256 key = _TX_NONCE_KEY(a);
     assembly {
       ret := sload(key)
-    }
-  }
-
-  /// @dev Setter for `txNonces`.
-  function _setTxNonces (address a, uint256 b) internal {
-    uint256 key = _TX_NONCE_KEY(a);
-    assembly {
-      sstore(key, b)
     }
   }
 
@@ -84,32 +128,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _incrementBalance (address tkn, address account, uint256 amount) internal {
-    uint256 key = _ERC20_KEY(tkn, account);
-    uint256 oldBalance;
-    assembly {
-      oldBalance := sload(key)
-    }
-    uint256 newBalance = oldBalance + amount;
-    require(newBalance > oldBalance, 'INCR');
-    assembly {
-      sstore(key, newBalance)
-    }
-  }
-
-  function _decrementBalance (address tkn, address account, uint256 amount) internal {
-    uint256 key = _ERC20_KEY(tkn, account);
-    uint256 oldBalance;
-    assembly {
-      oldBalance := sload(key)
-    }
-    uint256 newBalance = oldBalance - amount;
-    require(newBalance < oldBalance, 'DECR');
-    assembly {
-      sstore(key, newBalance)
-    }
-  }
-
   function _ERC721_KEY (address tkn, uint256 b) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x0b0adec1d909ec867fdb1853ca8d859f7b8137ab9c01f734b3fbfc40d9061ded)
@@ -125,13 +143,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     uint256 key = _ERC721_KEY(tkn, b);
     assembly {
       ret := sload(key)
-    }
-  }
-
-  function _setErc721Owner (address tkn, uint256 b, address owner) internal {
-    uint256 key = _ERC721_KEY(tkn, b);
-    assembly {
-      sstore(key, owner)
     }
   }
 
@@ -153,13 +164,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _setVote (bytes32 proposalId, address account, uint256 shares) internal {
-    uint256 key = _VOTING_SHARES_KEY(proposalId, account);
-    assembly {
-      sstore(key, shares)
-    }
-  }
-
   function _VOTING_SIGNAL_KEY (bytes32 proposalId, address account) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x12bc1ed237026cb917edecf1ca641d1047e3fc382300e8b3fab49ae10095e490)
@@ -168,20 +172,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
       mstore(64, account)
       ret := keccak256(0, 96)
       mstore(64, tmp)
-    }
-  }
-
-  function getVoteSignal (bytes32 proposalId, address account) internal view returns (uint256 ret) {
-    uint256 key = _VOTING_SIGNAL_KEY(proposalId, account);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  function _setVoteSignal (bytes32 proposalId, address account, uint256 signal) internal {
-    uint256 key = _VOTING_SIGNAL_KEY(proposalId, account);
-    assembly {
-      sstore(key, signal)
     }
   }
 
@@ -200,13 +190,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _incrementVoteCount (bytes32 proposalId) internal {
-    uint256 key = _VOTING_COUNT_KEY(proposalId);
-    assembly {
-      sstore(key, add(sload(key), 1))
-    }
-  }
-
   function _VOTING_TOTAL_SHARE_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x847f5cbc41e438ef8193df4d65950ec6de3a1197e7324bffd84284b7940b2d4a)
@@ -222,32 +205,11 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _setTotalVotingShares (bytes32 proposalId, uint256 val) internal {
-    uint256 key = _VOTING_TOTAL_SHARE_KEY(proposalId);
-    assembly {
-      sstore(key, val)
-    }
-  }
-
   function _VOTING_TOTAL_SIGNAL_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x3a5afbb81b36a1a15e90db8cc0deb491bf6379592f98c129fd8bdf0b887f82dc)
       mstore(32, proposalId)
       ret := keccak256(0, 64)
-    }
-  }
-
-  function getTotalVotingSignal (bytes32 proposalId) internal view returns (uint256 ret) {
-    uint256 key = _VOTING_TOTAL_SIGNAL_KEY(proposalId);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  function _setTotalVotingSignal (bytes32 proposalId, uint256 val) internal {
-    uint256 key = _VOTING_TOTAL_SIGNAL_KEY(proposalId);
-    assembly {
-      sstore(key, val)
     }
   }
 
@@ -259,20 +221,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
       mstore(64, account)
       ret := keccak256(0, 96)
       mstore(64, tmp)
-    }
-  }
-
-  function getIsMemberOfCommunity (bytes32 communityId, address account) internal view returns (bool ret) {
-    uint256 key = _MEMBER_OF_COMMUNITY_KEY(communityId, account);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  function _setIsMemberOfCommunity (bytes32 communityId, address account) internal {
-    uint256 key = _MEMBER_OF_COMMUNITY_KEY(communityId, account);
-    assembly {
-      sstore(key, 1)
     }
   }
 
@@ -291,14 +239,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _incrementTotalMemberCount (bytes32 communityId) internal returns (uint256 ret) {
-    uint256 key = _MEMBERS_TOTAL_COUNT_KEY(communityId);
-    assembly {
-      ret := add(sload(key), 1)
-      sstore(key, ret)
-    }
-  }
-
   function _NAME_TO_ADDRESS_KEY (bytes32 shortString) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x09ec9a99acfe90ba324ac042a90e28c5458cfd65beba073b0a92ea7457cdfc56)
@@ -314,32 +254,11 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _setNameToAddress (bytes32 shortString, address addr) internal {
-    uint256 key = _NAME_TO_ADDRESS_KEY(shortString);
-    assembly {
-      sstore(key, addr)
-    }
-  }
-
   function _ACCOUNT_DELEGATE_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xa4cf686a12e967d8e7bd65750e2f83e9462cafbc9c0d8faf956478a83b935c62)
       mstore(32, a)
       ret := keccak256(0, 64)
-    }
-  }
-
-  function accountDelegate (address a) internal virtual view returns (address ret) {
-    uint256 key = _ACCOUNT_DELEGATE_KEY(a);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  function _setAccountDelegate (address a, address b) internal {
-    uint256 key = _ACCOUNT_DELEGATE_KEY(a);
-    assembly {
-      sstore(key, b)
     }
   }
 
@@ -351,43 +270,11 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  /// @notice tracks proposalId > vault
-  function proposalVault (bytes32 a) internal virtual view returns (address ret) {
-    uint256 key = _PROPOSAL_VAULT_KEY(a);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  /// @dev Setter for `proposalVault`.
-  function _setProposalVault (bytes32 a, address b) internal {
-    uint256 key = _PROPOSAL_VAULT_KEY(a);
-    assembly {
-      sstore(key, b)
-    }
-  }
-
   function _PROPOSAL_START_DATE_KEY (bytes32 a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x539a579b21c2852f7f3a22630162ab505d3fd0b33d6b46f926437d8082d494c1)
       mstore(32, a)
       ret := keccak256(0, 64)
-    }
-  }
-
-  /// @notice tracks proposalId > startDate
-  function proposalStartDate (bytes32 a) internal virtual view returns (uint256 ret) {
-    uint256 key = _PROPOSAL_START_DATE_KEY(a);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  /// @dev Setter for `proposalStartDate`.
-  function _setProposalStartDate (bytes32 a, uint256 b) internal {
-    uint256 key = _PROPOSAL_START_DATE_KEY(a);
-    assembly {
-      sstore(key, b)
     }
   }
 
@@ -407,14 +294,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  /// @dev Setter for `tokenOfCommunity`.
-  function _setTokenOfCommunity (bytes32 a, address b) internal {
-    uint256 key = _TOKEN_OF_COMMUNITY_KEY(a);
-    assembly {
-      sstore(key, b)
-    }
-  }
-
   function _COMMUNITY_OF_VAULT_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xf659eca1f5df040d1f35ff0bac6c4cd4017c26fe0dbe9317b2241af59edbfe06)
@@ -431,14 +310,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  /// @dev Setter for `communityOfVault`.
-  function _setCommunityOfVault (address vault, bytes32 b) internal {
-    uint256 key = _COMMUNITY_OF_VAULT_KEY(vault);
-    assembly {
-      sstore(key, b)
-    }
-  }
-
   function _MODULE_HASH_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xe6ab7761f522dca2c6f74f7f7b1083a1b184fec6b893cb3418cb3121c5eda5aa)
@@ -447,43 +318,11 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  /// @notice The (codehash) of the module at `a`.
-  function moduleHash (address a) internal virtual view returns (bytes32 ret) {
-    uint256 key = _MODULE_HASH_KEY(a);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  /// @dev Setter for `moduleHash`.
-  function _setModuleHash (address a, bytes32 b) internal {
-    uint256 key = _MODULE_HASH_KEY(a);
-    assembly {
-      sstore(key, b)
-    }
-  }
-
   function _VAULT_CONDITION_KEY (address a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x615e61b2f7f9d8ca18a90a9b0d27a62ae27581219d586cb9aeb7c695bc7b92c8)
       mstore(32, a)
       ret := keccak256(0, 64)
-    }
-  }
-
-  /// @notice The condition of `vault`.
-  function vaultCondition (address vault) internal virtual view returns (address ret) {
-    uint256 key = _VAULT_CONDITION_KEY(vault);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  /// @dev Setter for `vaultCondition`.
-  function _setVaultCondition (address vault, address b) internal {
-    uint256 key = _VAULT_CONDITION_KEY(vault);
-    assembly {
-      sstore(key, b)
     }
   }
 
@@ -503,20 +342,12 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  /// @dev Setter for `getProposalStatus`.
-  function _setProposalStatus (bytes32 a, uint256 b) internal {
-    uint256 key = _PROPOSAL_STATUS_KEY(a);
-    assembly {
-      sstore(key, b)
-    }
-  }
-
   function _maybeUpdateMemberCount (bytes32 proposalId, address account) internal {
-    address vault = proposalVault(proposalId);
+    address vault = address(_getStorage(_PROPOSAL_VAULT_KEY(proposalId)));
     bytes32 communityId = communityOfVault(vault);
-    if (!getIsMemberOfCommunity(communityId, account)) {
-      _setIsMemberOfCommunity(communityId, account);
-      _incrementTotalMemberCount(communityId);
+    if (_getStorage(_MEMBER_OF_COMMUNITY_KEY(communityId, account)) == 0) {
+      _setStorage(_MEMBER_OF_COMMUNITY_KEY(communityId, account), 1);
+      _incrementStorage(_MEMBERS_TOTAL_COUNT_KEY(communityId));
     }
   }
 
@@ -525,20 +356,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
       mstore(0, 0x4e7484f055e36257052a570831d7e3114ad145e0c8d8de63ded89925c7e17cb6)
       mstore(32, a)
       ret := keccak256(0, 64)
-    }
-  }
-
-  function _incrementTotalValueLocked (address token, uint256 value) internal {
-    uint256 key = _TOKEN_TVL_KEY(token);
-    assembly {
-      sstore(key, add(sload(key), value))
-    }
-  }
-
-  function _decrementTotalValueLocked (address token, uint256 value) internal {
-    uint256 key = _TOKEN_TVL_KEY(token);
-    assembly {
-      sstore(key, sub(sload(key), value))
     }
   }
 
@@ -560,20 +377,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _setActivatorOfModule (bytes32 communityId, address condition, address val) internal {
-    uint256 key = _ACTIVATOR_OF_MODULE_KEY(communityId, condition);
-    assembly {
-      sstore(key, val)
-    }
-  }
-
-  function activatorOfModule (bytes32 communityId, address condition) internal returns (address ret) {
-    uint256 key = _ACTIVATOR_OF_MODULE_KEY(communityId, condition);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
   function _PROPOSAL_HASH_INTERNAL_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x9f6ffbe6bd26bda84ec854c7775d819340fd4340bc8fa1ab853cdee0d60e7141)
@@ -582,43 +385,11 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  /// @notice Getter for the proposalId > keccak256(internalActions).
-  function proposalHashInternal (bytes32 proposalId) internal virtual view returns (bytes32 ret) {
-    uint256 key = _PROPOSAL_HASH_INTERNAL_KEY(proposalId);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  /// @dev Setter for `proposalHashInternal`.
-  function _setProposalHashInternal (bytes32 proposalId, bytes32 hash) internal {
-    uint256 key = _PROPOSAL_HASH_INTERNAL_KEY(proposalId);
-    assembly {
-      sstore(key, hash)
-    }
-  }
-
   function _PROPOSAL_HASH_EXTERNAL_KEY (bytes32 proposalId) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0xcd566f7f1fd69d79df8b7e0a3e28a2b559ab3e7f081db4a0c0640de4db78de9a)
       mstore(32, proposalId)
       ret := keccak256(0, 64)
-    }
-  }
-
-  /// @notice Getter for the proposalId > keccak256(externalActions).
-  function proposalHashExternal (bytes32 proposalId) internal virtual view returns (bytes32 ret) {
-    uint256 key = _PROPOSAL_HASH_EXTERNAL_KEY(proposalId);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
-  /// @dev Setter for `proposalHashExternal`.
-  function _setProposalHashExternal (bytes32 proposalId, bytes32 hash) internal {
-    uint256 key = _PROPOSAL_HASH_EXTERNAL_KEY(proposalId);
-    assembly {
-      sstore(key, hash)
     }
   }
 
@@ -663,20 +434,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
     assembly {
       ret := sload(key)
-    }
-  }
-
-  function _incrementActiveVotingStake (address token, address account, uint256 val) internal {
-    uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
-    assembly {
-      sstore(key, add( sload(key), val ))
-    }
-  }
-
-  function _decrementActiveVotingStake (address token, address account, uint256 val) internal {
-    uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
-    assembly {
-      sstore(key, sub( sload(key), val ))
     }
   }
 }

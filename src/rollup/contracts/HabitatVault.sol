@@ -19,11 +19,11 @@ contract HabitatVault is HabitatBase {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     // checks if the condition exists
-    require(HabitatBase.moduleHash(condition) != bytes32(0), 'HASH');
+    require(HabitatBase._getStorage(_MODULE_HASH_KEY(condition)) != 0, 'HASH');
     // checks if the community exists
     require(tokenOfCommunity(communityId) != address(0), 'COMMUNITY');
     // checks if the community has this module activated
-    require(HabitatBase.activatorOfModule(communityId, condition) != address(0), 'ACTIVE');
+    require(HabitatBase._getStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition)) != 0, 'ACTIVE');
 
     // generate unique address
     address vaultAddress = HabitatBase._calculateAddress(msgSender, nonce, communityId);
@@ -31,8 +31,8 @@ contract HabitatVault is HabitatBase {
     require(HabitatBase.communityOfVault(vaultAddress) == bytes32(0), 'EXISTS');
 
     // save
-    HabitatBase._setCommunityOfVault(vaultAddress, communityId);
-    HabitatBase._setVaultCondition(vaultAddress, condition);
+    HabitatBase._setStorage(_COMMUNITY_OF_VAULT_KEY(vaultAddress), communityId);
+    HabitatBase._setStorage(_VAULT_CONDITION_KEY(vaultAddress), condition);
 
     emit VaultCreated(communityId, condition, vaultAddress, metadata);
   }

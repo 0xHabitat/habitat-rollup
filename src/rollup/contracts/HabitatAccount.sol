@@ -14,7 +14,7 @@ contract HabitatAccount is HabitatBase {
 
     require(HabitatBase.nameToAddress(shortString) == address(0), 'SET');
 
-    HabitatBase._setNameToAddress(shortString, msgSender);
+    HabitatBase._setStorage(_NAME_TO_ADDRESS_KEY(shortString), msgSender);
     emit ClaimUsername(msgSender, shortString);
   }
 
@@ -23,6 +23,6 @@ contract HabitatAccount is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    HabitatBase._setAccountDelegate(msgSender, delegatee);
+    HabitatBase._setStorage(_ACCOUNT_DELEGATE_KEY(msgSender), delegatee);
   }
 }

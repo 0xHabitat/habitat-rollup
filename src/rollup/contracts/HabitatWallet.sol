@@ -28,7 +28,7 @@ contract HabitatWallet is HabitatBase {
       // update from
       if (isERC721) {
         require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
-        HabitatBase._setErc721Owner(token, value, to);
+        HabitatBase._setStorage(_ERC721_KEY(token, value), to);
       }
 
       uint256 balanceDelta = isERC721 ? 1 : value;
@@ -42,7 +42,7 @@ contract HabitatWallet is HabitatBase {
         }
 
         // can throw
-        HabitatBase._decrementBalance(token, from, balanceDelta);
+        HabitatBase._decrementStorage(_ERC20_KEY(token, from), balanceDelta);
 
         if (to == address(0)) {
           if (isERC721) {
@@ -52,23 +52,23 @@ contract HabitatWallet is HabitatBase {
           }
         } else {
           // can throw
-          HabitatBase._incrementBalance(token, to, balanceDelta);
+          HabitatBase._incrementStorage(_ERC20_KEY(token, to), balanceDelta);
         }
       }
 
       {
         // TVL
-        bool fromVault = HabitatBase.vaultCondition(from) != address(0);
-        bool toVault = !fromVault && HabitatBase.vaultCondition(to) != address(0);
+        bool fromVault = HabitatBase._getStorage(_VAULT_CONDITION_KEY(from)) != 0;
+        bool toVault = !fromVault && HabitatBase._getStorage(_VAULT_CONDITION_KEY(to)) != 0;
 
         // transfer from vault to vault
         // exits (to == 0)
         // transfer from user to vault
         // transfer from vault to user
         if (toVault || !fromVault && to == address(0)) {
-          HabitatBase._decrementTotalValueLocked(token, balanceDelta);
+          HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
         } else if (fromVault) {
-          HabitatBase._incrementTotalValueLocked(token, balanceDelta);
+          HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
         }
       }
     }
@@ -85,17 +85,17 @@ contract HabitatWallet is HabitatBase {
     uint256 incrementBy = isERC721 ? 1 : value;
 
     if (isERC721) {
-      HabitatBase._setErc721Owner(token, value, owner);
+      HabitatBase._setStorage(_ERC721_KEY(token, value), owner);
     }
 
     // both ERC-20 and ERC-721
-    HabitatBase._incrementBalance(token, owner, incrementBy);
+    HabitatBase._incrementStorage(_ERC20_KEY(token, owner), incrementBy);
 
     // TVL
     {
-      bool notAVault = HabitatBase.vaultCondition(owner) == address(0);
+      bool notAVault = HabitatBase._getStorage(_VAULT_CONDITION_KEY(owner)) == 0;
       if (notAVault) {
-        HabitatBase._incrementTotalValueLocked(token, incrementBy);
+        HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), incrementBy);
       }
     }
 

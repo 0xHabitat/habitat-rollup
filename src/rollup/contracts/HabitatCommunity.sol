@@ -28,9 +28,9 @@ contract HabitatCommunity is HabitatBase {
     require(HabitatBase.tokenOfCommunity(communityId) == address(0));
 
     // save
-    HabitatBase._setTokenOfCommunity(communityId, governanceToken);
-    HabitatBase._setIsMemberOfCommunity(communityId, msgSender);
-    HabitatBase._incrementTotalMemberCount(communityId);
+    HabitatBase._setStorage(_TOKEN_OF_COMMUNITY_KEY(communityId), governanceToken);
+    HabitatBase._setStorage(_MEMBER_OF_COMMUNITY_KEY(communityId, msgSender), 1);
+    HabitatBase._incrementStorage(_MEMBERS_TOTAL_COUNT_KEY(communityId));
 
     emit CommunityCreated(governanceToken, communityId, metadata);
   }

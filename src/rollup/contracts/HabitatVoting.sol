@@ -26,18 +26,18 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
 
   /// @dev Lookup condition (module) and verify the codehash
   function _getVaultCondition (address vault) internal returns (address) {
-    address contractAddress = HabitatBase.vaultCondition(vault);
+    address contractAddress = address(HabitatBase._getStorage(_VAULT_CONDITION_KEY(vault)));
     require(contractAddress != address(0), 'VAULT');
 
-    bytes32 expectedHash = HabitatBase.moduleHash(contractAddress);
-    require(expectedHash != bytes32(0), 'HASH');
+    uint256 expectedHash = HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress));
+    require(expectedHash != 0, 'HASH');
 
     bool valid;
     assembly {
       valid := eq( extcodehash(contractAddress), expectedHash )
     }
 
-    require(expectedHash != bytes32(0) && valid == true, 'CODE');
+    require(expectedHash != 0 && valid == true, 'CODE');
 
     return contractAddress;
   }
@@ -160,16 +160,16 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     }
 
     // assuming startDate is never 0 (see validateTimestamp) then this should suffice
-    require(proposalStartDate(proposalId) == 0, 'EXISTS');
+    require(HabitatBase._getStorage(_PROPOSAL_START_DATE_KEY(proposalId)) == 0, 'EXISTS');
 
     // The vault module receives a callback at creation
     _callCreateProposal(vault, msgSender, startDate, internalActions, externalActions);
 
     // store
-    HabitatBase._setProposalStartDate(proposalId, startDate);
-    HabitatBase._setProposalVault(proposalId, vault);
-    HabitatBase._setProposalHashInternal(proposalId, keccak256(internalActions));
-    HabitatBase._setProposalHashExternal(proposalId, keccak256(externalActions));
+    HabitatBase._setStorage(_PROPOSAL_START_DATE_KEY(proposalId), startDate);
+    HabitatBase._setStorage(_PROPOSAL_VAULT_KEY(proposalId), vault);
+    HabitatBase._setStorage(_PROPOSAL_HASH_INTERNAL_KEY(proposalId), keccak256(internalActions));
+    HabitatBase._setStorage(_PROPOSAL_HASH_EXTERNAL_KEY(proposalId), keccak256(externalActions));
     // update member count
     HabitatBase._maybeUpdateMemberCount(proposalId, msgSender);
 
@@ -191,16 +191,16 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     // requires that the signal is in a specific range...
-    require(signalStrength > 0 && signalStrength < 101, 'SIGNAL');
+    require(signalStrength < 101, 'SIGNAL');
 
     // voter account
     address account = msgSender;
     if (delegatedFor != address(0)) {
-      require(HabitatBase.accountDelegate(delegatedFor) == msgSender, 'DELEGATE');
+      require(address(HabitatBase._getStorage(_ACCOUNT_DELEGATE_KEY(delegatedFor))) == msgSender, 'DELEGATE');
       account = delegatedFor;
     }
 
-    address vault = HabitatBase.proposalVault(proposalId);
+    address vault = address(HabitatBase._getStorage(_PROPOSAL_VAULT_KEY(proposalId)));
     bytes32 communityId = HabitatBase.communityOfVault(vault);
     address token = HabitatBase.tokenOfCommunity(communityId);
     // only check token here, assuming any invalid proposalId / vault will end with having a zero address
@@ -210,46 +210,43 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // replace any existing votes
     // check token balances, shares, signalStrength
     uint256 previousVote = HabitatBase.getVote(proposalId, account);
-    uint256 previousSignal = HabitatBase.getVoteSignal(proposalId, account);
+    uint256 previousSignal = HabitatBase._getStorage(_VOTING_SIGNAL_KEY(proposalId, account));
     if (previousVote == 0) {
-      HabitatBase._incrementVoteCount(proposalId);
-    }
-    if (shares == 0) {
-      //HabitatBase._decrementVoteCount(proposalId);
+      HabitatBase._incrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
+    } else if (shares == 0) {
+      require(signalStrength == 0, 'SIGNAL');
+      HabitatBase._decrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
     }
 
     // check for discrepancy between balance and stake
     {
       uint256 stakableBalance = _getUnstakedBalance(token, account) + previousVote;
-      require(shares > 0 && stakableBalance >= shares, 'SHARE');
+      require(stakableBalance >= shares, 'SHARE');
     }
 
-    // update member count first
     HabitatBase._maybeUpdateMemberCount(proposalId, account);
-    HabitatBase._setVote(proposalId, account, shares);
-    HabitatBase._setVoteSignal(proposalId, account, signalStrength);
+    HabitatBase._setStorage(_VOTING_SHARES_KEY(proposalId, account), shares);
+    HabitatBase._setStorage(_VOTING_SIGNAL_KEY(proposalId, account), signalStrength);
 
     // update total share count and staking amount
-    uint256 t = HabitatBase.getTotalVotingShares(proposalId);
     if (previousVote >= shares) {
       uint256 delta = previousVote - shares;
-      HabitatBase._setTotalVotingShares(proposalId, t - delta);
+      HabitatBase._decrementStorage(_VOTING_TOTAL_SHARE_KEY(proposalId), delta);
       // xxx claim any acquired fees
       // decrease stake
-      HabitatBase._decrementActiveVotingStake(token, account, delta);
+      HabitatBase._decrementStorage(_VOTING_ACTIVE_STAKE_KEY(token, account), delta);
     } else {
       uint256 delta = shares - previousVote;
-      HabitatBase._setTotalVotingShares(proposalId, t + delta);
+      HabitatBase._incrementStorage(_VOTING_TOTAL_SHARE_KEY(proposalId), delta);
       // xxx claim any acquired fees
       // increase stake
-      HabitatBase._incrementActiveVotingStake(token, account, delta);
+      HabitatBase._incrementStorage(_VOTING_ACTIVE_STAKE_KEY(token, account), delta);
     }
 
-    uint256 totalSignal = HabitatBase.getTotalVotingSignal(proposalId);
     if (previousSignal >= signalStrength) {
-      HabitatBase._setTotalVotingSignal(proposalId, totalSignal - (previousSignal - signalStrength));
+      HabitatBase._decrementStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId), previousSignal - signalStrength);
     } else {
-      HabitatBase._setTotalVotingSignal(proposalId, totalSignal + (signalStrength - previousSignal));
+      HabitatBase._incrementStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId), signalStrength - previousSignal);
     }
 
     emit VotedOnProposal(account, proposalId, signalStrength, shares);
@@ -262,12 +259,12 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // statistics
     uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
     uint256 totalVotingShares = HabitatBase.getTotalVotingShares(proposalId);
-    uint256 totalVotingSignal = HabitatBase.getTotalVotingSignal(proposalId);
+    uint256 totalVotingSignal = HabitatBase._getStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId));
     uint256 totalVoteCount = HabitatBase.getVoteCount(proposalId);
     uint256 secondsPassed;
     {
       uint256 now = RollupCoreBrick._getTime();
-      uint256 proposalStartDate = HabitatBase.proposalStartDate(proposalId);
+      uint256 proposalStartDate = HabitatBase._getStorage(_PROPOSAL_START_DATE_KEY(proposalId));
 
       if (now > proposalStartDate) {
         secondsPassed = now - proposalStartDate;
@@ -309,7 +306,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    address vault = HabitatBase.proposalVault(proposalId);
+    address vault = address(HabitatBase._getStorage(_PROPOSAL_VAULT_KEY(proposalId)));
     require(vault != address(0), 'VAULT');
     uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
     require(previousVotingStatus < 2, 'CLOSED');
@@ -319,16 +316,16 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // update proposal status (if needed)
     //if (votingStatus != 0 && votingStatus != previousVotingStatus) {
     {
-      HabitatBase._setProposalStatus(proposalId, votingStatus);
+      HabitatBase._setStorage(_PROPOSAL_STATUS_KEY(proposalId), votingStatus);
 
       // PASSED
       if (votingStatus == 3) {
         bytes32 hash = keccak256(internalActions);
-        require(HabitatBase.proposalHashInternal(proposalId) == hash, 'IHASH');
+        require(HabitatBase._getStorage(_PROPOSAL_HASH_INTERNAL_KEY(proposalId)) == uint256(hash), 'IHASH');
         _executeInternalActions(vault, internalActions);
 
         hash = keccak256(externalActions);
-        require(HabitatBase.proposalHashExternal(proposalId) == hash, 'EHASH');
+        require(HabitatBase._getStorage(_PROPOSAL_HASH_EXTERNAL_KEY(proposalId)) == uint256(hash), 'EHASH');
         if (externalActions.length != 0) {
           HabitatBase._setExecutionPermit(vault, proposalId, hash);
         }

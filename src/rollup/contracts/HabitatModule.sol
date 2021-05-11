@@ -100,11 +100,11 @@ contract HabitatModule is HabitatBase {
   function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, string calldata metadata) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
-    require(HabitatBase.moduleHash(contractAddress) == bytes32(0), 'EXISTS');
+    require(HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress)) == 0, 'EXISTS');
 
     // verify the contract code and returns the keccak256(bytecode) (reverts if invalid)
     bytes32 codeHash = _verifyModule(contractAddress);
-    HabitatBase._setModuleHash(contractAddress, codeHash);
+    HabitatBase._setStorage(_MODULE_HASH_KEY(contractAddress), codeHash);
 
     emit ModuleSubmitted(contractAddress, metadata);
   }
@@ -116,8 +116,8 @@ contract HabitatModule is HabitatBase {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     // checks if the module of submitted and verified
-    require(HabitatBase.moduleHash(condition) != bytes32(0), 'HASH');
-    require(HabitatBase.activatorOfModule(communityId, condition) == address(0));
+    require(HabitatBase._getStorage(_MODULE_HASH_KEY(condition)) != 0, 'HASH');
+    require(HabitatBase._getStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition)) == 0);
 
     // xxx acquire/buy flow
     //uint256 modulePrice = HabitatBase.modulePriceOf(condition);
@@ -125,7 +125,7 @@ contract HabitatModule is HabitatBase {
     //}
 
     // activate
-    HabitatBase._setActivatorOfModule(communityId, condition, msgSender);
+    HabitatBase._setStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition), msgSender);
 
     emit ModuleActivated(communityId, condition);
   }
