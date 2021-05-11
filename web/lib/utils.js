@@ -59,7 +59,7 @@ export function getProvider (chainId) {
 
   if (!provider || (provider._network && provider._network.chainId !== chainId)) {
     const name = getNetworkName(chainId);
-    const url = name === 'unknown' ? 'http://localhost:8222' : `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
+    const url = name === 'unknown' ? `http://${window.location.hostname}:8222` : `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
     provider = new ethers.providers.JsonRpcProvider(url, 'any');
     // workaround that ethers.js requests eth_chainId for almost any call.
     const network = ethers.providers.getNetwork(chainId);

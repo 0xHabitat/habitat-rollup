@@ -86,13 +86,11 @@ export default class HabitatStake extends HTMLElement {
 
     const token = await _getTokenCached(communityInfo.governanceToken);
     const units = ethers.utils.formatUnits(shares, token._decimals);
-    console.log({shares,units});
     const slider = this.querySelector('habitat-slider');
     const circle = this.querySelector('habitat-circle');
 
     slider.setRange(0, units, units, units);
     slider.addEventListener('change', () => {
-      console.log(slider.value);
       circle.setValue(slider.percent, renderAmount(slider.value), token._symbol);
     }, false);
 

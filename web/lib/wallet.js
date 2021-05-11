@@ -371,7 +371,7 @@ async function accountOverlay () {
   wrapListener(container.querySelector('button#close'), (evt) => {
     animatedRemove(container);
   });
-  for (const e of container.querySelectorAll('.tabs div')) {
+  for (const e of container.querySelectorAll('.tabs div > a')) {
     wrapListener(e, onTab);
   }
 
@@ -430,12 +430,13 @@ async function connect (evt) {
 }
 
 function onTab (evt) {
-  const target = evt.target.getAttribute('target');
   const ACTIVE = 'active';
-  evt.target.parentElement.parentElement.querySelector('.active').classList.remove(ACTIVE);
-  evt.target.parentElement.classList.add(ACTIVE);
+  const target = evt.target.getAttribute('target');
   const targetSection = document.querySelector(target);
   const parentContainer = targetSection.parentElement;
+
+  evt.target.parentElement.parentElement.querySelector('.active').classList.remove(ACTIVE);
+  evt.target.parentElement.classList.add(ACTIVE);
 
   for (let i = 0, len = parentContainer.children.length; i < len; i++) {
     const section = parentContainer.children[i];
