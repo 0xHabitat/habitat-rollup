@@ -95,7 +95,6 @@ class HabitatSlider extends HTMLElement {
     this.percent = Math.round((x / this._width) * 100);
     this._x = x;
     this.value = Math.max(Math.min(this.cap, (this.max * this.percent) / 100), this.min);
-    this.percent = percent;
     this.inner.style['padding-left'] = `${this.percent}%`;
 
     this.dispatchEvent(new Event('change'));
