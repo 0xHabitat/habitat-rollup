@@ -528,7 +528,7 @@ export async function getToken (val) {
   return erc20;
 }
 
-async function _getTokenCached (address) {
+export async function _getTokenCached (address) {
   const erc20 = await getErc20(address);
   try {
     if (erc20._name === undefined) {

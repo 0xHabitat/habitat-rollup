@@ -454,13 +454,13 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   };
 }
 
-export async function submitVote (communityId, proposalId, signalStrength) {
+export async function submitVote (communityId, proposalId, signalStrength, shares) {
   const { habitat } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
   const governanceToken = await habitat.tokenOfCommunity(communityId);
   const balance = await habitat.getBalance(governanceToken, account);
-  const shares = balance.div(100).mul(signalStrength).toHexString();
+  shares = (shares || balance.div(100).mul(signalStrength)).toHexString();
   const timestamp = ~~(Date.now() / 1000);
   const args = {
     proposalId,
@@ -512,7 +512,9 @@ export async function getProposalInformation (txHash) {
     console.warn(e);
   }
 
-  return { title, proposalId, startDate, vaultAddress, communityId };
+  const _net = window.location.pathname.indexOf('testnet') === -1 ? 'mainnet' : 'testnet';
+  const link = `/${_net}/proposal/#${txHash}`;
+  return { title, proposalId, startDate, vaultAddress, communityId, link };
 }
 
 export async function resolveName (str) {
@@ -704,4 +706,17 @@ export async function renderLabels (labels, labelContainer) {
     tmp.style['border-color'] = `#${label.color}`;
     labelContainer.appendChild(tmp);
   }
+}
+
+export async function queryTransactionHashForProposal (proposalId) {
+  const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'ProposalCreated', null, proposalId);
+  return logs[logs.length - 1].transactionHash;
+}
+
+export async function fetchLatestVote (account, proposalId) {
+  const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'VotedOnProposal', account, proposalId);
+  const log = logs[logs.length - 1];
+  const { habitat } = await getProviders();
+
+  return habitat.interface.parseLog(log).args;
 }

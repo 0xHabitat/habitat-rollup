@@ -30,6 +30,7 @@ import './colorSchemeToggle.js';
 import './slider.js';
 import './HabitatCircle.js';
 import './HabitatPath.js';
+import './HabitatStakes.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 const { HBT } = getConfig();
@@ -111,6 +112,9 @@ const ACCOUNT_TEMPLATE =
       <a target='#wallet-activity' class='bold secondary purple'>Activity</a>
     </div>
     <div>
+      <a target='#wallet-stakes' class='bold secondary purple'>Stakes</a>
+    </div>
+    <div>
       <a target='#wallet-delegation' class='bold secondary purple'>Delegation</a>
     </div>
   </div>
@@ -160,6 +164,10 @@ const ACCOUNT_TEMPLATE =
         <div id='history'></div>
       </div>
     </div>
+  </section>
+
+  <section class='tab' id='wallet-stakes'>
+    <habitat-stakes></habitat-stakes>
   </section>
 
   <section class='tab' id='wallet-delegation'>

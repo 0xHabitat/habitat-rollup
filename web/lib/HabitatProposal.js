@@ -53,6 +53,7 @@ export default class HabitatProposal extends HTMLElement {
       this.innerHTML = TEMPLATE;
     }
   }
+
   connectedCallback () {
     this.init();
   }
