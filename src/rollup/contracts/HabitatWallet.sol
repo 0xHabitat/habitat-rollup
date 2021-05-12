@@ -13,7 +13,7 @@ contract HabitatWallet is HabitatBase {
   /// Supports ERC-20 and ERC-721 and takes staked balances into account.
   function _getUnstakedBalance (address token, address account) internal view returns (uint256 ret) {
     uint256 staked = HabitatBase.getActiveVotingStake(token, account);
-    ret = HabitatBase.getBalance(token, account);
+    ret = getBalance(token, account);
     require(staked <= ret, 'BUG1');
     ret = ret - staked;
   }
