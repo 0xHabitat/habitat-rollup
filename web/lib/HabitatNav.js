@@ -26,7 +26,7 @@ import {
   TransferFlow,
 } from './flows.js';
 
-import './colorSchemeToggle.js';
+import './HabitatColorToggle.js';
 import './HabitatSlider.js';
 import './HabitatCircle.js';
 import './HabitatPath.js';
