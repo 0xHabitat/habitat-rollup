@@ -16,7 +16,7 @@ import {
   submitVote,
 } from './rollup.js';
 
-import './slider.js';
+import './HabitatSlider.js';
 import './HabitatCircle.js';
 
 const TEMPLATE =

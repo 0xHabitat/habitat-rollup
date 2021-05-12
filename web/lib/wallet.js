@@ -27,7 +27,7 @@ import {
 } from './flows.js';
 
 import './colorSchemeToggle.js';
-import './slider.js';
+import './HabitatSlider.js';
 import './HabitatCircle.js';
 import './HabitatPath.js';
 import './HabitatStakes.js';
