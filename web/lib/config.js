@@ -1,4 +1,9 @@
-export default {
+const DEV_ENV_BASE = `http://${window.location.hostname}`;
+export const DEV_ENV = window.location.hostname.indexOf('localhost') !== -1;
+export const ROOT_CHAIN_ID = window.location.pathname.indexOf('testnet') === -1 ? 1 : 4;
+export const L2_RPC_URL = DEV_ENV ? `${DEV_ENV_BASE}:8111/` : `https://testnet-0xhabitat.fly.dev/`;
+export const DEV_ENV_L1_RPC = `${DEV_ENV_BASE}:8222/`;
+export const CONFIGS = {
   1: {
     HBT: '0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415',
     TOKEN_TURNER: '0x51F93C014A185c2cA4877F7d97f0bD6Fc7EFf5de',
@@ -9,7 +14,7 @@ export default {
     FUNDING_SUPPLY: 2_000_000,
     EPOCH_SECONDS: 604800,
     FUNDING_START_DATE: 1615370400,
-    EVOLUTION_ENDPOINT: window.location.hostname === 'localhost' ? 'http://localhost:1111' : 'https://habitat-evolution.fly.dev',
+    EVOLUTION_ENDPOINT: DEV_ENV ? `${DEV_ENV_BASE}:1111` : 'https://habitat-evolution.fly.dev',
   },
   3: {
     HBT: '0x6533Bc5355561cbb841E81eb07056F5EbE4DF413',
@@ -33,4 +38,4 @@ export default {
     EPOCH_SECONDS: 300,
     FUNDING_START_DATE: 0x0000000000000000000000000000000000000000000000000000000060488fce,
   },
-}
+};

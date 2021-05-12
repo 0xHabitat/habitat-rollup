@@ -1,9 +1,9 @@
-import NETWORKS from './rollup-config.js';
 import { BRICK_ABI, EXECUTION_PROXY_ABI, TYPED_DATA } from './constants.js';
 import {
   getSigner,
   getProvider,
   getErc20,
+  getToken,
   getTokenSymbol,
   walletIsConnected,
   secondsToString,
@@ -11,17 +11,15 @@ import {
   getCache,
   setCache,
 } from './utils.js';
+import { L2_RPC_URL } from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
-
-const ROOT_CHAIN_ID = window.location.hostname.indexOf('localhost') === -1 ? 3 : 99;
-const { RPC_URL, EXECUTION_PROXY_ADDRESS } = NETWORKS[ROOT_CHAIN_ID];
 
 export async function getProviders () {
   if (document._providers) {
     return document._providers;
   }
 
-  const childProvider = new ethers.providers.JsonRpcProvider(RPC_URL, 'any');
+  const childProvider = new ethers.providers.JsonRpcProvider(L2_RPC_URL, 'any');
   const network = await childProvider.detectNetwork();
   childProvider.detectNetwork = async () => network;
 
@@ -425,11 +423,13 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
 
   let userShares = ethers.BigNumber.from(0);
   let userSignal = 0;
+  let userBalance = ethers.BigNumber.from(0);
   if (walletIsConnected()) {
     const signer = await getSigner();
     const account = await signer.getAddress();
     const userVote = await habitat.getVote(proposalId, account);
 
+    userBalance = ethers.utils.formatUnits(await habitat.getBalance(erc20.address, account), erc20._decimals);
     if (userVote.gt(0)) {
       userShares = ethers.utils.formatUnits(userVote, erc20._decimals);
       userSignal = signals[account];
@@ -451,16 +451,17 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     userSignal,
     tokenSymbol,
     proposalStatus,
+    userBalance,
   };
 }
 
-export async function submitVote (communityId, proposalId, signalStrength, shares) {
+export async function submitVote (communityId, proposalId, signalStrength, _shares) {
   const { habitat } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
   const governanceToken = await habitat.tokenOfCommunity(communityId);
-  const balance = await habitat.getBalance(governanceToken, account);
-  shares = (shares || balance.div(100).mul(signalStrength)).toHexString();
+  const token = await getToken(governanceToken);
+  const shares = ethers.utils.parseUnits(_shares, await token._decimals).toHexString();
   const timestamp = ~~(Date.now() / 1000);
   const args = {
     proposalId,
@@ -491,7 +492,18 @@ export async function getTreasuryInformation (vaultAddress) {
   const evt = habitat.interface.parseLog(logs[logs.length - 1]);
   const metadata = JSON.parse(evt.args.metadata);
 
-  return Object.assign(metadata, { });
+  return metadata;
+}
+
+export async function getModuleInformation (vaultAddress) {
+  const { habitat } = await getProviders();
+  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
+  const evt = habitat.interface.parseLog(logs[logs.length - 1]);
+  const metadata = await fetchModuleInformation(evt.args.condition);
+
+  metadata.flavor = metadata.flavor || 'binary';
+
+  return metadata;
 }
 
 export async function getProposalInformation (txHash) {
@@ -504,17 +516,18 @@ export async function getProposalInformation (txHash) {
   const startDate = evt.args.startDate;
   const vaultAddress = evt.args.vault;
   const communityId = await habitat.communityOfVault(vaultAddress);
+  let metadata = {};
   let title = '???';
   try {
-    const obj = JSON.parse(tx.message.metadata);
-    title = obj.title || title;
+    metadata = JSON.parse(tx.message.metadata);
+    title = metadata.title || title;
   } catch (e) {
     console.warn(e);
   }
 
   const _net = window.location.pathname.indexOf('testnet') === -1 ? 'mainnet' : 'testnet';
   const link = `/${_net}/proposal/#${txHash}`;
-  return { title, proposalId, startDate, vaultAddress, communityId, link };
+  return { title, proposalId, startDate, vaultAddress, communityId, link, metadata };
 }
 
 export async function resolveName (str) {

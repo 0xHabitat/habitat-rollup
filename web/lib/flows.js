@@ -88,7 +88,9 @@ export class BaseFlow {
 
     // enter
     if (!evt || evt.which === 13) {
-      const str = this.input.value.split(' - ')[0];
+      /// xxx hacky workaround for some datalist ?
+      //const str = this.input.value.split(' - ')[0];
+      const str = this.input.value;
 
       this.input.blur();
       this.input.value = '';

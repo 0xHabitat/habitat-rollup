@@ -336,6 +336,16 @@ button:active,
   color: var(--color-black);
 }
 
+.red {
+  background-color: var(--color-red);
+  color: var(--color-white);
+}
+
+.green {
+  background-color: var(--color-green);
+  color: var(--color-white);
+}
+
 .left {
   text-align: left;
 }
