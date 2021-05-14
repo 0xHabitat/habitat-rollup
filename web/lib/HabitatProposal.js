@@ -12,7 +12,8 @@ import {
   renderLabels,
   getModuleInformation,
 } from './rollup.js';
-import HabitatCircle from '/lib/HabitatCircle.js';
+import './HabitatCircle.js';
+import './HabitatVotingSub.js';
 
 const TEMPLATE =
 `
@@ -25,34 +26,10 @@ const TEMPLATE =
   <center style='padding-bottom:1rem;'>
     <habitat-circle class='signal'></habitat-circle>
     <p id='totalVotes' class='text-center smaller bold' style='padding:.3rem;'></p>
-    <p id='feedback' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
     <p id='time' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
   </center>
 
-  <label>
-    The amount to stake
-    <input style='min-width:100%;margin:auto;' class='smaller' id='shares' type='number' value='1'>
-  </label>
-  <div id='binary' class='flex row center' style='display:none;width:20ch;'>
-    <label>
-    A binary vote stakes your amount above on either Yes or No.
-    <div class='flex row center'>
-    <button id='vote' class='bold yes green' disabled>Yes</button>
-    <button id='vote' class='bold no red' disabled>No</button>
-    </div>
-    </label>
-  </div>
-  <div id='signal' class='flex row center' style='display:none;width:30ch;'>
-    <div style="width:100%;height:1.4rem;font-size:.7rem;">
-      <h3 class="left inline" style="float:left;text-shadow:0 0 2px #909090;">❄️</h3>
-      <h3 class="right inline" style="float:right;text-shadow:0 0 2px #909090;">🔥</h3>
-    </div>
-    <habitat-slider></habitat-slider>
-    <label>
-    A signaling vote stakes your amount above and your signaled importance on this proposal.
-    <button id='vote' class='bold signal' disabled>Vote</button>
-    </label>
-  </div>
+  <habitat-voting-sub></habitat-voting-sub>
 
   <div class='flex col'>
     <a target='_blank' id='open' class='button smaller purple'>View Proposal</a>
@@ -124,37 +101,13 @@ export default class HabitatProposal extends HTMLElement {
     } = await fetchProposalStats({ communityId, proposalId });
     const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
     const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(startDate);
-    const inputShares = document.querySelector('#shares');
 
-    for (const ele of this.querySelectorAll('button#vote')) {
-      ele.disabled = votingDisabled;
-      wrapListener(
-        ele,
-        async (evt) => {
-          let signalStrength = 0;
-          const shares = inputShares.value;
-
-          if (flavor === 'binary') {
-            signalStrength = evt.target.classList.contains('yes') ? 100 : 1;
-          } else if (flavor === 'signal') {
-            signalStrength = Number(slider.value);
-          }
-
-          await submitVote(communityId, proposalId, signalStrength, shares);
-          await this.update(proposalCreatedEvent);
-        }
-      );
-    }
     this.querySelector('#time').textContent = status;
     this.querySelector('habitat-circle').setValue(signalStrength, renderAmount(totalShares), tokenSymbol);
-    this.querySelector(`div#${flavor}`).style.display = 'block';
 
-    if (userSignal) {
-      this.querySelector('#feedback').textContent = `You Voted with ${renderAmount(userShares)} ${tokenSymbol}.`;
-    }
-
-    inputShares.value = userShares;
-    inputShares.max = userShares;
+    const votingElement = this.querySelector('habitat-voting-sub');
+    votingElement.addEventListener('update', () => this.update(proposalCreatedEvent), { once: true });
+    votingElement.update({ proposalId, vault });
 
     if (slider.value == slider.defaultValue) {
       slider.setRange(1, 100, 100, defaultSliderValue);

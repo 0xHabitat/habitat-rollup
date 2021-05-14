@@ -367,6 +367,7 @@ export async function setupModulelist () {
     return;
   }
 
+  const FLAVOR_TYPES = ['binary', 'signal'];
   const modules = [];
   // query transactions with the `SubmitModule` type
   for (const tx of await doQueryByPrimaryTypes(['SubmitModule'])) {
@@ -374,6 +375,10 @@ export async function setupModulelist () {
       const { contractAddress, metadata } = tx.message;
       const meta = JSON.parse(metadata);
 
+      if (FLAVOR_TYPES.indexOf(meta.flavor) === -1) {
+        console.warn('invalid module metadata', meta, tx);
+        continue;
+      }
       modules.push({ name: meta.name || '<unknown>', address: contractAddress });
     } catch (e) {
       console.warn(e);

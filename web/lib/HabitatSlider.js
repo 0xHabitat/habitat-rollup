@@ -38,9 +38,8 @@ class HabitatSlider extends HTMLElement {
     this.cap = Number(cap);
     this.min = Number(min);
     this.defaultValue = defaultValue !== undefined ? Number(defaultValue) : this.cap;
-
-    this._width = this.offsetWidth;
-    this._x = (this._width * (this.defaultValue / this.max));
+    // trigger reset
+    this._width = 0;
 
     this.scheduleUpdate();
   }
@@ -80,6 +79,13 @@ class HabitatSlider extends HTMLElement {
   }
 
   scheduleUpdate () {
+    if (this._width === 0) {
+      this._width = this.offsetWidth;
+      this._x = (this._width * (this.defaultValue / this.max));
+      window.requestAnimationFrame(() => this.scheduleUpdate());
+      return;
+    }
+
     if (this.scheduled) {
       return;
     }

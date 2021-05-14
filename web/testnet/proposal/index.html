@@ -52,19 +52,8 @@
             </div>
           </section>
 
-          <div style='width:42ch;max-width:100%;'>
-            <label>
-            How do you feel about this?
-            </label>
-            <div style="width:100%;height:1.4rem;font-size:.7rem;">
-              <h3 class="left inline" style="float:left;text-shadow:0 0 2px #909090;">❄️</h3>
-              <h3 class="right inline" style="float:right;text-shadow:0 0 2px #909090;">🔥</h3>
-            </div>
-            <habitat-slider id='signal'></habitat-slider>
-            <space></space>
-            <p id='feedback' class='bold smaller'> </p>
-            <button id='vote' disabled class='bold green'>Vote</button>
-          </div>
+          <habitat-voting-sub></habitat-voting-sub>
+
           <div class='flex actions'>
             <button id='finalize' disabled>Finalize Proposal</button>
             <button id='execProposal' disabled>Execute On-chain Proposal actions</button>

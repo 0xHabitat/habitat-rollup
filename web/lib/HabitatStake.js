@@ -33,6 +33,10 @@ const TEMPLATE =
       Tap or Drag the slider to adjust the stake
       <habitat-slider></habitat-slider>
     </label>
+    <label>
+      Or manually enter your desired stake
+      <input type='number' min='0' style='min-width:auto;'>
+    </label>
     <div class='flex'>
       <button id='vote' class='smaller purple'>Change</button>
       <a id='link' target='_blank' class='button secondary smaller'>View Proposal</a>
@@ -87,18 +91,26 @@ export default class HabitatStake extends HTMLElement {
     const token = await _getTokenCached(communityInfo.governanceToken);
     const units = ethers.utils.formatUnits(shares, token._decimals);
     const slider = this.querySelector('habitat-slider');
+    const input = this.querySelector('input');
     const circle = this.querySelector('habitat-circle');
 
     slider.setRange(0, units, units, units);
     slider.addEventListener('change', () => {
-      circle.setValue(slider.percent, renderAmount(slider.value), token._symbol);
+      circle.setValue(slider.percent, renderAmount(input.value), token._symbol);
+      if (document.activeElement !== input) {
+        input.value = slider.value;
+      }
+    }, false);
+    input.addEventListener('keyup', () => {
+      console.log({units,x:input.value});
+      slider.setRange(0, units, units, input.value);
     }, false);
 
     wrapListener(
       this.querySelector('button'),
       async () => {
-        const _shares = ethers.BigNumber.from(shares).div(100).mul(slider.percent);
-        await submitVote(info.communityId, proposalId, _shares.eq(0) ? 0 : signalStrength, _shares);
+        const shares = input.value;
+        await submitVote(info.communityId, proposalId, Number(shares) ? signalStrength : 0, shares);
         await this.update();
       }
     );

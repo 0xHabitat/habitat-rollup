@@ -19,7 +19,6 @@ import {
   humanProposalTime,
   getUsername,
   fetchProposalStats,
-  submitVote,
   VotingStatus,
   simulateProcessProposal,
   fetchIssue,
@@ -70,7 +69,6 @@ async function updateProposal () {
   const { internalActions, externalActions } = tx.message;
   const nextStatus = await simulateProcessProposal({ proposalId, internalActions, externalActions });
 
-  document.querySelector('#vote').disabled = votingDisabled;
   document.querySelector('#finalize').disabled = !(nextStatus > VotingStatus.OPEN);
   document.querySelector('#execProposal').disabled = !(proposalStatus.eq(VotingStatus.PASSED) && tx.message.externalActions !== '0x');
 
@@ -98,14 +96,7 @@ async function updateProposal () {
     circles.querySelector('#shares').setValue(signalStrength, renderAmount(totalShares), totalShares !== 1 ? 'Shares' : 'Share');
   }
 
-  if (userSignal) {
-    document.querySelector('#feedback').textContent = `You Voted with ${renderAmount(userShares)} ${tokenSymbol}.`;
-  }
-
-  const slider = document.querySelector('habitat-slider#signal');
-  if (slider.value == slider.defaultValue) {
-    slider.setRange(1, 100, 100, defaultSliderValue);
-  }
+  document.querySelector('habitat-voting-sub').update({ proposalId, vault: tx.message.vault });
 }
 
 async function render () {
@@ -194,10 +185,9 @@ async function render () {
   }
 
   {
-    wrapListener('button#vote', async () => {
-      await submitVote(communityId, proposalId, slider.value);
+    wrapListener('habitat-voting-sub', async () => {
       await updateProposal();
-    });
+    }, 'update');
     wrapListener('button#finalize', () => processProposal(proposalId, tx));
 
     // any actions we can execute?
