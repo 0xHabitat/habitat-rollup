@@ -40,8 +40,8 @@ const PERMIT_EIP_2612 = new ethers.utils.Interface(
   ['function permit(address owner,address spender,uint256 value,uint256 deadline,uint8 v,bytes32 r,bytes32 s)']
 );
 
-const _cache = {};
-const _providers = {};
+document._utilsCache = {};
+document._utilsProviders = {};
 
 export function getNetwork () {
   return ROOT_CHAIN_ID;
@@ -54,7 +54,7 @@ export function getProvider (chainId) {
   if (chainId === undefined) {
     chainId = ROOT_CHAIN_ID;
   }
-  let provider = _providers[chainId];
+  let provider = document._utilsProviders[chainId];
 
   if (!provider || (provider._network && provider._network.chainId !== chainId)) {
     const name = getNetworkName(chainId);
@@ -63,7 +63,7 @@ export function getProvider (chainId) {
     // workaround that ethers.js requests eth_chainId for almost any call.
     const network = ethers.providers.getNetwork(chainId);
     provider.detectNetwork = async () => network;
-    _providers[chainId] = provider;
+    document._utilsProviders[chainId] = provider;
   }
 
   return provider;
@@ -75,7 +75,7 @@ export function getNetworkName (id) {
 }
 
 export async function getErc20 (addr) {
-  if (!_cache[addr]) {
+  if (!document._utilsCache[addr]) {
     const tkn = new ethers.Contract(addr, ERC20_ABI, getProvider());
     tkn._decimals = 18;
     try {
@@ -83,10 +83,10 @@ export async function getErc20 (addr) {
     } catch (e) {
       console.error(e);
     }
-    _cache[addr] = tkn;
+    document._utilsCache[addr] = tkn;
   }
 
-  return _cache[addr];
+  return document._utilsCache[addr];
 }
 
 const WALLET_AUTH_KEY = '_utils_wallet_auth';

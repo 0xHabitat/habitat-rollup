@@ -15,8 +15,8 @@ import { L2_RPC_URL } from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export async function getProviders () {
-  if (document._providers) {
-    return document._providers;
+  if (document._rollupProviders) {
+    return document._rollupProviders;
   }
 
   const childProvider = new ethers.providers.JsonRpcProvider(L2_RPC_URL, 'any');
@@ -28,9 +28,9 @@ export async function getProviders () {
   const habitat = new ethers.Contract(bridgeAddress, BRICK_ABI, childProvider);
   const bridge = habitat.connect(rootProvider);
 
-  document._providers = { rootProvider, childProvider, habitat, bridge };
+  document._rollupProviders = { rootProvider, childProvider, habitat, bridge };
 
-  return document._providers;
+  return document._rollupProviders;
 }
 
 export async function simulateTransaction (primaryType, _message) {

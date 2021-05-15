@@ -1,7 +1,6 @@
 import {
   wrapListener,
   renderAmount,
-  ethers,
 } from './utils.js';
 import {
   getProviders,
@@ -101,14 +100,14 @@ export default class HabitatVotingSub extends HTMLElement {
       slider.setRange(1, 100, 100, defaultSliderValue);
     }
 
-    if (userShares) {
+    if (userShares > 0) {
       this.querySelector('#feedback').textContent = `You Voted with ${renderAmount(userShares)} ${tokenSymbol}.`;
     }
 
     this.querySelector(`div#${flavor}`).style.display = 'block';
-    inputShares.value = userShares;
+    inputShares.value = userShares.toString();
     // xxx: take active voting stake into account
-    inputShares.max = userBalance;
+    inputShares.max = userBalance.toString();
   }
 }
 

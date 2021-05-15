@@ -105,7 +105,6 @@ async function render () {
   tx = await habitat.provider.send('eth_getTransactionByHash', [proposalTxHash]);
   const receipt = await habitat.provider.send('eth_getTransactionReceipt', [proposalTxHash]);
   const proposalEvent = habitat.interface.parseLog(receipt.logs[0]);
-  const slider = document.querySelector('habitat-slider#signal');
   proposer = await getUsername(receipt.from);
   console.log({tx,receipt});
   let metadata = {};
