@@ -506,9 +506,11 @@ export class UsernameFlow extends BaseFlow {
   }
 
   async confirmName (ctx) {
-    this.context.shortString = getShortString(ctx.username);
-    const logs = await doQueryWithOptions({ maxResults: 1 }, 'ClaimUsername', null, this.context.shortString);
-    if (logs.length) {
+    ctx.shortString = getShortString(ctx.username);
+
+    try {
+      const ret = await simulateTransaction('ClaimUsername', ctx);
+    } catch (e) {
       throw new Error('Ouch, that one is already taken 😢');
     }
 
