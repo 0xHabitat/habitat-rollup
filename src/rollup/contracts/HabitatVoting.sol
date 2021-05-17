@@ -253,7 +253,11 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
   }
 
   /// @dev Invokes IModule.onProcessProposal(...) on `vault`
-  function _callProcessProposal (bytes32 proposalId, address vault) internal returns (uint256 votingStatus) {
+  function _callProcessProposal (
+    bytes32 proposalId,
+    address vault
+  ) internal returns (uint256 votingStatus, uint256 secondsTillClose)
+  {
     bytes32 communityId = HabitatBase.communityOfVault(vault);
 
     // statistics
@@ -288,10 +292,14 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 MAX_GAS = 90000;
     address vaultCondition = _getVaultCondition(vault);
     assembly {
+      // clear memory
       mstore(0, 0)
-      let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 32)
+      mstore(32, 0)
+      // call
+      let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 64)
       if success {
         votingStatus := mload(0)
+        secondsTillClose := mload(32)
       }
     }
   }
@@ -302,7 +310,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     bytes32 proposalId,
     bytes calldata internalActions,
     bytes calldata externalActions
-  ) external returns (uint256 votingStatus) {
+  ) external returns (uint256 votingStatus, uint256 secondsTillClose) {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
@@ -311,7 +319,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
     require(previousVotingStatus < 2, 'CLOSED');
 
-    votingStatus = _callProcessProposal(proposalId, vault);
+    (votingStatus, secondsTillClose) = _callProcessProposal(proposalId, vault);
 
     // update proposal status (if needed)
     //if (votingStatus != 0 && votingStatus != previousVotingStatus) {

@@ -37,23 +37,25 @@ contract SevenDayVoting is IModule {
     uint256 totalVotingSignal,
     uint256 totalValueLocked,
     uint256 secondsPassed
-  ) external view override returns (VotingStatus) {
-
+  ) external view override returns (VotingStatus, uint256) {
     // 7 days
-    if (secondsPassed < 604800) {
-      return VotingStatus.OPEN;
+    uint256 VOTING_DURATION = 604800;
+    uint256 secondsTillClose = secondsPassed > VOTING_DURATION ? 0 : VOTING_DURATION - secondsPassed;
+
+    if (secondsPassed < VOTING_DURATION) {
+      return (VotingStatus.OPEN, secondsTillClose);
     }
 
     uint256 minQuorum = totalValueLocked / 10;
     if (totalVotingShares < minQuorum) {
-      return VotingStatus.CLOSED;
+      return (VotingStatus.CLOSED, secondsTillClose);
     }
 
     uint256 averageSignal = totalVotingSignal / totalVoteCount;
     if (averageSignal > 50) {
-      return VotingStatus.PASSED;
+      return (VotingStatus.PASSED, secondsTillClose);
     }
 
-    return VotingStatus.CLOSED;
+    return (VotingStatus.CLOSED, secondsTillClose);
   }
 }

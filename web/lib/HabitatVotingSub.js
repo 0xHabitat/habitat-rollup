@@ -18,7 +18,7 @@ const TEMPLATE =
     The amount to stake
     <input style='min-width:100%;margin:auto;' class='smaller' id='shares' type='number' value='1'>
   </label>
-  <p id='feedback' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
+  <p id='feedback' class='smaller center bold text-center' style='padding:0;margin:0;'></p>
   <div id='binary' class='flex row center' style='display:none;width:20ch;'>
     <label>
     A binary vote stakes your amount above on either Yes or No.

@@ -2,6 +2,7 @@ import {
   wrapListener,
   renderAmount,
   ethers,
+  secondsToString,
 } from './utils.js';
 import {
   getProviders,
@@ -11,6 +12,7 @@ import {
   humanProposalTime,
   renderLabels,
   getModuleInformation,
+  simulateProcessProposal,
 } from './rollup.js';
 import './HabitatCircle.js';
 import './HabitatVotingSub.js';
@@ -27,6 +29,7 @@ const TEMPLATE =
     <habitat-circle class='signal'></habitat-circle>
     <p id='totalVotes' class='text-center smaller bold' style='padding:.3rem;'></p>
     <p id='time' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
+    <p id='tillClose' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
   </center>
 
   <habitat-voting-sub></habitat-voting-sub>
@@ -57,6 +60,9 @@ export default class HabitatProposal extends HTMLElement {
   async update (proposalCreatedEvent) {
     this.init();
 
+    const { habitat } = await getProviders();
+    const txHash = proposalCreatedEvent.transactionHash;
+    const tx = await habitat.provider.send('eth_getTransactionByHash', [txHash]);
     const { proposalId, startDate, vault } = proposalCreatedEvent.args;
     let metadata = {};
     let title = '???';
@@ -81,7 +87,6 @@ export default class HabitatProposal extends HTMLElement {
       renderLabels(labels, this.querySelector('#labels'));
     }
 
-    const { habitat } = await getProviders();
     const communityId = await habitat.communityOfVault(vault);
     const { flavor } = await getModuleInformation(vault);
     const slider = this.querySelector('habitat-slider');
@@ -99,9 +104,18 @@ export default class HabitatProposal extends HTMLElement {
       proposalStatus,
       userBalance,
     } = await fetchProposalStats({ communityId, proposalId });
+    const simResult = await simulateProcessProposal(
+      {
+        proposalId,
+        internalActions: tx.message.internalActions,
+        externalActions: tx.message.externalActions,
+      }
+    );
     const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
     const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(startDate);
+    const tillClose = simResult.secondsTillClose === -1 ? '∞' : secondsToString(simResult.secondsTillClose);
 
+    this.querySelector('#tillClose').textContent = `Closes in ${tillClose}`;
     this.querySelector('#time').textContent = status;
     this.querySelector('habitat-circle').setValue(signalStrength, renderAmount(totalShares), tokenSymbol);
 

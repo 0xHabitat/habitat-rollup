@@ -655,6 +655,8 @@ export async function fetchVaultInformation (vaultAddress) {
 
 export async function simulateProcessProposal ({ proposalId, internalActions, externalActions }) {
   let votingStatus = VotingStatus.UNKNOWN;
+  // infinity
+  let secondsTillClose = -1;
   try {
     const { habitat } = await getProviders();
     const ret = await habitat.provider.send(
@@ -666,12 +668,16 @@ export async function simulateProcessProposal ({ proposalId, internalActions, ex
       }]
     );
 
-    votingStatus = Number(ret) || VotingStatus.UNKNOWN;
+    votingStatus = Number(ret.substring(0, 66)) || VotingStatus.UNKNOWN;
+    secondsTillClose = parseInt(ret.substring(66, 130), 16);
+    if (secondsTillClose > Number.MAX_SAFE_INTEGER) {
+      secondsTillClose = -1;
+    }
   } catch (e) {
     console.warn(e);
   }
 
-  return votingStatus;
+  return { votingStatus, secondsTillClose };
 }
 
 export function getDeployCode (codeStr) {

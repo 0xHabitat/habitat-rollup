@@ -31,10 +31,10 @@ contract OneThirdParticipationThreshold is IModule {
     uint256 totalVotingSignal,
     uint256 totalValueLocked,
     uint256 secondsPassed
-  ) external view override returns (VotingStatus) {
+  ) external view override returns (VotingStatus, uint256) {
 
     if (totalVoteCount == 0 || secondsPassed < 1) {
-      return VotingStatus.OPEN;
+      return (VotingStatus.OPEN, uint256(-1));
     }
 
     uint256 PRECISION = 10000;
@@ -44,12 +44,12 @@ contract OneThirdParticipationThreshold is IModule {
 
     if (participation > THRESHOLD) {
       if (averageSignal > 50) {
-        return VotingStatus.PASSED;
+        return (VotingStatus.PASSED, 0);
       } else {
-        return VotingStatus.CLOSED;
+        return (VotingStatus.CLOSED, 0);
       }
     }
 
-    return VotingStatus.OPEN;
+    return (VotingStatus.OPEN, 0);
   }
 }

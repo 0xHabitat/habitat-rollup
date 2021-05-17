@@ -67,9 +67,10 @@ async function updateProposal () {
   const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
   const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(tx.message.startDate);
   const { internalActions, externalActions } = tx.message;
-  const nextStatus = await simulateProcessProposal({ proposalId, internalActions, externalActions });
+  const { votingStatus, secondsTillClose } = await simulateProcessProposal({ proposalId, internalActions, externalActions });
+  const tillClose = secondsTillClose === -1 ? '∞' : secondsToString(secondsTillClose);
 
-  document.querySelector('#finalize').disabled = !(nextStatus > VotingStatus.OPEN);
+  document.querySelector('#finalize').disabled = !(votingStatus > VotingStatus.OPEN);
   document.querySelector('#execProposal').disabled = !(proposalStatus.eq(VotingStatus.PASSED) && tx.message.externalActions !== '0x');
 
   // some metadata below the proposal
@@ -78,6 +79,7 @@ async function updateProposal () {
       id: proposalId,
       status,
       proposer,
+      'Closes in': tillClose,
     };
 
     const container = document.querySelector('#proposalStats');

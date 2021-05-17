@@ -33,7 +33,7 @@ contract FeatureFarmSignaling is IModule {
     uint256 totalVotingSignal,
     uint256 totalValueLocked,
     uint256 secondsPassed
-  ) external view override returns (VotingStatus) {
-    return VotingStatus.OPEN;
+  ) external view override returns (VotingStatus, uint256) {
+    return (VotingStatus.OPEN, uint256(-1));
   }
 }
