@@ -271,26 +271,46 @@ describe('HabitatV1', async function () {
         const args = {
           shortString: Array.from((new TextEncoder()).encode('alice')),
         };
-        if (alreadyClaimed) {
-          await assert.rejects(createTransaction('ClaimUsername', args, alice, habitat), /SET/);
-        } else {
-          const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
-          assert.equal(receipt.status, '0x1', 'success');
-          assert.equal(receipt.logs.length, 1, '# events');
+        const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
+        assert.equal(receipt.status, '0x1', 'success');
+        assert.equal(receipt.logs.length, 1, '# events');
 
-          const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-          assert.equal(evt.account, alice.address);
-          assert.equal(BigInt(evt.shortString), BigInt(ethers.utils.hexlify(args.shortString)));
-          assert.equal(await habitat.nameToAddress(evt.shortString), alice.address);
-          names[alice.address] = args.shortString;
-        }
+        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        assert.equal(evt.account, alice.address);
+        assert.equal(BigInt(evt.shortString), BigInt(ethers.utils.hexlify(args.shortString)));
+        names[alice.address] = args.shortString;
       });
 
+      let randomClaimedUsername;
       it('alice: claim random user name', async () => {
         const args = {
           shortString: Array.from(ethers.utils.randomBytes(32)),
         };
+        randomClaimedUsername = args.shortString;
         const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
+        assert.equal(receipt.status, '0x1', 'success');
+      });
+
+      it('bob: claiming username from alice should fail', async () => {
+        const args = {
+          shortString: randomClaimedUsername,
+        };
+        await assert.rejects(createTransaction('ClaimUsername', args, bob, habitat), /SET/);
+      });
+
+      it('alice: free randomn username by choosing another', async () => {
+        const args = {
+          shortString: Array.from(ethers.utils.randomBytes(32)),
+        };
+        const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
+        assert.equal(receipt.status, '0x1', 'success');
+      });
+
+      it('bob: claim freed username', async () => {
+        const args = {
+          shortString: randomClaimedUsername,
+        };
+        const { receipt } = await createTransaction('ClaimUsername', args, bob, habitat);
         assert.equal(receipt.status, '0x1', 'success');
       });
 

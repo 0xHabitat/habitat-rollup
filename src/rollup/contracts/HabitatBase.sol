@@ -247,10 +247,11 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function nameToAddress (bytes32 shortString) public virtual view returns (address ret) {
-    uint256 key = _NAME_TO_ADDRESS_KEY(shortString);
+  function _ADDRESS_TO_NAME_KEY (address account) internal pure returns (uint256 ret) {
     assembly {
-      ret := sload(key)
+      mstore(0, 0x83cb99259282c2842186d0db03ab6fdfc530b2afa0eb2a4fe480c4815a5e1f34)
+      mstore(32, account)
+      ret := keccak256(0, 64)
     }
   }
 
