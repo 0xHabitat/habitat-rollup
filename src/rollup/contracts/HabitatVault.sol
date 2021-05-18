@@ -23,7 +23,8 @@ contract HabitatVault is HabitatBase {
     // checks if the community exists
     require(tokenOfCommunity(communityId) != address(0), 'COMMUNITY');
     // checks if the community has this module activated
-    require(HabitatBase._getStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition)) != 0, 'ACTIVE');
+    // xxx not needed yet
+    // require(HabitatBase._getStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition)) != 0, 'ACTIVE');
 
     // generate unique address
     address vaultAddress = HabitatBase._calculateAddress(msgSender, nonce, communityId);

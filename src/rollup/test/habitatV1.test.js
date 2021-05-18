@@ -355,7 +355,7 @@ describe('HabitatV1', async function () {
           condition: vaultCondition,
           metadata: '{}',
         };
-        await assert.rejects(createTransaction('CreateVault', args, alice, habitat), 'ACTIVE');
+        await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /HASH/);
       });
 
       it('activate condition should fail - not submitted yet', async () => {
