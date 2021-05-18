@@ -4,17 +4,17 @@ pragma solidity >=0.6.2;
 import '../TokenTurner.sol';
 
 contract TokenTurnerMainnet is TokenTurner {
-  function INPUT_TOKEN () internal view override returns (address) {
+  function INPUT_TOKEN () internal pure override returns (address) {
     // DAI
     return 0x6B175474E89094C44Da98b954EedeAC495271d0F;
   }
 
-  function OUTPUT_TOKEN () internal view override returns (address) {
+  function OUTPUT_TOKEN () internal pure override returns (address) {
     // HBT
     return 0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415;
   }
 
-  function COMMUNITY_FUND () internal view override returns (address) {
+  function COMMUNITY_FUND () internal pure override returns (address) {
     // multisig
     return 0xc97f82c80DF57c34E84491C0EDa050BA924D7429;
   }

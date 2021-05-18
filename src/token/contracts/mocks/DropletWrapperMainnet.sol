@@ -16,17 +16,17 @@ contract DropletWrapperMainnet is DropletWrapper {
     return _droplet;
   }
 
-  function OWNER () internal view override returns (address) {
+  function OWNER () internal pure override returns (address) {
     // multisig
     return 0xc97f82c80DF57c34E84491C0EDa050BA924D7429;
   }
 
-  function SOURCE_TOKEN () internal view override returns (address) {
+  function SOURCE_TOKEN () internal pure override returns (address) {
     // HBT
     return 0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415;
   }
 
-  function ACTIVATION_DELAY () internal view override returns (uint256) {
+  function ACTIVATION_DELAY () internal pure override returns (uint256) {
     // 2 weeks
     return 1209600;
   }

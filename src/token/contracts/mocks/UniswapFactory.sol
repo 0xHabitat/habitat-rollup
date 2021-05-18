@@ -36,7 +36,7 @@ contract UniswapV2ERC20 {
   event Approval(address indexed owner, address indexed spender, uint value);
   event Transfer(address indexed from, address indexed to, uint value);
 
-  constructor() public {
+  constructor() {
     uint chainId;
     assembly {
       chainId := chainid()
@@ -158,7 +158,7 @@ contract UniswapV2Pair is UniswapV2ERC20 {
       );
   event Sync(uint112 reserve0, uint112 reserve1);
 
-  constructor() public {
+  constructor() {
     factory = msg.sender;
   }
 
@@ -309,7 +309,7 @@ contract UniswapV2Factory {
 
   event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
-  constructor(address _feeToSetter) public {
+  constructor(address _feeToSetter) {
     feeToSetter = _feeToSetter;
   }
 
