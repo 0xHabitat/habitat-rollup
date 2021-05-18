@@ -29,5 +29,5 @@ interface IModule {
     uint256 totalVotingSignal,
     uint256 totalValueLocked,
     uint256 secondsPassed
-  ) external view returns (VotingStatus, uint256 secondsTillClose);
+  ) external view returns (VotingStatus, uint256 secondsTillClose, uint256 quorumPercent);
 }

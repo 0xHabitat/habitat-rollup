@@ -15,12 +15,12 @@ contract ExecutionProxy is MetaProxyFactory {
 
   event NewProxyCreated(address addr);
 
-  constructor (address _delegate) public {
+  constructor (address _delegate) {
     delegate = _delegate;
   }
 
   // @notice MetaProxy construction via calldata.
-  function create (address vault) external returns (address addr) {
+  function createProxy (address /*vault*/) external returns (address addr) {
     addr = MetaProxyFactory._metaProxyFromCalldata();
     emit NewProxyCreated(addr);
   }

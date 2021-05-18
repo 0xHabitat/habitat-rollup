@@ -20,7 +20,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     return 3600 * 32;
   }
 
-  function _commonChecks () internal {
+  function _commonChecks () internal view {
     // all power the core protocol
     require(msg.sender == address(this));
   }
@@ -31,7 +31,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     _incrementStorage(_TX_NONCE_KEY(msgSender));
   }
 
-  function _calculateAddress (address msgSender, uint256 nonce, bytes32 salt) internal returns (address ret) {
+  function _calculateAddress (address msgSender, uint256 nonce, bytes32 salt) internal pure returns (address ret) {
     assembly {
       let backup := mload(64)
       mstore(0, msgSender)
@@ -69,7 +69,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     require(newValue <= oldValue, 'DECR');
   }
 
-  function _getStorage (uint256 key) internal returns (uint256 ret) {
+  function _getStorage (uint256 key) internal view returns (uint256 ret) {
     assembly {
       ret := sload(key)
     }
@@ -360,7 +360,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function getTotalValueLocked (address token) public view returns (uint256 value) {
+  function getTotalValueLocked (address token) public view virtual returns (uint256 value) {
     uint256 key = _TOKEN_TVL_KEY(token);
     assembly {
       value := sload(key)

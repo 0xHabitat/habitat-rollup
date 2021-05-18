@@ -12,7 +12,7 @@ contract HabitatModule is HabitatBase {
   /// introduce side effects on the rollup at will.
   /// The convention for Modules is that they handle a known set of callbacks
   /// without handling their own state. Thus, opcodes for state handling etc are not allowed.
-  function _verifyModule (address contractAddress) internal returns (bytes32 codehash) {
+  function _verifyModule (address contractAddress) internal view returns (bytes32 codehash) {
     assembly {
       function doRevert () {
         // xxx add error message?

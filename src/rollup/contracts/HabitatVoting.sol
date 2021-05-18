@@ -25,7 +25,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
   }
 
   /// @dev Lookup condition (module) and verify the codehash
-  function _getVaultCondition (address vault) internal returns (address) {
+  function _getVaultCondition (address vault) internal view returns (address) {
     address contractAddress = address(HabitatBase._getStorage(_VAULT_CONDITION_KEY(vault)));
     require(contractAddress != address(0), 'VAULT');
 
@@ -101,12 +101,12 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 startDate,
     bytes memory internalActions,
     bytes memory externalActions
-  ) internal {
+  ) internal view {
     bytes32 communityId = HabitatBase.communityOfVault(vault);
     // statistics
     uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
     address governanceToken = HabitatBase.tokenOfCommunity(communityId);
-    uint256 totalValueLocked = HabitatBase.getTotalValueLocked(governanceToken);
+    uint256 totalValueLocked = getTotalValueLocked(governanceToken);
     uint256 proposerBalance = getBalance(governanceToken, proposer);
     // call vault with all the statistics
     bytes memory _calldata = abi.encodeWithSelector(
@@ -211,9 +211,10 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // check token balances, shares, signalStrength
     uint256 previousVote = HabitatBase.getVote(proposalId, account);
     uint256 previousSignal = HabitatBase._getStorage(_VOTING_SIGNAL_KEY(proposalId, account));
-    if (previousVote == 0) {
+    if (previousVote == 0 && shares != 0) {
       HabitatBase._incrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
-    } else if (shares == 0) {
+    }
+    if (shares == 0) {
       require(signalStrength == 0, 'SIGNAL');
       HabitatBase._decrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
     }
@@ -256,7 +257,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
   function _callProcessProposal (
     bytes32 proposalId,
     address vault
-  ) internal returns (uint256 votingStatus, uint256 secondsTillClose)
+  ) internal view returns (uint256 votingStatus, uint256 secondsTillClose, uint256 quorumPercent)
   {
     bytes32 communityId = HabitatBase.communityOfVault(vault);
 
@@ -267,16 +268,16 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 totalVoteCount = HabitatBase.getVoteCount(proposalId);
     uint256 secondsPassed;
     {
-      uint256 now = RollupCoreBrick._getTime();
+      uint256 dateNow = RollupCoreBrick._getTime();
       uint256 proposalStartDate = HabitatBase._getStorage(_PROPOSAL_START_DATE_KEY(proposalId));
 
-      if (now > proposalStartDate) {
-        secondsPassed = now - proposalStartDate;
+      if (dateNow > proposalStartDate) {
+        secondsPassed = dateNow - proposalStartDate;
       }
     }
 
     address governanceToken = HabitatBase.tokenOfCommunity(communityId);
-    uint256 totalValueLocked = HabitatBase.getTotalValueLocked(governanceToken);
+    uint256 totalValueLocked = getTotalValueLocked(governanceToken);
     // call vault with all the statistics
     bytes memory _calldata = abi.encodeWithSelector(
       0xf8d8ade6,
@@ -292,14 +293,17 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 MAX_GAS = 90000;
     address vaultCondition = _getVaultCondition(vault);
     assembly {
+      let ptr := mload(64)
       // clear memory
-      mstore(0, 0)
-      mstore(32, 0)
+      calldatacopy(ptr, calldatasize(), 96)
       // call
-      let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 64)
+      let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), ptr, 96)
       if success {
-        votingStatus := mload(0)
-        secondsTillClose := mload(32)
+        votingStatus := mload(ptr)
+        ptr := add(ptr, 32)
+        secondsTillClose := mload(ptr)
+        ptr := add(ptr, 32)
+        quorumPercent := mload(ptr)
       }
     }
   }
@@ -310,7 +314,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     bytes32 proposalId,
     bytes calldata internalActions,
     bytes calldata externalActions
-  ) external returns (uint256 votingStatus, uint256 secondsTillClose) {
+  ) external returns (uint256 votingStatus, uint256 secondsTillClose, uint256 quorumPercent) {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
@@ -319,7 +323,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
     require(previousVotingStatus < 2, 'CLOSED');
 
-    (votingStatus, secondsTillClose) = _callProcessProposal(proposalId, vault);
+    (votingStatus, secondsTillClose, quorumPercent) = _callProcessProposal(proposalId, vault);
 
     // update proposal status (if needed)
     //if (votingStatus != 0 && votingStatus != previousVotingStatus) {
