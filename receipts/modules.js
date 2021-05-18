@@ -11,6 +11,7 @@ export const MODULES = [
     artefact: OneThirdParticipationThreshold,
     metadata: {
       flavor: 'signal',
+      version: 1,
       name: '1/3 Participation Threshold',
       details: 'A nice explainer...',
     },
@@ -19,6 +20,7 @@ export const MODULES = [
     artefact: SevenDayVoting,
     metadata: {
       flavor: 'binary',
+      version: 1,
       name: 'Seven Day Voting - Simple Majority Voting',
       details: 'A nice explainer...',
     },
@@ -27,6 +29,7 @@ export const MODULES = [
     artefact: FeatureFarmSignaling,
     metadata: {
       flavor: 'signal',
+      version: 1,
       name: 'Feature Farm Signaling Module',
       details: 'A nice explainer...',
     },
