@@ -98,7 +98,7 @@ export default class HabitatStake extends HTMLElement {
     slider.addEventListener('change', () => {
       circle.setValue(slider.percent, renderAmount(input.value), token._symbol);
       if (document.activeElement !== input) {
-        input.value = slider.value;
+        input.value = Number(slider.value).toFixed(2);
       }
     }, false);
     input.addEventListener('keyup', () => {

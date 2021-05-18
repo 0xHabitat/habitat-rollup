@@ -102,12 +102,12 @@ export default class HabitatVotingSub extends HTMLElement {
 
     if (userShares > 0) {
       this.querySelector('#feedback').textContent = `You Voted with ${renderAmount(userShares)} ${tokenSymbol}.`;
+      inputShares.value = userShares.toString();
+      // xxx: take active voting stake into account
+      inputShares.max = userBalance.toString();
     }
 
     this.querySelector(`div#${flavor}`).style.display = 'block';
-    inputShares.value = userShares.toString();
-    // xxx: take active voting stake into account
-    inputShares.max = userBalance.toString();
   }
 }
 
