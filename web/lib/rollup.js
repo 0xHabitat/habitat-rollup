@@ -375,7 +375,7 @@ export async function setupModulelist () {
       const { contractAddress, metadata } = tx.message;
       const meta = JSON.parse(metadata);
 
-      if (FLAVOR_TYPES.indexOf(meta.flavor) === -1) {
+      if (!meta.version || FLAVOR_TYPES.indexOf(meta.flavor) === -1) {
         console.warn('invalid module metadata', meta, tx);
         continue;
       }
