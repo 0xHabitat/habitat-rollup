@@ -5,7 +5,7 @@ contract ExecutionTest {
   address public delegate;
   uint256 public somevalue;
 
-  constructor (address _delegate) public {
+  constructor (address _delegate) {
     delegate = _delegate;
   }
 
