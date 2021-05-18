@@ -417,13 +417,13 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     cumulativeSignals += signals[k];
   }
 
-  console.log({cumulativeSignals,numSignals});
   const signalStrength = cumulativeSignals / numSignals;
   const totalVotes = Number(await habitat.getVoteCount(proposalId));
   const totalShares = ethers.utils.formatUnits(await habitat.getTotalVotingShares(proposalId), erc20._decimals);
   const totalMembers = Number(await habitat.getTotalMemberCount(communityId));
   const participationRate = (totalVotes / totalMembers) * 100;
   const proposalStatus = await habitat.getProposalStatus(proposalId);
+  console.log({cumulativeSignals, numSignals});
   console.log({totalVotes, totalShares});
 
   let userShares = ethers.BigNumber.from(0);
@@ -657,6 +657,7 @@ export async function simulateProcessProposal ({ proposalId, internalActions, ex
   let votingStatus = VotingStatus.UNKNOWN;
   // infinity
   let secondsTillClose = -1;
+  let quorumPercent = 0;
   try {
     const { habitat } = await getProviders();
     const ret = await habitat.provider.send(
@@ -673,11 +674,12 @@ export async function simulateProcessProposal ({ proposalId, internalActions, ex
     if (secondsTillClose > Number.MAX_SAFE_INTEGER) {
       secondsTillClose = -1;
     }
+    quorumPercent = parseInt(ret.substring(130, 194), 16);
   } catch (e) {
     console.warn(e);
   }
 
-  return { votingStatus, secondsTillClose };
+  return { votingStatus, secondsTillClose, quorumPercent };
 }
 
 export function getDeployCode (codeStr) {

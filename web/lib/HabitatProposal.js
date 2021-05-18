@@ -30,6 +30,7 @@ const TEMPLATE =
     <p id='totalVotes' class='text-center smaller bold' style='padding:.3rem;'></p>
     <p id='time' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
     <p id='tillClose' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
+    <p id='quorum' class='smaller center bold text-center' style='padding-top:.5rem;'> </p>
   </center>
 
   <habitat-voting-sub></habitat-voting-sub>
@@ -117,6 +118,7 @@ export default class HabitatProposal extends HTMLElement {
 
     this.querySelector('#tillClose').textContent = `Closes in ${tillClose}`;
     this.querySelector('#time').textContent = status;
+    this.querySelector('#quorum').textContent = `Quorum Threshold is ${simResult.quorumPercent}% reached`;
     this.querySelector('habitat-circle').setValue(signalStrength, renderAmount(totalShares), tokenSymbol);
 
     const votingElement = this.querySelector('habitat-voting-sub');

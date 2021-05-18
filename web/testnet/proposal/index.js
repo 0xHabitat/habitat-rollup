@@ -67,7 +67,7 @@ async function updateProposal () {
   const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
   const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(tx.message.startDate);
   const { internalActions, externalActions } = tx.message;
-  const { votingStatus, secondsTillClose } = await simulateProcessProposal({ proposalId, internalActions, externalActions });
+  const { votingStatus, secondsTillClose, quorumPercent } = await simulateProcessProposal({ proposalId, internalActions, externalActions });
   const tillClose = secondsTillClose === -1 ? '∞' : secondsToString(secondsTillClose);
 
   document.querySelector('#finalize').disabled = !(votingStatus > VotingStatus.OPEN);
@@ -80,6 +80,7 @@ async function updateProposal () {
       status,
       proposer,
       'Closes in': tillClose,
+      'Quorum Threshold reached by': `${quorumPercent}%`,
     };
 
     const container = document.querySelector('#proposalStats');
