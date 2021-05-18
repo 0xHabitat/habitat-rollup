@@ -515,9 +515,9 @@ decamelize@^4.0.0:
   resolved "https://registry.yarnpkg.com/decamelize/-/decamelize-4.0.0.tgz#aa472d7bf660eb15f3494efd531cab7f2a709837"
   integrity sha512-9iE1PgSik9HeIIw2JO94IidnE3eBoQrFJ3w7sFuzSX4DpmZ3v5sZpUiV5Swcf6mQEF+Y0ru8Neo+p+nyh2J+hQ==
 
-"develatus-apparatus@https://github.com/pinkiebell/develatus-apparatus.git#v0.3.6":
-  version "0.3.6"
-  resolved "https://github.com/pinkiebell/develatus-apparatus.git#7e20fe8131a8f4cf0b91facab04e504bf8a1cdf3"
+"develatus-apparatus@https://github.com/pinkiebell/develatus-apparatus.git#v0.3.7":
+  version "0.3.7"
+  resolved "https://github.com/pinkiebell/develatus-apparatus.git#cf0321b2dd72a3485ed400ba14d5ca2ca8273961"
 
 diff@5.0.0:
   version "5.0.0"
