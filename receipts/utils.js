@@ -52,7 +52,10 @@ export async function deploy (artifact, args, wallet, txOverrides = {}) {
 }
 
 export const rootProvider = new ethers.providers.JsonRpcProvider(process.env.ROOT_RPC_URL);
-export const wallet = new ethers.Wallet('0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501200', rootProvider);
+export const wallet = new ethers.Wallet(
+  process.env.PRIV_KEY || '0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501200',
+  rootProvider
+);
 
 const HabitatV1Testnet = JSON.parse(fs.readFileSync('./build/contracts/HabitatV1Testnet.json'));
 const RollupProxy = JSON.parse(fs.readFileSync('./build/contracts/RollupProxy.json'));
