@@ -6,16 +6,18 @@ import './HabitatBase.sol';
 /// @notice Functionality for user wallets.
 contract HabitatWallet is HabitatBase {
   event TokenTransfer(address indexed token, address indexed from, address indexed to, uint256 value);
-  // xxx: add something like a approve function?
-  // xxx add total balance of asset
+  event DelegatedAmount(address indexed account, address indexed delegatee, address indexed token, uint256 value);
 
-  /// @notice Returns the balance (amount of `token`) for `account`.
+  /// @notice Returns the (free) balance (amount of `token`) for `account`.
+  /// Free = balance of `token` for `account` - activeVotingStake & delegated stake for `account`.
   /// Supports ERC-20 and ERC-721 and takes staked balances into account.
   function _getUnstakedBalance (address token, address account) internal view returns (uint256 ret) {
-    uint256 staked = HabitatBase.getActiveVotingStake(token, account);
+    uint256 locked =
+      HabitatBase.getActiveVotingStake(token, account) +
+      HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(token, account));
     ret = getBalance(token, account);
-    require(staked <= ret, 'BUG1');
-    ret = ret - staked;
+    require(locked <= ret, 'BUG1');
+    ret = ret - locked;
   }
 
   /// @dev State transition when a user transfers a token.
@@ -107,5 +109,46 @@ contract HabitatWallet is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
     _transferToken(token, msgSender, to, value);
+  }
+
+  /// @dev State transition when a user sets a delegate.
+  function onDelegateAmount (address msgSender, uint256 nonce, address delegatee, address token, uint256 newAllowance) external {
+    HabitatBase._commonChecks();
+    HabitatBase._checkUpdateNonce(msgSender, nonce);
+
+    // can not delegate to self
+    require(msgSender != delegatee, 'ODA1');
+
+    uint256 oldAllowance = HabitatBase._getStorage(_DELEGATED_ACCOUNT_ALLOWANCE_KEY(msgSender, delegatee, token));
+
+    // track the difference
+    if (oldAllowance < newAllowance) {
+      uint256 delta = newAllowance - oldAllowance;
+      uint256 availableBalance = _getUnstakedBalance(token, msgSender);
+      // check
+      require(availableBalance >= delta, 'ODA2');
+
+      // increment new total delegated balance for delegatee
+      HabitatBase._incrementStorage(_DELEGATED_ACCOUNT_TOTAL_AMOUNT_KEY(delegatee, token), delta);
+      // increment new total delegated amount for msgSender
+      HabitatBase._incrementStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(msgSender, token), delta);
+    } else {
+      uint256 delta = oldAllowance - newAllowance;
+      uint256 currentlyStaked = HabitatBase._getStorage(_DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, delegatee));
+      uint256 total = HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_AMOUNT_KEY(delegatee, token));
+      uint256 freeAmount = total - currentlyStaked;
+      // check
+      require(delta <= freeAmount, 'ODA3');
+
+      // decrement new total delegated balance for delegatee
+      HabitatBase._decrementStorage(_DELEGATED_ACCOUNT_TOTAL_AMOUNT_KEY(delegatee, token), delta);
+      // decrement new total delegated amount for msgSender
+      HabitatBase._decrementStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(msgSender, token), delta);
+    }
+
+    // save the new allowance
+    HabitatBase._setStorage(_DELEGATED_ACCOUNT_ALLOWANCE_KEY(msgSender, delegatee, token), newAllowance);
+
+    emit DelegatedAmount(msgSender, delegatee, token, newAllowance);
   }
 }

@@ -255,14 +255,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function _ACCOUNT_DELEGATE_KEY (address a) internal pure returns (uint256 ret) {
-    assembly {
-      mstore(0, 0xa4cf686a12e967d8e7bd65750e2f83e9462cafbc9c0d8faf956478a83b935c62)
-      mstore(32, a)
-      ret := keccak256(0, 64)
-    }
-  }
-
   function _PROPOSAL_VAULT_KEY (bytes32 a) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x622061f2b694ba7aa754d63e7f341f02ac8341e2b36ccbb1d3fc1bf00b57162d)
@@ -433,6 +425,84 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
 
   function getActiveVotingStake (address token, address account) public view returns (uint256 ret) {
     uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
+    assembly {
+      ret := sload(key)
+    }
+  }
+
+  /// @dev Tracks account owner > delegatee allowance for `token`
+  function _DELEGATED_ACCOUNT_ALLOWANCE_KEY (address account, address delegatee, address token) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0xf8affafdc89531391d5ba543f3f243d05d9f0325e7bebb13e50d0158dfe7ff74)
+      mstore(32, account)
+      mstore(64, delegatee)
+      mstore(96, token)
+      ret := keccak256(0, 128)
+      mstore(64, backup)
+      mstore(96, 0)
+    }
+  }
+
+  /// @dev Tracks account owner > total delegated amount of `token`.
+  function _DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY (address account, address token) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x5f823da33b83835d30bb64c6b6539db24009aecef661452e8903ad12aee6bf8d)
+      mstore(32, account)
+      mstore(64, token)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  /// @dev Tracks delegatee > total delegated amount of `token`.
+  function _DELEGATED_ACCOUNT_TOTAL_AMOUNT_KEY (address delegatee, address token) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x82dffec7bb13e333bbe061529a9dc24cdad0f5d0900f144abb0bf82b70e68452)
+      mstore(32, delegatee)
+      mstore(64, token)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  function _DELEGATED_VOTING_SHARES_KEY (bytes32 proposalId, address delegatee) internal pure returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x846d3c69e4bfb41c345a501556d4ab5cfb40fa2bbfa478d2d6863adb6a612ce7)
+      mstore(32, proposalId)
+      let tmp := mload(64)
+      mstore(64, delegatee)
+      ret := keccak256(0, 96)
+      mstore(64, tmp)
+    }
+  }
+
+  function _DELEGATED_VOTING_SIGNAL_KEY (bytes32 proposalId, address delegatee) internal pure returns (uint256 ret) {
+    assembly {
+      mstore(0, 0x785294304b174fede6de17c61b65e5b77d3e5ad5a71821b78dad3e2dab50d10f)
+      mstore(32, proposalId)
+      let tmp := mload(64)
+      mstore(64, delegatee)
+      ret := keccak256(0, 96)
+      mstore(64, tmp)
+    }
+  }
+
+  function _DELEGATED_VOTING_ACTIVE_STAKE_KEY (address token, address delegatee) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0xbe24be1148878e5dc0cfaecb52c8dd418ecc98483a44968747d43843653a5754)
+      mstore(32, token)
+      mstore(64, delegatee)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  function getActiveDelegatedVotingStake (address token, address account) public view returns (uint256 ret) {
+    uint256 key = _DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, account);
     assembly {
       ret := sload(key)
     }
