@@ -467,11 +467,9 @@ export async function submitVote (communityId, proposalId, signalStrength, _shar
   const governanceToken = await habitat.tokenOfCommunity(communityId);
   const token = await getToken(governanceToken);
   const shares = ethers.utils.parseUnits(_shares, await token._decimals).toHexString();
-  const timestamp = ~~(Date.now() / 1000);
   const args = {
     proposalId,
     shares,
-    timestamp,
     signalStrength,
     // xxx
     delegatedFor: ethers.constants.AddressZero,
