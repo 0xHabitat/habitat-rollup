@@ -32,10 +32,9 @@ contract HabitatAccount is HabitatBase {
   }
 
   /// @dev State transition when a user sets a delegate.
+  // xxx remove me
   function onSetDelegate (address msgSender, uint256 nonce, address delegatee) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
-
-    HabitatBase._setStorage(_ACCOUNT_DELEGATE_KEY(msgSender), delegatee);
   }
 }
