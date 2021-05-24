@@ -6,6 +6,8 @@ export const BRICK_ABI = [
   'event BlockBeacon()',
   'event ClaimUsername(address indexed account, bytes32 indexed shortString)',
   'event CommunityCreated(address indexed governanceToken, bytes32 indexed communityId, string metadata)',
+  'event DelegatedAmount(address indexed account, address indexed delegatee, address indexed token, uint256 value)',
+  'event DelegateeVotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares)',
   'event Deposit(address token, address owner, uint256 value)',
   'event ModuleActivated(bytes32 communityId, address condition)',
   'event ModuleSubmitted(address contractAddress, string metadata)',
