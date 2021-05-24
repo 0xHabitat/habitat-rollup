@@ -18,6 +18,7 @@ import {
   getExitStatus,
   getBlockExplorerLink,
   queryTransfers,
+  getTotalDelegatedAmountForToken,
 } from './rollup.js';
 import {
   DepositFlow,
@@ -31,6 +32,7 @@ import './HabitatSlider.js';
 import './HabitatCircle.js';
 import './HabitatPath.js';
 import './HabitatStakes.js';
+import './HabitatDelegationView.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 const { HBT } = getConfig();
@@ -43,6 +45,7 @@ let account;
 const ACCOUNT_ERC20_TEMPLATE =
 `
 <a target='_blank'></a>
+<p></p>
 <p></p>
 <p></p>
 <button id='_transfer' class='secondary purple'>Transfer</button>
@@ -81,7 +84,7 @@ const ACCOUNT_TEMPLATE =
   grid-template-columns:repeat(5, auto);
 }
 #erc20 > div {
-  grid-template-columns:repeat(6, auto);
+  grid-template-columns:repeat(7, auto);
 }
 #history > div {
   grid-template-columns:repeat(6, auto);
@@ -94,6 +97,15 @@ const ACCOUNT_TEMPLATE =
 }
 .tabs > div.active {
   border-bottom-color: var(--color-bg-invert);
+}
+#tokenActions > button {
+  visibility: hidden;
+  opacity: 0;
+  border: none;
+}
+#tokenActions > button.expanded {
+  visibility: visible;
+  opacity: 1;
 }
 </style>
 <div class='flex row evenly' style='width:100%;'>
@@ -142,8 +154,8 @@ const ACCOUNT_TEMPLATE =
       <space></space>
       <space></space>
       <div id='tokenActions' class='flex row' style='visibility:hidden'>
-        <button id='transfer' class='flow'>⏩</button>
-        <button id='withdraw' class='flow'>⏬</button>
+        <button id='transfer' class='flow'></button>
+        <button id='withdraw' class='flow'></button>
       </div>
       <div class='flex row'>
       </div>
@@ -171,7 +183,7 @@ const ACCOUNT_TEMPLATE =
   </section>
 
   <section class='tab' id='wallet-delegation'>
-    <h3>Nothing to see here yet</h3>
+    <habitat-delegation-view></habitat-delegation-view>
   </section>
 </section>
 `;
@@ -235,10 +247,12 @@ async function updateErc20 () {
       const balance = await habitat.getBalance(token, account);
       const tokenName = await getTokenName(token);
       const stakedBalance = await habitat.getActiveVotingStake(token, account);
+      const delegatedBalance = await getTotalDelegatedAmountForToken(token, account);
       children[childPtr].textContent = tokenName;
       children[childPtr++].href = getEtherscanTokenLink(token, account);
       children[childPtr++].textContent = renderAmount(balance, erc._decimals);
       children[childPtr++].textContent = `${renderAmount(stakedBalance, erc._decimals)} Staked`;
+      children[childPtr++].textContent = `${renderAmount(delegatedBalance, erc._decimals)} Delegated`;
       // transfer
       wrapListener(children[childPtr++], (evt) => new TransferFlow(document.querySelector('button#transfer'), { callback, token }));
       // withdraw

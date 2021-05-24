@@ -744,3 +744,21 @@ export async function fetchLatestVote (account, proposalId) {
 
   return habitat.interface.parseLog(log).args;
 }
+
+export async function getTotalDelegatedAmountForToken (tokenAddr, account) {
+  const { habitat } = await getProviders();
+  const logs = await doQueryWithOptions({ toBlock: 1 }, 'DelegatedAmount', account, null, tokenAddr);
+  const map = {};
+  let cumulative = ethers.BigNumber.from(0);
+
+  for (const log of logs) {
+    const { account, value } = habitat.interface.parseLog(log).args;
+    if (map[account]) {
+      continue;
+    }
+    map[account] = true;
+    cumulative = cumulative.add(value);
+  }
+
+  return cumulative;
+}
