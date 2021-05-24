@@ -92,6 +92,29 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
       sstore(key, value)
     }
   }
+
+  function _setStorageDelta (uint256 key, uint256 a, uint256 b) internal {
+    // xxx require(a != b) ?
+    uint256 newValue;
+    {
+      uint256 oldValue;
+      assembly {
+        oldValue := sload(key)
+      }
+      if (a > b) {
+        uint256 delta = a - b;
+        newValue = oldValue - delta;
+        require(newValue < oldValue, 'DECR');
+      } else {
+        uint256 delta = b - a;
+        newValue = oldValue + delta;
+        require(newValue > oldValue, 'INCR');
+      }
+    }
+    assembly {
+      sstore(key, newValue)
+    }
+  }
   // end of storage helpers
 
   function _TX_NONCE_KEY (address a) internal pure returns (uint256 ret) {

@@ -69,6 +69,12 @@ export default {
       { name: 'operator', type: 'address' },
       { name: 'amount', type: 'uint256' },
     ],
+    DelegateAmount: [
+      { name: 'nonce', 'type': 'uint256' },
+      { name: 'delegatee', type: 'address' },
+      { name: 'token', type: 'address' },
+      { name: 'value', type: 'uint256' },
+    ],
   },
   domain: {
     name: 'Habitat V1',
@@ -86,5 +92,6 @@ export default {
     'VoteOnProposal',
     'ProcessProposal',
     'TributeForOperator',
+    'DelegateAmount',
   ],
 }

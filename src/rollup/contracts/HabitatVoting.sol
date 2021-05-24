@@ -8,6 +8,7 @@ import './HabitatWallet.sol';
 contract HabitatVoting is HabitatBase, HabitatWallet {
   event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string metadata);
   event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
+  event DelegateeVotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
   event ProposalProcessed(bytes32 indexed proposalId, uint256 indexed votingStatus);
 
   /// @dev Validates if `timestamp` is inside a valid range.
@@ -178,39 +179,34 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     UtilityBrick._emitTransactionDeadline(startDate);
   }
 
-  /// @dev State transition routine for `VoteOnProposal`.
-  function onVoteOnProposal (
-    address msgSender,
-    uint256 nonce,
-    bytes32 proposalId,
-    uint256 shares,
-    address delegatedFor,
-    uint8 signalStrength
-  ) external {
-    HabitatBase._commonChecks();
-    HabitatBase._checkUpdateNonce(msgSender, nonce);
-
-    // requires that the signal is in a specific range...
-    require(signalStrength < 101, 'SIGNAL');
-
-    // voter account
-    address account = msgSender;
-    if (delegatedFor != address(0)) {
-      require(address(HabitatBase._getStorage(_ACCOUNT_DELEGATE_KEY(delegatedFor))) == msgSender, 'DELEGATE');
-      account = delegatedFor;
-    }
-
+  /// @dev Helper function to retrieve the governance token given `proposalId`.
+  /// Reverts if `proposalId` is invalid.
+  function _getTokenOfProposal (bytes32 proposalId) internal returns (address) {
     address vault = address(HabitatBase._getStorage(_PROPOSAL_VAULT_KEY(proposalId)));
     bytes32 communityId = HabitatBase.communityOfVault(vault);
     address token = HabitatBase.tokenOfCommunity(communityId);
     // only check token here, assuming any invalid proposalId / vault will end with having a zero address
     require(token != address(0), 'VAULT');
 
-    // xxx
-    // replace any existing votes
-    // check token balances, shares, signalStrength
-    uint256 previousVote = HabitatBase.getVote(proposalId, account);
-    uint256 previousSignal = HabitatBase._getStorage(_VOTING_SIGNAL_KEY(proposalId, account));
+    return token;
+  }
+
+  /// @dev Helper function for validating and applying votes
+  function _votingRoutine (
+    address account,
+    uint256 previousVote,
+    uint256 previousSignal,
+    uint256 signalStrength,
+    uint256 shares,
+    bytes32 proposalId,
+    bool delegated
+  ) internal {
+    // requires that the signal is in a specific range...
+    require(signalStrength < 101, 'SIGNAL');
+
+    address token = _getTokenOfProposal(proposalId);
+    // xxx do not update voting stats if proposal is closed?
+
     if (previousVote == 0 && shares != 0) {
       HabitatBase._incrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
     }
@@ -219,38 +215,104 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
       HabitatBase._decrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
     }
 
-    // check for discrepancy between balance and stake
-    {
-      uint256 stakableBalance = _getUnstakedBalance(token, account) + previousVote;
-      require(stakableBalance >= shares, 'SHARE');
-    }
-
     HabitatBase._maybeUpdateMemberCount(proposalId, account);
-    HabitatBase._setStorage(_VOTING_SHARES_KEY(proposalId, account), shares);
-    HabitatBase._setStorage(_VOTING_SIGNAL_KEY(proposalId, account), signalStrength);
+    if (delegated) {
+      HabitatBase._setStorage(_DELEGATED_VOTING_SHARES_KEY(proposalId, account), shares);
+      HabitatBase._setStorage(_DELEGATED_VOTING_SIGNAL_KEY(proposalId, account), signalStrength);
+    } else {
+      HabitatBase._setStorage(_VOTING_SHARES_KEY(proposalId, account), shares);
+      HabitatBase._setStorage(_VOTING_SIGNAL_KEY(proposalId, account), signalStrength);
+    }
 
     // update total share count and staking amount
-    if (previousVote >= shares) {
-      uint256 delta = previousVote - shares;
-      HabitatBase._decrementStorage(_VOTING_TOTAL_SHARE_KEY(proposalId), delta);
+    {
+      uint256 activeStakeKey =
+        delegated ? _DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, account) : _VOTING_ACTIVE_STAKE_KEY(token, account);
+
       // xxx claim any acquired fees
-      // decrease stake
-      HabitatBase._decrementStorage(_VOTING_ACTIVE_STAKE_KEY(token, account), delta);
-    } else {
-      uint256 delta = shares - previousVote;
-      HabitatBase._incrementStorage(_VOTING_TOTAL_SHARE_KEY(proposalId), delta);
-      // xxx claim any acquired fees
-      // increase stake
-      HabitatBase._incrementStorage(_VOTING_ACTIVE_STAKE_KEY(token, account), delta);
+      HabitatBase._setStorageDelta(activeStakeKey, previousVote, shares);
+      HabitatBase._setStorageDelta(_VOTING_TOTAL_SHARE_KEY(proposalId), previousVote, shares);
     }
 
-    if (previousSignal >= signalStrength) {
-      HabitatBase._decrementStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId), previousSignal - signalStrength);
-    } else {
-      HabitatBase._incrementStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId), signalStrength - previousSignal);
+    // update total signal
+    if (previousSignal != signalStrength) {
+      HabitatBase._setStorageDelta(_VOTING_TOTAL_SIGNAL_KEY(proposalId), previousSignal, signalStrength);
     }
+  }
 
-    emit VotedOnProposal(account, proposalId, signalStrength, shares);
+  /// @dev State transition routine for `VoteOnProposal`.
+  function onVoteOnProposal (
+    address msgSender,
+    uint256 nonce,
+    bytes32 proposalId,
+    uint256 shares,
+    address delegatee,
+    uint8 signalStrength
+  ) external {
+    HabitatBase._commonChecks();
+    HabitatBase._checkUpdateNonce(msgSender, nonce);
+
+    address token = _getTokenOfProposal(proposalId);
+
+    if (delegatee == address(0)) {
+      // voter account
+      address account = msgSender;
+      uint256 previousVote = HabitatBase.getVote(proposalId, account);
+      // check for discrepancy between balance and stake
+      uint256 stakableBalance = _getUnstakedBalance(token, account) + previousVote;
+      require(stakableBalance >= shares, 'OVOP1');
+      uint256 previousSignal = HabitatBase._getStorage(_VOTING_SIGNAL_KEY(proposalId, account));
+
+      _votingRoutine(account, previousVote, previousSignal, signalStrength, shares, proposalId, false);
+
+      emit VotedOnProposal(account, proposalId, signalStrength, shares);
+    } else {
+      uint256 previousVote = HabitatBase._getStorage(_DELEGATED_VOTING_SHARES_KEY(proposalId, delegatee));
+      uint256 previousSignal = HabitatBase._getStorage(_DELEGATED_VOTING_SIGNAL_KEY(proposalId, delegatee));
+      uint256 maxAmount = HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_AMOUNT_KEY(delegatee, token));
+      uint256 currentlyStaked = HabitatBase._getStorage(_DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, delegatee));
+      // should not happen but anyway...
+      require(maxAmount >= currentlyStaked, 'ODVOP1');
+
+      if (msgSender == delegatee) {
+        // vote
+        uint256 freeAmount = maxAmount - (currentlyStaked - previousVote);
+        // check for discrepancy between balance and stake
+        require(freeAmount >= shares, 'ODVOP2');
+      } else {
+        // a user may only remove shares if there is no other choice
+        // we have to account for
+        // - msgSender balance
+        // - msgSender personal stakes
+        // - msgSender delegated balance
+        // - delegatee staked balance
+
+        // new shares must be less than old shares, otherwise what are we doing here?
+        require(shares < previousVote, 'ODVOP3');
+
+        if (shares != 0) {
+          // the user is not allowed to change the signalStrength
+          require(signalStrength == previousSignal, 'ODVOP4');
+        }
+
+        uint256 unusedBalance = maxAmount - currentlyStaked;
+        uint256 maxRemovable = HabitatBase._getStorage(_DELEGATED_ACCOUNT_ALLOWANCE_KEY(msgSender, delegatee, token));
+        // only allow changing the stake if the user has no other choice
+        require(maxRemovable > unusedBalance, 'ODVOP5');
+        maxRemovable = maxRemovable - unusedBalance;
+        if (maxRemovable > previousVote) {
+          // clamp
+          maxRemovable = previousVote;
+        }
+
+        uint256 sharesToRemove = previousVote - shares;
+        require(maxRemovable >= sharesToRemove, 'ODVOP6');
+      }
+
+      _votingRoutine(delegatee, previousVote, previousSignal, signalStrength, shares, proposalId, true);
+
+      emit DelegateeVotedOnProposal(delegatee, proposalId, signalStrength, shares);
+    }
   }
 
   /// @dev Invokes IModule.onProcessProposal(...) on `vault`

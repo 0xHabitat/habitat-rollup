@@ -759,6 +759,73 @@ case 10 {
   success := or(success, returndatasize())
 }
 // end of TributeForOperator
+
+// start of DelegateAmount
+// typeHash: 0x7595f378ac19fee39d9d6a79a8240d32afae43c5943289e491976d85c9e9ad54
+// function: onDelegateAmount(address,uint256,address,address,uint256)
+case 11 {
+  let headSize := 160
+  let typeLen := 0
+  let txPtr := 384
+  let endOfSlot := add(txPtr, 160)
+
+  txPtr := 416
+  // typeHash of DelegateAmount
+  mstore(0, 0x7595f378ac19fee39d9d6a79a8240d32afae43c5943289e491976d85c9e9ad54)
+  // uint256 DelegateAmount.nonce
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(32, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // address DelegateAmount.delegatee
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(64, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // address DelegateAmount.token
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(96, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // uint256 DelegateAmount.value
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(128, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // typeHash
+  let structHash := keccak256(0, 160)
+  // prefix
+  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
+  // DOMAIN struct hash
+  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  // transactionStructHash
+  mstore(34, structHash)
+  mstore(0, keccak256(0, 66))
+  mstore(32, v)
+  mstore(64, r)
+  mstore(96, s)
+  mstore(128, 0)
+  success := staticcall(gas(), 1, 0, 128, 128, 32)
+  // functionSig
+  mstore(352, 0x1b5e17db)
+  mstore(384, mload(128))
+
+  success := call(sub(gas(), 5000), address(), 0, 380, sub(endOfSlot, 380), 0, 0)
+  success := or(success, returndatasize())
+}
+// end of DelegateAmount
 default { success := 1 }
 }
 

@@ -7,7 +7,16 @@ import { getDeployCode } from '../lib/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
-async function createTransaction (primaryType, message, signer, habitat) {
+async function createTransaction (primaryType, _message, signer, habitat) {
+  const message = {};
+  for (const k in _message) {
+    let v = _message[k];
+    if (typeof v === 'bigint') {
+      v = v.toString();
+    }
+    message[k] = v;
+  }
+
   if (message.nonce === undefined && builder.fieldNames[primaryType][0].name === 'nonce') {
     message.nonce = (await habitat.txNonces(signer.address)).toHexString();
   }
@@ -40,6 +49,15 @@ describe('HabitatV1', async function () {
     FeatureFarmSignaling,
   } = Artifacts;
   const { rootProvider, alice, bob, charlie } = getDefaultWallets();
+  const aliases = {
+    [alice.address]: 'alice',
+    [bob.address]: 'bob',
+    [charlie.address]: 'charlie',
+  };
+  const balances = {};
+  const votes = {};
+  const signals = {};
+  const delegatedShares = {};
   let bridge;
   let rollupProxy;
   let rollupImplementation;
@@ -60,6 +78,20 @@ describe('HabitatV1', async function () {
   let validAction;
   let conditions = {};
   let nftId = 0;
+  let leftOverStake = 0;
+
+  afterEach(async() => {
+    for (const wallet of [alice, bob]) {
+      const tmp = (await habitat.getBalance(erc20.address, wallet.address)).toString();
+      assert.equal(balances[wallet.address] || 0n, BigInt(tmp), wallet.address);
+    }
+  });
+
+  after('cleanup', async () => {
+    try {
+      await habitatNode.send('debug_kill', []);
+    } catch (e) { }
+  });
 
   before('Prepare contracts', async () => {
     erc20 = await deploy(TestERC20, alice);
@@ -96,7 +128,7 @@ describe('HabitatV1', async function () {
 
   let vaultCondition;
   function _doRound (abortProposal = false) {
-    const depositAmount = '0xffffffff';
+    const depositAmount = 0xffffffn;
 
     describe('round', async () => {
       async function doDeposit (signer) {
@@ -117,6 +149,7 @@ describe('HabitatV1', async function () {
         assert.equal(newBalance.toString(), oldBalance.add(depositAmount).toString(), 'token balance should match');
         cumulativeDeposits += BigInt(depositAmount);
         assert.equal((await habitat.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
+        balances[user] = (balances[user] || 0n) + depositAmount;
       }
 
       async function doNftDeposit (signer) {
@@ -211,9 +244,8 @@ describe('HabitatV1', async function () {
         const args = {
           token: erc20.address,
           to: bob.address,
-          value: '0x1',
+          value: 1n,
         };
-
         const { txHash, receipt } = await createTransaction('TransferToken', args, alice, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
         assert.equal(receipt.logs.length, 1, 'should emit');
@@ -222,13 +254,15 @@ describe('HabitatV1', async function () {
         assert.equal(evt.from, alice.address);
         assert.equal(evt.to, args.to);
         assert.equal(evt.value.toString(), BigInt(args.value).toString());
+        balances[evt.from] = (balances[evt.from] || 0n) - args.value;
+        balances[evt.to] = (balances[evt.to] || 0n) + args.value;
       });
 
       it('exit erc20: bob', async () => {
         const args = {
           token: erc20.address,
           to: ethers.constants.AddressZero,
-          value: '0x1',
+          value: 1n,
         };
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
@@ -241,6 +275,7 @@ describe('HabitatV1', async function () {
         assert.equal(evt.value.toString(), BigInt(args.value).toString());
         cumulativeDeposits -= BigInt(args.value);
         assert.equal((await habitat.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
+        balances[evt.from] = (balances[evt.from] || 0n) - args.value;
       });
 
       it('deposit: bob', async () => {
@@ -251,7 +286,7 @@ describe('HabitatV1', async function () {
         const args = {
           token: erc20.address,
           to: ethers.constants.AddressZero,
-          value: (await habitat.getBalance(erc20.address, bob.address)).toHexString(),
+          value: BigInt((await habitat.getBalance(erc20.address, bob.address)).toString()),
         };
 
         const { txHash, receipt } = await createTransaction('TransferToken', args, bob, habitat);
@@ -264,6 +299,7 @@ describe('HabitatV1', async function () {
         assert.equal(evt.value.toString(), BigInt(args.value).toString());
         cumulativeDeposits -= BigInt(args.value);
         assert.equal((await habitat.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
+        balances[evt.from] = (balances[evt.from] || 0n) - args.value;
       });
 
       it('alice: claim user name', async () => {
@@ -314,13 +350,44 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.status, '0x1', 'success');
       });
 
-      it('alice: setDelegate', async () => {
-        const args = {
-          to: bob.address,
-        };
-        const { txHash, receipt } = await createTransaction('SetDelegate', args, alice, habitat);
-        assert.equal(receipt.status, '0x1');
-      });
+      function delegate (from, to, amount) {
+        it(`${aliases[from.address]}: delegateTo (${aliases[to.address]}, ${amount})`, async () => {
+          let expectedError;
+          const stake = await habitat.getActiveDelegatedVotingStake(erc20.address, to.address);
+
+          if (from.address === to.address) {
+            expectedError = /ODA1/;
+          }
+          if (amount > balances[from.address]) {
+            expectedError = /ODA2/;
+          }
+          if (amount === 0 && stake.gt(0)) {
+            expectedError = /ODA3/;
+          }
+          const args = {
+            delegatee: to.address,
+            token: erc20.address,
+            value: amount,
+          };
+          const promise = createTransaction('DelegateAmount', args, from, habitat);
+          if (expectedError) {
+            await assert.rejects(promise, expectedError);
+          } else {
+            const { txHash, receipt } = await promise;
+            assert.equal(receipt.status, '0x1');
+            assert.equal(receipt.logs.length, 1);
+            delegatedShares[to.address] = amount;
+            delegatedShares[from.address] = amount;
+          }
+        });
+      }
+
+      delegate(alice, alice, 1);
+      delegate(alice, bob, depositAmount);
+      delegate(alice, bob, 0);
+      delegate(alice, bob, 1);
+      delegate(alice, bob, depositAmount + 1);
+      delegate(alice, bob, 0xff);
 
       let communityId;
       it('alice: create a new community', async () => {
@@ -453,49 +520,116 @@ describe('HabitatV1', async function () {
         assert.equal(Number(evt.votingStatus), 1);
       });
 
-      it('alice: vote on proposal', async () => {
-        const args = {
-          proposalId,
-          signalStrength: 100,
-          shares: 0xffffff00 - 1,
-          timestamp: ~~(Date.now() / 1000),
-          delegatedFor: ethers.constants.AddressZero,
-        };
-        const previousStake = await habitat.getActiveVotingStake(erc20.address, alice.address);
-        const { txHash, receipt } = await createTransaction('VoteOnProposal', args, alice, habitat);
-        assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.account, alice.address, 'account');
+      function vote (wallet, shares, signalStrength = 100) {
+        it(`${aliases[wallet.address]}: vote on proposal (shares=${shares}, signalStrength=${signalStrength})`, async () => {
+          const args = {
+            proposalId,
+            signalStrength,
+            shares,
+            delegatedFor: ethers.constants.AddressZero,
+          };
+          const previousVote = await habitat.getVote(proposalId, wallet.address);
+          const activeVotingStake = BigInt(await habitat.getActiveVotingStake(erc20.address, wallet.address));
+          const delegatedAmount = delegatedShares[wallet.address] || 0n;
+          const availableBalance = ((balances[wallet.address] || 0n) - (activeVotingStake + delegatedAmount)) + BigInt(previousVote);
+          let expectedError;
+          if (availableBalance < args.shares) {
+            expectedError = /OVOP1/;
+          }
+          if (args.shares === 0 && args.signalStrength !== 0) {
+            expectedError = /SIGNAL/;
+          }
 
-        {
-          // check stake
-          const stake = await habitat.getActiveVotingStake(erc20.address, evt.account);
-          assert.equal(stake.toString(), previousStake.add(args.shares).toString(), 'stake');
-        }
-      });
+          const promise = createTransaction('VoteOnProposal', args, wallet, habitat);
+          if (expectedError) {
+            await assert.rejects(promise, expectedError);
+          } else {
+            const { txHash, receipt } = await promise;
+            assert.equal(receipt.status, '0x1');
+            assert.equal(receipt.logs.length, 1);
+            const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+            assert.equal(evt.account, alice.address, 'account');
+            {
+              // check stake
+              const stake = await habitat.getActiveVotingStake(erc20.address, evt.account);
+              assert.equal(stake.toString(), args.shares.toString(), 'stake');
+            }
+          }
+        });
+      }
+      vote(alice, 3n);
+      vote(alice, depositAmount);
+      vote(alice, 0n);
+      vote(alice, 9n);
+      vote(alice, 0n, 0);
+      vote(alice, depositAmount - 10000n);
 
-      it('bob: vote on proposal as a delegate for alice', async () => {
-        const args = {
-          proposalId,
-          signalStrength: 100,
-          shares: 0xffffff00 - 1,
-          timestamp: ~~(Date.now() / 1000),
-          delegatedFor: alice.address,
-        };
-        const previousStake = await habitat.getActiveVotingStake(erc20.address, args.delegatedFor);
-        const { txHash, receipt } = await createTransaction('VoteOnProposal', args, bob, habitat);
-        assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.account, alice.address);
+      function delegatedVote (from, delegatee, shares, signalStrength = 100) {
+        const nameFrom = aliases[from.address];
+        const nameTo = aliases[delegatee.address];
+        it(`${nameFrom}: vote on proposal as delegate ${nameTo} (shares=${shares},signal=${signalStrength})`, async () => {
+          const args = {
+            proposalId,
+            signalStrength,
+            shares: shares,
+            delegatedFor: delegatee.address,
+          };
+          const delegatedAmount = delegatedShares[delegatee.address] || 0n;
+          let expectedError;
+          if (from.address === delegatee.address) {
+            if (shares + leftOverStake > delegatedAmount) {
+              expectedError = /ODVOP2/;
+            }
+            if (shares === 0n && signalStrength !== 0) {
+              expectedError = /SIGNAL/;
+            }
+          } else {
+            const lastVote = votes[proposalId] || 0n;
+            const lastSignal = signals[proposalId] || 0n;
 
-        {
-          // check stake
-          const stake = await habitat.getActiveVotingStake(erc20.address, evt.account);
-          // only replaces the vote with the same amount, should have the same stake
-          assert.equal(stake.toString(), previousStake.toString(), 'stake');
-        }
+            if (shares >= lastVote) {
+              expectedError = /ODVOP3/;
+            } else if (shares !== 0n && lastSignal !== signalStrength) {
+              expectedError = /ODVOP4/;
+            }
+          }
+
+          const promise = createTransaction('VoteOnProposal', args, from, habitat);
+          if (expectedError) {
+            await assert.rejects(promise, expectedError);
+          } else {
+            const { txHash, receipt } = await promise;
+            assert.equal(receipt.status, '0x1');
+            assert.equal(receipt.logs.length, 1);
+            const evt = habitat.interface.parseLog(receipt.logs[0]);
+            assert.equal(evt.args.account, bob.address, 'account');
+            votes[proposalId] = shares;
+            signals[proposalId] = signalStrength;
+
+            {
+              // check stake
+              const stake = await habitat.getActiveDelegatedVotingStake(erc20.address, evt.args.account);
+              // only replaces the vote with the same amount, should have the same stake
+              assert.equal(stake.toString(), (shares + leftOverStake).toString(), 'stake');
+            }
+          }
+        });
+      }
+
+      delegatedVote(bob, bob, 22n);
+      delegatedVote(bob, bob, 0n);
+      delegatedVote(bob, bob, 0xffn);
+      delegatedVote(bob, bob, 0xffffn);
+      delegatedVote(bob, bob, 0n, 0);
+      delegatedVote(bob, bob, 0xffn);
+      delegatedVote(alice, bob, 1n, 2);
+      delegatedVote(alice, bob, depositAmount * 2n, 0);
+      delegatedVote(alice, bob, 1n, 0);
+      delegatedVote(alice, bob, 0n, 0);
+      delegatedVote(bob, bob, 1n);
+
+      it('keep track of leftover stakes', () => {
+        leftOverStake++;
       });
 
       it('process proposal - should still be open', async () => {
@@ -528,16 +662,17 @@ describe('HabitatV1', async function () {
       });
 
       it('transfer to vault', async () => {
-        console.log(await habitat.getBalance(erc20.address, alice.address));
         const args = {
           token: erc20.address,
           to: vault,
-          value: '0xff',
+          value: 0xff,
         };
         const { txHash, receipt } = await createTransaction('TransferToken', args, alice, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
         // transfer from user to vault
-        cumulativeDeposits -= 0xffn;
+        cumulativeDeposits -= BigInt(args.value);
+        balances[alice.address] = (balances[alice.address] || 0n) - args.value;
+        balances[vault] = (balances[vault] || 0n) + args.value;
       });
 
       it('process proposal - should revert, invalid internalActons', async () => {
@@ -582,6 +717,8 @@ describe('HabitatV1', async function () {
         // transfer from vault to user
         cumulativeDeposits += 0xfan;
       });
+
+      vote(alice, 0n, 0);
     });
   }
 
@@ -616,7 +753,6 @@ describe('HabitatV1', async function () {
           }
 
           assert.equal(result, expected, 'expected execution result via proxy');
-          console.log({ proposalId, expected });
 
           if (expected) {
             // a second time should fail
@@ -649,14 +785,5 @@ describe('HabitatV1', async function () {
       it('debugStorage', () => debugStorage(bridge, rootProvider, habitatNode));
     });
     doExecutionTest();
-  });
-
-  describe('kill node', () => {
-    it('debug_kill', async () => {
-      try {
-        await habitatNode.send('debug_kill', []);
-      } catch (e) {
-      }
-    });
   });
 });
