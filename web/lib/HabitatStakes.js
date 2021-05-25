@@ -43,7 +43,6 @@ export default class HabitatStakes extends HTMLElement {
 
     const signer = await getSigner();
     const account = await signer.getAddress();
-    //this.querySelector('#info').textContent = account;
     const { habitat } = await getProviders();
     const tmp = {};
     for (const log of await doQuery('VotedOnProposal', account)) {
@@ -61,11 +60,16 @@ export default class HabitatStakes extends HTMLElement {
       if (this._container.querySelector(`[x-proposal="${proposalId}"]`)) {
         continue;
       }
+
       const ele = document.createElement('habitat-stake');
       ele.setAttribute('x-proposal', proposalId);
       ele.setAttribute('x-shares', shares.toString());
       ele.setAttribute('x-signal', signalStrength.toString());
       this._container.appendChild(ele);
+    }
+
+    if (this._container.children.length === 0) {
+      this.querySelector('#info').textContent = 'You staked nothing yet.';
     }
   }
 }

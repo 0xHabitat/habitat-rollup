@@ -28,7 +28,10 @@ const TEMPLATE =
 </template>
 
 <div class='flex col'>
-  <h3>Delegate</h3>
+  <div class='flex col align-left'>
+    <p>Here you can delegate a specific amount to another person.</p>
+    <p class='smaller bold'>The amount can be changed any time.</p>
+  </div>
   <space></space>
   <label>
     Token
@@ -45,6 +48,9 @@ const TEMPLATE =
   <button id='delegatee'>Change</button>
 </div>
 
+<space></space>
+<sep></sep>
+<space></space>
 <div>
   <space></space>
   <div class='auto-col-grid align-right' style='grid-template-columns:repeat(3,auto);'></div>
