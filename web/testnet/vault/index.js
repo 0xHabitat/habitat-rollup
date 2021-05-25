@@ -17,7 +17,7 @@ async function fetchProposals (vaultAddress) {
   const container = document.querySelector('#proposals');
   for await (const evt of pullEvents(habitat, filter)) {
     const child = document.createElement('habitat-proposal');
-    child.update(evt);
+    child.setAttribute('hash', evt.transactionHash);
     container.appendChild(child);
   }
 }

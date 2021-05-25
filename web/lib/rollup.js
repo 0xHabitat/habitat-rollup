@@ -434,6 +434,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     const account = await signer.getAddress();
     const userVote = await habitat.getVote(proposalId, account);
 
+    // xxx: take active voting stake into account
     userBalance = ethers.utils.formatUnits(await habitat.getBalance(erc20.address, account), erc20._decimals);
     if (userVote.gt(0)) {
       userShares = ethers.utils.formatUnits(userVote, erc20._decimals);
@@ -457,10 +458,11 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     tokenSymbol,
     proposalStatus,
     userBalance,
+    governanceToken,
   };
 }
 
-export async function submitVote (communityId, proposalId, signalStrength, _shares) {
+export async function submitVote (communityId, proposalId, signalStrength, _shares, delegatee) {
   const { habitat } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
@@ -472,7 +474,7 @@ export async function submitVote (communityId, proposalId, signalStrength, _shar
     shares,
     signalStrength,
     // xxx
-    delegatedFor: ethers.constants.AddressZero,
+    delegatedFor: delegatee || ethers.constants.AddressZero,
   };
 
   return sendTransaction('VoteOnProposal', args);
@@ -530,7 +532,7 @@ export async function getProposalInformation (txHash) {
 
   const _net = window.location.pathname.indexOf('testnet') === -1 ? 'mainnet' : 'testnet';
   const link = `/${_net}/proposal/#${txHash}`;
-  return { title, proposalId, startDate, vaultAddress, communityId, link, metadata };
+  return { title, proposalId, startDate, vaultAddress, communityId, link, metadata, tx };
 }
 
 export async function resolveName (str) {
@@ -761,4 +763,25 @@ export async function getTotalDelegatedAmountForToken (tokenAddr, account) {
   }
 
   return cumulative;
+}
+
+export async function getDelegatedAmountsForToken (governanceToken, delegatee) {
+  const tmp = {};
+  const { habitat } = await getProviders();
+  let total = ethers.BigNumber.from(0);
+
+  for (const log of await doQueryWithOptions({ toBlock: 1 }, 'DelegatedAmount', null, delegatee, governanceToken)) {
+    const { account, value } = habitat.interface.parseLog(log).args;
+    if (tmp[account]) {
+      continue;
+    }
+
+    tmp[account] = true;
+    total = total.add(value);
+  }
+
+  const used = await habitat.getActiveDelegatedVotingStake(governanceToken, delegatee);
+  const free = total.sub(used);
+
+  return { total, free, used };
 }

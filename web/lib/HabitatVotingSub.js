@@ -1,6 +1,9 @@
 import {
   wrapListener,
   renderAmount,
+  getSigner,
+  getToken,
+  ethers,
 } from './utils.js';
 import {
   getProviders,
@@ -8,24 +11,37 @@ import {
   submitVote,
   VotingStatus,
   getModuleInformation,
+  getDelegatedAmountsForToken,
+  doQueryWithOptions,
+  getProposalInformation,
 } from './rollup.js';
 import HabitatCircle from '/lib/HabitatCircle.js';
 
 const TEMPLATE =
 `
-<div>
-  <label>
-    The amount to stake
-    <input style='min-width:100%;margin:auto;' class='smaller' id='shares' type='number' value='1'>
-  </label>
-  <p id='feedback' class='smaller center bold text-center' style='padding:0;margin:0;'></p>
+<div style='border:1px solid var(--color-text);padding:.3em;border-radius: .3em;'>
+  <div>
+    <label>
+      Choose your voting method.
+      <br>
+      <button id='personal' class='secondary nohover selected'>Personal Vote</button>
+      <button id='delegate' class='secondary nohover'>Delegate Vote</button>
+    </label>
+    <label>
+      The amount to stake
+      <input style='min-width:100%;margin:auto;' class='smaller' id='shares' type='number' value='1'>
+    </label>
+    <p id='feedback' class='smaller center bold text-center' style='padding:0;margin:0;'></p>
+    <p id='available' class='smaller bold'></p>
+  </div>
+
   <div id='binary' class='flex row center' style='display:none;width:20ch;'>
     <label>
-    A binary vote stakes your amount above on either Yes or No.
-    <div class='flex row center'>
-    <button id='vote' class='bold yes green' disabled>Yes</button>
-    <button id='vote' class='bold no red' disabled>No</button>
-    </div>
+      A binary vote stakes your amount above on either Yes or No.
+      <div class='flex row center'>
+        <button id='vote' class='bold yes green' disabled>Yes</button>
+        <button id='vote' class='bold no red' disabled>No</button>
+      </div>
     </label>
   </div>
   <div id='signal' class='flex row center' style='display:none;width:30ch;'>
@@ -35,79 +51,158 @@ const TEMPLATE =
     </div>
     <habitat-slider></habitat-slider>
     <label>
-    A signaling vote stakes your amount above and your signaled importance on this proposal.
-    <button id='vote' class='bold signal' disabled>Vote</button>
+      A signaling vote stakes your amount above and your signaled importance on this proposal.
+      <button id='vote' class='bold signal' disabled>Vote</button>
     </label>
   </div>
 </div>
 `;
 
+const ATTR_HASH = 'hash';
+const SELECTED = 'selected';
+
 export default class HabitatVotingSub extends HTMLElement {
+  static get observedAttributes() {
+    return [ATTR_HASH];
+  }
+
   constructor() {
     super();
   }
 
-  init () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-    }
-  }
-
   connectedCallback () {
-    this.init();
-  }
+    this.innerHTML = TEMPLATE;
+    this._personalBtn = this.querySelector('button#personal');
+    this._delegateBtn = this.querySelector('button#delegate');
+    this._slider = this.querySelector('habitat-slider');
+    this._inputShares = this.querySelector('#shares');
+    this._flavor = 'binary';
 
-  async update ({ proposalId, vault }) {
-    this.init();
-
-    const { habitat } = await getProviders();
-    const communityId = await habitat.communityOfVault(vault);
-    const { flavor } = await getModuleInformation(vault);
-    const slider = this.querySelector('habitat-slider');
-    const inputShares = this.querySelector('#shares');
-    const {
-      defaultSliderValue,
-      userShares,
-      userSignal,
-      proposalStatus,
-      userBalance,
-      tokenSymbol,
-    } = await fetchProposalStats({ communityId, proposalId });
-    const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
+    wrapListener(
+      this._personalBtn,
+      this.switchToPersonal.bind(this)
+    );
+    wrapListener(
+      this._delegateBtn,
+      this.switchToDelegate.bind(this)
+    );
 
     for (const ele of this.querySelectorAll('button#vote')) {
-      ele.disabled = votingDisabled;
+      ele.disabled = true;
       wrapListener(
         ele,
         async (evt) => {
           let signalStrength = 0;
-          const shares = inputShares.value;
+          const shares = this._inputShares.value;
 
-          if (flavor === 'binary') {
+          if (this._flavor === 'binary') {
             signalStrength = evt.target.classList.contains('yes') ? 100 : 1;
-          } else if (flavor === 'signal') {
-            signalStrength = Number(slider.value);
+          } else if (this._flavor === 'signal') {
+            signalStrength = Number(this._slider.value);
           }
 
-          await submitVote(communityId, proposalId, signalStrength, shares);
-          await this.update({ proposalId, vault });
+          let account = null;
+          if (this._delegateBtn.classList.contains(SELECTED)) {
+            const signer = await getSigner();
+            account = await signer.getAddress();
+          }
+          await submitVote(this._communityId, this._proposalId, signalStrength, shares, account);
+          await this.update();
           this.dispatchEvent(new Event('update'));
         }
       );
     }
 
-    if (slider.value == slider.defaultValue) {
-      slider.setRange(1, 100, 100, defaultSliderValue);
+    //this.update();
+  }
+
+  disconnectedCallback () {
+  }
+
+  adoptedCallback () {
+  }
+
+  attributeChangedCallback (name, oldValue, newValue) {
+    return this.update();
+  }
+
+  async switchToPersonal () {
+    this._personalBtn.classList.add(SELECTED);
+    this._delegateBtn.classList.remove(SELECTED);
+    await this.update();
+  }
+
+  async switchToDelegate () {
+    this._personalBtn.classList.remove(SELECTED);
+    this._delegateBtn.classList.add(SELECTED);
+    await this.update();
+  }
+
+  async update () {
+    const txHash = this.getAttribute(ATTR_HASH);
+    if (!txHash) {
+      return;
     }
 
-    if (userShares > 0) {
-      this.querySelector('#feedback').textContent = `You Voted with ${renderAmount(userShares)} ${tokenSymbol}.`;
-      inputShares.value = userShares.toString();
-      // xxx: take active voting stake into account
-      inputShares.max = userBalance.toString();
+    const {
+      title,
+      proposalId,
+      startDate,
+      vaultAddress,
+      communityId,
+      metadata,
+      link,
+      tx,
+    } = await getProposalInformation(txHash);
+    const { flavor } = await getModuleInformation(vaultAddress);
+    let {
+        defaultSliderValue,
+        userShares,
+        userSignal,
+        proposalStatus,
+        userBalance,
+        tokenSymbol,
+        governanceToken,
+    } = await fetchProposalStats({ communityId, proposalId });
+
+    const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
+    for (const ele of this.querySelectorAll('button#vote')) {
+      ele.disabled = votingDisabled;
     }
 
+    let feedback = '';
+    if (this._delegateBtn.classList.contains(SELECTED)) {
+      const signer = await getSigner();
+      const account = await signer.getAddress();
+      const erc = await getToken(governanceToken);
+      const { total, used, free } = await getDelegatedAmountsForToken(governanceToken, account);
+      const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'DelegateeVotedOnProposal', account, proposalId);
+      if (logs.length) {
+        const { habitat } = await getProviders();
+        const { signalStrength, shares } = habitat.interface.parseLog(logs[0]).args;
+
+        userShares = ethers.utils.formatUnits(shares, erc._decimals);
+        feedback = `You Voted with ${renderAmount(shares, erc._decimals)} out of ${renderAmount(total, erc._decimals)} ${erc._symbol}.`;
+        defaultSliderValue = Number(signalStrength);
+      } else {
+        feedback = `You can vote up to ${renderAmount(free, erc._decimals)} ${erc._symbol}.`;
+      }
+    } else {
+      feedback =
+        `You Voted with ${renderAmount(userShares)} out of ${renderAmount(userBalance)} ${tokenSymbol}.`;
+    }
+
+    if (this._slider.value == this._slider.defaultValue) {
+      this._slider.setRange(0, 100, 100, defaultSliderValue);
+    }
+
+    this._inputShares.value = userShares.toString();
+    this._inputShares.max = userBalance.toString();
+    this.querySelector('#feedback').textContent = feedback;
     this.querySelector(`div#${flavor}`).style.display = 'block';
+    this._flavor = flavor;
+    this._communityId = communityId;
+    this._proposalId = proposalId;
   }
 }
 

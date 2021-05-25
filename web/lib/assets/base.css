@@ -310,6 +310,19 @@ button:active,
   outline: none;
 }
 
+.nohover:hover,
+.nohover:active {
+  transform: none;
+  box-shadow: inherit;
+  outline: none;
+}
+
+button.selected,
+.button.selected {
+  color: var(--color-bg);
+  background-color: var(--color-text);
+}
+
 .blue {
   background-color: var(--color-blue);
   color: var(--color-black);

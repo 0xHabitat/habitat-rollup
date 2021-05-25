@@ -13,6 +13,7 @@ import {
   renderLabels,
   getModuleInformation,
   simulateProcessProposal,
+  getProposalInformation,
 } from './rollup.js';
 import './HabitatCircle.js';
 import './HabitatVotingSub.js';
@@ -43,53 +44,58 @@ const TEMPLATE =
 </div>
 `;
 
+const ATTR_HASH = 'hash';
+
 export default class HabitatProposal extends HTMLElement {
+  static get observedAttributes() {
+    return [ATTR_HASH];
+  }
+
   constructor() {
     super();
   }
 
-  init () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-    }
-  }
-
   connectedCallback () {
-    this.init();
+    this.innerHTML = TEMPLATE;
   }
 
-  async update (proposalCreatedEvent) {
-    this.init();
+  disconnectedCallback () {
+  }
 
+  adoptedCallback () {
+  }
+
+  attributeChangedCallback (name, oldValue, newValue) {
+    return this.update();
+  }
+
+  async update () {
     const { habitat } = await getProviders();
-    const txHash = proposalCreatedEvent.transactionHash;
-    const tx = await habitat.provider.send('eth_getTransactionByHash', [txHash]);
-    const { proposalId, startDate, vault } = proposalCreatedEvent.args;
-    let metadata = {};
-    let title = '???';
-    try {
-      metadata = JSON.parse(proposalCreatedEvent.args.metadata);
-      title = metadata.title || title;
-    } catch (e) {
-      console.error(e);
-    }
+    const txHash = this.getAttribute(ATTR_HASH);
+    const {
+      title,
+      proposalId,
+      startDate,
+      vaultAddress,
+      communityId,
+      metadata,
+      link,
+      tx,
+    } = await getProposalInformation(txHash);
 
     {
       // title / link elements
-      const base = window.location.pathname.split('/')[1];
-      const proposalLink = `/${base}/proposal/#${proposalCreatedEvent.transactionHash}`;
       const titleElement = this.querySelector('#title');
       titleElement.textContent = title;
-      titleElement.href = proposalLink;
-      this.querySelector('#open').href = proposalLink;
+      titleElement.href = link;
+      this.querySelector('#open').href = link;
     }
     {
       const labels = metadata.labels || [];
       renderLabels(labels, this.querySelector('#labels'));
     }
 
-    const communityId = await habitat.communityOfVault(vault);
-    const { flavor } = await getModuleInformation(vault);
+    const { flavor } = await getModuleInformation(vaultAddress);
     const slider = this.querySelector('habitat-slider');
 
     const {
@@ -122,8 +128,8 @@ export default class HabitatProposal extends HTMLElement {
     this.querySelector('habitat-circle').setValue(signalStrength, renderAmount(totalShares), tokenSymbol);
 
     const votingElement = this.querySelector('habitat-voting-sub');
-    votingElement.addEventListener('update', () => this.update(proposalCreatedEvent), { once: true });
-    votingElement.update({ proposalId, vault });
+    votingElement.addEventListener('update', () => this.update(), { once: true });
+    votingElement.setAttribute(ATTR_HASH, txHash);
 
     if (slider.value == slider.defaultValue) {
       slider.setRange(1, 100, 100, defaultSliderValue);

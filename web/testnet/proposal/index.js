@@ -31,7 +31,7 @@ const CIRCLES = `
 <habitat-circle class='signal' id='shares' tag='Shares'></habitat-circle>
 `;
 
-let communityId, proposalId, proposer, tx;
+let communityId, proposalId, proposer, tx, txHash;
 
 async function processProposal (proposalId, originTx) {
   const args = {
@@ -98,15 +98,13 @@ async function updateProposal () {
     circles.querySelector('#votes').setValue(100, totalVotes, totalVotes !== 1 ? 'Votes' : 'Vote');
     circles.querySelector('#shares').setValue(signalStrength, renderAmount(totalShares), totalShares !== 1 ? 'Shares' : 'Share');
   }
-
-  document.querySelector('habitat-voting-sub').update({ proposalId, vault: tx.message.vault });
 }
 
 async function render () {
   const { habitat } = await getProviders();
-  const proposalTxHash = window.location.hash.replace('#', '');
-  tx = await habitat.provider.send('eth_getTransactionByHash', [proposalTxHash]);
-  const receipt = await habitat.provider.send('eth_getTransactionReceipt', [proposalTxHash]);
+  txHash = window.location.hash.replace('#', '');
+  tx = await habitat.provider.send('eth_getTransactionByHash', [txHash]);
+  const receipt = await habitat.provider.send('eth_getTransactionReceipt', [txHash]);
   const proposalEvent = habitat.interface.parseLog(receipt.logs[0]);
   proposer = await getUsername(receipt.from);
   console.log({tx,receipt});
@@ -199,6 +197,7 @@ async function render () {
     }
   }
 
+  document.querySelector('habitat-voting-sub').setAttribute('hash', txHash);
   await updateProposal();
   setInterval(updateProposal, 10000);
 }
