@@ -14,15 +14,7 @@ contract HabitatCommunity is HabitatBase {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    bytes32 communityId;
-    assembly {
-      mstore(0, msgSender)
-      mstore (32, nonce)
-      let tmp := mload(64)
-      mstore(64, governanceToken)
-      communityId := keccak256(0, 96)
-      mstore(64, tmp)
-    }
+    bytes32 communityId = HabitatBase._calculateSeed(msgSender, nonce);
 
     // checks if the community was already created
     require(HabitatBase.tokenOfCommunity(communityId) == address(0));

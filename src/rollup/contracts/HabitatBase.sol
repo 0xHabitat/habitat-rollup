@@ -31,14 +31,11 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     _incrementStorage(_TX_NONCE_KEY(msgSender));
   }
 
-  function _calculateAddress (address msgSender, uint256 nonce, bytes32 salt) internal pure returns (address ret) {
+  function _calculateSeed (address msgSender, uint256 nonce) internal pure returns (bytes32 ret) {
     assembly {
-      let backup := mload(64)
       mstore(0, msgSender)
       mstore(32, nonce)
-      mstore(64, salt)
-      ret := shr(96, keccak256(0, 96) )
-      mstore(64, backup)
+      ret := keccak256(0, 64)
     }
   }
 

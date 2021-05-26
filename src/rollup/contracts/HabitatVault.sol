@@ -27,7 +27,7 @@ contract HabitatVault is HabitatBase {
     // require(HabitatBase._getStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition)) != 0, 'ACTIVE');
 
     // generate unique address
-    address vaultAddress = HabitatBase._calculateAddress(msgSender, nonce, communityId);
+    address vaultAddress = address(bytes20(HabitatBase._calculateSeed(msgSender, nonce)));
     // checks if the vault already exists
     require(HabitatBase.communityOfVault(vaultAddress) == bytes32(0), 'EXISTS');
 

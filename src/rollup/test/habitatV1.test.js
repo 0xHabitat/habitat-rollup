@@ -78,7 +78,7 @@ describe('HabitatV1', async function () {
   let validAction;
   let conditions = {};
   let nftId = 0;
-  let leftOverStake = 0;
+  let leftOverStake = 0n;
 
   afterEach(async() => {
     for (const wallet of [alice, bob]) {
@@ -361,7 +361,7 @@ describe('HabitatV1', async function () {
           if (amount > balances[from.address]) {
             expectedError = /ODA2/;
           }
-          if (amount === 0 && stake.gt(0)) {
+          if (amount === 0n && stake.gt(0)) {
             expectedError = /ODA3/;
           }
           const args = {
@@ -382,12 +382,12 @@ describe('HabitatV1', async function () {
         });
       }
 
-      delegate(alice, alice, 1);
+      delegate(alice, alice, 1n);
       delegate(alice, bob, depositAmount);
-      delegate(alice, bob, 0);
-      delegate(alice, bob, 1);
-      delegate(alice, bob, depositAmount + 1);
-      delegate(alice, bob, 0xff);
+      delegate(alice, bob, 0n);
+      delegate(alice, bob, 1n);
+      delegate(alice, bob, depositAmount + 1n);
+      delegate(alice, bob, 0xffn);
 
       let communityId;
       it('alice: create a new community', async () => {
@@ -406,9 +406,8 @@ describe('HabitatV1', async function () {
         assert.equal(evt.metadata, args.metadata, 'metadata');
         communityId = ethers.utils.keccak256(
           Buffer.from(
-            alice.address.replace('0x', '').padStart(64, '0') +
-            args.nonce.replace('0x', '').padStart(64, '0') +
-            args.governanceToken.replace('0x', '').padStart(64, '0'),
+            alice.address.replace('0x', '').padStart(64, '0')
+            + args.nonce.replace('0x', '').padStart(64, '0'),
             'hex'
           )
         );
@@ -536,7 +535,7 @@ describe('HabitatV1', async function () {
           if (availableBalance < args.shares) {
             expectedError = /OVOP1/;
           }
-          if (args.shares === 0 && args.signalStrength !== 0) {
+          if (args.shares === 0n && args.signalStrength !== 0) {
             expectedError = /SIGNAL/;
           }
 
@@ -665,7 +664,7 @@ describe('HabitatV1', async function () {
         const args = {
           token: erc20.address,
           to: vault,
-          value: 0xff,
+          value: 0xffn,
         };
         const { txHash, receipt } = await createTransaction('TransferToken', args, alice, habitat);
         assert.equal(receipt.status, '0x1', 'receipt.status');
