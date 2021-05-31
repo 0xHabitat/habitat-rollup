@@ -12,10 +12,10 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
   event ProposalProcessed(bytes32 indexed proposalId, uint256 indexed votingStatus);
 
   /// @dev Validates if `timestamp` is inside a valid range.
-  /// `timestamp` should not be under/over now +- `PROPOSAL_DELAY`.
+  /// `timestamp` should not be under/over now +- `_PROPOSAL_DELAY`.
   function _validateTimestamp (uint256 timestamp) internal virtual {
     uint256 time = RollupCoreBrick._getTime();
-    uint256 delay = PROPOSAL_DELAY();
+    uint256 delay = _PROPOSAL_DELAY();
     require(
       time > delay && ((time + delay) > timestamp),
       'TIME'
@@ -257,7 +257,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     if (delegatee == address(0)) {
       // voter account
       address account = msgSender;
-      uint256 previousVote = HabitatBase.getVote(proposalId, account);
+      uint256 previousVote = HabitatBase._getStorage(_VOTING_SHARES_KEY(proposalId, account));
       // check for discrepancy between balance and stake
       uint256 stakableBalance = _getUnstakedBalance(token, account) + previousVote;
       require(stakableBalance >= shares, 'OVOP1');
@@ -327,7 +327,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
     uint256 totalVotingShares = HabitatBase.getTotalVotingShares(proposalId);
     uint256 totalVotingSignal = HabitatBase._getStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId));
-    uint256 totalVoteCount = HabitatBase.getVoteCount(proposalId);
+    uint256 totalVoteCount = HabitatBase._getStorage(_VOTING_COUNT_KEY(proposalId));
     uint256 secondsPassed;
     {
       uint256 dateNow = RollupCoreBrick._getTime();

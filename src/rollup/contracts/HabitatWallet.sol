@@ -21,6 +21,7 @@ contract HabitatWallet is HabitatBase {
   }
 
   /// @dev State transition when a user transfers a token.
+  /// Updates Total Value Locked and does accounting needed for staking rewards.
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
     // xxx check under/overflows
     // take getActiveVotingStake() into account
@@ -35,7 +36,7 @@ contract HabitatWallet is HabitatBase {
 
       uint256 balanceDelta = isERC721 ? 1 : value;
       // both ERC-20 & ERC-721
-      {
+      if (from != address(0)) {
         // check stake
         // xxx: nfts are currently not separately tracked - probably not needed?
         {
@@ -45,7 +46,8 @@ contract HabitatWallet is HabitatBase {
 
         // can throw
         HabitatBase._decrementStorage(_ERC20_KEY(token, from), balanceDelta);
-
+      }
+      {
         if (to == address(0)) {
           if (isERC721) {
             TokenInventoryBrick._setERC721Exit(token, from, value);
@@ -64,14 +66,33 @@ contract HabitatWallet is HabitatBase {
         bool toVault = !fromVault && HabitatBase._getStorage(_VAULT_CONDITION_KEY(to)) != 0;
 
         // transfer from vault to vault
+        // deposits (from = 0)
         // exits (to == 0)
         // transfer from user to vault
         // transfer from vault to user
-        if (toVault || !fromVault && to == address(0)) {
-          HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
-        } else if (fromVault) {
+        if (fromVault || from == address(0)) {
           HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
+        } else if (toVault || !fromVault && to == address(0)) {
+          HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
         }
+      }
+
+      {
+        // staking rewards
+        // update from & to
+        uint256 currentEpoch = getCurrentEpoch();
+        HabitatBase._setStorageInfinityIfZero(
+          _STAKING_EPOCH_TVL_KEY(currentEpoch, token),
+          HabitatBase._getStorage(_TOKEN_TVL_KEY(token))
+        );
+        HabitatBase._setStorageInfinityIfZero(
+          _STAKING_EPOCH_TUB_KEY(currentEpoch, token, to),
+          getBalance(token, to)
+        );
+        HabitatBase._setStorageInfinityIfZero(
+          _STAKING_EPOCH_TUB_KEY(currentEpoch, token, from),
+          getBalance(token, from)
+        );
       }
     }
 
@@ -81,27 +102,7 @@ contract HabitatWallet is HabitatBase {
   /// @dev State transition when a user deposits a token.
   function onDeposit (address token, address owner, uint256 value) external {
     HabitatBase._commonChecks();
-
-    // xxx check under/overflows
-    bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
-    uint256 incrementBy = isERC721 ? 1 : value;
-
-    if (isERC721) {
-      HabitatBase._setStorage(_ERC721_KEY(token, value), owner);
-    }
-
-    // both ERC-20 and ERC-721
-    HabitatBase._incrementStorage(_ERC20_KEY(token, owner), incrementBy);
-
-    // TVL
-    {
-      bool notAVault = HabitatBase._getStorage(_VAULT_CONDITION_KEY(owner)) == 0;
-      if (notAVault) {
-        HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), incrementBy);
-      }
-    }
-
-    emit TokenTransfer(token, address(0), owner, value);
+    _transferToken(token, address(0), owner, value);
   }
 
   /// @dev State transition when a user transfers a token.

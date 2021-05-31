@@ -3,34 +3,36 @@ pragma solidity >=0.6.2;
 
 import '@NutBerry/rollup-bricks/src/tsm/contracts/NutBerryTokenBridge.sol';
 import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
+import './UpgradableRollup.sol';
 
 /// @notice Global state and public utiltiy functions for the Habitat Rollup
-contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
-  // xxx
-  // - default community voting condition?
-  // - execution permits
-
+contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
+  /// @inheritdoc RollupCoreBrick
   function INSPECTION_PERIOD () public view virtual override returns (uint16) {
     // in blocks - ~84 hours
     return 21600;
   }
 
-  function PROPOSAL_DELAY () public view virtual returns (uint256) {
+  /// @dev The maximum time drift between the time of block submission and a proposal's start date.
+  function _PROPOSAL_DELAY () internal pure virtual returns (uint256) {
     // in seconds
     return 3600 * 32;
   }
 
+  /// @dev Includes common checks for rollup transactions.
   function _commonChecks () internal view {
     // all power the core protocol
     require(msg.sender == address(this));
   }
 
+  /// @dev Verifies and updates the account nonce for `msgSender`.
   function _checkUpdateNonce (address msgSender, uint256 nonce) internal {
     require(nonce == txNonces(msgSender), 'NONCE');
 
     _incrementStorage(_TX_NONCE_KEY(msgSender));
   }
 
+  /// @dev Helper function to calculate a unique seed. Primarily used for deriving addresses.
   function _calculateSeed (address msgSender, uint256 nonce) internal pure returns (bytes32 ret) {
     assembly {
       mstore(0, msgSender)
@@ -88,6 +90,14 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     assembly {
       sstore(key, value)
     }
+  }
+
+  function _setStorageInfinityIfZero (uint256 key, uint256 value) internal {
+    if (value == 0) {
+      value = uint256(-1);
+    }
+
+    _setStorage(key, value);
   }
 
   function _setStorageDelta (uint256 key, uint256 a, uint256 b) internal {
@@ -177,13 +187,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     }
   }
 
-  function getVote (bytes32 proposalId, address account) public view returns (uint256 ret) {
-    uint256 key = _VOTING_SHARES_KEY(proposalId, account);
-    assembly {
-      ret := sload(key)
-    }
-  }
-
   function _VOTING_SIGNAL_KEY (bytes32 proposalId, address account) internal pure returns (uint256 ret) {
     assembly {
       mstore(0, 0x12bc1ed237026cb917edecf1ca641d1047e3fc382300e8b3fab49ae10095e490)
@@ -200,13 +203,6 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
       mstore(0, 0x637730e93bbd8200299f72f559c841dfae36a36f86ace777eac8fe48f977a46d)
       mstore(32, proposalId)
       ret := keccak256(0, 64)
-    }
-  }
-
-  function getVoteCount (bytes32 proposalId) public view returns (uint256 ret) {
-    uint256 key = _VOTING_COUNT_KEY(proposalId);
-    assembly {
-      ret := sload(key)
     }
   }
 
@@ -526,5 +522,58 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick {
     assembly {
       ret := sload(key)
     }
+  }
+
+  function _STAKING_EPOCH_TVL_KEY (uint256 epoch, address token) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x8975800e5c219c77b3263a2c64fd28d02cabe02e45f8f9463d035b3c1aae8a62)
+      mstore(32, epoch)
+      mstore(64, token)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  function _STAKING_EPOCH_TUB_KEY (uint256 epoch, address token, address account) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x6094318105f3510ea893d7758a4f394f18bfa74ee039be1ce39d67a0ab12524c)
+      mstore(32, epoch)
+      mstore(64, token)
+      mstore(96, account)
+      ret := keccak256(0, 128)
+      mstore(64, backup)
+      mstore(96, 0)
+    }
+  }
+
+  function _STAKING_EPOCH_LAST_CLAIMED_KEY (address token, address account) internal pure returns (uint256 ret) {
+    assembly {
+      let backup := mload(64)
+      mstore(0, 0x6094318105f3510ea893d7758a4f394f18bfa74ee039be1ce39d67a0ab12524f)
+      mstore(32, token)
+      mstore(64, account)
+      ret := keccak256(0, 96)
+      mstore(64, backup)
+    }
+  }
+
+  /// @notice Epoch should be greater than 0.
+  function getCurrentEpoch () public virtual view returns (uint256) {
+    uint256 genesis = 1620000000;
+    uint256 timeNow = _getTime();
+    // 7 days
+    uint256 epoch = ((timeNow - genesis) / (604800)) + 1;
+
+    return epoch;
+  }
+
+  /// @notice The divisor for every tribute. A fraction of the operator tribute always goes into the staking pool.
+  function STAKING_POOL_FEE_DIVISOR () public view virtual returns (uint256) {
+  }
+
+  /// @notice Used for testing purposes.
+  function onModifyRollupStorage (address msgSender, uint256 nonce, bytes calldata data) external virtual {
   }
 }

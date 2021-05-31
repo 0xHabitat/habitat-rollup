@@ -702,17 +702,17 @@ case 9 {
 // end of ProcessProposal
 
 // start of TributeForOperator
-// typeHash: 0xf1fbac3f7a338f2d311f65117ace344ce27659545697922b63c217ff83eecb98
-// function: onTributeForOperator(address,uint256,address,uint256)
+// typeHash: 0x1d7f2e50c4a73ada77cc1796f78f259a43e44d6d99adaf69a6628ef42c527df7
+// function: onTributeForOperator(address,uint256,address,address,uint256)
 case 10 {
-  let headSize := 128
+  let headSize := 160
   let typeLen := 0
-  let txPtr := 320
-  let endOfSlot := add(txPtr, 128)
+  let txPtr := 384
+  let endOfSlot := add(txPtr, 160)
 
-  txPtr := 352
+  txPtr := 416
   // typeHash of TributeForOperator
-  mstore(0, 0xf1fbac3f7a338f2d311f65117ace344ce27659545697922b63c217ff83eecb98)
+  mstore(0, 0x1d7f2e50c4a73ada77cc1796f78f259a43e44d6d99adaf69a6628ef42c527df7)
   // uint256 TributeForOperator.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -729,7 +729,7 @@ case 10 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // uint256 TributeForOperator.amount
+  // address TributeForOperator.token
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
   calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
@@ -737,8 +737,16 @@ case 10 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
+  // uint256 TributeForOperator.amount
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(128, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
   // typeHash
-  let structHash := keccak256(0, 128)
+  let structHash := keccak256(0, 160)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -752,10 +760,10 @@ case 10 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(288, 0x35c48e63)
-  mstore(320, mload(128))
+  mstore(352, 0x24fa29ea)
+  mstore(384, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 380, sub(endOfSlot, 380), 0, 0)
   success := or(success, returndatasize())
 }
 // end of TributeForOperator
@@ -826,6 +834,113 @@ case 11 {
   success := or(success, returndatasize())
 }
 // end of DelegateAmount
+
+// start of ClaimStakingReward
+// typeHash: 0x5b7e01fd1453024a599fa59870e9edca08c3468a89c0f132a921bebc95b3e11a
+// function: onClaimStakingReward(address,uint256,address)
+case 12 {
+  let headSize := 96
+  let typeLen := 0
+  let txPtr := 256
+  let endOfSlot := add(txPtr, 96)
+
+  txPtr := 288
+  // typeHash of ClaimStakingReward
+  mstore(0, 0x5b7e01fd1453024a599fa59870e9edca08c3468a89c0f132a921bebc95b3e11a)
+  // uint256 ClaimStakingReward.nonce
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(32, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // address ClaimStakingReward.token
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(64, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // typeHash
+  let structHash := keccak256(0, 96)
+  // prefix
+  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
+  // DOMAIN struct hash
+  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  // transactionStructHash
+  mstore(34, structHash)
+  mstore(0, keccak256(0, 66))
+  mstore(32, v)
+  mstore(64, r)
+  mstore(96, s)
+  mstore(128, 0)
+  success := staticcall(gas(), 1, 0, 128, 128, 32)
+  // functionSig
+  mstore(224, 0x3242d952)
+  mstore(256, mload(128))
+
+  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
+  success := or(success, returndatasize())
+}
+// end of ClaimStakingReward
+
+// start of ModifyRollupStorage
+// typeHash: 0x31a8f1b3e855fde3871d440618da073d0504133dc34db1896de6774ed15abb70
+// function: onModifyRollupStorage(address,uint256,bytes)
+case 13 {
+  let headSize := 96
+  let typeLen := 0
+  let txPtr := 256
+  let endOfSlot := add(txPtr, 96)
+
+  txPtr := 288
+  // typeHash of ModifyRollupStorage
+  mstore(0, 0x31a8f1b3e855fde3871d440618da073d0504133dc34db1896de6774ed15abb70)
+  // uint256 ModifyRollupStorage.nonce
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(32, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // bytes ModifyRollupStorage.data
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(64, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
+  // typeHash
+  let structHash := keccak256(0, 96)
+  // prefix
+  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
+  // DOMAIN struct hash
+  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  // transactionStructHash
+  mstore(34, structHash)
+  mstore(0, keccak256(0, 66))
+  mstore(32, v)
+  mstore(64, r)
+  mstore(96, s)
+  mstore(128, 0)
+  success := staticcall(gas(), 1, 0, 128, 128, 32)
+  // functionSig
+  mstore(224, 0x10ea8892)
+  mstore(256, mload(128))
+
+  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
+  success := or(success, returndatasize())
+}
+// end of ModifyRollupStorage
 default { success := 1 }
 }
 
