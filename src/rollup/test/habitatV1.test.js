@@ -79,6 +79,8 @@ describe('HabitatV1', async function () {
   let conditions = {};
   let nftId = 0;
   let leftOverStake = 0n;
+  let startEpoch = 0n;
+  let endEpoch = 1n;
 
   afterEach(async() => {
     for (const wallet of [alice, bob]) {
@@ -519,6 +521,18 @@ describe('HabitatV1', async function () {
         assert.equal(Number(evt.votingStatus), 1);
       });
 
+      async function getPreviousVotingShares (proposalId, account) {
+        const filter = habitat.filters.VotedOnProposal(account, proposalId);
+        filter.toBlock = 1;
+        filter.maxResults = 1;
+        const logs = await habitat.provider.send('eth_getLogs', [filter]);
+        if (logs.length) {
+          const log = habitat.interface.parseLog(logs[0]);
+          return log.args.shares;
+        }
+        return ethers.BigNumber.from(0);
+      }
+
       function vote (wallet, shares, signalStrength = 100) {
         it(`${aliases[wallet.address]}: vote on proposal (shares=${shares}, signalStrength=${signalStrength})`, async () => {
           const args = {
@@ -527,7 +541,7 @@ describe('HabitatV1', async function () {
             shares,
             delegatedFor: ethers.constants.AddressZero,
           };
-          const previousVote = await habitat.getVote(proposalId, wallet.address);
+          const previousVote = await getPreviousVotingShares(proposalId, wallet.address);
           const activeVotingStake = BigInt(await habitat.getActiveVotingStake(erc20.address, wallet.address));
           const delegatedAmount = delegatedShares[wallet.address] || 0n;
           const availableBalance = ((balances[wallet.address] || 0n) - (activeVotingStake + delegatedAmount)) + BigInt(previousVote);
@@ -718,6 +732,169 @@ describe('HabitatV1', async function () {
       });
 
       vote(alice, 0n, 0);
+
+      describe('staking rewards', () => {
+        const operatorAmount = 1234n;
+        const divisor = 100n;
+
+        it('set epoch', async () => {
+          startEpoch += endEpoch;
+          endEpoch += 0xffn;
+          const data = '0x072512b50f96eebc18b80fcb796fd1878d108cab3f9601c23c8c01ab32315d14'
+            + startEpoch.toString(16).padStart(64, '0');
+          const args = {
+            data,
+          };
+          const { receipt } = await createTransaction('ModifyRollupStorage', args, alice, habitat);
+          assert.equal(receipt.status, '0x1');
+
+          const newEpoch = BigInt(await habitat.getCurrentEpoch());
+          assert.equal(newEpoch, startEpoch);
+        });
+
+        it('set staking token - should fail', async () => {
+          const data = '0x';
+          const args = {
+            data,
+          };
+          await assert.rejects(createTransaction('ModifyRollupStorage', args, bob, habitat), /OMRS1/);
+        });
+
+        it('set staking token', async () => {
+          const data = '0x777a0813e4fa78b2c1088d37b5a406c9f45908dd6e6e558639a4a33766d33732'
+            + erc20.address.replace('0x', '').padStart(64, '0');
+          const args = {
+            data,
+          };
+          const { receipt } = await createTransaction('ModifyRollupStorage', args, alice, habitat);
+          assert.equal(receipt.status, '0x1');
+        });
+
+        it('TributeForOperator', async () => {
+          const expectedFee = operatorAmount / divisor;
+          const args = {
+            operator: charlie.address,
+            amount: operatorAmount,
+            token: erc20.address,
+          };
+
+          const { receipt } = await createTransaction('TributeForOperator', args, alice, habitat);
+          assert.equal(receipt.status, '0x1');
+
+          {
+            // fee transfer
+            const log = habitat.interface.parseLog(receipt.logs[0]);
+            assert.equal(BigInt(log.args.value), expectedFee, 'fee');
+            assert.equal(log.args.from, alice.address, 'from');
+            assert.equal(log.args.to, '0x' + startEpoch.toString(16).padStart(40, '0'), 'to');
+          }
+          {
+            const log = habitat.interface.parseLog(receipt.logs[1]);
+            assert.equal(BigInt(log.args.value), operatorAmount - expectedFee, 'fee');
+            assert.equal(log.args.from, alice.address, 'from');
+            assert.equal(log.args.to, args.operator, 'to');
+          }
+
+          balances[alice.address] -= args.amount;
+          balances[args.operator] = (balances[args.operator] || 0n) + expectedFee;
+        });
+
+        it('claim reward - fail, epoch not closed yet', async () => {
+          const args = {
+            token: erc20.address,
+          };
+          await assert.rejects(createTransaction('ClaimStakingReward', args, alice, habitat), /OCSR1/);
+        });
+
+        it('set epoch', async () => {
+          const data = '0x072512b50f96eebc18b80fcb796fd1878d108cab3f9601c23c8c01ab32315d14'
+            + (startEpoch + 4n).toString(16).padStart(64, '0');
+          const args = {
+            data,
+          };
+          const { receipt } = await createTransaction('ModifyRollupStorage', args, alice, habitat);
+          assert.equal(receipt.status, '0x1');
+        });
+
+        it('TributeForOperator', async () => {
+          const expectedFee = operatorAmount / divisor;
+          const args = {
+            operator: charlie.address,
+            amount: operatorAmount,
+            token: erc20.address,
+          };
+
+          const { receipt } = await createTransaction('TributeForOperator', args, alice, habitat);
+          assert.equal(receipt.status, '0x1');
+
+          {
+            // fee transfer
+            const log = habitat.interface.parseLog(receipt.logs[0]);
+            assert.equal(BigInt(log.args.value), expectedFee, 'fee');
+            assert.equal(log.args.from, alice.address, 'from');
+            assert.equal(log.args.to, '0x' + (startEpoch + 4n).toString(16).padStart(40, '0'), 'to');
+          }
+          {
+            const log = habitat.interface.parseLog(receipt.logs[1]);
+            assert.equal(BigInt(log.args.value), operatorAmount - expectedFee, 'fee');
+            assert.equal(log.args.from, alice.address, 'from');
+            assert.equal(log.args.to, args.operator, 'to');
+          }
+
+          balances[alice.address] -= args.amount;
+          balances[args.operator] = (balances[args.operator] || 0n) + expectedFee;
+        });
+
+        it('set epoch', async () => {
+          const data = '0x072512b50f96eebc18b80fcb796fd1878d108cab3f9601c23c8c01ab32315d14'
+            + endEpoch.toString(16).padStart(64, '0');
+          const args = {
+            data,
+          };
+          const { receipt } = await createTransaction('ModifyRollupStorage', args, alice, habitat);
+          assert.equal(receipt.status, '0x1');
+        });
+
+        it('claim reward', async () => {
+          const args = {
+            token: erc20.address,
+          };
+          const { receipt } = await createTransaction('ClaimStakingReward', args, alice, habitat);
+          assert.equal(receipt.logs.length, Number(endEpoch - startEpoch) + 2);
+
+          const expectedReward = 12n;
+          {
+            // first reward
+            const log = habitat.interface.parseLog(receipt.logs[0]);
+            assert.equal(BigInt(log.args.value), expectedReward, 'fee');
+            assert.equal(log.args.to, alice.address, 'to');
+            assert.equal(log.args.from, '0x' + startEpoch.toString(16).padStart(40, '0'), 'from');
+            {
+              const log = habitat.interface.parseLog(receipt.logs[1]);
+              assert.equal(BigInt(log.args.amount), expectedReward, 'reward');
+              assert.equal(log.args.account, alice.address, 'account');
+            }
+          }
+          {
+            // second reward
+            const log = habitat.interface.parseLog(receipt.logs[5]);
+            assert.equal(BigInt(log.args.value), expectedReward, 'fee2');
+            assert.equal(log.args.to, alice.address, 'to');
+            assert.equal(log.args.from, '0x' + (startEpoch + 4n).toString(16).padStart(40, '0'), 'from');
+            {
+              const log = habitat.interface.parseLog(receipt.logs[6]);
+              assert.equal(BigInt(log.args.amount), expectedReward, 'reward2');
+              assert.equal(log.args.account, alice.address, 'account');
+            }
+          }
+
+          // balance of alice should increase by reward
+          balances[alice.address] += expectedReward * 2n;
+
+          // claiming again should fail
+          await assert.rejects(createTransaction('ClaimStakingReward', args, alice, habitat), /OCSR1/);
+        });
+      });
     });
   }
 
