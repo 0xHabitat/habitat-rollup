@@ -3,7 +3,7 @@ pragma solidity >=0.6.2;
 
 import './HabitatBase.sol';
 
-/// @notice Habitat Accounts, basic functionality for delegation and social features.
+/// @notice Habitat Accounts, basic functionality for social features.
 contract HabitatAccount is HabitatBase {
   event ClaimUsername(address indexed account, bytes32 indexed shortString);
 
@@ -29,12 +29,5 @@ contract HabitatAccount is HabitatBase {
     HabitatBase._setStorage(_ADDRESS_TO_NAME_KEY(msgSender), shortString);
 
     emit ClaimUsername(msgSender, shortString);
-  }
-
-  /// @dev State transition when a user sets a delegate.
-  // xxx remove me
-  function onSetDelegate (address msgSender, uint256 nonce, address delegatee) external {
-    HabitatBase._commonChecks();
-    HabitatBase._checkUpdateNonce(msgSender, nonce);
   }
 }
