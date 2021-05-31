@@ -404,9 +404,15 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   const erc20 = await getErc20(governanceToken);
   const tokenSymbol = await getTokenSymbol(governanceToken);
   const signals = {};
+  const votes = {};
+  let totalVotes = 0;
   for (const log of await doQuery('VotedOnProposal', null, proposalId)) {
-    const { account, signalStrength } = habitat.interface.parseLog(log).args;
+    const { account, signalStrength, shares } = habitat.interface.parseLog(log).args;
+    if (!signals[account]) {
+      totalVotes++;
+    }
     signals[account] = signalStrength;
+    votes[account] = shares;
   }
   let defaultSliderValue = 50;
 
@@ -418,7 +424,6 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   }
 
   const signalStrength = cumulativeSignals / numSignals;
-  const totalVotes = Number(await habitat.getVoteCount(proposalId));
   const totalShares = ethers.utils.formatUnits(await habitat.getTotalVotingShares(proposalId), erc20._decimals);
   const totalMembers = Number(await habitat.getTotalMemberCount(communityId));
   const participationRate = (totalVotes / totalMembers) * 100;
@@ -432,7 +437,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   if (walletIsConnected()) {
     const signer = await getSigner();
     const account = await signer.getAddress();
-    const userVote = await habitat.getVote(proposalId, account);
+    const userVote = votes[account] || ethers.BigNumber.from(0);
 
     // xxx: take active voting stake into account
     userBalance = ethers.utils.formatUnits(await habitat.getBalance(erc20.address, account), erc20._decimals);
