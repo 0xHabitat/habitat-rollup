@@ -67,6 +67,7 @@ export default {
     TributeForOperator: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'operator', type: 'address' },
+      { name: 'token', type: 'address' },
       { name: 'amount', type: 'uint256' },
     ],
     DelegateAmount: [
@@ -74,6 +75,14 @@ export default {
       { name: 'delegatee', type: 'address' },
       { name: 'token', type: 'address' },
       { name: 'value', type: 'uint256' },
+    ],
+    ClaimStakingReward: [
+      { name: 'nonce', 'type': 'uint256' },
+      { name: 'token', 'type': 'address' },
+    ],
+    ModifyRollupStorage: [
+      { name: 'nonce', 'type': 'uint256' },
+      { name: 'data', 'type': 'bytes' },
     ],
   },
   domain: {
@@ -93,5 +102,7 @@ export default {
     'ProcessProposal',
     'TributeForOperator',
     'DelegateAmount',
+    'ClaimStakingReward',
+    'ModifyRollupStorage',
   ],
 }
