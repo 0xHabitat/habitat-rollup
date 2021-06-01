@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.7.6;
 
+// Audit-1: ok
 interface IModule {
   enum VotingStatus {
     UNKNOWN,
