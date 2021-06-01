@@ -1,9 +1,10 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 
 /// @notice Functionality for user wallets.
+// Audit-1: pending
 contract HabitatWallet is HabitatBase {
   event TokenTransfer(address indexed token, address indexed from, address indexed to, uint256 value);
   event DelegatedAmount(address indexed account, address indexed delegatee, address indexed token, uint256 value);
@@ -96,7 +97,9 @@ contract HabitatWallet is HabitatBase {
       }
     }
 
-    emit TokenTransfer(token, from, to, value);
+    if (_shouldEmitEvents()) {
+      emit TokenTransfer(token, from, to, value);
+    }
   }
 
   /// @dev State transition when a user deposits a token.
@@ -150,6 +153,8 @@ contract HabitatWallet is HabitatBase {
     // save the new allowance
     HabitatBase._setStorage(_DELEGATED_ACCOUNT_ALLOWANCE_KEY(msgSender, delegatee, token), newAllowance);
 
-    emit DelegatedAmount(msgSender, delegatee, token, newAllowance);
+    if (_shouldEmitEvents()) {
+      emit DelegatedAmount(msgSender, delegatee, token, newAllowance);
+    }
   }
 }

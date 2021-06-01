@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 import './HabitatWallet.sol';
 
 /// @notice Takes care of transferring value to a operator minus a few that goes to the staking pool.
+// Audit-1: pending
 contract HabitatStakingPool is HabitatBase, HabitatWallet {
   event ClaimedStakingReward(address indexed account, address indexed token, uint256 amount);
 
@@ -42,6 +43,7 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
       address pool = address(epoch);
       uint256 poolBalance = getBalance(token, pool);
 
+      /// xxx get final pool balance
       if (poolBalance > 0) {
         historicTVL = _specialLoad(historicTVL, _STAKING_EPOCH_TVL_KEY(epoch, token));
         historicTotalUserBalance = _specialLoad(historicTotalUserBalance, _STAKING_EPOCH_TUB_KEY(epoch, token, msgSender));
@@ -51,7 +53,9 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
         _transferToken(token, pool, msgSender, reward);
       }
 
-      emit ClaimedStakingReward(msgSender, token, reward);
+      if (_shouldEmitEvents()) {
+        emit ClaimedStakingReward(msgSender, token, reward);
+      }
     }
   }
 

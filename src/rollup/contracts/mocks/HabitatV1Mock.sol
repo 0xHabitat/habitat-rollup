@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import '../HabitatV1.sol';
 

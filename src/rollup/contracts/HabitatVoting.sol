@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 import './HabitatWallet.sol';
@@ -174,9 +174,11 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // update member count
     HabitatBase._maybeUpdateMemberCount(proposalId, msgSender);
 
-    emit ProposalCreated(vault, proposalId, startDate, metadata);
-    // internal event for submission deadlines
-    UtilityBrick._emitTransactionDeadline(startDate);
+    if (_shouldEmitEvents()) {
+      emit ProposalCreated(vault, proposalId, startDate, metadata);
+      // internal event for submission deadlines
+      UtilityBrick._emitTransactionDeadline(startDate);
+    }
   }
 
   /// @dev Helper function to retrieve the governance token given `proposalId`.
@@ -265,7 +267,9 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
 
       _votingRoutine(account, previousVote, previousSignal, signalStrength, shares, proposalId, false);
 
-      emit VotedOnProposal(account, proposalId, signalStrength, shares);
+      if (_shouldEmitEvents()) {
+        emit VotedOnProposal(account, proposalId, signalStrength, shares);
+      }
     } else {
       uint256 previousVote = HabitatBase._getStorage(_DELEGATED_VOTING_SHARES_KEY(proposalId, delegatee));
       uint256 previousSignal = HabitatBase._getStorage(_DELEGATED_VOTING_SIGNAL_KEY(proposalId, delegatee));
@@ -311,7 +315,9 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
 
       _votingRoutine(delegatee, previousVote, previousSignal, signalStrength, shares, proposalId, true);
 
-      emit DelegateeVotedOnProposal(delegatee, proposalId, signalStrength, shares);
+      if (_shouldEmitEvents()) {
+        emit DelegateeVotedOnProposal(delegatee, proposalId, signalStrength, shares);
+      }
     }
   }
 
@@ -404,7 +410,9 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
           HabitatBase._setExecutionPermit(vault, proposalId, hash);
         }
       }
-      emit ProposalProcessed(proposalId, votingStatus);
+      if (_shouldEmitEvents()) {
+        emit ProposalProcessed(proposalId, votingStatus);
+      }
     }
   }
 }

@@ -1,9 +1,10 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 
 /// @notice Habitat Accounts, basic functionality for social features.
+// Audit-1: ok
 contract HabitatAccount is HabitatBase {
   event ClaimUsername(address indexed account, bytes32 indexed shortString);
 
@@ -28,6 +29,8 @@ contract HabitatAccount is HabitatBase {
     HabitatBase._setStorage(_NAME_TO_ADDRESS_KEY(shortString), msgSender);
     HabitatBase._setStorage(_ADDRESS_TO_NAME_KEY(msgSender), shortString);
 
-    emit ClaimUsername(msgSender, shortString);
+    if (_shouldEmitEvents()) {
+      emit ClaimUsername(msgSender, shortString);
+    }
   }
 }

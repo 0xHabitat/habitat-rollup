@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: Unlicense
 pragma solidity >=0.7.6;
 
 import '@NutBerry/rollup-bricks/src/tsm/contracts/RollupUtils.sol';

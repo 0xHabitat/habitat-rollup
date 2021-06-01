@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import '@NutBerry/rollup-bricks/src/tsm/contracts/NutBerryTokenBridge.sol';
 import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
@@ -575,5 +575,12 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
 
   /// @notice Used for testing purposes.
   function onModifyRollupStorage (address msgSender, uint256 nonce, bytes calldata data) external virtual {
+  }
+
+  /// @dev Returns true on Layer 2.
+  function _shouldEmitEvents () internal returns (bool ret) {
+    assembly {
+      ret := iszero(origin())
+    }
   }
 }

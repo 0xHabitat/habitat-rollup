@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import './HabitatV1Challenge.sol';
 import './HabitatBase.sol';
@@ -11,7 +11,8 @@ import './HabitatVoting.sol';
 import './HabitatModule.sol';
 import './HabitatStakingPool.sol';
 
-/// @notice Composition of the full Habitat Rollup contracts
+/// @notice Composition of the full Habitat Rollup contracts (v1)
+// Audit-1: ok
 contract HabitatV1 is
   HabitatBase,
   HabitatAccount,
