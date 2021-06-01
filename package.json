@@ -2,7 +2,7 @@
   "name": "habitat",
   "version": "0.1.0",
   "author": "NutBerry",
-  "license": "MPL-2.0",
+  "license": "Unlicense",
   "type": "module",
   "scripts": {
     "compile": "for x in src/*/scripts/codegen.js; do $x; done && develatus-apparatus-compile src/*/**/*.sol src/*/**/**/*.sol",
