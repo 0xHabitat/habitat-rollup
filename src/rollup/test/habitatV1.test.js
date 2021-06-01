@@ -178,6 +178,12 @@ describe('HabitatV1', async function () {
         round++;
       });
 
+      it('rollup update', async () => {
+        const tx = await bridge.connect(alice).upgradeRollup(rollupImplementation.address);
+        const receipt = await tx.wait();
+        assert.equal(receipt.logs.length, 1);
+      });
+
       it('deposit: alice', async () => {
         await doDeposit(alice);
       });
