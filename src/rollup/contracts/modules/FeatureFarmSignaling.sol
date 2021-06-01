@@ -4,7 +4,11 @@ pragma solidity >=0.7.6;
 import '../IModule.sol';
 
 /// @notice This Module is always open and requires a minimum .001% balance regarding the total value locked of the governance token.
+// Audit-1: ok
 contract FeatureFarmSignaling is IModule {
+  /// @notice Called if a proposal gets created.
+  /// Requirements:
+  /// - proposerBalance needs to be at least 0.001% of TVL.
   function onCreateProposal (
     bytes32 /*communityId*/,
     uint256 /*totalMemberCount*/,
@@ -16,7 +20,7 @@ contract FeatureFarmSignaling is IModule {
     bytes calldata /*externalActions*/
   ) external pure override
   {
-    uint256 minProposerBalance = totalValueLocked / 10000;
+    uint256 minProposerBalance = totalValueLocked / 100_000;
     require(
       proposerBalance >= minProposerBalance,
       'Not enough balance'
@@ -24,6 +28,8 @@ contract FeatureFarmSignaling is IModule {
   }
 
   /// @notice Signaling Proposals are forever open.
+  /// The resulting voting signal is `totalVotingSignal / totalVoteCount` if `totalVoteCount > 0`,
+  /// else `0`.
   function onProcessProposal (
     bytes32 /*proposalId*/,
     bytes32 /*communityId*/,

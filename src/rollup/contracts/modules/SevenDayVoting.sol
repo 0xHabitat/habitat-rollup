@@ -3,13 +3,17 @@ pragma solidity >=0.7.6;
 
 import '../IModule.sol';
 
-// @notice Seven Day Voting - Simple Majority Voting
-// min proposer balance = .1%  (1% / 10)
-// TVL = total value on rollup for governance token for non vault addresses
-// 7 day voting period (fixed)
-// quorum: total voting shares / TVL >= 10%
-// requirement: total signal (average preference) > 50%  = YES else NO
+/// @notice Seven Day Voting - Simple Majority Voting
+/// Requirements/Conditions:
+/// - min proposer balance = .1%  (100(%) / 1000)
+/// - TVL = total value on rollup for governance token (excluding vault balances)
+/// - 7 day voting period (fixed)
+/// - quorum: total voting shares / TVL >= 10%
+/// - total signal (average preference) > 50%  = YES else NO
+// Audit-1: ok
 contract SevenDayVoting is IModule {
+  /// @notice Called on proposal creation.
+  /// Checks if `proposerBalance` is at least TVL / 1000 (0.1%)
   function onCreateProposal (
     bytes32 /*communityId*/,
     uint256 /*totalMemberCount*/,
@@ -28,6 +32,7 @@ contract SevenDayVoting is IModule {
     );
   }
 
+  /// @notice See requirements for this contract.
   function onProcessProposal (
     bytes32 /*proposalId*/,
     bytes32 /*communityId*/,
@@ -42,21 +47,29 @@ contract SevenDayVoting is IModule {
     uint256 VOTING_DURATION = 604800;
     uint256 secondsTillClose = secondsPassed > VOTING_DURATION ? 0 : VOTING_DURATION - secondsPassed;
     uint256 minQuorum = totalValueLocked / 10;
-    uint256 q = minQuorum == 0 ? 0 : (totalVotingShares * 100) / minQuorum;
+    // both variables are used for frontend purposes
+    // assuming `totalValueLocked` can not be over `totalVotingShares`
+    uint256 onePercent = totalValueLocked / 100;
+    uint256 q = onePercent == 0 ? 0 : totalVotingShares / onePercent;
 
+    // Proposal stays open if VOTING_DURATION has not yet passed.
     if (secondsPassed < VOTING_DURATION) {
       return (VotingStatus.OPEN, secondsTillClose, q);
     }
 
-    if (totalVotingShares < minQuorum) {
+    // Proposal is closed if less than 10% of TVL voted on this proposal.
+    if (totalVotingShares < minQuorum || totalVoteCount == 0) {
       return (VotingStatus.CLOSED, secondsTillClose, q);
     }
 
+    // at this point we reached the `minQuorum` requirement.
+    // `totalVoteCount` can not be 0 here.
     uint256 averageSignal = totalVotingSignal / totalVoteCount;
     if (averageSignal > 50) {
       return (VotingStatus.PASSED, secondsTillClose, q);
     }
 
+    // defaults to closed if `averageSignal` is not reached
     return (VotingStatus.CLOSED, secondsTillClose, q);
   }
 }

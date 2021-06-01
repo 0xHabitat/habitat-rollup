@@ -78,6 +78,7 @@ describe('HabitatV1', async function () {
   let invalidAction;
   let validAction;
   let conditions = {};
+  let deployedConditions = {};
   let nftId = 0;
   let leftOverStake = 0n;
   let startEpoch = 0n;
@@ -129,7 +130,6 @@ describe('HabitatV1', async function () {
     );
   });
 
-  let vaultCondition;
   function _doRound (abortProposal = false) {
     const depositAmount = 0xffffffn;
 
@@ -427,32 +427,34 @@ describe('HabitatV1', async function () {
         await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /HASH/);
       });
 
-      it('submit SevenDayVoting module', async () => {
-        const expectRevert = !!vaultCondition;
+      it('submit voting modules', async () => {
+        for (const conditionName in conditions) {
+          const condition = conditions[conditionName];
+          const expectRevert = !!deployedConditions[condition];
+          const args = {
+            contractAddress: condition,
+            metadata: '{}',
+          };
 
-        vaultCondition = conditions.SevenDayVoting;
-        const args = {
-          contractAddress: vaultCondition,
-          metadata: '{}',
-        };
+          if (expectRevert) {
+            await assert.rejects(createTransaction('SubmitModule', args, alice, habitat), /EXISTS/);
+            return;
+          }
 
-        if (expectRevert) {
-          await assert.rejects(createTransaction('SubmitModule', args, alice, habitat), /EXISTS/);
-          return;
+          const { txHash, receipt } = await createTransaction('SubmitModule', args, alice, habitat);
+          assert.equal(receipt.status, '0x1', conditionName);
+          assert.equal(receipt.logs.length, 1);
+          const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+          assert.equal(evt.contractAddress, args.contractAddress);
+          deployedConditions[condition] = true;
         }
-
-        const { txHash, receipt } = await createTransaction('SubmitModule', args, alice, habitat);
-        assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.contractAddress, args.contractAddress);
       });
 
       let vault;
       it('alice: create a vault', async () => {
         const args = {
           communityId,
-          condition: vaultCondition,
+          condition: conditions.SevenDayVoting,
           metadata: '{}',
         };
         const { txHash, receipt } = await createTransaction('CreateVault', args, alice, habitat);
