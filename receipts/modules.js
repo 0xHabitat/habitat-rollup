@@ -1,6 +1,5 @@
 import fs from 'fs';
 import assert from 'assert';
-import { getDeployCode } from './../src/rollup/lib/utils.js';
 import { wallet, layer2, sendTransaction, deploy } from './utils.js';
 
 const OneThirdParticipationThreshold = JSON.parse(fs.readFileSync('./build/contracts/OneThirdParticipationThreshold.json'));
@@ -37,9 +36,8 @@ export const MODULES = [
 ];
 
 for (const module of MODULES) {
-  const bytecode = getDeployCode(module.artefact.deployedBytecode);
   // deploy
-  module.contractAddress = (await deploy({ bytecode, abi: [] }, [], wallet)).address;
+  module.contractAddress = (await deploy(module.artefact, [], wallet)).address;
   // register module
   const args = {
     contractAddress: module.contractAddress,

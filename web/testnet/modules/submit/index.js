@@ -23,7 +23,7 @@ async function doSubmit (evt) {
 
   try {
     const artefact = JSON.parse(await file.text());
-    const contract = await deployModule(artefact.deployedBytecode);
+    const contract = await deployModule(artefact);
     const args = {
       contractAddress: contract.address,
       metadata: JSON.stringify({ name: name.value, details: textarea.value }),

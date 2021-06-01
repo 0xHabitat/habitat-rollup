@@ -3,7 +3,6 @@ import ethers from 'ethers';
 import TransactionBuilder from '@NutBerry/rollup-bricks/src/bricked/lib/TransactionBuilder.js';
 import TYPED_DATA from '../habitatV1.js';
 import { encodeExternalProposalActions, encodeInternalProposalActions } from './utils.js';
-import { getDeployCode } from '../lib/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
@@ -40,7 +39,6 @@ describe('HabitatV1', async function () {
   const {
     HabitatV1Mock,
     ExecutionProxy,
-    TestERC20,
     HabitatToken,
     TestERC721,
     ExecutionTest,
@@ -112,8 +110,7 @@ describe('HabitatV1', async function () {
     executionTestContract = await deploy(ExecutionTest, alice, executionProxy.address);
 
     for (const condition of [OneThirdParticipationThreshold, SevenDayVoting, FeatureFarmSignaling]) {
-      const bytecode = getDeployCode(condition.deployedBytecode);
-      conditions[condition.contractName] = (await deploy({ bytecode, abi: [] }, alice)).address;
+      conditions[condition.contractName] = (await deploy(condition, alice)).address;
     }
 
     invalidAction = encodeExternalProposalActions(

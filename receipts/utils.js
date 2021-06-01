@@ -6,7 +6,6 @@ import TransactionBuilder from '@NutBerry/rollup-bricks/dist/TransactionBuilder.
 import TYPED_DATA from './../src/rollup/habitatV1.js';
 import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
 import { encodeInternalProposalActions, encodeExternalProposalActions } from './../src/rollup/test/utils.js';
-import { getDeployCode } from './../src/rollup/lib/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
@@ -60,7 +59,7 @@ export const wallet = new ethers.Wallet(
 const HabitatV1Testnet = JSON.parse(fs.readFileSync('./build/contracts/HabitatV1Testnet.json'));
 const RollupProxy = JSON.parse(fs.readFileSync('./build/contracts/RollupProxy.json'));
 const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
-const ERC20 = JSON.parse(fs.readFileSync('./build/contracts/TestERC20.json'));
+const ERC20 = JSON.parse(fs.readFileSync('./build/contracts/HabitatToken.json'));
 const configPath = process.argv[2];
 export const config = {};
 if (!fs.existsSync(configPath)) {

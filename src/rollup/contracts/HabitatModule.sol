@@ -24,12 +24,15 @@ contract HabitatModule is HabitatBase {
         doRevert()
       }
 
+      let terminatedByOpcode := 0
       let ptr := mload(64)
       let end := add(ptr, size)
       extcodecopy(contractAddress, ptr, 0, size)
       codehash := keccak256(ptr, size)
 
       for { } lt(ptr, end) { ptr := add(ptr, 1) } {
+        let terminatedByPreviousOpcode := terminatedByOpcode
+        terminatedByOpcode := 0
         let opcode := byte(0, mload(ptr))
 
         // PUSH opcodes
@@ -46,6 +49,8 @@ contract HabitatModule is HabitatBase {
 
         // everything from 0x0 to 0x20 (inclusive)
         if lt(opcode, 0x21) {
+          // in theory, opcode 0x0 (STOP) also terminates execution
+          // but we will ignore this one
           continue
         }
 
@@ -82,14 +87,23 @@ contract HabitatModule is HabitatBase {
         // JUMPDEST
         case 0x5b {}
         // RETURN
-        case 0xf3 {}
+        case 0xf3 {
+          terminatedByOpcode := 1
+        }
         // REVERT
-        case 0xfd {}
+        case 0xfd {
+          terminatedByOpcode := 1
+        }
         // INVALID
-        case 0xfe {}
+        case 0xfe {
+          terminatedByOpcode := 1
+        }
         default {
-          // everything else is not allowed
-          doRevert()
+          // we fall through if the previous opcode terminates execution
+          if iszero(terminatedByPreviousOpcode) {
+            // everything else is not allowed
+            doRevert()
+          }
         }
       }
     }

@@ -50,12 +50,6 @@ async function main () {
         args = {
           communityId,
           condition: module.contractAddress,
-        };
-        tmp = await sendTransaction('ActivateModule', args, wallet, layer2);
-
-        args = {
-          communityId,
-          condition: module.contractAddress,
           metadata: JSON.stringify({ title: `Treasure Chest` }),
         };
         tmp = await sendTransaction('CreateVault', args, wallet, layer2);
@@ -74,7 +68,7 @@ async function main () {
 
   {
     // deposit
-    const amount = '0xffffffffffffffffff';
+    const amount = '0x' + (100_000_000n * (10n ** 10n)).toString(16);
     const oldBlock = await layer2.provider.getBlockNumber();
     let tx = await erc20.approve(bridgeL1.address, amount);
     let receipt = await tx.wait();
