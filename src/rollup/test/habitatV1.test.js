@@ -924,21 +924,21 @@ describe('HabitatV1', async function () {
     });
   }
 
-  describe('chain - forward', function () {
-    doRound();
-    describe('finalize', function () {
-      it('submitBlock', () => submitBlock(bridge, rootProvider, habitatNode));
-      it('doForward', () => doForward(bridge, rootProvider, habitatNode));
-      it('debugStorage', () => debugStorage(bridge, rootProvider, habitatNode));
-    });
-    doExecutionTest();
-  });
-
   describe('chain - challenge', function () {
     doRound();
     describe('finalize', function () {
       it('submitBlock', () => submitBlock(bridge, rootProvider, habitatNode));
       it('doChallenge', () => doChallenge(bridge, rootProvider, habitatNode));
+      it('debugStorage', () => debugStorage(bridge, rootProvider, habitatNode));
+    });
+    doExecutionTest();
+  });
+
+  describe('chain - forward', function () {
+    doRound();
+    describe('finalize', function () {
+      it('submitBlock', () => submitBlock(bridge, rootProvider, habitatNode));
+      it('doForward', () => doForward(bridge, rootProvider, habitatNode));
       it('debugStorage', () => debugStorage(bridge, rootProvider, habitatNode));
     });
     doExecutionTest();
