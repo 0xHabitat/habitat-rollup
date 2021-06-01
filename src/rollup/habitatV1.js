@@ -16,11 +16,6 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'shortString', type: 'bytes32' },
     ],
-    SetDelegate: [
-      { name: 'nonce', 'type': 'uint256' },
-      { name: 'to', type: 'address' },
-    ],
-    // community related
     CreateCommunity: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'governanceToken', type: 'address' },
@@ -37,12 +32,6 @@ export default {
       { name: 'contractAddress', type: 'address' },
       { name: 'metadata', type: 'string' },
     ],
-    ActivateModule: [
-      { name: 'nonce', 'type': 'uint256' },
-      { name: 'communityId', type: 'bytes32' },
-      { name: 'condition', type: 'address' },
-    ],
-    // voting related
     CreateProposal: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'startDate', 'type': 'uint256' },
@@ -92,11 +81,9 @@ export default {
   primaryTypes: [
     'TransferToken',
     'ClaimUsername',
-    'SetDelegate',
     'CreateCommunity',
     'CreateVault',
     'SubmitModule',
-    'ActivateModule',
     'CreateProposal',
     'VoteOnProposal',
     'ProcessProposal',

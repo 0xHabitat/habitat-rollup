@@ -141,61 +141,10 @@ case 1 {
 }
 // end of ClaimUsername
 
-// start of SetDelegate
-// typeHash: 0x0976e4734b23f68e97fb754289639f7cde00c4a9f7421cbb59eab25341131dab
-// function: onSetDelegate(address,uint256,address)
-case 2 {
-  let headSize := 96
-  let typeLen := 0
-  let txPtr := 256
-  let endOfSlot := add(txPtr, 96)
-
-  txPtr := 288
-  // typeHash of SetDelegate
-  mstore(0, 0x0976e4734b23f68e97fb754289639f7cde00c4a9f7421cbb59eab25341131dab)
-  // uint256 SetDelegate.nonce
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(32, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // address SetDelegate.to
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(64, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // typeHash
-  let structHash := keccak256(0, 96)
-  // prefix
-  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
-  // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
-  // transactionStructHash
-  mstore(34, structHash)
-  mstore(0, keccak256(0, 66))
-  mstore(32, v)
-  mstore(64, r)
-  mstore(96, s)
-  mstore(128, 0)
-  success := staticcall(gas(), 1, 0, 128, 128, 32)
-  // functionSig
-  mstore(224, 0x718bb386)
-  mstore(256, mload(128))
-
-  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
-  success := or(success, returndatasize())
-}
-// end of SetDelegate
-
 // start of CreateCommunity
 // typeHash: 0x444a86b501cf5285015cf7d602819c806ff2b6d3e9a36753c81e1bf24abaa94b
 // function: onCreateCommunity(address,uint256,address,string)
-case 3 {
+case 2 {
   let headSize := 128
   let typeLen := 0
   let txPtr := 320
@@ -259,7 +208,7 @@ case 3 {
 // start of CreateVault
 // typeHash: 0x6f70797b7bf84e5eb6136f9bba812b553d6bfd37e9b86a9016c12a59a9b58eaf
 // function: onCreateVault(address,uint256,bytes32,address,string)
-case 4 {
+case 3 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -331,7 +280,7 @@ case 4 {
 // start of SubmitModule
 // typeHash: 0xc0ec083f7dd76c7db4e97877703b9199cd5d2e4c952c43c35e87e4ce4f3635b3
 // function: onSubmitModule(address,uint256,address,string)
-case 5 {
+case 4 {
   let headSize := 128
   let typeLen := 0
   let txPtr := 320
@@ -392,69 +341,10 @@ case 5 {
 }
 // end of SubmitModule
 
-// start of ActivateModule
-// typeHash: 0x0bf485f0f9090f0baf2ad8ca67e39f883400e7d9ac7e650c5d5881244c934901
-// function: onActivateModule(address,uint256,bytes32,address)
-case 6 {
-  let headSize := 128
-  let typeLen := 0
-  let txPtr := 320
-  let endOfSlot := add(txPtr, 128)
-
-  txPtr := 352
-  // typeHash of ActivateModule
-  mstore(0, 0x0bf485f0f9090f0baf2ad8ca67e39f883400e7d9ac7e650c5d5881244c934901)
-  // uint256 ActivateModule.nonce
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(32, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // bytes32 ActivateModule.communityId
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(64, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // address ActivateModule.condition
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(96, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // typeHash
-  let structHash := keccak256(0, 128)
-  // prefix
-  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
-  // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
-  // transactionStructHash
-  mstore(34, structHash)
-  mstore(0, keccak256(0, 66))
-  mstore(32, v)
-  mstore(64, r)
-  mstore(96, s)
-  mstore(128, 0)
-  success := staticcall(gas(), 1, 0, 128, 128, 32)
-  // functionSig
-  mstore(288, 0xacd8076a)
-  mstore(320, mload(128))
-
-  success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
-  success := or(success, returndatasize())
-}
-// end of ActivateModule
-
 // start of CreateProposal
 // typeHash: 0x0a2fe2e0a2527ed37d3563b490e75c737df97f6a03d02840e5a1a5aaaf3e93f2
 // function: onCreateProposal(address,uint256,uint256,address,bytes,bytes,string)
-case 7 {
+case 5 {
   let headSize := 224
   let typeLen := 0
   let txPtr := 512
@@ -552,7 +442,7 @@ case 7 {
 // start of VoteOnProposal
 // typeHash: 0xeedce560579f8160e8bbb71ad5823fb1098eee0d1116be92232ee87ab1bce294
 // function: onVoteOnProposal(address,uint256,bytes32,uint256,address,uint8)
-case 8 {
+case 6 {
   let headSize := 192
   let typeLen := 0
   let txPtr := 448
@@ -627,7 +517,7 @@ case 8 {
 // start of ProcessProposal
 // typeHash: 0xb4da110edbcfa262bdf7849c0e02e03ed15ced328922eca5a0bc1c547451b4af
 // function: onProcessProposal(address,uint256,bytes32,bytes,bytes)
-case 9 {
+case 7 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -704,7 +594,7 @@ case 9 {
 // start of TributeForOperator
 // typeHash: 0x1d7f2e50c4a73ada77cc1796f78f259a43e44d6d99adaf69a6628ef42c527df7
 // function: onTributeForOperator(address,uint256,address,address,uint256)
-case 10 {
+case 8 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -771,7 +661,7 @@ case 10 {
 // start of DelegateAmount
 // typeHash: 0x7595f378ac19fee39d9d6a79a8240d32afae43c5943289e491976d85c9e9ad54
 // function: onDelegateAmount(address,uint256,address,address,uint256)
-case 11 {
+case 9 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -838,7 +728,7 @@ case 11 {
 // start of ClaimStakingReward
 // typeHash: 0x5b7e01fd1453024a599fa59870e9edca08c3468a89c0f132a921bebc95b3e11a
 // function: onClaimStakingReward(address,uint256,address)
-case 12 {
+case 10 {
   let headSize := 96
   let typeLen := 0
   let txPtr := 256
@@ -889,7 +779,7 @@ case 12 {
 // start of ModifyRollupStorage
 // typeHash: 0x31a8f1b3e855fde3871d440618da073d0504133dc34db1896de6774ed15abb70
 // function: onModifyRollupStorage(address,uint256,bytes)
-case 13 {
+case 11 {
   let headSize := 96
   let typeLen := 0
   let txPtr := 256

@@ -41,6 +41,7 @@ describe('HabitatV1', async function () {
     HabitatV1Mock,
     ExecutionProxy,
     TestERC20,
+    HabitatToken,
     TestERC721,
     ExecutionTest,
     RollupProxy,
@@ -96,7 +97,7 @@ describe('HabitatV1', async function () {
   });
 
   before('Prepare contracts', async () => {
-    erc20 = await deploy(TestERC20, alice);
+    erc20 = await deploy(HabitatToken, alice);
     erc721 = await deploy(TestERC721, alice, 'NFT', 'NFT');
 
     rollupImplementation = await deploy(HabitatV1Mock, alice);
@@ -426,15 +427,6 @@ describe('HabitatV1', async function () {
         await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /HASH/);
       });
 
-      it('activate condition should fail - not submitted yet', async () => {
-        const vaultCondition = ethers.constants.AddressZero;
-        const args = {
-          communityId,
-          condition: vaultCondition,
-        };
-        await assert.rejects(createTransaction('ActivateModule', args, alice, habitat), /HASH/);
-      });
-
       it('submit SevenDayVoting module', async () => {
         const expectRevert = !!vaultCondition;
 
@@ -454,19 +446,6 @@ describe('HabitatV1', async function () {
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.contractAddress, args.contractAddress);
-      });
-
-      it('activate SevenDayVoting', async () => {
-        const args = {
-          communityId,
-          condition: vaultCondition,
-        };
-        const { txHash, receipt } = await createTransaction('ActivateModule', args, alice, habitat);
-        assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(evt.communityId, args.communityId);
-        assert.equal(evt.condition, args.condition);
       });
 
       let vault;

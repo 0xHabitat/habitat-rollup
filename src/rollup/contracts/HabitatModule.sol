@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: MPL-2.0
-pragma solidity >=0.6.2;
+// SPDX-License-Identifier: Unlicense
+pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 
 /// @notice Functionality for Habitat Modules
+// Audit-1: pending
 contract HabitatModule is HabitatBase {
   event ModuleSubmitted(address contractAddress, string metadata);
-  event ModuleActivated(bytes32 communityId, address condition);
 
   /// @dev Verifies that the bytecode at `contractAddress` can not
   /// introduce side effects on the rollup at will.
@@ -16,7 +16,7 @@ contract HabitatModule is HabitatBase {
     assembly {
       function doRevert () {
         // xxx add error message?
-        revert(0, 0)
+        revert(0, 1)
       }
 
       let size := extcodesize(contractAddress)
@@ -100,33 +100,15 @@ contract HabitatModule is HabitatBase {
   function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, string calldata metadata) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
-    require(HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress)) == 0, 'EXISTS');
 
+    // same contract (address) should not be submitted twice
+    require(HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress)) == 0, 'EXISTS');
     // verify the contract code and returns the keccak256(bytecode) (reverts if invalid)
     bytes32 codeHash = _verifyModule(contractAddress);
     HabitatBase._setStorage(_MODULE_HASH_KEY(contractAddress), codeHash);
 
-    emit ModuleSubmitted(contractAddress, metadata);
-  }
-
-  /// @notice Activates a module for `communityId`.
-  /// Modules only needs to be activated/bought once for a community.
-  function onActivateModule (address msgSender, uint256 nonce, bytes32 communityId, address condition) external {
-    HabitatBase._commonChecks();
-    HabitatBase._checkUpdateNonce(msgSender, nonce);
-
-    // checks if the module of submitted and verified
-    require(HabitatBase._getStorage(_MODULE_HASH_KEY(condition)) != 0, 'HASH');
-    require(HabitatBase._getStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition)) == 0);
-
-    // xxx acquire/buy flow
-    //uint256 modulePrice = HabitatBase.modulePriceOf(condition);
-    //if (modulePrice != 0) {
-    //}
-
-    // activate
-    HabitatBase._setStorage(_ACTIVATOR_OF_MODULE_KEY(communityId, condition), msgSender);
-
-    emit ModuleActivated(communityId, condition);
+    if (_shouldEmitEvents()) {
+      emit ModuleSubmitted(contractAddress, metadata);
+    }
   }
 }
