@@ -7,30 +7,46 @@ interface IBridge {
   function executionPermit (address vault, bytes32 proposalId) external view returns (bytes32);
 }
 
+/// @notice This contract verifies execution permits and is meant to be used for L1 governance.
+/// A new proxy can be created with `createProxy`, to be used for governance.
+// Audit-1: ok
 contract ExecutionProxy is MetaProxyFactory {
-  /// @notice The contract that ...brrrr... prints permits.
-  address public delegate;
   /// @notice keeps track of already executed permits
   mapping (bytes32 => bool) public executed;
 
-  event NewProxyCreated(address addr);
+  event ProxyCreated(address indexed bridge, address indexed vault, address proxy);
 
-  constructor (address _delegate) {
-    delegate = _delegate;
+  /// @notice Returns the metadata of this (MetaProxy) contract.
+  /// Only relevant with contracts created via the MetaProxy.
+  /// @dev This function is aimed to be invoked with- & without a call.
+  function getMetadata () public pure returns (
+    address bridge,
+    address vault
+  ) {
+    assembly {
+      // calldata layout:
+      // [ arbitrary data... ] [ metadata... ] [ size of metadata 32 bytes ]
+      bridge := calldataload(sub(calldatasize(), 96))
+      vault := calldataload(sub(calldatasize(), 64))
+    }
   }
 
-  // @notice MetaProxy construction via calldata.
-  function createProxy (address /*vault*/) external returns (address addr) {
+  /// @notice MetaProxy construction via calldata.
+  /// @param bridge is the address of the habitat rollup
+  /// @param vault is the L2 vault used for governance.
+  function createProxy (address bridge, address vault) external returns (address addr) {
     addr = MetaProxyFactory._metaProxyFromCalldata();
-    emit NewProxyCreated(addr);
+    emit ProxyCreated(bridge, vault, addr);
   }
 
   /// @notice Executes a set of contract calls `actions` if there is a valid
-  /// permit on `delegate` for `proposalIndex` and `actions`.
-  function execute (address vault, bytes32 proposalId, bytes memory actions) external {
+  /// permit on the rollup bridge for `proposalId` and `actions`.
+  function execute (bytes32 proposalId, bytes memory actions) external {
+    (address bridge, address vault) = getMetadata();
+
     require(executed[proposalId] == false, 'already executed');
     require(
-      IBridge(delegate).executionPermit(vault, proposalId) == keccak256(actions),
+      IBridge(bridge).executionPermit(vault, proposalId) == keccak256(actions),
       'wrong permit'
     );
 

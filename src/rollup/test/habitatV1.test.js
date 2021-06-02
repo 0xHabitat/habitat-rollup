@@ -57,6 +57,7 @@ describe('HabitatV1', async function () {
   const votes = {};
   const signals = {};
   const delegatedShares = {};
+  const executionProxyForVault = {};
   let bridge;
   let rollupProxy;
   let rollupImplementation;
@@ -106,7 +107,7 @@ describe('HabitatV1', async function () {
     habitatNode = await startNode('../../bricked/lib/index.js', 9999, 0, bridge.address, TYPED_DATA);
     habitat = bridge.connect(habitatNode);
 
-    executionProxy = await deploy(ExecutionProxy, alice, bridge.address);
+    executionProxy = await deploy(ExecutionProxy, alice);
     executionTestContract = await deploy(ExecutionTest, alice, executionProxy.address);
 
     for (const condition of [OneThirdParticipationThreshold, SevenDayVoting, FeatureFarmSignaling]) {
@@ -467,6 +468,17 @@ describe('HabitatV1', async function () {
         assert.equal(evt.communityId, args.communityId);
         assert.equal(evt.condition, args.condition);
         vault = evt.vaultAddress;
+      });
+
+      it('create execution proxy for vault', async () => {
+        const tx = await executionProxy.createProxy(bridge.address, vault);
+        const receipt = await tx.wait();
+
+        assert.equal(receipt.events.length, 1, '# log events');
+        const evt = receipt.events[0].args;
+        assert.equal(evt.bridge, bridge.address, 'bridge');
+        assert.equal(evt.vault, vault, 'vault');
+        executionProxyForVault[vault] = evt.proxy;
       });
 
       let proposalId;
@@ -900,15 +912,16 @@ describe('HabitatV1', async function () {
 
           assert.equal(!!Number(ok), valid, 'execution permit only for valid proposals');
 
+          const proxy = new ethers.Contract(executionProxyForVault[vault], ExecutionProxy.abi, alice);
           let expected = valid; //args.actions === validAction;
           // try to execute
           let result;
           if (expected) {
-            const tx = await executionProxy.execute(vault, proposalId, externalActions);
+            const tx = await proxy.execute(proposalId, externalActions);
             const receipt = await tx.wait();
             result = !!receipt.status;
           } else {
-            await assertRevert(executionProxy.execute(vault, proposalId, externalActions, { gasLimit: GAS_LIMIT }));
+            await assertRevert(proxy.execute(proposalId, externalActions, { gasLimit: GAS_LIMIT }));
             result = false;
           }
 
@@ -916,13 +929,12 @@ describe('HabitatV1', async function () {
 
           if (expected) {
             // a second time should fail
-            await assertRevert(executionProxy.execute(vault, proposalId, externalActions, { gasLimit: GAS_LIMIT }));
+            await assertRevert(proxy.execute(proposalId, externalActions, { gasLimit: GAS_LIMIT }));
           }
-        }
-      });
 
-      it('non existent permits', async () => {
-        await assertRevert(executionProxy.execute(charlie.address, ethers.utils.keccak256('0xff'), '0x', { gasLimit: GAS_LIMIT }));
+          // non existent permit should fail
+          await assertRevert(proxy.execute(ethers.utils.keccak256('0xff'), '0x', { gasLimit: GAS_LIMIT }));
+        }
       });
     });
   }
