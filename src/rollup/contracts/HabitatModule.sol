@@ -6,8 +6,6 @@ import './HabitatBase.sol';
 /// @notice Functionality for Habitat Modules
 // Audit-1: pending
 contract HabitatModule is HabitatBase {
-  event ModuleSubmitted(address contractAddress, string metadata);
-
   /// @dev Verifies that the bytecode at `contractAddress` can not
   /// introduce side effects on the rollup at will.
   /// The convention for Modules is that they handle a known set of callbacks
@@ -111,7 +109,7 @@ contract HabitatModule is HabitatBase {
 
   /// @notice Submits a module to the store.
   /// AppReview? 😬
-  function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, string calldata metadata) external {
+  function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, bytes calldata metadata) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
@@ -120,9 +118,5 @@ contract HabitatModule is HabitatBase {
     // verify the contract code and returns the keccak256(bytecode) (reverts if invalid)
     bytes32 codeHash = _verifyModule(contractAddress);
     HabitatBase._setStorage(_MODULE_HASH_KEY(contractAddress), codeHash);
-
-    if (_shouldEmitEvents()) {
-      emit ModuleSubmitted(contractAddress, metadata);
-    }
   }
 }

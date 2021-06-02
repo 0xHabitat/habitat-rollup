@@ -142,8 +142,8 @@ case 1 {
 // end of ClaimUsername
 
 // start of CreateCommunity
-// typeHash: 0x444a86b501cf5285015cf7d602819c806ff2b6d3e9a36753c81e1bf24abaa94b
-// function: onCreateCommunity(address,uint256,address,string)
+// typeHash: 0x4b8e81699d7dc349aa2eca5d6740c23aff4244d26288627f4ca3be7d236f5127
+// function: onCreateCommunity(address,uint256,address,bytes)
 case 2 {
   let headSize := 128
   let typeLen := 0
@@ -152,7 +152,7 @@ case 2 {
 
   txPtr := 352
   // typeHash of CreateCommunity
-  mstore(0, 0x444a86b501cf5285015cf7d602819c806ff2b6d3e9a36753c81e1bf24abaa94b)
+  mstore(0, 0x4b8e81699d7dc349aa2eca5d6740c23aff4244d26288627f4ca3be7d236f5127)
   // uint256 CreateCommunity.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -169,7 +169,7 @@ case 2 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // string CreateCommunity.metadata
+  // bytes CreateCommunity.metadata
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -197,7 +197,7 @@ case 2 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(288, 0x4cfd2251)
+  mstore(288, 0x5b292e29)
   mstore(320, mload(128))
 
   success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
@@ -206,8 +206,8 @@ case 2 {
 // end of CreateCommunity
 
 // start of CreateVault
-// typeHash: 0x6f70797b7bf84e5eb6136f9bba812b553d6bfd37e9b86a9016c12a59a9b58eaf
-// function: onCreateVault(address,uint256,bytes32,address,string)
+// typeHash: 0xd039a4c4cd9e9890710392eef9936bf5d690ec47246e5d6f4693c764d6b62635
+// function: onCreateVault(address,uint256,bytes32,address,bytes)
 case 3 {
   let headSize := 160
   let typeLen := 0
@@ -216,7 +216,7 @@ case 3 {
 
   txPtr := 416
   // typeHash of CreateVault
-  mstore(0, 0x6f70797b7bf84e5eb6136f9bba812b553d6bfd37e9b86a9016c12a59a9b58eaf)
+  mstore(0, 0xd039a4c4cd9e9890710392eef9936bf5d690ec47246e5d6f4693c764d6b62635)
   // uint256 CreateVault.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -241,7 +241,7 @@ case 3 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // string CreateVault.metadata
+  // bytes CreateVault.metadata
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -269,7 +269,7 @@ case 3 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(352, 0xa37bbbe8)
+  mstore(352, 0x9617e0c5)
   mstore(384, mload(128))
 
   success := call(sub(gas(), 5000), address(), 0, 380, sub(endOfSlot, 380), 0, 0)
@@ -278,8 +278,8 @@ case 3 {
 // end of CreateVault
 
 // start of SubmitModule
-// typeHash: 0xc0ec083f7dd76c7db4e97877703b9199cd5d2e4c952c43c35e87e4ce4f3635b3
-// function: onSubmitModule(address,uint256,address,string)
+// typeHash: 0xb9d41eae8b3cfe47bbf999b0c3182fe59b7cc2c28bb712fdb7de4aa9821639ec
+// function: onSubmitModule(address,uint256,address,bytes)
 case 4 {
   let headSize := 128
   let typeLen := 0
@@ -288,7 +288,7 @@ case 4 {
 
   txPtr := 352
   // typeHash of SubmitModule
-  mstore(0, 0xc0ec083f7dd76c7db4e97877703b9199cd5d2e4c952c43c35e87e4ce4f3635b3)
+  mstore(0, 0xb9d41eae8b3cfe47bbf999b0c3182fe59b7cc2c28bb712fdb7de4aa9821639ec)
   // uint256 SubmitModule.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -305,7 +305,7 @@ case 4 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
-  // string SubmitModule.metadata
+  // bytes SubmitModule.metadata
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -333,7 +333,7 @@ case 4 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(288, 0x551cf0f9)
+  mstore(288, 0x2c894020)
   mstore(320, mload(128))
 
   success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
@@ -342,8 +342,8 @@ case 4 {
 // end of SubmitModule
 
 // start of CreateProposal
-// typeHash: 0x0a2fe2e0a2527ed37d3563b490e75c737df97f6a03d02840e5a1a5aaaf3e93f2
-// function: onCreateProposal(address,uint256,uint256,address,bytes,bytes,string)
+// typeHash: 0x4d8a9f544d08772d597445c015580bcc93a38fd87bcf6be01f7b542ccdb97814
+// function: onCreateProposal(address,uint256,uint256,address,bytes,bytes,bytes)
 case 5 {
   let headSize := 224
   let typeLen := 0
@@ -352,7 +352,7 @@ case 5 {
 
   txPtr := 544
   // typeHash of CreateProposal
-  mstore(0, 0x0a2fe2e0a2527ed37d3563b490e75c737df97f6a03d02840e5a1a5aaaf3e93f2)
+  mstore(0, 0x4d8a9f544d08772d597445c015580bcc93a38fd87bcf6be01f7b542ccdb97814)
   // uint256 CreateProposal.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -403,7 +403,7 @@ case 5 {
   endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
   offset := add(offset, typeLen)
 
-  // string CreateProposal.metadata
+  // bytes CreateProposal.metadata
   typeLen := shr(240, calldataload(offset))
   offset := add(offset, 2)
   mstore(txPtr, headSize)
@@ -431,7 +431,7 @@ case 5 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(480, 0x9f91e940)
+  mstore(480, 0x9cc39bbe)
   mstore(512, mload(128))
 
   success := call(sub(gas(), 5000), address(), 0, 508, sub(endOfSlot, 508), 0, 0)

@@ -19,18 +19,18 @@ export default {
     CreateCommunity: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'governanceToken', type: 'address' },
-      { name: 'metadata', type: 'string' },
+      { name: 'metadata', type: 'bytes' },
     ],
     CreateVault: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'communityId', type: 'bytes32' },
       { name: 'condition', type: 'address' },
-      { name: 'metadata', type: 'string' },
+      { name: 'metadata', type: 'bytes' },
     ],
     SubmitModule: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'contractAddress', type: 'address' },
-      { name: 'metadata', type: 'string' },
+      { name: 'metadata', type: 'bytes' },
     ],
     CreateProposal: [
       { name: 'nonce', 'type': 'uint256' },
@@ -38,7 +38,7 @@ export default {
       { name: 'vault', type: 'address' },
       { name: 'internalActions', type: 'bytes' },
       { name: 'externalActions', type: 'bytes' },
-      { name: 'metadata', type: 'string' },
+      { name: 'metadata', type: 'bytes' },
     ],
     VoteOnProposal: [
       { name: 'nonce', 'type': 'uint256' },

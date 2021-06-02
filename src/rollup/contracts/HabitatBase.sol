@@ -8,6 +8,9 @@ import './UpgradableRollup.sol';
 /// @notice Global state and public utiltiy functions for the Habitat Rollup
 // Audit-1: pending
 contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
+  // Useful for fetching (compressed) metadata about a specific topic.
+  event MetadataUpdated(uint256 indexed topic, bytes metadata);
+
   /// @inheritdoc RollupCoreBrick
   function INSPECTION_PERIOD () public view virtual override returns (uint16) {
     // in blocks - ~84 hours

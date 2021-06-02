@@ -6,7 +6,7 @@ import './HabitatWallet.sol';
 
 /// @notice Voting Functionality.
 contract HabitatVoting is HabitatBase, HabitatWallet {
-  event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate, string metadata);
+  event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate);
   event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
   event DelegateeVotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
   event ProposalProcessed(bytes32 indexed proposalId, uint256 indexed votingStatus);
@@ -14,7 +14,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
   /// @dev Validates if `timestamp` is inside a valid range.
   /// `timestamp` should not be under/over now +- `_PROPOSAL_DELAY`.
   function _validateTimestamp (uint256 timestamp) internal virtual {
-    uint256 time = RollupCoreBrick._getTime();
+    uint256 time = _getTime();
     uint256 delay = _PROPOSAL_DELAY();
     require(
       time > delay && ((time + delay) > timestamp),
@@ -144,7 +144,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     address vault,
     bytes memory internalActions,
     bytes memory externalActions,
-    string calldata metadata
+    bytes calldata metadata
   ) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
@@ -175,7 +175,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._maybeUpdateMemberCount(proposalId, msgSender);
 
     if (_shouldEmitEvents()) {
-      emit ProposalCreated(vault, proposalId, startDate, metadata);
+      emit ProposalCreated(vault, proposalId, startDate);
       // internal event for submission deadlines
       UtilityBrick._emitTransactionDeadline(startDate);
     }
@@ -336,7 +336,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 totalVoteCount = HabitatBase._getStorage(_VOTING_COUNT_KEY(proposalId));
     uint256 secondsPassed;
     {
-      uint256 dateNow = RollupCoreBrick._getTime();
+      uint256 dateNow = _getTime();
       uint256 proposalStartDate = HabitatBase._getStorage(_PROPOSAL_START_DATE_KEY(proposalId));
 
       if (dateNow > proposalStartDate) {

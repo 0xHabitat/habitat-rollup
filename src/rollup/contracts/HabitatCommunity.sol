@@ -6,10 +6,10 @@ import './HabitatBase.sol';
 /// @notice Functionality for Habitat Communities.
 // Audit-1: pending
 contract HabitatCommunity is HabitatBase {
-  event CommunityCreated(address indexed governanceToken, bytes32 indexed communityId, string metadata);
+  event CommunityCreated(address indexed governanceToken, bytes32 indexed communityId);
 
   /// @dev Creates a Habitat Community.
-  function onCreateCommunity (address msgSender, uint256 nonce, address governanceToken, string calldata metadata) external {
+  function onCreateCommunity (address msgSender, uint256 nonce, address governanceToken, bytes calldata metadata) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
@@ -25,7 +25,8 @@ contract HabitatCommunity is HabitatBase {
     HabitatBase._setStorage(_MEMBERS_TOTAL_COUNT_KEY(communityId), 1);
 
     if (_shouldEmitEvents()) {
-      emit CommunityCreated(governanceToken, communityId, metadata);
+      emit CommunityCreated(governanceToken, communityId);
+      emit MetadataUpdated(uint256(communityId), metadata);
     }
   }
 }

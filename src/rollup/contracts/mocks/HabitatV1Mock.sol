@@ -25,7 +25,8 @@ contract HabitatV1Mock is HabitatV1 {
     return _getStorage(0x072512b50f96eebc18b80fcb796fd1878d108cab3f9601c23c8c01ab32315d14);
   }
 
-  function _validateTimestamp (uint256 timestamp) internal override {
+  function _getTime () internal view override returns (uint256) {
+    return _getStorage(0xb332e0078e64900acaff304c1adfa23f92f90f1431e5da2d32fc43b8780f91c9);
   }
 
   function onModifyRollupStorage (address msgSender, uint256 nonce, bytes calldata data) external override {

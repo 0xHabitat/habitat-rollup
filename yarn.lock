@@ -4,7 +4,7 @@
 
 "@NutBerry/rollup-bricks@https://github.com/NutBerry/rollup-bricks.git#master":
   version "0.1.0"
-  resolved "https://github.com/NutBerry/rollup-bricks.git#30ef21652a1bc5429c654915d35a6ee5c60f7fa8"
+  resolved "https://github.com/NutBerry/rollup-bricks.git#8066116913051d80503e3e70ef2d261955151647"
 
 "@ethersproject/abi@5.3.0", "@ethersproject/abi@^5.3.0":
   version "5.3.0"

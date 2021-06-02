@@ -6,7 +6,7 @@ import './HabitatBase.sol';
 /// @notice A Vault holds assets with a custom (contract) condition to unlock them.
 // Audit-1: pending
 contract HabitatVault is HabitatBase {
-  event VaultCreated(bytes32 indexed communityId, address indexed condition, address indexed vaultAddress, string metadata);
+  event VaultCreated(bytes32 indexed communityId, address indexed condition, address indexed vaultAddress);
 
   /// @dev Creates a Habitat Vault for a Community.
   function onCreateVault (
@@ -14,7 +14,7 @@ contract HabitatVault is HabitatBase {
     uint256 nonce,
     bytes32 communityId,
     address condition,
-    string calldata metadata
+    bytes calldata metadata
   ) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
@@ -32,7 +32,8 @@ contract HabitatVault is HabitatBase {
     HabitatBase._setStorage(_VAULT_CONDITION_KEY(vaultAddress), condition);
 
     if (_shouldEmitEvents()) {
-      emit VaultCreated(communityId, condition, vaultAddress, metadata);
+      emit VaultCreated(communityId, condition, vaultAddress);
+      emit MetadataUpdated(uint256(vaultAddress), metadata);
     }
   }
 }

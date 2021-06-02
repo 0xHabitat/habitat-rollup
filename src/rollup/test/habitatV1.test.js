@@ -132,6 +132,14 @@ describe('HabitatV1', async function () {
     const depositAmount = 0xffffffn;
 
     describe('round', async () => {
+      async function setTime (timestamp) {
+        const args = {
+          data: '0xb332e0078e64900acaff304c1adfa23f92f90f1431e5da2d32fc43b8780f91c9'
+          + timestamp.toString(16).padStart(64, '0'),
+        };
+        await createTransaction('ModifyRollupStorage', args, alice, habitat);
+      }
+
       async function doDeposit (signer) {
         const user = await signer.getAddress();
 
@@ -398,19 +406,19 @@ describe('HabitatV1', async function () {
 
       let communityId;
       it('alice: create a new community', async () => {
-        const metadata = '{}';
         const args = {
           nonce: (await habitat.txNonces(alice.address)).toHexString(),
           governanceToken: erc20.address,
-          metadata,
+          metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
         };
         const { txHash, receipt } = await createTransaction('CreateCommunity', args, alice, habitat);
 
-        assert.equal(receipt.logs.length, 1, '#events');
+        assert.equal(receipt.logs.length, 2, '#events');
         assert.equal(receipt.status, '0x1', 'status');
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+        const metaEvent = habitat.interface.parseLog(receipt.logs[1]).args;
         assert.equal(evt.governanceToken, args.governanceToken, 'governanceToken');
-        assert.equal(evt.metadata, args.metadata, 'metadata');
+        assert.equal(metaEvent.metadata, args.metadata, 'metadata');
         communityId = ethers.utils.keccak256(
           Buffer.from(
             alice.address.replace('0x', '').padStart(64, '0')
@@ -419,6 +427,7 @@ describe('HabitatV1', async function () {
           )
         );
         assert.equal(evt.communityId, communityId, 'communityId');
+        assert.equal(metaEvent.topic.toHexString(), communityId, 'metadata topic');
       });
 
       it('alice: create a vault - should fail', async () => {
@@ -426,7 +435,7 @@ describe('HabitatV1', async function () {
         const args = {
           communityId,
           condition: vaultCondition,
-          metadata: '{}',
+          metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
         };
         await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /HASH/);
       });
@@ -437,7 +446,7 @@ describe('HabitatV1', async function () {
           const expectRevert = !!deployedConditions[condition];
           const args = {
             contractAddress: condition,
-            metadata: '{}',
+            metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
           };
 
           if (expectRevert) {
@@ -447,9 +456,7 @@ describe('HabitatV1', async function () {
 
           const { txHash, receipt } = await createTransaction('SubmitModule', args, alice, habitat);
           assert.equal(receipt.status, '0x1', conditionName);
-          assert.equal(receipt.logs.length, 1);
-          const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-          assert.equal(evt.contractAddress, args.contractAddress);
+          assert.equal(receipt.logs.length, 0);
           deployedConditions[condition] = true;
         }
       });
@@ -459,11 +466,11 @@ describe('HabitatV1', async function () {
         const args = {
           communityId,
           condition: conditions.SevenDayVoting,
-          metadata: '{}',
+          metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
         };
         const { txHash, receipt } = await createTransaction('CreateVault', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
+        assert.equal(receipt.logs.length, 2);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.communityId, args.communityId);
         assert.equal(evt.condition, args.condition);
@@ -485,17 +492,29 @@ describe('HabitatV1', async function () {
       let internalActions;
       let externalActions = encodeExternalProposalActions([charlie.address, '0x']);
       it('create proposal for first vault', async () => {
+        const startDate = ~~(Date.now() / 1000);
         // token transfer
         internalActions = encodeInternalProposalActions(['0x01', erc20.address, charlie.address, '0xfa']);
         const args = {
-          // almost seven days
-          startDate: ~~(Date.now() / 1000) - ((3600*24*7) - 3),
+          startDate,
           vault,
           internalActions,
           externalActions,
-          metadata: JSON.stringify({ title: 'hello world' }),
+          metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({ title: 'hello world' }))),
         };
+
+        {
+          // should fail
+          await setTime(startDate - 100_000);
+          await assert.rejects(createTransaction('CreateProposal', args, alice, habitat), /TIME/);
+          // ditto
+          await setTime(startDate + 100_000);
+          await assert.rejects(createTransaction('CreateProposal', args, alice, habitat), /TIME/);
+        }
+
+        await setTime(startDate);
         const { txHash, receipt } = await createTransaction('CreateProposal', args, alice, habitat);
+
         assert.equal(receipt.status, '0x1');
         assert.equal(receipt.logs.length, 1);
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
@@ -657,8 +676,8 @@ describe('HabitatV1', async function () {
       // we are submitting this block to avoid time-based errors later in the timestamp checks
       it('submitBlock', () => submitBlock(bridge, rootProvider, habitatNode));
 
-      it('sleep', async () => {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+      it('setTime', async () => {
+        await setTime(~~(Date.now() / 1000) + (3600 * 24 * 7));
       });
 
       it('process proposal - should revert, vault has no balance', async () => {
