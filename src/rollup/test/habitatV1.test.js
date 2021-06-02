@@ -437,7 +437,7 @@ describe('HabitatV1', async function () {
           condition: vaultCondition,
           metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
         };
-        await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /HASH/);
+        await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /OCV1/);
       });
 
       it('submit voting modules', async () => {
@@ -461,6 +461,16 @@ describe('HabitatV1', async function () {
         }
       });
 
+      it('alice: create a vault - should fail, wrong communityId', async () => {
+        const vaultCondition = ethers.constants.AddressZero;
+        const args = {
+          communityId: '0x' + BigInt.asUintN(256, BigInt(communityId) * 2n).toString(16).padStart(64, '0'),
+          condition: vaultCondition,
+          metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
+        };
+        await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /OCV1/);
+      });
+
       let vault;
       it('alice: create a vault', async () => {
         const args = {
@@ -474,6 +484,7 @@ describe('HabitatV1', async function () {
         const evt = habitat.interface.parseLog(receipt.logs[0]).args;
         assert.equal(evt.communityId, args.communityId);
         assert.equal(evt.condition, args.condition);
+
         vault = evt.vaultAddress;
       });
 
