@@ -156,13 +156,19 @@ async function update () {
   // now sort this stuff and render it
   totalRewards = totalRewards.sort((a, b) => (b.expectedReward - a.expectedReward));
   let html = '<p>Rank</p><p>Address</p><p>Current Reward</p><p>Expected Reward</p><p>Pool Share</p>';
+  let csv = 'rank,address,poolShare,reward\n';
   for (let i = 0, len = totalRewards.length; i < len; i++) {
     const { addr, reward, share, expectedReward } = totalRewards[i];
     const highlight = account && addr === account;
+    const poolShare = ((share / PRECISION) * 100).toFixed(2);
     html +=
-      `<p>${highlight ? '<bold>🌟' + (i + 1) + '</bold>' : i + 1}.</p><p>${renderAddress(addr)}</p><p>${renderAmount(reward)} HBT</p><p>${renderAmount(expectedReward)} HBT</p><p>${((share / PRECISION) * 100).toFixed(2)}%</p>`;
+      `<p>${highlight ? '<bold>🌟' + (i + 1) + '</bold>' : i + 1}.</p><p>${renderAddress(addr)}</p><p>${renderAmount(reward)} HBT</p><p>${renderAmount(expectedReward)} HBT</p><p>${poolShare}%</p>`;
+    csv += `${i + 1},${addr},${poolShare},${reward}\n`;
   }
   document.querySelector('#leaderboard').innerHTML = html;
+  const exportButton = document.querySelector('#export');
+  exportButton.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  exportButton.style.visibility = 'visible';
 }
 
 let _reserves;
