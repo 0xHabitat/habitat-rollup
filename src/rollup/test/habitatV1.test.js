@@ -404,6 +404,14 @@ describe('HabitatV1', async function () {
       delegate(alice, bob, depositAmount + 1n);
       delegate(alice, bob, 0xffn);
 
+      it('alice: create a new community with token = 0; should fail', async () => {
+        const args = {
+          governanceToken: ethers.constants.AddressZero,
+          metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
+        };
+        await assert.rejects(createTransaction('CreateCommunity', args, alice, habitat), /OCC1/);
+      });
+
       let communityId;
       it('alice: create a new community', async () => {
         const args = {
@@ -542,9 +550,7 @@ describe('HabitatV1', async function () {
         };
         const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(Number(evt.votingStatus), 1);
+        assert.equal(receipt.logs.length, 0, 'no update');
       });
 
       async function getPreviousVotingShares (proposalId, account) {
@@ -679,9 +685,7 @@ describe('HabitatV1', async function () {
         };
         const { txHash, receipt } = await createTransaction('ProcessProposal', args, alice, habitat);
         assert.equal(receipt.status, '0x1');
-        assert.equal(receipt.logs.length, 1);
-        const evt = habitat.interface.parseLog(receipt.logs[0]).args;
-        assert.equal(Number(evt.votingStatus), 1);
+        assert.equal(receipt.logs.length, 0, 'no update');
       });
 
       // we are submitting this block to avoid time-based errors later in the timestamp checks

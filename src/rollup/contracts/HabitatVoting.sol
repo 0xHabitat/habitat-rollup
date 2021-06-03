@@ -3,8 +3,10 @@ pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 import './HabitatWallet.sol';
+import './IModule.sol';
 
 /// @notice Voting Functionality.
+// Audit-1: pending
 contract HabitatVoting is HabitatBase, HabitatWallet {
   event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate);
   event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
@@ -124,19 +126,25 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     uint256 MAX_GAS = 90000;
     address vaultCondition = _getVaultCondition(vault);
     assembly {
+      // check if we have enough gas to spend (relevant in challenges)
+      if lt(gas(), MAX_GAS) {
+        // do a silent revert to signal the challenge routine that this is an exception
+        revert(0, 0)
+      }
       let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), 0, 0)
       // revert and forward any returndata
       if iszero(success) {
+        // propagate any revert messages
         returndatacopy(0, 0, returndatasize())
         revert(0, returndatasize())
       }
     }
   }
 
-  /// xxx: change this to support the convention: community > (vault w/ condition). {proposal,vote,finalize}
-  /// todo
-  /// internal transfers
-  /// metadata updates - only for 'primary' vault?
+  /// @notice Creates a proposal belonging to `vault`.
+  /// @param startDate Should be within a reasonable range. See `_PROPOSAL_DELAY`
+  /// @param internalActions includes L2 specific actions if this proposal passes.
+  /// @param externalActions includes L1 specific actions if this proposal passes. (execution permit)
   function onCreateProposal (
     address msgSender,
     uint256 nonce,
@@ -150,20 +158,13 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._checkUpdateNonce(msgSender, nonce);
     _validateTimestamp(startDate);
 
-    bytes32 proposalId;
-    assembly {
-      mstore(0, msgSender)
-      mstore(32, nonce)
-      let backup := mload(64)
-      mstore(64, vault)
-      proposalId := keccak256(0, 96)
-      mstore(64, backup)
-    }
-
-    // assuming startDate is never 0 (see validateTimestamp) then this should suffice
-    require(HabitatBase._getStorage(_PROPOSAL_START_DATE_KEY(proposalId)) == 0, 'EXISTS');
+    // compute a deterministic id
+    bytes32 proposalId = HabitatBase._calculateSeed(msgSender, nonce);
+    // revert if such a proposal already exists (generally not possible due to msgSender, nonce)
+    require(HabitatBase._getStorage(_PROPOSAL_VAULT_KEY(proposalId)) == 0, 'OCP1');
 
     // The vault module receives a callback at creation
+    // Reverts if the module does not allow the creation of this proposal or if `vault` is invalid.
     _callCreateProposal(vault, msgSender, startDate, internalActions, externalActions);
 
     // store
@@ -177,7 +178,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     if (_shouldEmitEvents()) {
       emit ProposalCreated(vault, proposalId, startDate);
       // internal event for submission deadlines
-      UtilityBrick._emitTransactionDeadline(startDate);
+      UtilityBrick._emitTransactionDeadline(startDate + _PROPOSAL_DELAY());
     }
   }
 
@@ -231,7 +232,6 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
       uint256 activeStakeKey =
         delegated ? _DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, account) : _VOTING_ACTIVE_STAKE_KEY(token, account);
 
-      // xxx claim any acquired fees
       HabitatBase._setStorageDelta(activeStakeKey, previousVote, shares);
       HabitatBase._setStorageDelta(_VOTING_TOTAL_SHARE_KEY(proposalId), previousVote, shares);
     }
@@ -295,7 +295,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
         require(shares < previousVote, 'ODVOP3');
 
         if (shares != 0) {
-          // the user is not allowed to change the signalStrength
+          // the user is not allowed to change the signalStrength if not removing the vote
           require(signalStrength == previousSignal, 'ODVOP4');
         }
 
@@ -322,6 +322,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
   }
 
   /// @dev Invokes IModule.onProcessProposal(...) on `vault`
+  /// Assumes that `vault` was already validated.
   function _callProcessProposal (
     bytes32 proposalId,
     address vault
@@ -364,6 +365,11 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
       let ptr := mload(64)
       // clear memory
       calldatacopy(ptr, calldatasize(), 96)
+      // check if we have enough gas to spend (relevant in challenges)
+      if lt(gas(), MAX_GAS) {
+        // do a silent revert to signal the challenge routine that this is an exception
+        revert(0, 0)
+      }
       // call
       let success := staticcall(MAX_GAS, vaultCondition, add(_calldata, 32), mload(_calldata), ptr, 96)
       if success {
@@ -376,6 +382,8 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     }
   }
 
+  /// @notice Updates the state of a proposal.
+  /// @dev Only emits a event if the status changes to CLOSED or PASSED
   function onProcessProposal (
     address msgSender,
     uint256 nonce,
@@ -386,30 +394,36 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
+    // this will revert in _getVaultCondition if the proposal doesn't exist or `vault` is invalid
     address vault = address(HabitatBase._getStorage(_PROPOSAL_VAULT_KEY(proposalId)));
-    require(vault != address(0), 'VAULT');
-    uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
-    require(previousVotingStatus < 2, 'CLOSED');
+
+    {
+      uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
+      require(previousVotingStatus < uint256(IModule.VotingStatus.CLOSED), 'CLOSED');
+    }
 
     (votingStatus, secondsTillClose, quorumPercent) = _callProcessProposal(proposalId, vault);
 
-    // update proposal status (if needed)
-    //if (votingStatus != 0 && votingStatus != previousVotingStatus) {
-    {
+    // finalize if the new status is CLOSED or PASSED
+    if (votingStatus > uint256(IModule.VotingStatus.OPEN)) {
+      // save voting status
       HabitatBase._setStorage(_PROPOSAL_STATUS_KEY(proposalId), votingStatus);
 
       // PASSED
-      if (votingStatus == 3) {
+      if (votingStatus == uint256(IModule.VotingStatus.PASSED)) {
+        // verify the internal actions and execute
         bytes32 hash = keccak256(internalActions);
         require(HabitatBase._getStorage(_PROPOSAL_HASH_INTERNAL_KEY(proposalId)) == uint256(hash), 'IHASH');
         _executeInternalActions(vault, internalActions);
 
+        // verify external actions and store a permit
         hash = keccak256(externalActions);
         require(HabitatBase._getStorage(_PROPOSAL_HASH_EXTERNAL_KEY(proposalId)) == uint256(hash), 'EHASH');
         if (externalActions.length != 0) {
           HabitatBase._setExecutionPermit(vault, proposalId, hash);
         }
       }
+
       if (_shouldEmitEvents()) {
         emit ProposalProcessed(proposalId, votingStatus);
       }

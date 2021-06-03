@@ -70,7 +70,9 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
+    // fee can be zero
     uint256 fee = amount / STAKING_POOL_FEE_DIVISOR();
+    // epoch is greater than zero
     uint256 currentEpoch = getCurrentEpoch();
     address pool = address(currentEpoch);
     _transferToken(token, msgSender, pool, fee);

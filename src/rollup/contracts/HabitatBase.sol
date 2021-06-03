@@ -110,8 +110,8 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
   }
 
   /// @dev Decrements storage for `key` if `a > b` else increments the delta between `a` and `b`.
+  /// Reverts on over-/underflow and if `a` equals `b`.
   function _setStorageDelta (uint256 key, uint256 a, uint256 b) internal {
-    // xxx require(a != b) ?
     uint256 newValue;
     {
       uint256 oldValue;
@@ -418,6 +418,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
     }
   }
 
+  /// @dev The last total value locked of `token` in `epoch`.
   function _STAKING_EPOCH_TVL_KEY (uint256 epoch, address token) internal pure returns (uint256 ret) {
     assembly {
       let backup := mload(64)
@@ -429,6 +430,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
     }
   }
 
+  /// @dev The last total user balance for `account` in `epoch` of `token`.
   function _STAKING_EPOCH_TUB_KEY (uint256 epoch, address token, address account) internal pure returns (uint256 ret) {
     assembly {
       let backup := mload(64)
@@ -566,6 +568,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
 
   /// @notice Epoch should be greater than 0.
   function getCurrentEpoch () public virtual view returns (uint256) {
+    // 2021-05-03T00:00:00.000Z
     uint256 genesis = 1620000000;
     uint256 timeNow = _getTime();
     // 7 days
@@ -580,6 +583,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
 
   /// @notice Used for testing purposes.
   function onModifyRollupStorage (address msgSender, uint256 nonce, bytes calldata data) external virtual {
+    revert('OMRS1');
   }
 
   /// @dev Returns true on Layer 2.

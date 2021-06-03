@@ -17,15 +17,13 @@ contract HabitatWallet is HabitatBase {
       HabitatBase.getActiveVotingStake(token, account) +
       HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(token, account));
     ret = getBalance(token, account);
-    require(locked <= ret, 'BUG1');
+    require(locked <= ret, 'GUB1');
     ret = ret - locked;
   }
 
   /// @dev State transition when a user transfers a token.
   /// Updates Total Value Locked and does accounting needed for staking rewards.
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
-    // xxx check under/overflows
-    // take getActiveVotingStake() into account
     if (from != to) {
       bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
 
