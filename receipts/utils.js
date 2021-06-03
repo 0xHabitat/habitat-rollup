@@ -66,7 +66,7 @@ if (!fs.existsSync(configPath)) {
   const implementation = await deploy(HabitatV1Testnet, [], wallet);
   const proxy = await deploy(RollupProxy, [implementation.address], wallet);
   config.bridgeL1 = (new ethers.Contract(proxy.address, HabitatV1Testnet.abi, wallet)).address;
-  config.execProxy = (await deploy(ExecutionProxy, [config.bridgeL1], wallet)).address;
+  config.execProxy = (await deploy(ExecutionProxy, [], wallet)).address;
   config.erc20 = (await deploy(ERC20, [], wallet)).address;
   fs.writeFileSync(configPath, JSON.stringify(config));
 } else {

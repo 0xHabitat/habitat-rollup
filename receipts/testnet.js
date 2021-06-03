@@ -23,6 +23,10 @@ Sit ex necessitatibus ullam tempore sit est quo. Voluptatum omnis ipsum est perf
 Sed quibusdam illo non dicta vitae blanditiis omnis est. Nesciunt a voluptas rerum maiores eaque ab. Accusamus fuga est ea quis hic quia corrupti. Vero molestias quasi qui architecto doloribus eos. Odit dolores nam officia alias voluptatem. Praesentium deserunt et facere voluptatum porro neque ea quo.
 `;
 
+function toMeta (obj) {
+  return ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify(obj)));
+}
+
 async function main () {
   if ((await layer2.provider.getBlockNumber()) > 1) {
     return;
@@ -41,7 +45,7 @@ async function main () {
     for (const obj of COMMUNITIES) {
       let args = {
         governanceToken: obj.token,
-        metadata: JSON.stringify({ title: obj.title }),
+        metadata: toMeta({ title: obj.title }),
       };
       let tmp = await sendTransaction('CreateCommunity', args, wallet, layer2);
       const communityId = tmp.events[0].args.communityId;
@@ -50,7 +54,7 @@ async function main () {
         args = {
           communityId,
           condition: module.contractAddress,
-          metadata: JSON.stringify({ title: `Treasure Chest` }),
+          metadata: toMeta({ title: `Treasure Chest` }),
         };
         tmp = await sendTransaction('CreateVault', args, wallet, layer2);
 
@@ -59,7 +63,7 @@ async function main () {
           vault: tmp.events[0].args.vaultAddress,
           internalActions: encodeInternalProposalActions(['0x01', obj.token, wallet.address, '0xfffffffffffff']),
           externalActions: encodeExternalProposalActions(['0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415', '0xc0ffebabe17da53158']),
-          metadata: JSON.stringify({ title: 'Re: Evolution 🌱', details: LOREM_IPSUM }),
+          metadata: toMeta({ title: 'Re: Evolution 🌱', details: LOREM_IPSUM }),
         };
         tmp = await sendTransaction('CreateProposal', args, wallet, layer2);
       }

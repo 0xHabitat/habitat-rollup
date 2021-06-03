@@ -1,4 +1,3 @@
-import TYPED_DATA from './typedData.js';
 
 export { TYPED_DATA }
 

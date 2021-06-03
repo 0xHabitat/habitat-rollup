@@ -5,7 +5,7 @@
   "license": "Unlicense",
   "type": "module",
   "scripts": {
-    "compile": "for x in src/*/scripts/codegen.js; do $x; done && develatus-apparatus-compile src/*/**/*.sol src/*/**/**/*.sol",
+    "compile": "./scripts/compile.sh",
     "coverage": "yarn compile && develatus-apparatus",
     "test": "yarn _test \"src/*/**/*.test.js\"",
     "_test": "yarn compile && mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@",

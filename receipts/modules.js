@@ -1,5 +1,6 @@
 import fs from 'fs';
 import assert from 'assert';
+import ethers from 'ethers';
 import { wallet, layer2, sendTransaction, deploy } from './utils.js';
 
 const OneThirdParticipationThreshold = JSON.parse(fs.readFileSync('./build/contracts/OneThirdParticipationThreshold.json'));
@@ -41,7 +42,7 @@ for (const module of MODULES) {
   // register module
   const args = {
     contractAddress: module.contractAddress,
-    metadata: JSON.stringify(module.metadata),
+    metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify(module.metadata))),
   };
   const { txHash, receipt } = await sendTransaction('SubmitModule', args, wallet, layer2);
   assert.equal(receipt.status, '0x1', 'transaction successful');

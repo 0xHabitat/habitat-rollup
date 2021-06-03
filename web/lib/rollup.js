@@ -1,4 +1,6 @@
-import { BRICK_ABI, EXECUTION_PROXY_ABI, TYPED_DATA } from './constants.js';
+import BRICK_ABI from './HabitatAbi.js';
+import EXECUTION_PROXY_ABI from './ExecutionProxyAbi.js';
+import TYPED_DATA from './typedData.js';
 import {
   getSigner,
   getProvider,
