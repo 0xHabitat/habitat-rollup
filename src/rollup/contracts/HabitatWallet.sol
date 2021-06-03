@@ -3,8 +3,8 @@ pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 
-/// @notice Functionality for user wallets.
-// Audit-1: pending
+/// @notice Functionality for user wallets and token accounting.
+// Audit-1: ok
 contract HabitatWallet is HabitatBase {
   event TokenTransfer(address indexed token, address indexed from, address indexed to, uint256 value);
   event DelegatedAmount(address indexed account, address indexed delegatee, address indexed token, uint256 value);
@@ -12,11 +12,12 @@ contract HabitatWallet is HabitatBase {
   /// @notice Returns the (free) balance (amount of `token`) for `account`.
   /// Free = balance of `token` for `account` - activeVotingStake & delegated stake for `account`.
   /// Supports ERC-20 and ERC-721 and takes staked balances into account.
-  function _getUnstakedBalance (address token, address account) internal view returns (uint256 ret) {
+  function _getUnlockedBalance (address token, address account) internal view returns (uint256 ret) {
     uint256 locked =
       HabitatBase.getActiveVotingStake(token, account) +
       HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(token, account));
     ret = getBalance(token, account);
+    // something must be wrong if this happens
     require(locked <= ret, 'GUB1');
     ret = ret - locked;
   }
@@ -25,6 +26,7 @@ contract HabitatWallet is HabitatBase {
   /// Updates Total Value Locked and does accounting needed for staking rewards.
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
     if (from != to) {
+      // this is going to change
       bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
 
       // update from
@@ -33,21 +35,23 @@ contract HabitatWallet is HabitatBase {
         HabitatBase._setStorage(_ERC721_KEY(token, value), to);
       }
 
-      uint256 balanceDelta = isERC721 ? 1 : value;
       // both ERC-20 & ERC-721
+      uint256 balanceDelta = isERC721 ? 1 : value;
+      // update `from`
       if (from != address(0)) {
-        // check stake
-        // xxx: nfts are currently not separately tracked - probably not needed?
+        // not a deposit - check stake
         {
-          uint256 unstakedBalance = _getUnstakedBalance(token, from);
-          require(unstakedBalance >= balanceDelta, 'STAKE');
+          uint256 availableAmount = _getUnlockedBalance(token, from);
+          require(availableAmount >= balanceDelta, 'LOCK');
         }
 
-        // can throw
+        // can revert
         HabitatBase._decrementStorage(_ERC20_KEY(token, from), balanceDelta);
       }
+      // update `to`
       {
         if (to == address(0)) {
+          // exit
           if (isERC721) {
             TokenInventoryBrick._setERC721Exit(token, from, value);
           } else {
@@ -64,20 +68,21 @@ contract HabitatWallet is HabitatBase {
         bool fromVault = HabitatBase._getStorage(_VAULT_CONDITION_KEY(from)) != 0;
         bool toVault = !fromVault && HabitatBase._getStorage(_VAULT_CONDITION_KEY(to)) != 0;
 
-        // transfer from vault to vault
-        // deposits (from = 0)
-        // exits (to == 0)
-        // transfer from user to vault
-        // transfer from vault to user
+        // considerations
+        // - transfer from vault to vault
+        // - deposits (from = 0)
+        // - exits (to == 0)
+        // - transfer from user to vault
+        // - transfer from vault to user
         if (fromVault || from == address(0)) {
           HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
-        } else if (toVault || !fromVault && to == address(0)) {
+        } else if (toVault || (!fromVault && to == address(0))) {
           HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
         }
       }
 
+      // accounting for staking rewards
       {
-        // staking rewards
         // update from & to
         uint256 currentEpoch = getCurrentEpoch();
         HabitatBase._setStorageInfinityIfZero(
@@ -103,6 +108,7 @@ contract HabitatWallet is HabitatBase {
   /// @dev State transition when a user deposits a token.
   function onDeposit (address token, address owner, uint256 value) external {
     HabitatBase._commonChecks();
+      // this is going to change
     _transferToken(token, address(0), owner, value);
   }
 
@@ -126,7 +132,7 @@ contract HabitatWallet is HabitatBase {
     // track the difference
     if (oldAllowance < newAllowance) {
       uint256 delta = newAllowance - oldAllowance;
-      uint256 availableBalance = _getUnstakedBalance(token, msgSender);
+      uint256 availableBalance = _getUnlockedBalance(token, msgSender);
       // check
       require(availableBalance >= delta, 'ODA2');
 

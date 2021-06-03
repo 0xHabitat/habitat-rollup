@@ -39,6 +39,13 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
     /// xxx cap loop
     for (uint256 epoch = nextClaimableEpoch; epoch < currentEpoch; epoch++) {
       uint256 reward = 0;
+      // Considering the case:
+      // Someone deposits into the bridge to some pool then
+      // - pool balance increases
+      // - tvl value increases
+      // That would mean that the pool can never be fully drained
+      // - not really an issue now but maybe relevant in the future
+
       // special pool address
       address pool = address(epoch);
       uint256 poolBalance = getBalance(token, pool);

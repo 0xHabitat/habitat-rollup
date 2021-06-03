@@ -252,7 +252,7 @@ describe('HabitatV1', async function () {
           to: ethers.constants.AddressZero,
           value: '0x1',
         };
-        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /STAKE/);
+        await assert.rejects(createTransaction('TransferToken', args, bob, habitat), /LOCK/);
       });
 
       it('transfer erc20: alice > bob', async () => {
@@ -701,7 +701,7 @@ describe('HabitatV1', async function () {
           internalActions,
           externalActions,
         };
-        await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /STAKE/);
+        await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /LOCK/);
       });
 
       it('transfer to vault', async () => {

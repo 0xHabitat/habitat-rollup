@@ -261,7 +261,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
       address account = msgSender;
       uint256 previousVote = HabitatBase._getStorage(_VOTING_SHARES_KEY(proposalId, account));
       // check for discrepancy between balance and stake
-      uint256 stakableBalance = _getUnstakedBalance(token, account) + previousVote;
+      uint256 stakableBalance = _getUnlockedBalance(token, account) + previousVote;
       require(stakableBalance >= shares, 'OVOP1');
       uint256 previousSignal = HabitatBase._getStorage(_VOTING_SIGNAL_KEY(proposalId, account));
 
