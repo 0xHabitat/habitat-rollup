@@ -1,5 +1,5 @@
 import { getProviders } from '/lib/rollup.js';
-import { TYPED_DATA } from '/lib/constants.js';
+import TYPED_DATA from '/lib/typedData.js';
 
 function sortFunc (a, b) {
   const blockA = Number(a.blockNumber);
