@@ -49,9 +49,8 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
 
   // Storage helpers, functions will be replaced with special getters/setters to retrieve/store on the rollup
   /// @dev Increments `key` by `value`. Reverts on overflow or if `value` is zero.
-  function _incrementStorage (uint256 key, uint256 value) internal {
+  function _incrementStorage (uint256 key, uint256 value) internal returns (uint256 newValue) {
     uint256 oldValue;
-    uint256 newValue;
     assembly {
       oldValue := sload(key)
       newValue := add(oldValue, value)
@@ -60,14 +59,13 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
     require(newValue >= oldValue, 'INCR');
   }
 
-  function _incrementStorage (uint256 key) internal {
-    _incrementStorage(key, 1);
+  function _incrementStorage (uint256 key) internal returns (uint256 newValue) {
+    newValue = _incrementStorage(key, 1);
   }
 
   /// @dev Decrements `key` by `value`. Reverts on underflow or if `value` is zero.
-  function _decrementStorage (uint256 key, uint256 value) internal {
+  function _decrementStorage (uint256 key, uint256 value) internal returns (uint256 newValue) {
     uint256 oldValue;
-    uint256 newValue;
     assembly {
       oldValue := sload(key)
       newValue := sub(oldValue, value)

@@ -31,12 +31,11 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/node_modules
-    build:
-      context: ./
-      dockerfile: Dockerfile.dev
+    image: node:14-alpine
     working_dir: /app
     entrypoint: /bin/sh
-    command: "-c 'git config --global credential.helper store && echo $GIT_CREDENTIAL > $$HOME/.git-credentials && yarn'"
+    command: -c "
+      printf '@NutBerry:registry=https://github.com/\n//github.com/:_authToken='$GITHUB_CREDENTIAL > .npmrc && yarn"
     tty: true
     stdin_open: true
     environment:

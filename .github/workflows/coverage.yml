@@ -28,10 +28,10 @@ jobs:
     - name: Setup git credentials
       env:
         PAT: ${{ secrets.PAT }}
-      run: printf "GIT_CREDENTIAL=https://_:$PAT@github.com" > .env
+      run: printf "GITHUB_CREDENTIAL=$PAT" > .env
 
     - name: Setup
-      run: docker-compose up --timeout 1 --no-deps --exit-code-from dev
+      run: docker-compose up --timeout 1 --no-deps dev
 
     - name: Coverage
       run: docker-compose run dev -c 'yarn coverage'

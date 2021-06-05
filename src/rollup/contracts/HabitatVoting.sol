@@ -23,7 +23,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
       'TIME'
     );
     if (time > timestamp) {
-      require(time - timestamp <= delay, 'TIME');
+      require(time - timestamp < delay, 'TIME');
     }
   }
 
@@ -207,9 +207,6 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     // requires that the signal is in a specific range...
     require(signalStrength < 101, 'SIGNAL');
 
-    address token = _getTokenOfProposal(proposalId);
-    // xxx do not update voting stats if proposal is closed?
-
     if (previousVote == 0 && shares != 0) {
       HabitatBase._incrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
     }
@@ -228,7 +225,8 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     }
 
     // update total share count and staking amount
-    {
+    if (previousVote != shares) {
+      address token = _getTokenOfProposal(proposalId);
       uint256 activeStakeKey =
         delegated ? _DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, account) : _VOTING_ACTIVE_STAKE_KEY(token, account);
 
@@ -243,6 +241,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
   }
 
   /// @dev State transition routine for `VoteOnProposal`.
+  /// Note: Votes can be changed/removed anytime.
   function onVoteOnProposal (
     address msgSender,
     uint256 nonce,
@@ -261,7 +260,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
       address account = msgSender;
       uint256 previousVote = HabitatBase._getStorage(_VOTING_SHARES_KEY(proposalId, account));
       // check for discrepancy between balance and stake
-      uint256 stakableBalance = _getUnlockedBalance(token, account) + previousVote;
+      uint256 stakableBalance = getUnlockedBalance(token, account) + previousVote;
       require(stakableBalance >= shares, 'OVOP1');
       uint256 previousSignal = HabitatBase._getStorage(_VOTING_SIGNAL_KEY(proposalId, account));
 
@@ -279,7 +278,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
       require(maxAmount >= currentlyStaked, 'ODVOP1');
 
       if (msgSender == delegatee) {
-        // vote
+        // the amount that is left
         uint256 freeAmount = maxAmount - (currentlyStaked - previousVote);
         // check for discrepancy between balance and stake
         require(freeAmount >= shares, 'ODVOP2');

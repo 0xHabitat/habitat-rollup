@@ -49,4 +49,12 @@ contract HabitatV1Mock is HabitatV1 {
       }
     }
   }
+
+  function getDelegatedAmount (address account, address delegatee, address token) public view returns (uint256) {
+    return _getStorage(_DELEGATED_ACCOUNT_ALLOWANCE_KEY(account, delegatee, token));
+  }
+
+  function getTotalDelegatedAmount (address account, address token) public view returns (uint256) {
+    return _getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(account, token));
+  }
 }

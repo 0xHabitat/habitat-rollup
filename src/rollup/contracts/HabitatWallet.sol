@@ -12,10 +12,10 @@ contract HabitatWallet is HabitatBase {
   /// @notice Returns the (free) balance (amount of `token`) for `account`.
   /// Free = balance of `token` for `account` - activeVotingStake & delegated stake for `account`.
   /// Supports ERC-20 and ERC-721 and takes staked balances into account.
-  function _getUnlockedBalance (address token, address account) internal view returns (uint256 ret) {
+  function getUnlockedBalance (address token, address account) public view returns (uint256 ret) {
     uint256 locked =
       HabitatBase.getActiveVotingStake(token, account) +
-      HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(token, account));
+      HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(account, token));
     ret = getBalance(token, account);
     // something must be wrong if this happens
     require(locked <= ret, 'GUB1');
@@ -35,18 +35,25 @@ contract HabitatWallet is HabitatBase {
         HabitatBase._setStorage(_ERC721_KEY(token, value), to);
       }
 
+      uint256 currentEpoch = getCurrentEpoch();
       // both ERC-20 & ERC-721
       uint256 balanceDelta = isERC721 ? 1 : value;
       // update `from`
       if (from != address(0)) {
         // not a deposit - check stake
         {
-          uint256 availableAmount = _getUnlockedBalance(token, from);
+          uint256 availableAmount = getUnlockedBalance(token, from);
           require(availableAmount >= balanceDelta, 'LOCK');
         }
 
         // can revert
         HabitatBase._decrementStorage(_ERC20_KEY(token, from), balanceDelta);
+
+        // update historic total user balance
+        HabitatBase._setStorageInfinityIfZero(
+          _STAKING_EPOCH_TUB_KEY(currentEpoch, token, from),
+          getBalance(token, from)
+        );
       }
       // update `to`
       {
@@ -60,6 +67,12 @@ contract HabitatWallet is HabitatBase {
         } else {
           // can throw
           HabitatBase._incrementStorage(_ERC20_KEY(token, to), balanceDelta);
+
+          // update historic total user balance
+          HabitatBase._setStorageInfinityIfZero(
+            _STAKING_EPOCH_TUB_KEY(currentEpoch, token, to),
+            getBalance(token, to)
+          );
         }
       }
 
@@ -81,21 +94,11 @@ contract HabitatWallet is HabitatBase {
         }
       }
 
-      // accounting for staking rewards
       {
-        // update from & to
-        uint256 currentEpoch = getCurrentEpoch();
-        HabitatBase._setStorageInfinityIfZero(
+        // update tvl for epoch - accounting for staking rewards
+        HabitatBase._setStorage(
           _STAKING_EPOCH_TVL_KEY(currentEpoch, token),
           HabitatBase._getStorage(_TOKEN_TVL_KEY(token))
-        );
-        HabitatBase._setStorageInfinityIfZero(
-          _STAKING_EPOCH_TUB_KEY(currentEpoch, token, to),
-          getBalance(token, to)
-        );
-        HabitatBase._setStorageInfinityIfZero(
-          _STAKING_EPOCH_TUB_KEY(currentEpoch, token, from),
-          getBalance(token, from)
         );
       }
     }
@@ -132,7 +135,7 @@ contract HabitatWallet is HabitatBase {
     // track the difference
     if (oldAllowance < newAllowance) {
       uint256 delta = newAllowance - oldAllowance;
-      uint256 availableBalance = _getUnlockedBalance(token, msgSender);
+      uint256 availableBalance = getUnlockedBalance(token, msgSender);
       // check
       require(availableBalance >= delta, 'ODA2');
 

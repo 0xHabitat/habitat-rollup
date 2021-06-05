@@ -7,18 +7,23 @@ import './HabitatWallet.sol';
 /// @notice Takes care of transferring value to a operator minus a few that goes to the staking pool.
 // Audit-1: pending
 contract HabitatStakingPool is HabitatBase, HabitatWallet {
-  event ClaimedStakingReward(address indexed account, address indexed token, uint256 amount);
+  event ClaimedStakingReward(address indexed account, address indexed token, uint256 indexed epoch, uint256 amount);
 
-  function _specialLoad (uint256 oldValue, uint256 key) internal returns (uint256) {
+  /// @dev Like `_getStorage` but with some additional conditions.
+  function _specialLoad (uint256 oldValue, uint256 key) internal view returns (uint256) {
     uint256 newValue = HabitatBase._getStorage(key);
 
-    // a zero slot means no change and -1 means drained
-    if (newValue == uint256(1)) {
-      return 0;
-    }
+    // 0 means no record / no change
     if (newValue == 0) {
       return oldValue;
     }
+
+    // -1 means drained (no balance)
+    if (newValue == uint256(-1)) {
+      return 0;
+    }
+
+    // default to newValue
     return newValue;
   }
 
@@ -27,46 +32,74 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    uint256 currentEpoch = getCurrentEpoch();
-    uint256 nextClaimableEpoch = HabitatBase._getStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender)) + 1;
+    uint256 startEpoch = HabitatBase._getStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender)) + 1;
+    uint256 endEpoch = startEpoch + 10;
+    {
+      // assuming getCurrentEpoch never returns 0
+      uint256 max = getCurrentEpoch();
+      // clamp
+      if (endEpoch > max) {
+        endEpoch = max;
+      }
+    }
     // checks if the account can claim rewards
-    require(currentEpoch > nextClaimableEpoch, 'OCSR1');
-    // update
-    HabitatBase._setStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender), currentEpoch);
+    require(endEpoch > startEpoch, 'OCSR1');
 
+    // update last claimed epoch
+    HabitatBase._setStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender), endEpoch - 1);
+
+    // this is the total user balance for `token` in any given epoch
     uint256 historicTotalUserBalance;
-    uint256 historicTVL;
-    /// xxx cap loop
-    for (uint256 epoch = nextClaimableEpoch; epoch < currentEpoch; epoch++) {
-      uint256 reward = 0;
-      // Considering the case:
-      // Someone deposits into the bridge to some pool then
-      // - pool balance increases
-      // - tvl value increases
-      // That would mean that the pool can never be fully drained
-      // - not really an issue now but maybe relevant in the future
 
+    for (uint256 epoch = startEpoch; epoch < endEpoch; epoch++) {
+      uint256 reward = 0;
       // special pool address
       address pool = address(epoch);
       uint256 poolBalance = getBalance(token, pool);
+      // total value locked after the end of each epoch.
+      // tvl being zero should imply that `historicPoolBalance` must also be zero
+      uint256 historicTVL = HabitatBase._getStorage(_STAKING_EPOCH_TVL_KEY(epoch, token));
+      // returns the last 'known' user balance up to `epoch`
+      historicTotalUserBalance = _specialLoad(historicTotalUserBalance, _STAKING_EPOCH_TUB_KEY(epoch, token, msgSender));
 
-      /// xxx get final pool balance
-      if (poolBalance > 0) {
-        historicTVL = _specialLoad(historicTVL, _STAKING_EPOCH_TVL_KEY(epoch, token));
-        historicTotalUserBalance = _specialLoad(historicTotalUserBalance, _STAKING_EPOCH_TUB_KEY(epoch, token, msgSender));
-        // xxx bounds checking
-        reward = poolBalance / (historicTVL / historicTotalUserBalance);
-        // xxx transfer dust?
-        _transferToken(token, pool, msgSender, reward);
+      if (
+        poolBalance != 0
+        && historicTVL != 0
+        && historicTotalUserBalance != 0
+        // `historicTotalUserBalance` should always be less than `historicTVL`
+        && historicTotalUserBalance < historicTVL
+      ) {
+        // deduct pool balance from tvl
+        // assuming `historicPoolBalance` must be less than `historicTVL`
+        uint256 historicPoolBalance = HabitatBase._getStorage(_STAKING_EPOCH_TUB_KEY(epoch, token, pool));
+        uint256 tvl = historicTVL - historicPoolBalance;
+
+        reward = historicPoolBalance / (tvl / historicTotalUserBalance);
+
+        if (reward != 0) {
+          // this can happen
+          if (reward > poolBalance) {
+            reward = poolBalance;
+          }
+          _transferToken(token, pool, msgSender, reward);
+        }
       }
 
       if (_shouldEmitEvents()) {
-        emit ClaimedStakingReward(msgSender, token, reward);
+        emit ClaimedStakingReward(msgSender, token, epoch, reward);
       }
+    }
+
+    // store the tub for the user but do not overwrite if there is already
+    // a non-zero entry
+    uint256 key = _STAKING_EPOCH_TUB_KEY(endEpoch, token, msgSender);
+    if (HabitatBase._getStorage(key) == 0) {
+      _setStorageInfinityIfZero(key, historicTotalUserBalance);
     }
   }
 
-  /// @notice Transfers funds to a (trusted) operator. A fraction `STAKING_POOL_FEE_DIVISOR` of the funds goes to the staking pool.
+  /// @notice Transfers funds to a (trusted) operator.
+  /// A fraction `STAKING_POOL_FEE_DIVISOR` of the funds goes to the staking pool.
   function onTributeForOperator (
     address msgSender,
     uint256 nonce,
@@ -82,6 +115,7 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
     // epoch is greater than zero
     uint256 currentEpoch = getCurrentEpoch();
     address pool = address(currentEpoch);
+    // zero-value transfers are not a problem
     _transferToken(token, msgSender, pool, fee);
     _transferToken(token, msgSender, operator, amount - fee);
   }

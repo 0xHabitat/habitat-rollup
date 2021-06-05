@@ -1,7 +1,7 @@
 export default [
   'event BlockBeacon()',
   'event ClaimUsername(address indexed account, bytes32 indexed shortString)',
-  'event ClaimedStakingReward(address indexed account, address indexed token, uint256 amount)',
+  'event ClaimedStakingReward(address indexed account, address indexed token, uint256 indexed epoch, uint256 amount)',
   'event CommunityCreated(address indexed governanceToken, bytes32 indexed communityId)',
   'event DelegatedAmount(address indexed account, address indexed delegatee, address indexed token, uint256 value)',
   'event DelegateeVotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares)',
@@ -43,6 +43,7 @@ export default [
   'function getTotalMemberCount(bytes32 communityId) view returns (uint256 ret)',
   'function getTotalValueLocked(address token) view returns (uint256 value)',
   'function getTotalVotingShares(bytes32 proposalId) view returns (uint256 ret)',
+  'function getUnlockedBalance(address token, address account) view returns (uint256 ret)',
   'function onChallenge() returns (uint256)',
   'function onClaimStakingReward(address msgSender, uint256 nonce, address token)',
   'function onClaimUsername(address msgSender, uint256 nonce, bytes32 shortString)',

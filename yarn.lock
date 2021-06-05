@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@NutBerry/rollup-bricks@https://github.com/NutBerry/rollup-bricks.git#master":
+"@NutBerry/rollup-bricks@https://github.com/NutBerry/rollup-bricks/archive/refs/heads/master.tar.gz":
   version "0.1.0"
-  resolved "https://github.com/NutBerry/rollup-bricks.git#8066116913051d80503e3e70ef2d261955151647"
+  resolved "https://github.com/NutBerry/rollup-bricks/archive/refs/heads/master.tar.gz#7472936ea1efc47693154dc35e8b5b3ba6cd3d0c"
 
 "@ethersproject/abi@5.3.0", "@ethersproject/abi@^5.3.0":
   version "5.3.0"
@@ -511,9 +511,9 @@ decamelize@^4.0.0:
   resolved "https://registry.yarnpkg.com/decamelize/-/decamelize-4.0.0.tgz#aa472d7bf660eb15f3494efd531cab7f2a709837"
   integrity sha512-9iE1PgSik9HeIIw2JO94IidnE3eBoQrFJ3w7sFuzSX4DpmZ3v5sZpUiV5Swcf6mQEF+Y0ru8Neo+p+nyh2J+hQ==
 
-"develatus-apparatus@https://github.com/pinkiebell/develatus-apparatus.git#v0.3.8":
+"develatus-apparatus@https://github.com/pinkiebell/develatus-apparatus/archive/refs/tags/v0.3.8.tar.gz":
   version "0.3.8"
-  resolved "https://github.com/pinkiebell/develatus-apparatus.git#0e11625d0b2b79416a70ee6c959153cf252fc356"
+  resolved "https://github.com/pinkiebell/develatus-apparatus/archive/refs/tags/v0.3.8.tar.gz#123612e5014cc9815a2c1fed0b4202ecc213ae06"
 
 diff@5.0.0:
   version "5.0.0"
