@@ -7,7 +7,7 @@ import './HabitatVault.sol';
 import './IModule.sol';
 
 /// @notice Voting Functionality.
-// Audit-1: pending
+// Audit-1: ok
 contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
   event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate);
   event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
@@ -19,12 +19,11 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
   function _validateTimestamp (uint256 timestamp) internal virtual {
     uint256 time = _getTime();
     uint256 delay = _PROPOSAL_DELAY();
-    require(
-      time > delay && ((time + delay) > timestamp),
-      'TIME'
-    );
+
     if (time > timestamp) {
-      require(time - timestamp < delay, 'TIME');
+      require(time - timestamp < delay, 'VT1');
+    } else {
+      require(timestamp - time < delay, 'VT2');
     }
   }
 
@@ -39,6 +38,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     //  UPDATE_COMMUNITY_METADATA
     // }
 
+    // assuming that `length` can never be > 2^16
     uint256 ptr;
     uint256 end;
     assembly {
@@ -72,11 +72,12 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
         continue;
       }
 
-      revert('ACTION');
+      revert('EIA1');
     }
 
+    // revert if out of bounds read(s) happened
     if (ptr > end) {
-      revert('INVALID');
+      revert('EIA2');
     }
   }
 
@@ -89,19 +90,16 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     bytes memory externalActions
   ) internal view {
     bytes32 communityId = HabitatBase.communityOfVault(vault);
-    // statistics
-    uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
     address governanceToken = HabitatBase.tokenOfCommunity(communityId);
-    uint256 totalValueLocked = getTotalValueLocked(governanceToken);
-    uint256 proposerBalance = getBalance(governanceToken, proposer);
-    // call vault with all the statistics
+
+    // encoding all all the statistics
     bytes memory _calldata = abi.encodeWithSelector(
       0x5e79ee45,
       communityId,
-      totalMemberCount,
-      totalValueLocked,
+      HabitatBase.getTotalMemberCount(communityId),
+      getTotalValueLocked(governanceToken),
       proposer,
-      proposerBalance,
+      getBalance(governanceToken, proposer),
       startDate,
       internalActions,
       externalActions
@@ -172,7 +170,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     bytes32 communityId = HabitatBase.communityOfVault(vault);
     address token = HabitatBase.tokenOfCommunity(communityId);
     // only check token here, assuming any invalid proposalId / vault will end with having a zero address
-    require(token != address(0), 'VAULT');
+    require(token != address(0), 'GTOP1');
 
     return token;
   }
@@ -188,17 +186,20 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     bool delegated
   ) internal {
     // requires that the signal is in a specific range...
-    require(signalStrength < 101, 'SIGNAL');
+    require(signalStrength < 101, 'VR1');
 
     if (previousVote == 0 && shares != 0) {
+      // a new vote - increment vote count
       HabitatBase._incrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
     }
     if (shares == 0) {
-      require(signalStrength == 0, 'SIGNAL');
+      // removes a vote - decrement vote count
+      require(signalStrength == 0 && previousVote != 0, 'VR2');
       HabitatBase._decrementStorage(HabitatBase._VOTING_COUNT_KEY(proposalId), 1);
     }
 
     HabitatBase._maybeUpdateMemberCount(proposalId, account);
+
     if (delegated) {
       HabitatBase._setStorage(_DELEGATED_VOTING_SHARES_KEY(proposalId, account), shares);
       HabitatBase._setStorage(_DELEGATED_VOTING_SIGNAL_KEY(proposalId, account), signalStrength);
@@ -285,6 +286,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
         uint256 maxRemovable = HabitatBase._getStorage(_DELEGATED_ACCOUNT_ALLOWANCE_KEY(msgSender, delegatee, token));
         // only allow changing the stake if the user has no other choice
         require(maxRemovable > unusedBalance, 'ODVOP5');
+        // the max. removable amount is the total delegated amount - the unused balance of delegatee
         maxRemovable = maxRemovable - unusedBalance;
         if (maxRemovable > previousVote) {
           // clamp
@@ -310,13 +312,6 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     address vault
   ) internal view returns (uint256 votingStatus, uint256 secondsTillClose, uint256 quorumPercent)
   {
-    bytes32 communityId = HabitatBase.communityOfVault(vault);
-
-    // statistics
-    uint256 totalMemberCount = HabitatBase.getTotalMemberCount(communityId);
-    uint256 totalVotingShares = HabitatBase.getTotalVotingShares(proposalId);
-    uint256 totalVotingSignal = HabitatBase._getStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId));
-    uint256 totalVoteCount = HabitatBase._getStorage(_VOTING_COUNT_KEY(proposalId));
     uint256 secondsPassed;
     {
       uint256 dateNow = _getTime();
@@ -327,18 +322,17 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
       }
     }
 
-    address governanceToken = HabitatBase.tokenOfCommunity(communityId);
-    uint256 totalValueLocked = getTotalValueLocked(governanceToken);
+    bytes32 communityId = HabitatBase.communityOfVault(vault);
     // call vault with all the statistics
     bytes memory _calldata = abi.encodeWithSelector(
       0xf8d8ade6,
       proposalId,
       communityId,
-      totalMemberCount,
-      totalVoteCount,
-      totalVotingShares,
-      totalVotingSignal,
-      totalValueLocked,
+      HabitatBase.getTotalMemberCount(communityId),
+      HabitatBase._getStorage(_VOTING_COUNT_KEY(proposalId)),
+      HabitatBase.getTotalVotingShares(proposalId),
+      HabitatBase._getStorage(_VOTING_TOTAL_SIGNAL_KEY(proposalId)),
+      getTotalValueLocked(HabitatBase.tokenOfCommunity(communityId)),
       secondsPassed
     );
     uint256 MAX_GAS = 90000;
@@ -376,13 +370,13 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    // this will revert in _getVaultCondition if the proposal doesn't exist or `vault` is invalid
-    address vault = address(HabitatBase._getStorage(_PROPOSAL_VAULT_KEY(proposalId)));
-
     {
       uint256 previousVotingStatus = HabitatBase.getProposalStatus(proposalId);
       require(previousVotingStatus < uint256(IModule.VotingStatus.CLOSED), 'CLOSED');
     }
+
+    // this will revert in _getVaultCondition if the proposal doesn't exist or `vault` is invalid
+    address vault = address(HabitatBase._getStorage(_PROPOSAL_VAULT_KEY(proposalId)));
 
     (votingStatus, secondsTillClose, quorumPercent) = _callProcessProposal(proposalId, vault);
 

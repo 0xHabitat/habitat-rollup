@@ -541,10 +541,10 @@ describe('HabitatV1', async function () {
             {
               // should fail
               await setTime(startDate - 100_000);
-              await assert.rejects(createTransaction('CreateProposal', args, alice, habitat), /TIME/);
+              await assert.rejects(createTransaction('CreateProposal', args, alice, habitat), /VT2/);
               // ditto
               await setTime(startDate + 100_000);
-              await assert.rejects(createTransaction('CreateProposal', args, alice, habitat), /TIME/);
+              await assert.rejects(createTransaction('CreateProposal', args, alice, habitat), /VT1/);
             }
 
             await setTime(startDate);
@@ -556,6 +556,15 @@ describe('HabitatV1', async function () {
             proposalId = evt.proposalId;
 
             proposals.push({ vault, proposalId, internalActions, externalActions, valid: moduleName !== 'FeatureFarmSignaling' ? true : false });
+          });
+
+          it('process proposal should fail - invalid proposal', async () => {
+            const args = {
+              proposalId: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
+              internalActions,
+              externalActions,
+            };
+            await assert.rejects(createTransaction('ProcessProposal', args, alice, habitat), /GVC1/);
           });
 
           it('process proposal - should remain open', async () => {
@@ -576,15 +585,27 @@ describe('HabitatV1', async function () {
             const logs = await habitat.provider.send('eth_getLogs', [filter]);
             if (logs.length) {
               const log = habitat.interface.parseLog(logs[0]);
-              return log.args.shares;
+              return BigInt(log.args.shares);
             }
-            return ethers.BigNumber.from(0);
+            return 0n;
           }
 
-          function vote (wallet, shares, signalStrength = 100) {
+          async function getPreviousDelegateeVotingShares (proposalId, account) {
+            const filter = habitat.filters.DelegateeVotedOnProposal(account, proposalId);
+            filter.toBlock = 1;
+            filter.maxResults = 1;
+            const logs = await habitat.provider.send('eth_getLogs', [filter]);
+            if (logs.length) {
+              const log = habitat.interface.parseLog(logs[0]);
+              return BigInt(log.args.shares);
+            }
+            return 0n;
+          }
+
+          function vote (wallet, shares, signalStrength = 100, wrongProposalId) {
             it(`${aliases[wallet.address]}: vote on proposal (shares=${shares}, signalStrength=${signalStrength})`, async () => {
               const args = {
-                proposalId,
+                proposalId: wrongProposalId || proposalId,
                 signalStrength,
                 shares,
                 delegatedFor: ethers.constants.AddressZero,
@@ -592,13 +613,19 @@ describe('HabitatV1', async function () {
               const previousVote = await getPreviousVotingShares(proposalId, wallet.address);
               const activeVotingStake = BigInt(await habitat.getActiveVotingStake(erc20.address, wallet.address));
               const delegatedAmount = delegatedShares[wallet.address] || 0n;
-              const availableBalance = ((balances[wallet.address] || 0n) - (activeVotingStake + delegatedAmount)) + BigInt(previousVote);
+              const availableBalance = ((balances[wallet.address] || 0n) - (activeVotingStake + delegatedAmount)) + previousVote;
               let expectedError;
               if (availableBalance < args.shares) {
                 expectedError = /OVOP1/;
               }
               if (args.shares === 0n && args.signalStrength !== 0) {
-                expectedError = /SIGNAL/;
+                expectedError = /VR2/;
+              }
+              if (args.signalStrength > 100) {
+                expectedError = /VR1/;
+              }
+              if (wrongProposalId) {
+                expectedError = /GTOP1/;
               }
 
               const promise = createTransaction('VoteOnProposal', args, wallet, habitat);
@@ -618,6 +645,9 @@ describe('HabitatV1', async function () {
               }
             });
           }
+          // vote on non-existent proposal
+          vote(alice, 3n, 2, ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+          vote(alice, 3n, 104);
           vote(alice, 3n);
           vote(alice, depositAmount);
           vote(alice, 0n);
@@ -627,12 +657,12 @@ describe('HabitatV1', async function () {
           vote(alice, 0n, 0);
           vote(alice, depositAmount - 10000n);
 
-          function delegatedVote (from, delegatee, shares, signalStrength = 100) {
+          function delegatedVote (from, delegatee, shares, signalStrength = 100, wrongProposalId) {
             const nameFrom = aliases[from.address];
             const nameTo = aliases[delegatee.address];
             it(`${nameFrom}: vote on proposal as delegate ${nameTo} (shares=${shares},signal=${signalStrength})`, async () => {
               const args = {
-                proposalId,
+                proposalId: wrongProposalId || proposalId,
                 signalStrength,
                 shares: shares,
                 delegatedFor: delegatee.address,
@@ -640,11 +670,12 @@ describe('HabitatV1', async function () {
               const delegatedAmount = delegatedShares[delegatee.address] || 0n;
               let expectedError;
               if (from.address === delegatee.address) {
+                const previousVote = await getPreviousDelegateeVotingShares(proposalId, from.address);
                 if (shares + leftOverStake > delegatedAmount) {
                   expectedError = /ODVOP2/;
                 }
-                if (shares === 0n && signalStrength !== 0) {
-                  expectedError = /SIGNAL/;
+                if ((shares === 0n && signalStrength !== 0) || (shares === 0n && previousVote === 0n)) {
+                  expectedError = /VR2/;
                 }
               } else {
                 const lastVote = votes[proposalId] || 0n;
@@ -655,6 +686,12 @@ describe('HabitatV1', async function () {
                 } else if (shares !== 0n && lastSignal !== signalStrength) {
                   expectedError = /ODVOP4/;
                 }
+              }
+              if (args.signalStrength > 100) {
+                expectedError = /VR1/;
+              }
+              if (wrongProposalId) {
+                expectedError = /GTOP1/;
               }
 
               const promise = createTransaction('VoteOnProposal', args, from, habitat);
@@ -679,6 +716,10 @@ describe('HabitatV1', async function () {
             });
           }
 
+          // vote on non-existent proposal
+          delegatedVote(bob, bob, 2n, 100, ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+          delegatedVote(bob, bob, 2n, 101);
+          delegatedVote(bob, bob, 0n, 0);
           delegatedVote(bob, bob, 22n);
           delegatedVote(bob, bob, 0n);
           delegatedVote(bob, bob, 0xffn);
