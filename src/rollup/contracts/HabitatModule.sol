@@ -4,7 +4,7 @@ pragma solidity >=0.7.6;
 import './HabitatBase.sol';
 
 /// @notice Functionality for Habitat Modules
-// Audit-1: pending
+// Audit-1: ok
 contract HabitatModule is HabitatBase {
   /// @dev Verifies that the bytecode at `contractAddress` can not
   /// introduce side effects on the rollup at will.
@@ -13,7 +13,7 @@ contract HabitatModule is HabitatBase {
   function _verifyModule (address contractAddress) internal view returns (bytes32 codehash) {
     assembly {
       function doRevert () {
-        // xxx add error message?
+        // revert with non-zero returndata to signal we are not out of gas
         revert(0, 1)
       }
 
@@ -25,10 +25,18 @@ contract HabitatModule is HabitatBase {
       let terminatedByOpcode := 0
       let ptr := mload(64)
       let end := add(ptr, size)
+      // copy the bytecode into memory
       extcodecopy(contractAddress, ptr, 0, size)
+      // and hash it
       codehash := keccak256(ptr, size)
 
+      // verify opcodes
       for { } lt(ptr, end) { ptr := add(ptr, 1) } {
+        // this is used to detect metadata from the solidity compiler
+        // at the end of the bytecode
+        // this most likely doesn't work if strings or other data are appended
+        // at the end of the bytecode,
+        // but works if the developer follows some conventions.
         let terminatedByPreviousOpcode := terminatedByOpcode
         terminatedByOpcode := 0
         let opcode := byte(0, mload(ptr))
@@ -107,14 +115,14 @@ contract HabitatModule is HabitatBase {
     }
   }
 
-  /// @notice Submits a module to the store.
-  /// AppReview? 😬
+  /// @notice Register a module to be used for Habitat Vaults (Treasuries).
+  /// The bytecode at `contractAddress` must apply to some conventions, see `_verifyModule`.
   function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, bytes calldata metadata) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
     // same contract (address) should not be submitted twice
-    require(HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress)) == 0, 'EXISTS');
+    require(HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress)) == 0, 'OSM1');
     // verify the contract code and returns the keccak256(bytecode) (reverts if invalid)
     bytes32 codeHash = _verifyModule(contractAddress);
     HabitatBase._setStorage(_MODULE_HASH_KEY(contractAddress), codeHash);

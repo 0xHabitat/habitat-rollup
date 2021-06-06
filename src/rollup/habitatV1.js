@@ -68,6 +68,7 @@ export default {
     ClaimStakingReward: [
       { name: 'nonce', 'type': 'uint256' },
       { name: 'token', 'type': 'address' },
+      { name: 'sinceEpoch', 'type': 'uint256' },
     ],
     ModifyRollupStorage: [
       { name: 'nonce', 'type': 'uint256' },

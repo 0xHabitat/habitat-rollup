@@ -5,7 +5,7 @@ import './HabitatBase.sol';
 import './HabitatWallet.sol';
 
 /// @notice Takes care of transferring value to a operator minus a few that goes to the staking pool.
-// Audit-1: pending
+// Audit-1: ok
 contract HabitatStakingPool is HabitatBase, HabitatWallet {
   event ClaimedStakingReward(address indexed account, address indexed token, uint256 indexed epoch, uint256 amount);
 
@@ -28,30 +28,35 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
   }
 
   /// @notice Claims staking rewards for `epoch`.
-  function onClaimStakingReward (address msgSender, uint256 nonce, address token) external {
+  function onClaimStakingReward (address msgSender, uint256 nonce, address token, uint256 sinceEpoch) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);
 
-    uint256 startEpoch = HabitatBase._getStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender)) + 1;
-    uint256 endEpoch = startEpoch + 10;
+    // we ignore untilEpoch wrapping around because this is not a practical problem
+    uint256 untilEpoch = sinceEpoch + 10;
     {
       // assuming getCurrentEpoch never returns 0
       uint256 max = getCurrentEpoch();
       // clamp
-      if (endEpoch > max) {
-        endEpoch = max;
+      if (untilEpoch > max) {
+        untilEpoch = max;
       }
     }
-    // checks if the account can claim rewards
-    require(endEpoch > startEpoch, 'OCSR1');
+    // checks if the account can claim rewards, starting from `sinceEpoch`
+    require(
+      sinceEpoch != 0
+      && untilEpoch > sinceEpoch
+      && sinceEpoch > HabitatBase._getStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender)),
+      'OCSR1'
+    );
 
     // update last claimed epoch
-    HabitatBase._setStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender), endEpoch - 1);
+    HabitatBase._setStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, msgSender), untilEpoch - 1);
 
     // this is the total user balance for `token` in any given epoch
     uint256 historicTotalUserBalance;
 
-    for (uint256 epoch = startEpoch; epoch < endEpoch; epoch++) {
+    for (uint256 epoch = sinceEpoch; epoch < untilEpoch; epoch++) {
       uint256 reward = 0;
       // special pool address
       address pool = address(epoch);
@@ -92,7 +97,7 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
 
     // store the tub for the user but do not overwrite if there is already
     // a non-zero entry
-    uint256 key = _STAKING_EPOCH_TUB_KEY(endEpoch, token, msgSender);
+    uint256 key = _STAKING_EPOCH_TUB_KEY(untilEpoch, token, msgSender);
     if (HabitatBase._getStorage(key) == 0) {
       _setStorageInfinityIfZero(key, historicTotalUserBalance);
     }

@@ -105,6 +105,8 @@ contract HabitatWallet is HabitatBase {
 
     if (_shouldEmitEvents()) {
       emit TokenTransfer(token, from, to, value);
+      // transactions should be submitted before the next epoch
+      UtilityBrick._emitTransactionDeadline(HabitatBase._secondsUntilNextEpoch());
     }
   }
 
@@ -148,7 +150,7 @@ contract HabitatWallet is HabitatBase {
       uint256 currentlyStaked = HabitatBase._getStorage(_DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, delegatee));
       uint256 total = HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_AMOUNT_KEY(delegatee, token));
       uint256 freeAmount = total - currentlyStaked;
-      // check
+      // check that delta is less or equal to the available balance
       require(delta <= freeAmount, 'ODA3');
 
       // decrement new total delegated balance for delegatee

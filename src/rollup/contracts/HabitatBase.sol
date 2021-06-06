@@ -6,7 +6,7 @@ import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
 import './UpgradableRollup.sol';
 
 /// @notice Global state and public utiltiy functions for the Habitat Rollup
-// Audit-1: pending
+// Audit-1: ok
 contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
   // Useful for fetching (compressed) metadata about a specific topic.
   event MetadataUpdated(uint256 indexed topic, bytes metadata);
@@ -564,15 +564,24 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
     }
   }
 
+  function EPOCH_GENESIS () public pure virtual returns (uint256) {
+    // 2021-05-03T00:00:00.000Z
+    return 1620000000;
+  }
+
+  function SECONDS_PER_EPOCH () public pure virtual returns (uint256) {
+    // 7 days
+    return 604800;
+  }
+
+  function _secondsUntilNextEpoch () internal virtual view returns (uint256) {
+    uint256 genesis = EPOCH_GENESIS();
+    return ((SECONDS_PER_EPOCH() - _getTime()) - genesis) % genesis;
+  }
+
   /// @notice Epoch should be greater than 0.
   function getCurrentEpoch () public virtual view returns (uint256) {
-    // 2021-05-03T00:00:00.000Z
-    uint256 genesis = 1620000000;
-    uint256 timeNow = _getTime();
-    // 7 days
-    uint256 epoch = ((timeNow - genesis) / (604800)) + 1;
-
-    return epoch;
+    return ((_getTime() - EPOCH_GENESIS()) / SECONDS_PER_EPOCH()) + 1;
   }
 
   /// @notice The divisor for every tribute. A fraction of the operator tribute always goes into the staking pool.

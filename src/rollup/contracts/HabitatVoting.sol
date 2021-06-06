@@ -3,11 +3,12 @@ pragma solidity >=0.7.6;
 
 import './HabitatBase.sol';
 import './HabitatWallet.sol';
+import './HabitatVault.sol';
 import './IModule.sol';
 
 /// @notice Voting Functionality.
 // Audit-1: pending
-contract HabitatVoting is HabitatBase, HabitatWallet {
+contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
   event ProposalCreated(address indexed vault, bytes32 indexed proposalId, uint256 startDate);
   event VotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
   event DelegateeVotedOnProposal(address indexed account, bytes32 indexed proposalId, uint8 signalStrength, uint256 shares);
@@ -27,26 +28,8 @@ contract HabitatVoting is HabitatBase, HabitatWallet {
     }
   }
 
-  /// @dev Lookup condition (module) and verify the codehash
-  function _getVaultCondition (address vault) internal view returns (address) {
-    address contractAddress = address(HabitatBase._getStorage(_VAULT_CONDITION_KEY(vault)));
-    require(contractAddress != address(0), 'VAULT');
-
-    uint256 expectedHash = HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress));
-    require(expectedHash != 0, 'HASH');
-
-    bool valid;
-    assembly {
-      valid := eq( extcodehash(contractAddress), expectedHash )
-    }
-
-    require(expectedHash != 0 && valid == true, 'CODE');
-
-    return contractAddress;
-  }
-
   /// @dev Parses and executes `internalActions`.
-  /// xxx Only `TRANSFER_TOKEN` is currently implemented
+  /// TODO Only `TRANSFER_TOKEN` is currently implemented
   function _executeInternalActions (address vaultAddress, bytes calldata internalActions) internal {
     // Types, related to actionable proposal items on L2.
     // L1 has no such items and only provides an array of [<address><calldata] for on-chain execution.

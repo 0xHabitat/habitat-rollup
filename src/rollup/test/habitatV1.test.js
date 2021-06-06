@@ -1,10 +1,7 @@
 import ethers from 'ethers';
 
-import TransactionBuilder from '@NutBerry/rollup-bricks/src/bricked/lib/TransactionBuilder.js';
 import TYPED_DATA from '../habitatV1.js';
 import { encodeExternalProposalActions, encodeInternalProposalActions } from './utils.js';
-
-const builder = new TransactionBuilder(TYPED_DATA);
 
 async function createTransaction (primaryType, _message, signer, habitat) {
   const message = {};
@@ -16,7 +13,7 @@ async function createTransaction (primaryType, _message, signer, habitat) {
     message[k] = v;
   }
 
-  if (message.nonce === undefined && builder.fieldNames[primaryType][0].name === 'nonce') {
+  if (message.nonce === undefined && TYPED_DATA.types[primaryType][0].name === 'nonce') {
     message.nonce = (await habitat.txNonces(signer.address)).toHexString();
   }
 
@@ -24,8 +21,12 @@ async function createTransaction (primaryType, _message, signer, habitat) {
     primaryType,
     message,
   };
-  const hash = builder.sigHash(tx);
-  const { r, s, v } = signer._signingKey().signDigest(hash);
+  const sig = await signer._signTypedData(
+    TYPED_DATA.domain,
+    { [primaryType]: TYPED_DATA.types[primaryType] },
+    tx.message,
+  );
+  const { v, r, s } = ethers.utils.splitSignature(sig);
 
   Object.assign(tx, { r, s, v });
 
@@ -333,7 +334,7 @@ describe('HabitatV1', async function () {
       it('alice: claim user name', async () => {
         const alreadyClaimed = !!names[alice.address];
         const args = {
-          shortString: Array.from((new TextEncoder()).encode('alice')),
+          shortString: ethers.utils.formatBytes32String('alice'),
         };
         const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
         assert.equal(receipt.status, '0x1', 'success');
@@ -348,7 +349,7 @@ describe('HabitatV1', async function () {
       let randomClaimedUsername;
       it('alice: claim random user name', async () => {
         const args = {
-          shortString: Array.from(ethers.utils.randomBytes(32)),
+          shortString: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
         };
         randomClaimedUsername = args.shortString;
         const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
@@ -364,7 +365,7 @@ describe('HabitatV1', async function () {
 
       it('alice: free randomn username by choosing another', async () => {
         const args = {
-          shortString: Array.from(ethers.utils.randomBytes(32)),
+          shortString: ethers.utils.hexlify(ethers.utils.randomBytes(32)),
         };
         const { txHash, receipt } = await createTransaction('ClaimUsername', args, alice, habitat);
         assert.equal(receipt.status, '0x1', 'success');
@@ -432,7 +433,7 @@ describe('HabitatV1', async function () {
           };
 
           if (expectRevert) {
-            await assert.rejects(createTransaction('SubmitModule', args, alice, habitat), /EXISTS/);
+            await assert.rejects(createTransaction('SubmitModule', args, alice, habitat), /OSM1/);
             return;
           }
 
@@ -970,6 +971,7 @@ describe('HabitatV1', async function () {
           it(`${walletName}: claim reward - fail, epoch not closed yet`, async () => {
             const args = {
               token: erc20.address,
+              sinceEpoch: activeEpoch,
             };
             await assert.rejects(createTransaction('ClaimStakingReward', args, wallet, habitat), /OCSR1/);
           });
@@ -1012,6 +1014,7 @@ describe('HabitatV1', async function () {
             for (let epoch = startEpoch; epoch < endEpoch; epoch += 10) {
               const args = {
                 token: erc20.address,
+                sinceEpoch: epoch,
               };
               let claimableEpochs = 10;
               if (epoch + claimableEpochs > endEpoch) {
@@ -1051,6 +1054,7 @@ describe('HabitatV1', async function () {
           it(`${walletName}: claim reward second time should fail`, async () => {
             const args = {
               token: erc20.address,
+              sinceEpoch: startEpoch,
             };
             await assert.rejects(createTransaction('ClaimStakingReward', args, wallet, habitat), /OCSR1/);
           });

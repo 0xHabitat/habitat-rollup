@@ -726,17 +726,17 @@ case 9 {
 // end of DelegateAmount
 
 // start of ClaimStakingReward
-// typeHash: 0x5b7e01fd1453024a599fa59870e9edca08c3468a89c0f132a921bebc95b3e11a
-// function: onClaimStakingReward(address,uint256,address)
+// typeHash: 0x56d7b9415a7ab01a4e256d5e8a8a100fcf839c82096289e6a835115c704aee67
+// function: onClaimStakingReward(address,uint256,address,uint256)
 case 10 {
-  let headSize := 96
+  let headSize := 128
   let typeLen := 0
-  let txPtr := 256
-  let endOfSlot := add(txPtr, 96)
+  let txPtr := 320
+  let endOfSlot := add(txPtr, 128)
 
-  txPtr := 288
+  txPtr := 352
   // typeHash of ClaimStakingReward
-  mstore(0, 0x5b7e01fd1453024a599fa59870e9edca08c3468a89c0f132a921bebc95b3e11a)
+  mstore(0, 0x56d7b9415a7ab01a4e256d5e8a8a100fcf839c82096289e6a835115c704aee67)
   // uint256 ClaimStakingReward.nonce
   typeLen := byte(0, calldataload(offset))
   offset := add(offset, 1)
@@ -753,8 +753,16 @@ case 10 {
   offset := add(offset, typeLen)
   txPtr := add(txPtr, 32)
 
+  // uint256 ClaimStakingReward.sinceEpoch
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(96, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
   // typeHash
-  let structHash := keccak256(0, 96)
+  let structHash := keccak256(0, 128)
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
@@ -768,10 +776,10 @@ case 10 {
   mstore(128, 0)
   success := staticcall(gas(), 1, 0, 128, 128, 32)
   // functionSig
-  mstore(224, 0x3242d952)
-  mstore(256, mload(128))
+  mstore(288, 0x8e7700c0)
+  mstore(320, mload(128))
 
-  success := call(sub(gas(), 5000), address(), 0, 252, sub(endOfSlot, 252), 0, 0)
+  success := call(sub(gas(), 5000), address(), 0, 316, sub(endOfSlot, 316), 0, 0)
   success := or(success, returndatasize())
 }
 // end of ClaimStakingReward
