@@ -23,14 +23,16 @@ const PRECISION = 10000;
 // seconds
 const ONE_DAY_SECONDS = 3600 * 24;
 const ONE_WEEK_SECONDS = ONE_DAY_SECONDS * 7;
-const MAX_SECONDS = ONE_WEEK_SECONDS * 12;
+// first const MAX_SECONDS = ONE_WEEK_SECONDS * 12;
+const MAX_SECONDS = ONE_WEEK_SECONDS * 4;
 const MAX_DAYS = MAX_SECONDS / ONE_DAY_SECONDS;
 const MAX_HBT = 2_000_000;
 const MAX_SHARE = Math.sqrt(MAX_HBT) * (MAX_SECONDS * MAX_SECONDS);
-const MAX_REWARD_DAY = 2143;
-const START_DATE = 1615372251;
+// first const MAX_REWARD_DAY = 2143;
+const MAX_REWARD_DAY = 714.2857142857143;
+// first const START_DATE = 1615372251;
+const START_DATE = 1622630070;
 const END_DATE = START_DATE + MAX_SECONDS;
-const MIN_LP_AMOUNT = 300;
 
 const globalBlocks = JSON.parse(localStorage.getItem('gblocks') || '{}');
 const provider = getProvider();
