@@ -16,10 +16,6 @@ contract HabitatV1Testnet is HabitatV1 {
     return 0xDf08F82De32B8d460adbE8D72043E3a7e25A3B39;
   }
 
-  function STAKING_POOL_FEE_DIVISOR () public pure override returns (uint256) {
-    return 100;
-  }
-
   function getBalance (address tkn, address account) public override returns (uint256 ret) {
     ret = super.getBalance(tkn, account);
     if (ret == 0) {

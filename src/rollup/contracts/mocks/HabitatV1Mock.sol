@@ -16,7 +16,7 @@ contract HabitatV1Mock is HabitatV1 {
     return 100;
   }
 
-  function ROLLUP_MANAGER () public view override returns (address) {
+  function ROLLUP_MANAGER () public override pure returns (address) {
     // alice
     return 0xDf08F82De32B8d460adbE8D72043E3a7e25A3B39;
   }

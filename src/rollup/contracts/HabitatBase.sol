@@ -10,18 +10,22 @@ contract HabitatBase is NutBerryFlavorV1, UpgradableRollup {
   // Useful for fetching (compressed) metadata about a specific topic.
   event MetadataUpdated(uint256 indexed topic, bytes metadata);
 
-  /// @inheritdoc NutBerryCore
-  function INSPECTION_PERIOD () public view virtual override returns (uint16) {
-    // in blocks - ~84 hours
-    return 21600;
-  }
-
   /// @dev The maximum time drift between the time of block submission and a proposal's start date.
   /// This is here to avoid keeping proposals off-chain, accumulating votes and finalizing the proposal
   /// all at once on block submission without anyone being aware of it.
   function _PROPOSAL_DELAY () internal pure virtual returns (uint256) {
     // in seconds - 32 hrs
     return 3600 * 32;
+  }
+
+  function EPOCH_GENESIS () public pure virtual returns (uint256) {
+  }
+
+  function SECONDS_PER_EPOCH () public pure virtual returns (uint256) {
+  }
+
+  /// @notice The divisor for every tribute. A fraction of the operator tribute always goes into the staking pool.
+  function STAKING_POOL_FEE_DIVISOR () public pure virtual returns (uint256) {
   }
 
   /// @dev Includes common checks for rollup transactions.
@@ -522,16 +526,6 @@ contract HabitatBase is NutBerryFlavorV1, UpgradableRollup {
     return _sload(key);
   }
 
-  function EPOCH_GENESIS () public pure virtual returns (uint256) {
-    // 2021-05-03T00:00:00.000Z
-    return 1620000000;
-  }
-
-  function SECONDS_PER_EPOCH () public pure virtual returns (uint256) {
-    // 7 days
-    return 604800;
-  }
-
   function _secondsUntilNextEpoch () internal virtual returns (uint256) {
     uint256 genesis = EPOCH_GENESIS();
     return ((SECONDS_PER_EPOCH() - _getTime()) - genesis) % genesis;
@@ -540,10 +534,6 @@ contract HabitatBase is NutBerryFlavorV1, UpgradableRollup {
   /// @notice Epoch should be greater than 0.
   function getCurrentEpoch () public virtual returns (uint256) {
     return ((_getTime() - EPOCH_GENESIS()) / SECONDS_PER_EPOCH()) + 1;
-  }
-
-  /// @notice The divisor for every tribute. A fraction of the operator tribute always goes into the staking pool.
-  function STAKING_POOL_FEE_DIVISOR () public virtual returns (uint256) {
   }
 
   /// @notice Used for testing purposes.

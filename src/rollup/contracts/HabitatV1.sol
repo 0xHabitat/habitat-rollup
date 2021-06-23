@@ -24,4 +24,51 @@ contract HabitatV1 is
   HabitatStakingPool,
   HabitatV1Challenge
 {
+  /// @inheritdoc NutBerryCore
+  function MAX_BLOCK_SIZE () public view override returns (uint24) {
+    return 31744;
+  }
+
+  /// @inheritdoc NutBerryCore
+  function INSPECTION_PERIOD () public view virtual override returns (uint16) {
+    // in blocks, (3600 * 24 * 7) seconds / 14s per block
+    return 43200;
+  }
+
+  /// @inheritdoc NutBerryCore
+  function INSPECTION_PERIOD_MULTIPLIER () public view override returns (uint256) {
+    return 3;
+  }
+
+  /// @inheritdoc NutBerryCore
+  function _CHALLENGE_IMPLEMENTATION_ADDRESS () internal override returns (address addr) {
+    assembly {
+      // loads the target contract adddress from the proxy slot
+      addr := sload(not(0))
+    }
+  }
+
+  /// @inheritdoc UpgradableRollup
+  function ROLLUP_MANAGER () public virtual override pure returns (address) {
+    // Habitat multisig - will be replaced by the community governance proxy in the future
+    return 0xc97f82c80DF57c34E84491C0EDa050BA924D7429;
+  }
+
+  /// @inheritdoc HabitatBase
+  function STAKING_POOL_FEE_DIVISOR () public virtual override pure returns (uint256) {
+    // 1%
+    return 100;
+  }
+
+  /// @inheritdoc HabitatBase
+  function EPOCH_GENESIS () public virtual override pure returns (uint256) {
+    // 2021-05-03T00:00:00.000Z
+    return 1620000000;
+  }
+
+  /// @inheritdoc HabitatBase
+  function SECONDS_PER_EPOCH () public virtual override pure returns (uint256) {
+    // 7 days
+    return 604800;
+  }
 }

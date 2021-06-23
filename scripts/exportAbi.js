@@ -39,11 +39,10 @@ for (let i = 0; i < abi.length; i++) {
     );
   }
 
-  if (ele.stateMutability === 'view') {
-    str += ' view';
-  }
-  if (ele.stateMutability === 'payable') {
-    str += ' payable';
+  const mut = ['view', 'pure', 'payable'];
+  const mutability = mut[mut.indexOf(ele.stateMutability)];
+  if (mutability) {
+    str += ' ' + mutability;
   }
 
   if (outputs) {
