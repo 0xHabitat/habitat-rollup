@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.7.6;
 
-import '@NutBerry/rollup-bricks/src/tsm/contracts/NutBerryTokenBridge.sol';
-import '@NutBerry/rollup-bricks/src/bricked/contracts/UtilityBrick.sol';
+import '@NutBerry/NutBerry/src/v1/contracts/NutBerryFlavorV1.sol';
 import './UpgradableRollup.sol';
 
 /// @notice Global state and public utiltiy functions for the Habitat Rollup
 // Audit-1: ok
-contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
+contract HabitatBase is NutBerryFlavorV1, UpgradableRollup {
   // Useful for fetching (compressed) metadata about a specific topic.
   event MetadataUpdated(uint256 indexed topic, bytes metadata);
 
-  /// @inheritdoc RollupCoreBrick
+  /// @inheritdoc NutBerryCore
   function INSPECTION_PERIOD () public view virtual override returns (uint16) {
     // in blocks - ~84 hours
     return 21600;
@@ -50,13 +49,10 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
   // Storage helpers, functions will be replaced with special getters/setters to retrieve/store on the rollup
   /// @dev Increments `key` by `value`. Reverts on overflow or if `value` is zero.
   function _incrementStorage (uint256 key, uint256 value) internal returns (uint256 newValue) {
-    uint256 oldValue;
-    assembly {
-      oldValue := sload(key)
-      newValue := add(oldValue, value)
-      sstore(key, newValue)
-    }
+    uint256 oldValue = _sload(key);
+    newValue = oldValue + value;
     require(newValue >= oldValue, 'INCR');
+    _sstore(key, newValue);
   }
 
   function _incrementStorage (uint256 key) internal returns (uint256 newValue) {
@@ -65,37 +61,26 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
 
   /// @dev Decrements `key` by `value`. Reverts on underflow or if `value` is zero.
   function _decrementStorage (uint256 key, uint256 value) internal returns (uint256 newValue) {
-    uint256 oldValue;
-    assembly {
-      oldValue := sload(key)
-      newValue := sub(oldValue, value)
-      sstore(key, newValue)
-    }
+    uint256 oldValue = _sload(key);
+    newValue = oldValue - value;
     require(newValue <= oldValue, 'DECR');
+    _sstore(key, newValue);
   }
 
-  function _getStorage (uint256 key) internal view returns (uint256 ret) {
-    assembly {
-      ret := sload(key)
-    }
+  function _getStorage (uint256 key) internal returns (uint256 ret) {
+    return _sload(key);
   }
 
   function _setStorage (uint256 key, uint256 value) internal {
-    assembly {
-      sstore(key, value)
-    }
+    _sstore(key, value);
   }
 
   function _setStorage (uint256 key, bytes32 value) internal {
-    assembly {
-      sstore(key, value)
-    }
+    _sstore(key, uint256(value));
   }
 
   function _setStorage (uint256 key, address value) internal {
-    assembly {
-      sstore(key, value)
-    }
+    _sstore(key, uint256(value));
   }
 
   /// @dev Helper for `_setStorage`. Writes `uint256(-1)` if `value` is zero.
@@ -112,10 +97,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
   function _setStorageDelta (uint256 key, uint256 a, uint256 b) internal {
     uint256 newValue;
     {
-      uint256 oldValue;
-      assembly {
-        oldValue := sload(key)
-      }
+      uint256 oldValue = _sload(key);
       if (a > b) {
         uint256 delta = a - b;
         newValue = oldValue - delta;
@@ -126,9 +108,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
         require(newValue > oldValue, 'INCR');
       }
     }
-    assembly {
-      sstore(key, newValue)
-    }
+    _sstore(key, newValue);
   }
   // end of storage helpers
 
@@ -465,7 +445,7 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
   /// Reflects the storage slot for `executionPermit` on L1.
   function _setExecutionPermit (address vault, bytes32 proposalId, bytes32 hash) internal {
     bytes32 key = bytes32(_EXECUTION_PERMIT_KEY(vault, proposalId));
-    RollupStorage._setStorageL1(key, uint256(hash));
+    _setStorageL1(key, uint256(hash));
   }
 
   /// @dev Updates the member count for the community if `account` is a new member.
@@ -479,89 +459,67 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
   }
 
   /// @notice The nonce of account `a`.
-  function txNonces (address a) public virtual view returns (uint256 ret) {
+  function txNonces (address a) public virtual returns (uint256) {
     uint256 key = _TX_NONCE_KEY(a);
-    assembly {
-      ret := sload(key)
-    }
+    return _sload(key);
   }
 
   /// @notice The token balance of `tkn` for `account. This works for ERC-20 and ERC-721.
-  function getBalance (address tkn, address account) public virtual view returns (uint256 ret) {
+  function getBalance (address tkn, address account) public virtual returns (uint256) {
     uint256 key = _ERC20_KEY(tkn, account);
-    assembly {
-      ret := sload(key)
-    }
+    return _sload(key);
   }
 
   /// @notice Returns the owner of a ERC-721 token.
-  function getErc721Owner (address tkn, uint256 b) public virtual view returns (address ret) {
+  function getErc721Owner (address tkn, uint256 b) public virtual returns (address) {
     uint256 key = _ERC721_KEY(tkn, b);
-    assembly {
-      ret := sload(key)
-    }
+    return address(_sload(key));
   }
 
   /// @notice Returns the cumulative voted shares on `proposalId`.
-  function getTotalVotingShares (bytes32 proposalId) public view returns (uint256 ret) {
+  function getTotalVotingShares (bytes32 proposalId) public returns (uint256) {
     uint256 key = _VOTING_TOTAL_SHARE_KEY(proposalId);
-    assembly {
-      ret := sload(key)
-    }
+    return _sload(key);
   }
 
   /// @notice Returns the member count for `communityId`.
   /// An account automatically becomes a member if it interacts with community vaults & proposals.
-  function getTotalMemberCount (bytes32 communityId) public view returns (uint256 ret) {
+  function getTotalMemberCount (bytes32 communityId) public returns (uint256) {
     uint256 key = _MEMBERS_TOTAL_COUNT_KEY(communityId);
-    assembly {
-      ret := sload(key)
-    }
+    return _sload(key);
   }
 
   /// @notice Governance Token of community.
-  function tokenOfCommunity (bytes32 a) public virtual view returns (address ret) {
+  function tokenOfCommunity (bytes32 a) public virtual returns (address) {
     uint256 key = _TOKEN_OF_COMMUNITY_KEY(a);
-    assembly {
-      ret := sload(key)
-    }
+    return address(_sload(key));
   }
 
   /// @notice Returns the `communityId` of `vault`.
-  function communityOfVault (address vault) public virtual view returns (bytes32 ret) {
+  function communityOfVault (address vault) public virtual returns (bytes32) {
     uint256 key = _COMMUNITY_OF_VAULT_KEY(vault);
-    assembly {
-      ret := sload(key)
-    }
+    return bytes32(_sload(key));
   }
 
   /// @notice Returns the voting status of proposal id `a`.
-  function getProposalStatus (bytes32 a) public virtual view returns (uint256 ret) {
+  function getProposalStatus (bytes32 a) public virtual returns (uint256) {
     uint256 key = _PROPOSAL_STATUS_KEY(a);
-    assembly {
-      ret := sload(key)
-    }
+    return _sload(key);
   }
 
-  function getTotalValueLocked (address token) public view virtual returns (uint256 value) {
+  function getTotalValueLocked (address token) public virtual returns (uint256) {
     uint256 key = _TOKEN_TVL_KEY(token);
-    assembly {
-      value := sload(key)
-    }
+    return _sload(key);
   }
 
-  function getActiveVotingStake (address token, address account) public view returns (uint256 ret) {
+  function getActiveVotingStake (address token, address account) public returns (uint256) {
     uint256 key = _VOTING_ACTIVE_STAKE_KEY(token, account);
-    assembly {
-      ret := sload(key)
-    }
+    return _sload(key);
   }
 
-  function getActiveDelegatedVotingStake (address token, address account) public view returns (uint256 ret) {
+  function getActiveDelegatedVotingStake (address token, address account) public returns (uint256) {
     uint256 key = _DELEGATED_VOTING_ACTIVE_STAKE_KEY(token, account);
-    assembly {
-      ret := sload(key)
-    }
+    return _sload(key);
   }
 
   function EPOCH_GENESIS () public pure virtual returns (uint256) {
@@ -574,18 +532,18 @@ contract HabitatBase is NutBerryTokenBridge, UtilityBrick, UpgradableRollup {
     return 604800;
   }
 
-  function _secondsUntilNextEpoch () internal virtual view returns (uint256) {
+  function _secondsUntilNextEpoch () internal virtual returns (uint256) {
     uint256 genesis = EPOCH_GENESIS();
     return ((SECONDS_PER_EPOCH() - _getTime()) - genesis) % genesis;
   }
 
   /// @notice Epoch should be greater than 0.
-  function getCurrentEpoch () public virtual view returns (uint256) {
+  function getCurrentEpoch () public virtual returns (uint256) {
     return ((_getTime() - EPOCH_GENESIS()) / SECONDS_PER_EPOCH()) + 1;
   }
 
   /// @notice The divisor for every tribute. A fraction of the operator tribute always goes into the staking pool.
-  function STAKING_POOL_FEE_DIVISOR () public view virtual returns (uint256) {
+  function STAKING_POOL_FEE_DIVISOR () public virtual returns (uint256) {
   }
 
   /// @notice Used for testing purposes.

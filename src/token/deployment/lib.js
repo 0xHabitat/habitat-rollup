@@ -1,5 +1,5 @@
 import ethers from 'ethers';
-import _Artifacts from '@NutBerry/rollup-bricks/src/common/Artifacts.js';
+import _Artifacts from '@NutBerry/NutBerry/src/common/Artifacts.js';
 
 export async function deploy (artifact, wallet, ...args) {
   const _factory = new ethers.ContractFactory(

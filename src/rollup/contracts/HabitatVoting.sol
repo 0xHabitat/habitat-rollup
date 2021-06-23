@@ -88,7 +88,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     uint256 startDate,
     bytes memory internalActions,
     bytes memory externalActions
-  ) internal view {
+  ) internal {
     bytes32 communityId = HabitatBase.communityOfVault(vault);
     address governanceToken = HabitatBase.tokenOfCommunity(communityId);
 
@@ -159,7 +159,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
     if (_shouldEmitEvents()) {
       emit ProposalCreated(vault, proposalId, startDate);
       // internal event for submission deadlines
-      UtilityBrick._emitTransactionDeadline(startDate + _PROPOSAL_DELAY());
+      _emitTransactionDeadline(startDate + _PROPOSAL_DELAY());
     }
   }
 
@@ -310,7 +310,7 @@ contract HabitatVoting is HabitatBase, HabitatWallet, HabitatVault {
   function _callProcessProposal (
     bytes32 proposalId,
     address vault
-  ) internal view returns (uint256 votingStatus, uint256 secondsTillClose, uint256 quorumPercent)
+  ) internal returns (uint256 votingStatus, uint256 secondsTillClose, uint256 quorumPercent)
   {
     uint256 secondsPassed;
     {

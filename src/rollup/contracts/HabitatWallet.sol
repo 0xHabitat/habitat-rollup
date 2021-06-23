@@ -12,7 +12,7 @@ contract HabitatWallet is HabitatBase {
   /// @notice Returns the (free) balance (amount of `token`) for `account`.
   /// Free = balance of `token` for `account` - activeVotingStake & delegated stake for `account`.
   /// Supports ERC-20 and ERC-721 and takes staked balances into account.
-  function getUnlockedBalance (address token, address account) public view returns (uint256 ret) {
+  function getUnlockedBalance (address token, address account) public returns (uint256 ret) {
     uint256 locked =
       HabitatBase.getActiveVotingStake(token, account) +
       HabitatBase._getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(account, token));
@@ -26,8 +26,7 @@ contract HabitatWallet is HabitatBase {
   /// Updates Total Value Locked and does accounting needed for staking rewards.
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
     if (from != to) {
-      // this is going to change
-      bool isERC721 = NutBerryTokenBridge.isERC721(token, value);
+      bool isERC721 = _getTokenType(token) > 1;
 
       // update from
       if (isERC721) {
@@ -60,9 +59,9 @@ contract HabitatWallet is HabitatBase {
         if (to == address(0)) {
           // exit
           if (isERC721) {
-            TokenInventoryBrick._setERC721Exit(token, from, value);
+            _setERC721Exit(token, from, value);
           } else {
-            TokenInventoryBrick._incrementExit(token, from, value);
+            _incrementExit(token, from, value);
           }
         } else {
           // can throw
@@ -106,14 +105,14 @@ contract HabitatWallet is HabitatBase {
     if (_shouldEmitEvents()) {
       emit TokenTransfer(token, from, to, value);
       // transactions should be submitted before the next epoch
-      UtilityBrick._emitTransactionDeadline(HabitatBase._secondsUntilNextEpoch());
+      _emitTransactionDeadline(HabitatBase._secondsUntilNextEpoch());
     }
   }
 
   /// @dev State transition when a user deposits a token.
-  function onDeposit (address token, address owner, uint256 value) external {
+  function onDeposit (address owner, address token, uint256 value, uint256 tokenType) external {
     HabitatBase._commonChecks();
-      // this is going to change
+      _setTokenType(token, tokenType);
     _transferToken(token, address(0), owner, value);
   }
 

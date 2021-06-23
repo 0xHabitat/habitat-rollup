@@ -1,6 +1,6 @@
 {
   "name": "habitat",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "0xHabitat",
   "license": "Unlicense",
   "type": "module",
@@ -8,17 +8,14 @@
     "compile": "./scripts/compile.sh",
     "coverage": "yarn compile && develatus-apparatus",
     "test": "yarn _test \"src/*/**/*.test.js\"",
-    "_test": "yarn compile && mocha --file node_modules/@NutBerry/rollup-bricks/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@",
-    "docs:solidity": "./node_modules/@NutBerry/rollup-bricks/scripts/devdoc.js"
+    "_test": "yarn compile && mocha --file node_modules/@NutBerry/NutBerry/src/common/test/mocha.js --color --bail --exit --timeout=900000 $@",
+    "docs:solidity": "./node_modules/@NutBerry/NutBerry/scripts/devdoc.js"
   },
   "devDependencies": {
-    "@NutBerry/rollup-bricks": "https://github.com/NutBerry/rollup-bricks/archive/refs/heads/master.tar.gz",
+    "@NutBerry/NutBerry": "https://github.com/NutBerry/NutBerry/archive/refs/heads/master.tar.gz",
     "develatus-apparatus": "https://github.com/pinkiebell/develatus-apparatus/archive/refs/tags/v0.3.8.tar.gz",
     "ethers": "=5.3.0",
     "mocha": "=8.3.2",
-    "noble-ripemd160": "=0.1.1",
-    "noble-secp256k1": "=1.0.3",
-    "rustbn.js": "=0.2.0",
     "solc": "=0.7.6"
   }
 }

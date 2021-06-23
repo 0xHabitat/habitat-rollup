@@ -10,7 +10,7 @@ contract HabitatVault is HabitatBase {
 
   /// @dev Lookup condition (module) for `vault` and verify the codehash
   /// @return address if the contract on L1
-  function _getVaultCondition (address vault) internal view returns (address) {
+  function _getVaultCondition (address vault) internal returns (address) {
     address contractAddress = address(HabitatBase._getStorage(_VAULT_CONDITION_KEY(vault)));
     require(contractAddress != address(0), 'GVC1');
 

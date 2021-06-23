@@ -2,28 +2,17 @@
 
 # Development
 
-Use `docker-compose up dev` to bootstrap the environment,
+Use `docker-compose up --no-deps dev` to bootstrap the environment,
 you only need to do this once and if you changed node_modules and/or docker files.
 
-Enter the development container with
-
-`docker-compose run -p 8111:8111 dev -i`
-
-to establish a port mapping.
+Enter the development container with `./scripts/dev.sh`.
+This script also establishes a port(8111) mapping, the NutBerry node listens on that port.
 
 Then change the directory inside the container `cd /app` and run `node receipts/simple.js` for a simple bootstrap environment.
 
 Note: You may need to run `yarn compile` first.
 
 That provides you with a full stack environment in combination with `receipts/simple.js`.
-
-### Git Credentials
-
-This project requires private access for one repo.
-You can add a git credential to a `.env` file like this:
-```
-GIT_CREDENTIAL=https://_:<YOUR GITHUB PAN TOKEN>@github.com
-```
 
 ### Compiling Contracts
 

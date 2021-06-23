@@ -10,7 +10,7 @@ contract HabitatStakingPool is HabitatBase, HabitatWallet {
   event ClaimedStakingReward(address indexed account, address indexed token, uint256 indexed epoch, uint256 amount);
 
   /// @dev Like `_getStorage` but with some additional conditions.
-  function _specialLoad (uint256 oldValue, uint256 key) internal view returns (uint256) {
+  function _specialLoad (uint256 oldValue, uint256 key) internal returns (uint256) {
     uint256 newValue = HabitatBase._getStorage(key);
 
     // 0 means no record / no change

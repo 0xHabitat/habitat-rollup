@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.7.6;
 
-import '@NutBerry/rollup-bricks/src/tsm/contracts/RollupUtils.sol';
+import '@NutBerry/NutBerry/src/tsm/contracts/NutBerryEvents.sol';
 
 /// @notice Callforwarding proxy
 // Audit-1: ok
-contract RollupProxy is RollupUtils {
+contract RollupProxy is NutBerryEvents {
   constructor (address initialImplementation) {
     assembly {
       // stores the initial contract address to forward calls
@@ -14,7 +14,7 @@ contract RollupProxy is RollupUtils {
       sstore(0x319a610c8254af7ecb1f669fb64fa36285b80cad26faf7087184ce1dceb114df, number())
     }
     // emit upgrade event
-    emit RollupUtils.RollupUpgrade(initialImplementation);
+    emit NutBerryEvents.RollupUpgrade(initialImplementation);
   }
 
   fallback () external payable {
@@ -36,7 +36,7 @@ contract RollupProxy is RollupUtils {
       // copy all return data into memory
       returndatacopy(zero, zero, returndatasize())
 
-      // if the delegatecall succeeded then return
+      // if the delegatecall succeeded, then return
       if success {
         return(zero, returndatasize())
       }

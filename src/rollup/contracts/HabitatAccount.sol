@@ -10,7 +10,7 @@ contract HabitatAccount is HabitatBase {
 
   /// @dev State transition when a user claims a (short) username.
   /// Only one username can be claimed for `msgSender`.
-  /// If `msgSender` already claimed a name then it should be freed.
+  /// If `msgSender` already claimed a name, then it should be freed.
   function onClaimUsername (address msgSender, uint256 nonce, bytes32 shortString) external {
     HabitatBase._commonChecks();
     HabitatBase._checkUpdateNonce(msgSender, nonce);

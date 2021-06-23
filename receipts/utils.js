@@ -2,16 +2,16 @@ import ethers from 'ethers';
 import fs from 'fs';
 import assert from 'assert';
 
-import TransactionBuilder from '@NutBerry/rollup-bricks/dist/TransactionBuilder.js';
+import TransactionBuilder from '@NutBerry/NutBerry/dist/TransactionBuilder.js';
 import TYPED_DATA from './../src/rollup/habitatV1.js';
-import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
+import { Bridge, startServer } from '@NutBerry/NutBerry/dist/node.js';
 import { encodeInternalProposalActions, encodeExternalProposalActions } from './../src/rollup/test/utils.js';
 
 const builder = new TransactionBuilder(TYPED_DATA);
 
 export async function sendTransaction (primaryType, message, signer, bridge) {
   if (message.nonce === undefined && builder.fieldNames[primaryType][0].name === 'nonce') {
-    message.nonce = (await bridge.txNonces(signer.address)).toHexString();
+    message.nonce = (await bridge.callStatic.txNonces(signer.address)).toHexString();
   }
 
   const tx = {

@@ -21,11 +21,11 @@ contract HabitatV1Mock is HabitatV1 {
     return 0xDf08F82De32B8d460adbE8D72043E3a7e25A3B39;
   }
 
-  function getCurrentEpoch () public view override returns (uint256) {
+  function getCurrentEpoch () public override returns (uint256) {
     return _getStorage(0x072512b50f96eebc18b80fcb796fd1878d108cab3f9601c23c8c01ab32315d14);
   }
 
-  function _getTime () internal view override returns (uint256) {
+  function _getTime () internal override returns (uint256) {
     return _getStorage(0xb332e0078e64900acaff304c1adfa23f92f90f1431e5da2d32fc43b8780f91c9);
   }
 
@@ -35,26 +35,30 @@ contract HabitatV1Mock is HabitatV1 {
 
     require(msgSender == ROLLUP_MANAGER(), 'OMRS1');
 
+    uint ptr;
+    uint end;
     assembly {
-      let ptr := data.offset
-      let end := add(ptr, data.length)
-
-      for { } lt(ptr, end) { } {
-        let k := calldataload(ptr)
+      ptr := data.offset
+      end := add(ptr, data.length)
+    }
+    while (ptr < end) {
+      uint k;
+      uint v;
+      assembly {
+        k := calldataload(ptr)
         ptr := add(ptr, 32)
-        let v := calldataload(ptr)
+        v := calldataload(ptr)
         ptr := add(ptr, 32)
-
-        sstore(k, v)
       }
+      _sstore(k, v);
     }
   }
 
-  function getDelegatedAmount (address account, address delegatee, address token) public view returns (uint256) {
+  function getDelegatedAmount (address account, address delegatee, address token) public returns (uint256) {
     return _getStorage(_DELEGATED_ACCOUNT_ALLOWANCE_KEY(account, delegatee, token));
   }
 
-  function getTotalDelegatedAmount (address account, address token) public view returns (uint256) {
+  function getTotalDelegatedAmount (address account, address token) public returns (uint256) {
     return _getStorage(_DELEGATED_ACCOUNT_TOTAL_ALLOWANCE_KEY(account, token));
   }
 }

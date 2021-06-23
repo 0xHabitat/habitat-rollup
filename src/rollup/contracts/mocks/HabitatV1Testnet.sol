@@ -20,14 +20,14 @@ contract HabitatV1Testnet is HabitatV1 {
     return 100;
   }
 
-  function getBalance (address tkn, address account) public override view returns (uint256 ret) {
+  function getBalance (address tkn, address account) public override returns (uint256 ret) {
     ret = super.getBalance(tkn, account);
     if (ret == 0) {
       ret = 1e18;
     }
   }
 
-  function getTotalValueLocked (address token) public view override returns (uint256 value) {
+  function getTotalValueLocked (address token) public override returns (uint256 value) {
     value = super.getTotalValueLocked(token);
     if (value == 0) {
       value = 1e18;

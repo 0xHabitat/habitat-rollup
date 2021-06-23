@@ -1,7 +1,7 @@
 import ethers from 'ethers';
 import fs from 'fs';
 import assert from 'assert';
-import { Bridge, startServer } from '@NutBerry/rollup-bricks/dist/bricked.js';
+import { Bridge, startServer } from '@NutBerry/NutBerry/dist/node.js';
 import { encodeInternalProposalActions, encodeExternalProposalActions } from './../src/rollup/test/utils.js';
 import { deploy, sendTransaction, wallet, bridgeL1, layer2, erc20 } from './utils.js';
 

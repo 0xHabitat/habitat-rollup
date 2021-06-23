@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'fs';
-import defaultCodeTemplates from '@NutBerry/rollup-bricks/src/bricked/lib/defaultCodeTemplates.js';
+import defaultCodeTemplates from '@NutBerry/NutBerry/src/v1/lib/defaultCodeTemplates.js';
 
 for (const typedDataPath of ['../habitatV1.js']) {
   const typedData = (await import(typedDataPath)).default;

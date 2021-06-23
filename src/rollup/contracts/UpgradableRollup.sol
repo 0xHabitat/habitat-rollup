@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.7.6;
 
-import '@NutBerry/rollup-bricks/src/tsm/contracts/RollupUtils.sol';
+import '@NutBerry/NutBerry/src/tsm/contracts/NutBerryEvents.sol';
 
 // Audit-1: ok
-contract UpgradableRollup is RollupUtils {
+contract UpgradableRollup is NutBerryEvents {
   /// @notice Returns the address who is in charge of changing the rollup implementation.
   /// This contract should be managed by a `ExecutionProxy` that in turn verifies governance decisions
   /// from the rollup.
@@ -21,6 +21,6 @@ contract UpgradableRollup is RollupUtils {
       // uint256(-1) - stores the contract address to delegate calls to (RollupProxy)
       sstore(not(returndatasize()), newImplementation)
     }
-    emit RollupUtils.RollupUpgrade(newImplementation);
+    emit NutBerryEvents.RollupUpgrade(newImplementation);
   }
 }
