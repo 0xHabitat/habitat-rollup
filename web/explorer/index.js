@@ -1,4 +1,4 @@
-import { wrapListener, stringDance, checkScroll } from '/lib/utils.js';
+import { wrapListener, checkScroll } from '/lib/utils.js';
 import { getProviders } from '/lib/rollup.js';
 import { renderTransaction, ZERO_HASH, explorerSearch } from './common.js';
 
@@ -90,10 +90,8 @@ async function render () {
   await update();
 
   const finalizedHeight = await bridge.finalizedHeight();
-  stringDance(
-    document.querySelector('#status'),
-    `Bridge: ${bridge.address}\nFinalized Height: ${finalizedHeight}\nL1: ${rootProvider.connection.url}\nL2: ${childProvider.connection.url}`
-  );
+  document.querySelector('#status').textContent =
+    `Bridge: ${bridge.address}\nFinalized Height: ${finalizedHeight}\nL1: ${rootProvider.connection.url}\nL2: ${childProvider.connection.url}`;
 }
 
 window.addEventListener('DOMContentLoaded', render, false);

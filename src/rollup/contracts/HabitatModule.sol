@@ -6,6 +6,8 @@ import './HabitatBase.sol';
 /// @notice Functionality for Habitat Modules
 // Audit-1: ok
 contract HabitatModule is HabitatBase {
+  event ModuleRegistered(address indexed contractAddress, bytes metadata);
+
   /// @dev Verifies that the bytecode at `contractAddress` can not
   /// introduce side effects on the rollup at will.
   /// The convention for Modules is that they handle a known set of callbacks
@@ -117,14 +119,47 @@ contract HabitatModule is HabitatBase {
 
   /// @notice Register a module to be used for Habitat Vaults (Treasuries).
   /// The bytecode at `contractAddress` must apply to some conventions, see `_verifyModule`.
-  function onSubmitModule (address msgSender, uint256 nonce, address contractAddress, bytes calldata metadata) external {
-    HabitatBase._commonChecks();
-    HabitatBase._checkUpdateNonce(msgSender, nonce);
+  /// @param _type Must be `1`.
+  /// @param contractAddress of the module.
+  /// @param codeHash of the bytecode @ `contractAddress`
+  function registerModule (
+    uint256 _type,
+    address contractAddress,
+    bytes32 codeHash,
+    bytes calldata /*metadata*/) external
+  {
+    if (_type != 1) {
+      revert();
+    }
 
-    // same contract (address) should not be submitted twice
-    require(HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress)) == 0, 'OSM1');
+    _createBlockMessage();
+
     // verify the contract code and returns the keccak256(bytecode) (reverts if invalid)
-    bytes32 codeHash = _verifyModule(contractAddress);
-    HabitatBase._setStorage(_MODULE_HASH_KEY(contractAddress), codeHash);
+    require(_verifyModule(contractAddress) == codeHash && codeHash != 0);
+  }
+
+  /// @notice Layer 2 callback for blocks created with `_createBlockMessage`.
+  /// Used for module registration (type = 1).
+  function onCustomBlockBeacon (bytes memory data) external {
+    HabitatBase._commonChecks();
+
+    uint256 _type;
+    assembly {
+      _type := calldataload(68)
+    }
+
+    if (_type == 1) {
+      (, address contractAddress, bytes32 codeHash, bytes memory metadata) =
+        abi.decode(data, (uint256, address, bytes32, bytes));
+
+      // same contract (address) should not be submitted twice
+      require(HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress)) == 0, 'OSM1');
+
+      HabitatBase._setStorage(_MODULE_HASH_KEY(contractAddress), codeHash);
+
+      if (_shouldEmitEvents()) {
+        emit ModuleRegistered(contractAddress, metadata);
+      }
+    }
   }
 }

@@ -9,7 +9,7 @@ const TEMPLATE =
 <div>
   <div class='flex row evenly'>
     <div id='path' class='flex row center' style='margin:0;'></div>
-    <a target='_blank' style='margin:0;' class='button secondary purple smaller' href='/testnet/explorer/'>Block Explorer</a>
+    <a target='_blank' style='margin:0;' class='button secondary purple smaller' href='/explorer/'>Block Explorer</a>
   </div>
   <space></space>
 </div>`;

@@ -15,36 +15,33 @@
     <meta property='og:url' content='https://0xhabitat.org'>
     <meta property='og:description' content='Scaling communities with Rollup technology.'>
     <meta property='og:image' content='/lib/assets/preview.jpg'>
-    <meta property='og:title' content='Habitat - Vault'>
-    <title>Habitat - Treasury</title>
+    <meta property='og:title' content='Habitat - Communities'>
+    <title>Habitat - Communities</title>
     <script src='/lib/common.js'></script>
-    <script type='module' src='/lib/HabitatGradient.js'></script>
-    <script type='module' src='/lib/HabitatNav.js'></script>
+    <script type='module' src='/lib/HabitatBackground.js'></script>
+    <script type='module' src='/lib/HabitatPanel.js'></script>
+    <script type='module' src='/lib/HabitatAccount.js'></script>
     <script type='module' src='/lib/HabitatMenu.js'></script>
     <script type='module' src='/lib/HabitatPath.js'></script>
+    <script type='module' src='/lib/HabitatSidebar.js'></script>
+    <script type='module' src='/lib/HabitatCommunities.js'></script>
+    <script type='module' src='/lib/HabitatCommunity.js'></script>
+    <script type='module' src='/lib/HabitatVault.js'></script>
+    <script type='module' src='/lib/HabitatProposalPreview.js'></script>
+    <script type='module' src='/lib/HabitatProposal.js'></script>
+    <script type='module' src='/lib/HabitatPropose.js'></script>
     <script type='module' src='index.js'></script>
   </head>
   <body>
-    <habitat-gradient></habitat-gradient>
-    <habitat-nav></habitat-nav>
-    <habitat-path class='bgwhite'></habitat-path>
+    <input type='checkbox' id='sidebar-toggle'>
+    <habitat-background></habitat-background>
     <habitat-menu></habitat-menu>
-    <section class='content'>
-      <section style='z-index:9;transform: translateZ(0)'>
-        <section class='bgwhite'>
-          <div class='flex evenly col center'>
-            <h2>Proposals</h2>
-          </div>
-          <div id='buttons' class='flex row evenly'>
-            <a id='propose' href='' class='button secondary purple smaller'>Create a Proposal</a>
-            <a id='back' href='' class='button secondary purple smaller'>Community Overview</a>
-          </div>
-          <space></space>
-        </section>
-        <section>
-          <div id='proposals' class='flex row evenly center'></div>
-        </section>
+    <section style='perspective:1000px; height:100vh;'>
+      <section id='left'>
+        <habitat-sidebar></habitat-sidebar>
       </section>
+      <section id='content'></section>
     </section>
+    <label for='sidebar-toggle' id='sidebar-btn'></label>
   </body>
 </html>

@@ -7,7 +7,8 @@ import { ethers } from 'ethers';
 
 const DEFAULT_HEADERS = {
   'access-control-allow-origin': '*',
-  'access-control-allow-headers': 'Origin, Content-Type, Accept, X-Requested-With',
+  'access-control-allow-headers': 'origin, content-type, accept, x-requested-with',
+  'access-control-max-age': '300',
   'content-type': 'application/json',
 };
 const DEFAULT_HEADERS_DEFLATE = Object.assign({ 'content-encoding': 'deflate' }, DEFAULT_HEADERS);
@@ -35,6 +36,10 @@ const INFURA_API_KEY = process.env.INFURA_API_KEY || '';
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = Number(process.env.PORT) || 8080;
 const TEST_ENV = !!process.env.TEST_ENV;
+const L2_RPC_URL = process.env.L2_RPC_URL;
+const OPERATOR_ADDRESS = process.env.OPERATOR_ADDRESS;
+const L2_RPC_API_KEY = process.env.L2_RPC_API_KEY;
+
 let globalRepoConfigs = Object.create(null);
 let globalIssueCache = Object.create(null);
 let globalLinkIndex = Object.create(null);
@@ -350,6 +355,53 @@ async function getStats () {
   return statCache;
 }
 
+async function getGasAccount (account) {
+  // uint256 nonce, address operator, address token, uint256 amount
+  const filter = {
+    fromBlock: 1,
+    primaryTypes: ['TributeForOperator']
+  };
+
+  try {
+    const from = account.toLowerCase();
+    const txs = (await ethers.utils.fetchJson(L2_RPC_URL, JSON.stringify({ id: 1, method: 'eth_getLogs', params: [filter] }))).result;
+    let value = 0n;
+    for (const tx of txs) {
+      if (tx.message.operator.toLowerCase() !== OPERATOR_ADDRESS || tx.from.toLowerCase() !== from) {
+        continue;
+      }
+      // todo: check token
+      value += BigInt(tx.message.amount);
+    }
+    // todo
+    const remainingEstimate = '0x' + (value / 1000000000n).toString(16);
+
+    return { value: '0x' + value.toString(16), remainingEstimate };
+  } catch (e) {
+    console.error(e);
+    throw new Error('unknown error');
+  }
+}
+
+async function getGasTank ([account]) {
+  return getGasAccount(account);
+}
+
+async function submitTransaction (_args, jsonOject) {
+  try {
+    // todo check gas balance
+    const ret = await ethers.utils.fetchJson(
+      L2_RPC_URL,
+      JSON.stringify({ id: 1, auth: L2_RPC_API_KEY, method: 'eth_sendRawTransaction', params: [jsonOject] })
+    );
+
+    return ret;
+  } catch (e) {
+    console.error(e);
+    throw new Error('unknown error');
+  }
+}
+
 async function startServer ({ host, port }) {
   async function onRequest (req, resp) {
     console.log(req.url);
@@ -424,6 +476,8 @@ process.on('SIGTERM', () => process.exit(0));
 REQUEST_HANDLERS['stats'] = getStats;
 REQUEST_HANDLERS['signals'] = getSignals;
 REQUEST_HANDLERS['submitVote'] = submitVote;
+REQUEST_HANDLERS['gasTank'] = getGasTank;
+REQUEST_HANDLERS['submitTransaction'] = submitTransaction;
 try {
   globalVotingCache = JSON.parse(readFileSync(VOTING_BACKING_PATH));
 } catch (e) {

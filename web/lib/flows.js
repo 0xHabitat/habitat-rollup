@@ -1,4 +1,4 @@
-import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected, stringDance } from './utils.js';
+import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected } from './utils.js';
 import {
   getProviders,
   sendTransaction,
@@ -8,6 +8,7 @@ import {
   resolveName,
   getShortString,
   getErc20Exit,
+  encodeMetadata
 } from './rollup.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
@@ -72,7 +73,7 @@ export class BaseFlow {
     this.input.disabled = false;
     this.input.focus();
 
-    stringDance(this.notifyBox, str);
+    this.notifyBox.textContent = str;
 
     this._buttonCallback = () => this.onInput();
     this.confirmButton.textContent = 'Continue';
@@ -109,7 +110,7 @@ export class BaseFlow {
     this.confirmButton.style.animation = 'jumpIn 1s';
 
     if (str) {
-      stringDance(this.notifyBox, str);
+      this.notifyBox.textContent = str;
     }
   }
 
@@ -155,11 +156,11 @@ export class BaseFlow {
   }
 
   writeError (str) {
-    stringDance(this.errorBox, str);
+    this.errorBox.textContent = str;
   }
 
   write (str) {
-    stringDance(this.notifyBox, str);
+    this.notifyBox.textContent = str;
   }
 
   onDone (ctx) {
@@ -352,7 +353,7 @@ export class WithdrawFlow extends BaseFlow {
 
     // rootnet
     this.write('Waiting for wallet...');
-    const tx = await habitat.connect(signer).withdraw(erc20.address, 0);
+    const tx = await habitat.connect(signer).withdraw(account, erc20.address, 0);
     this.write(`Waiting for the transaction to be mined...`);
     await tx.wait();
 
@@ -408,7 +409,7 @@ export class CreateCommunityFlow extends BaseFlow {
   async looksGood (ctx) {
     let args = {
       governanceToken: ctx.governanceToken,
-      metadata: JSON.stringify({ title: ctx.name }),
+      metadata: encodeMetadata({ title: ctx.name }),
     };
     let tmp = await sendTransaction('CreateCommunity', args);
 
@@ -468,7 +469,7 @@ export class CreateTreasuryFlow extends CreateCommunityFlow {
     const args = {
       communityId: ctx.communityId,
       condition: ctx.address,
-      metadata: JSON.stringify({ title: ctx.name }),
+      metadata: encodeMetadata({ title: ctx.name }),
     };
     try {
       await simulateTransaction('CreateVault', args);

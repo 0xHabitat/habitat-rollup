@@ -22,13 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.PAT }}
-
-    - name: Setup git credentials
-      env:
-        PAT: ${{ secrets.PAT }}
-      run: printf "GITHUB_CREDENTIAL=$PAT" > .env
 
     - name: Setup
       run: docker-compose up --timeout 1 --no-deps dev

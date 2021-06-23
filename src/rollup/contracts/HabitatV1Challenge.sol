@@ -84,7 +84,7 @@ case 0 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -134,7 +134,7 @@ case 1 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -197,7 +197,7 @@ case 2 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -268,7 +268,7 @@ case 3 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -285,73 +285,10 @@ case 3 {
 }
 // end of CreateVault
 
-// start of SubmitModule
-// typeHash: 0xb9d41eae8b3cfe47bbf999b0c3182fe59b7cc2c28bb712fdb7de4aa9821639ec
-// function: onSubmitModule(address,uint256,address,bytes)
-case 4 {
-  let headSize := 128
-  let typeLen := 0
-  let txPtr := 320
-  let endOfSlot := add(txPtr, 128)
-
-  txPtr := 352
-  // typeHash of SubmitModule
-  mstore(0, 0xb9d41eae8b3cfe47bbf999b0c3182fe59b7cc2c28bb712fdb7de4aa9821639ec)
-  // uint256 SubmitModule.nonce
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(32, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // address SubmitModule.contractAddress
-  typeLen := byte(0, calldataload(offset))
-  offset := add(offset, 1)
-  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
-  mstore(64, mload(txPtr))
-  offset := add(offset, typeLen)
-  txPtr := add(txPtr, 32)
-
-  // bytes SubmitModule.metadata
-  typeLen := shr(240, calldataload(offset))
-  offset := add(offset, 2)
-  mstore(txPtr, headSize)
-  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
-  txPtr := add(txPtr, 32)
-  mstore(endOfSlot, typeLen)
-  endOfSlot := add(endOfSlot, 32)
-  calldatacopy(endOfSlot, offset, typeLen)
-  mstore(96, keccak256(endOfSlot, typeLen))
-  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
-  offset := add(offset, typeLen)
-
-  // typeHash
-  let structHash := keccak256(0, 128)
-  // prefix
-  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
-  // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
-  // transactionStructHash
-  mstore(34, structHash)
-  mstore(0, keccak256(0, 66))
-  mstore(32, v)
-  mstore(64, r)
-  mstore(96, s)
-  success := staticcall(gas(), 1, 0, 128, 128, 32)
-  // functionSig
-  mstore(288, 0x2c894020)
-  mstore(320, mload(128))
-
-  inOffset := 316
-  inSize := sub(endOfSlot, 316)
-}
-// end of SubmitModule
-
 // start of CreateProposal
 // typeHash: 0x4d8a9f544d08772d597445c015580bcc93a38fd87bcf6be01f7b542ccdb97814
 // function: onCreateProposal(address,uint256,uint256,address,bytes,bytes,bytes)
-case 5 {
+case 4 {
   let headSize := 224
   let typeLen := 0
   let txPtr := 512
@@ -428,7 +365,7 @@ case 5 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -448,7 +385,7 @@ case 5 {
 // start of VoteOnProposal
 // typeHash: 0xeedce560579f8160e8bbb71ad5823fb1098eee0d1116be92232ee87ab1bce294
 // function: onVoteOnProposal(address,uint256,bytes32,uint256,address,uint8)
-case 6 {
+case 5 {
   let headSize := 192
   let typeLen := 0
   let txPtr := 448
@@ -502,7 +439,7 @@ case 6 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -522,7 +459,7 @@ case 6 {
 // start of ProcessProposal
 // typeHash: 0xb4da110edbcfa262bdf7849c0e02e03ed15ced328922eca5a0bc1c547451b4af
 // function: onProcessProposal(address,uint256,bytes32,bytes,bytes)
-case 7 {
+case 6 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -578,7 +515,7 @@ case 7 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -598,7 +535,7 @@ case 7 {
 // start of TributeForOperator
 // typeHash: 0x1d7f2e50c4a73ada77cc1796f78f259a43e44d6d99adaf69a6628ef42c527df7
 // function: onTributeForOperator(address,uint256,address,address,uint256)
-case 8 {
+case 7 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -644,7 +581,7 @@ case 8 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -664,7 +601,7 @@ case 8 {
 // start of DelegateAmount
 // typeHash: 0x7595f378ac19fee39d9d6a79a8240d32afae43c5943289e491976d85c9e9ad54
 // function: onDelegateAmount(address,uint256,address,address,uint256)
-case 9 {
+case 8 {
   let headSize := 160
   let typeLen := 0
   let txPtr := 384
@@ -710,7 +647,7 @@ case 9 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -730,7 +667,7 @@ case 9 {
 // start of ClaimStakingReward
 // typeHash: 0x56d7b9415a7ab01a4e256d5e8a8a100fcf839c82096289e6a835115c704aee67
 // function: onClaimStakingReward(address,uint256,address,uint256)
-case 10 {
+case 9 {
   let headSize := 128
   let typeLen := 0
   let txPtr := 320
@@ -768,7 +705,7 @@ case 10 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))
@@ -788,7 +725,7 @@ case 10 {
 // start of ModifyRollupStorage
 // typeHash: 0x31a8f1b3e855fde3871d440618da073d0504133dc34db1896de6774ed15abb70
 // function: onModifyRollupStorage(address,uint256,bytes)
-case 11 {
+case 10 {
   let headSize := 96
   let typeLen := 0
   let txPtr := 256
@@ -823,7 +760,7 @@ case 11 {
   // prefix
   mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
   // DOMAIN struct hash
-  mstore(2, 0x304ec29f98f26858cfb6274d5e19cdfa117eec7545a64cf0be2d71c917f6b43e)
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
   // transactionStructHash
   mstore(34, structHash)
   mstore(0, keccak256(0, 66))

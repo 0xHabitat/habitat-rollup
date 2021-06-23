@@ -29,6 +29,7 @@ const TEMPLATE =
     </label>
     <label>
       The amount to stake
+      <br>
       <input style='min-width:100%;margin:auto;' class='smaller' id='shares' type='number' value='1'>
     </label>
     <p id='feedback' class='smaller center bold text-center' style='padding:0;margin:0;'></p>
@@ -38,6 +39,7 @@ const TEMPLATE =
   <div id='binary' class='flex row center' style='display:none;width:20ch;'>
     <label>
       A binary vote stakes your amount above on either Yes or No.
+      <br>
       <div class='flex row center'>
         <button id='vote' class='bold yes green' disabled>Yes</button>
         <button id='vote' class='bold no red' disabled>No</button>
@@ -52,6 +54,7 @@ const TEMPLATE =
     <habitat-slider></habitat-slider>
     <label>
       A signaling vote stakes your amount above and your signaled importance on this proposal.
+      <br>
       <button id='vote' class='bold signal' disabled>Vote</button>
     </label>
   </div>
@@ -178,8 +181,7 @@ export default class HabitatVotingSub extends HTMLElement {
       const { total, used, free } = await getDelegatedAmountsForToken(governanceToken, account);
       const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'DelegateeVotedOnProposal', account, proposalId);
       if (logs.length) {
-        const { habitat } = await getProviders();
-        const { signalStrength, shares } = habitat.interface.parseLog(logs[0]).args;
+        const { signalStrength, shares } = logs[0].args;
 
         userShares = ethers.utils.formatUnits(shares, erc._decimals);
         feedback = `You Voted with ${renderAmount(shares, erc._decimals)} out of ${renderAmount(total, erc._decimals)} ${erc._symbol}.`;

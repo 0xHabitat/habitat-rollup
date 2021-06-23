@@ -3,13 +3,12 @@ pragma solidity >=0.7.6;
 
 import '../IModule.sol';
 
-/// @notice Seven Day Voting - Simple Majority Voting
-/// Requirements/Conditions:
-/// - min proposer balance = .1%  (100(%) / 1000)
-/// - TVL = total value on rollup for governance token (excluding vault balances)
-/// - 7 day voting period (fixed)
-/// - quorum: total voting shares / TVL >= 10%
-/// - total signal (average preference) > 50%  = YES else NO
+/// @notice Seven Day Voting - Simple Majority Voting.
+/// Used for protocol upgrades and funding proposals.
+/// * 7 day voting period.
+/// * Quorum >= 10%.
+/// * 0.1% of TVL needed to propose.
+/// * A proposal passes if the total signal (average preference) is over 50% (YES).
 // Audit-1: ok
 contract SevenDayVoting is IModule {
   /// @notice Called on proposal creation.

@@ -2,7 +2,6 @@ export default {
   types: {
     EIP712Domain: [
       { name: 'name', type: 'string' },
-      { name: 'version', type: 'string' },
     ],
     // Transactions that can be replayed need nonces.
     // Other transaction types revert if replayed.
@@ -25,11 +24,6 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'communityId', type: 'bytes32' },
       { name: 'condition', type: 'address' },
-      { name: 'metadata', type: 'bytes' },
-    ],
-    SubmitModule: [
-      { name: 'nonce', 'type': 'uint256' },
-      { name: 'contractAddress', type: 'address' },
       { name: 'metadata', type: 'bytes' },
     ],
     CreateProposal: [
@@ -77,14 +71,12 @@ export default {
   },
   domain: {
     name: 'Habitat V1',
-    version: '1',
   },
   primaryTypes: [
     'TransferToken',
     'ClaimUsername',
     'CreateCommunity',
     'CreateVault',
-    'SubmitModule',
     'CreateProposal',
     'VoteOnProposal',
     'ProcessProposal',

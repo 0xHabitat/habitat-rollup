@@ -2,10 +2,7 @@
 pragma solidity >=0.7.6;
 
 import './MetaProxyFactory.sol';
-
-interface IBridge {
-  function executionPermit (address vault, bytes32 proposalId) external view returns (bytes32);
-}
+import './IBridge.sol';
 
 /// @notice This contract verifies execution permits and is meant to be used for L1 governance.
 /// A new proxy can be created with `createProxy`, to be used for governance.

@@ -1,3 +1,4 @@
+const IPFS_ADD = 'https://ipfs.infura.io:5001/api/v0/add?pin=true&cid-version=1&hash=sha2-256';
 
 async function _fetch (url, headers, payload) {
   const resp = await fetch(url, { body: Uint8Array.from(payload), method: 'POST', headers });
@@ -10,7 +11,7 @@ async function _fetch (url, headers, payload) {
   return str;
 }
 
-export async function ipfsPush (url, files) {
+export async function ipfsPush (files) {
   const boundary = 'x';
   const headers = {
     'content-type': 'multipart/form-data; boundary=' + boundary,
@@ -31,6 +32,6 @@ export async function ipfsPush (url, files) {
 
   data = data.concat(Array.from(coder.encode('--' + boundary + '--\r\n')));
 
-  const ret = await _fetch(url, headers, data);
+  const ret = await _fetch(IPFS_ADD, headers, data);
   return ret.split('\n').slice(0, -1).map((str) => JSON.parse(str));
 }

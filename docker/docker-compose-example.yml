@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  ethnode:
+    image: ethereum/client-go:v1.10.3
+    volumes:
+      - root_node_data:/root
+    ports:
+      - 30303:30303/tcp
+      - 30303:30303/udp
+    expose:
+      - 8545
+    command: --syncmode light --nousb --maxpeers 16 --http.api "eth,net,web3,txpool,admin,debug" --ethash.cachesinmem 0 --ethash.cachesondisk 0 --ethash.dagsondisk 0 --ethash.dagsinmem 0 --ipcdisable --http --http.addr "0.0.0.0" --http.port 8545 --http.corsdomain "*" --http.vhosts "*"
+
+  habitat:
+    build: ./node
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - EVENT_CHECK_MS=6000
+      - BLOCK_SIZE_THRESHOLD=31000
+      - BLOCK_TIME_THRESHOLD=99999999
+      - SUBMIT_SOLUTION_THRESHOLD=256
+      - MAX_TRANSACTION_SIZE=512
+      # Provide these via environment variables or edit in place
+      - ROOT_RPC_URL=http://ethnode:8545
+      - PRIV_KEY=$NODE_PK
+      - BRIDGE_ADDRESS=$HABITAT_BRIDGE
+    volumes:
+      - node_data:/opt/node/data
+    ports:
+      - 8080:8080
+
+volumes:
+  node_data:
+  root_node_data:

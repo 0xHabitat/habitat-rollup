@@ -2,6 +2,7 @@ import BRICK_ABI from './HabitatAbi.js';
 import EXECUTION_PROXY_ABI from './ExecutionProxyAbi.js';
 import TYPED_DATA from './typedData.js';
 import {
+  getConfig,
   getSigner,
   getProvider,
   getErc20,
@@ -12,16 +13,25 @@ import {
   renderAddress,
   getCache,
   setCache,
+  RPC_CORS_HEADER_FIX
 } from './utils.js';
 import { L2_RPC_URL } from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
+import { deflateRaw, inflateRaw } from '/lib/extern/pako.esm.js';
+
+const { EVOLUTION_ENDPOINT, EXECUTION_PROXY_ADDRESS } = getConfig();
+
+export async function fetchJson (url, payload) {
+  const ret = await fetch(url, { method: payload ? 'POST' : 'GET', body: JSON.stringify(payload) });
+  return ret.json();
+}
 
 export async function getProviders () {
   if (document._rollupProviders) {
     return document._rollupProviders;
   }
 
-  const childProvider = new ethers.providers.JsonRpcProvider(L2_RPC_URL, 'any');
+  const childProvider = new ethers.providers.JsonRpcProvider({ url: L2_RPC_URL, headers: RPC_CORS_HEADER_FIX }, 'any');
   const network = await childProvider.detectNetwork();
   childProvider.detectNetwork = async () => network;
 
@@ -42,7 +52,7 @@ export async function simulateTransaction (primaryType, _message) {
   const message = Object.assign({}, _message);
 
   if (message.nonce === undefined && TYPED_DATA.types[primaryType][0].name === 'nonce') {
-    message.nonce = (await habitat.txNonces(signerAddress)).toHexString();
+    message.nonce = (await habitat.callStatic.txNonces(signerAddress)).toHexString();
   }
 
   return await habitat.provider.send('eth_call', [{ from: signerAddress, primaryType, message }]);
@@ -54,7 +64,7 @@ export async function sendTransaction (primaryType, message) {
   const signerAddress = await signer.getAddress();
 
   if (message.nonce === undefined && TYPED_DATA.types[primaryType][0].name === 'nonce') {
-    message.nonce = (await habitat.txNonces(signerAddress)).toHexString();
+    message.nonce = (await habitat.callStatic.txNonces(signerAddress)).toHexString();
   }
 
   const callResult = await habitat.provider.send('eth_call', [{ from: signerAddress, primaryType, message }]);
@@ -69,7 +79,7 @@ export async function sendTransaction (primaryType, message) {
   const tx = Object.assign({ message, primaryType }, TYPED_DATA);
   const sig = await signer.provider.send('eth_signTypedData_v3', [signerAddress, JSON.stringify(tx)]);
   const { r, s, v } = ethers.utils.splitSignature(sig);
-  const txHash = await habitat.provider.send('eth_sendRawTransaction', [{ primaryType, message, r, s, v }]);
+  const txHash = (await fetchJson(`${EVOLUTION_ENDPOINT}/submitTransaction/`, { primaryType, message, r, s, v })).result;
   const receipt = await habitat.provider.getTransactionReceipt(txHash);
 
   console.log({ receipt });
@@ -81,12 +91,13 @@ export async function sendTransaction (primaryType, message) {
 
   for (const obj of receipt.logs) {
     try {
-      receipt.events.push(habitat.interface.parseLog(obj));
+      receipt.events.push(Object.assign({ transactionHash: obj.transactionHash }, habitat.interface.parseLog(obj)));
     } catch (e) {
       console.warn(e);
     }
   }
 
+  window.postMessage('chainUpdate', window.location.origin);
   return receipt;
 }
 
@@ -106,12 +117,36 @@ export async function getReceipt (txHash) {
   return receipt;
 }
 
-export async function executeProposalActions (proposalIndex, actions) {
-  const signer = await getSigner();
-  const execProxy = new ethers.Contract(EXECUTION_PROXY_ADDRESS, EXECUTION_PROXY_ABI, signer);
+export async function getExecutionProxyContract (addr = EXECUTION_PROXY_ADDRESS) {
+  const { rootProvider } = await getProviders();
 
-  console.log({ proposalIndex, actions });
-  return execProxy.execute(proposalIndex, actions);
+  return new ethers.Contract(addr, EXECUTION_PROXY_ABI, rootProvider);
+}
+
+export async function lookupExecProxyForVault (vaultAddress) {
+  const factoryContract = await getExecutionProxyContract();
+  const { habitat } = await getProviders();
+  const filter = factoryContract.filters.ProxyCreated(habitat.address, vaultAddress);
+  filter.fromBlock = '0x1';
+  filter.toBlock = 'latest';
+  const logs = await factoryContract.provider.send('eth_getLogs', [filter]);
+
+  if (!logs.length) {
+    return;
+  }
+
+  return factoryContract.interface.parseLog(logs[0]).args.proxy;
+}
+
+export async function executeProposalActions (vaultAddress, proposalId, actions) {
+  const addr = await lookupExecProxyForVault(vaultAddress);
+  if (!addr) {
+    throw new Error('No Execution Proxy found for this Treasury.');
+  }
+  const execProxy = await getExecutionProxyContract(addr);
+  const signer = await getSigner();
+
+  return execProxy.connect(signer).execute(proposalId, actions);
 }
 
 export function encodeExternalProposalActions (ary) {
@@ -221,6 +256,25 @@ export function formatString (val, expandable) {
   return child;
 }
 
+export function encodeMetadata (obj) {
+  const options = {
+    //Z_BEST_COMPRESSION
+    level: 9,
+    memLevel: 9,
+    strategy: 0,
+  };
+  return ethers.utils.hexlify(deflateRaw(JSON.stringify(obj), options));
+}
+
+export function decodeMetadata (str) {
+  try {
+    return JSON.parse(inflateRaw(ethers.utils.arrayify(str), { to: 'string' }));
+  } catch (e) {
+    console.error(e);
+    return {};
+  }
+}
+
 export function formatObject (obj, href) {
   const child = document.createElement('div');
 
@@ -301,13 +355,28 @@ export function humanProposalTime (startDate) {
 }
 
 export async function doQueryWithOptions (options, name, ...args) {
+  const key = _genKey(options, name, args);
+  {
+    const cacheResult = _getLogCache(key);
+    if (cacheResult) {
+      return cacheResult;
+    }
+  }
+
   const { habitat } = await getProviders();
   const filter = habitat.filters[name](...args);
   // xxx: because deposit transaction don't match the message format yet
   filter.address = null;
   Object.assign(filter, options);
 
-  return await habitat.provider.send('eth_getLogs', [filter]);
+  const logs = await habitat.provider.send('eth_getLogs', [filter]);
+
+  for (const log of logs) {
+    log.args = habitat.interface.parseLog(log).args;
+  }
+
+  _setLogCache(key, logs);
+  return logs;
 }
 
 export async function doQuery (name, ...args) {
@@ -359,7 +428,7 @@ export async function resolveUsername (str) {
   const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'ClaimUsername', null, getShortString(str));
 
   if (logs.length) {
-    const evt = habitat.interface.parseLog(logs[logs.length - 1]);
+    const evt = logs[logs.length - 1];
     return evt.args.account;
   }
 }
@@ -371,11 +440,11 @@ export async function setupModulelist () {
 
   const FLAVOR_TYPES = ['binary', 'signal'];
   const modules = [];
-  // query transactions with the `SubmitModule` type
-  for (const tx of await doQueryByPrimaryTypes(['SubmitModule'])) {
+
+  for (const log of await doQueryWithOptions({ toBlock: 1 }, 'ModuleRegistered')) {
     try {
-      const { contractAddress, metadata } = tx.message;
-      const meta = JSON.parse(metadata);
+      const { contractAddress, metadata } = log.args;
+      const meta = decodeMetadata(metadata);
 
       if (!meta.version || FLAVOR_TYPES.indexOf(meta.flavor) === -1) {
         console.warn('invalid module metadata', meta, tx);
@@ -402,14 +471,14 @@ export async function setupModulelist () {
 
 export async function fetchProposalStats ({ proposalId, communityId }) {
   const { habitat } = await getProviders();
-  const governanceToken = await habitat.tokenOfCommunity(communityId);
+  const governanceToken = await habitat.callStatic.tokenOfCommunity(communityId);
   const erc20 = await getErc20(governanceToken);
   const tokenSymbol = await getTokenSymbol(governanceToken);
   const signals = {};
   const votes = {};
   let totalVotes = 0;
   for (const log of await doQuery('VotedOnProposal', null, proposalId)) {
-    const { account, signalStrength, shares } = habitat.interface.parseLog(log).args;
+    const { account, signalStrength, shares } = log.args;
     if (!signals[account]) {
       totalVotes++;
     }
@@ -426,12 +495,10 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   }
 
   const signalStrength = cumulativeSignals / numSignals;
-  const totalShares = ethers.utils.formatUnits(await habitat.getTotalVotingShares(proposalId), erc20._decimals);
-  const totalMembers = Number(await habitat.getTotalMemberCount(communityId));
+  const totalShares = ethers.utils.formatUnits(await habitat.callStatic.getTotalVotingShares(proposalId), erc20._decimals);
+  const totalMembers = Number(await habitat.callStatic.getTotalMemberCount(communityId));
   const participationRate = (totalVotes / totalMembers) * 100;
-  const proposalStatus = await habitat.getProposalStatus(proposalId);
-  console.log({cumulativeSignals, numSignals});
-  console.log({totalVotes, totalShares});
+  const proposalStatus = await habitat.callStatic.getProposalStatus(proposalId);
 
   let userShares = ethers.BigNumber.from(0);
   let userSignal = 0;
@@ -442,7 +509,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     const userVote = votes[account] || ethers.BigNumber.from(0);
 
     // xxx: take active voting stake into account
-    userBalance = ethers.utils.formatUnits(await habitat.getBalance(erc20.address, account), erc20._decimals);
+    userBalance = ethers.utils.formatUnits(await habitat.callStatic.getBalance(erc20.address, account), erc20._decimals);
     if (userVote.gt(0)) {
       userShares = ethers.utils.formatUnits(userVote, erc20._decimals);
       userSignal = signals[account];
@@ -473,7 +540,7 @@ export async function submitVote (communityId, proposalId, signalStrength, _shar
   const { habitat } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
-  const governanceToken = await habitat.tokenOfCommunity(communityId);
+  const governanceToken = await habitat.callStatic.tokenOfCommunity(communityId);
   const token = await getToken(governanceToken);
   const shares = ethers.utils.parseUnits(_shares, await token._decimals).toHexString();
   const args = {
@@ -487,30 +554,33 @@ export async function submitVote (communityId, proposalId, signalStrength, _shar
   return sendTransaction('VoteOnProposal', args);
 }
 
+export async function getMetadataForTopic (topic) {
+  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'MetadataUpdated', topic);
+  if (!logs.length) {
+    return {};
+  }
+  return decodeMetadata(logs[0].args.metadata);
+}
+
 export async function getCommunityInformation (communityId) {
-  // xxx
-  const { habitat } = await getProviders();
   const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'CommunityCreated', null, communityId);
-  const evt = habitat.interface.parseLog(logs[logs.length - 1]);
-  const metadata = JSON.parse(evt.args.metadata);
+  const evt = logs[logs.length - 1];
+  const metadata = await getMetadataForTopic(evt.args.communityId);
 
   return Object.assign(metadata, { communityId: evt.args.communityId, governanceToken: evt.args.governanceToken });
 }
 
 export async function getTreasuryInformation (vaultAddress) {
-  // xxx
-  const { habitat } = await getProviders();
   const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
-  const evt = habitat.interface.parseLog(logs[logs.length - 1]);
-  const metadata = JSON.parse(evt.args.metadata);
+  const evt = logs[logs.length - 1];
+  const metadata = getMetadataForTopic(vaultAddress);
 
   return metadata;
 }
 
 export async function getModuleInformation (vaultAddress) {
-  const { habitat } = await getProviders();
   const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
-  const evt = habitat.interface.parseLog(logs[logs.length - 1]);
+  const evt = logs[logs.length - 1];
   const metadata = await fetchModuleInformation(evt.args.condition);
 
   metadata.flavor = metadata.flavor || 'binary';
@@ -527,18 +597,17 @@ export async function getProposalInformation (txHash) {
   const proposalId = evt.args.proposalId;
   const startDate = evt.args.startDate;
   const vaultAddress = evt.args.vault;
-  const communityId = await habitat.communityOfVault(vaultAddress);
+  const communityId = await habitat.callStatic.communityOfVault(vaultAddress);
   let metadata = {};
   let title = '???';
   try {
-    metadata = JSON.parse(tx.message.metadata);
+    metadata = decodeMetadata(tx.message.metadata);
     title = metadata.title || title;
   } catch (e) {
     console.warn(e);
   }
 
-  const _net = window.location.pathname.indexOf('testnet') === -1 ? 'mainnet' : 'testnet';
-  const link = `/${_net}/proposal/#${txHash}`;
+  const link = `#habitat-proposal,${txHash}`;
   return { title, proposalId, startDate, vaultAddress, communityId, link, metadata, tx };
 }
 
@@ -592,8 +661,7 @@ export async function getExitStatus (tokenAddr, accountAddr) {
 }
 
 export function getBlockExplorerLink (txHash) {
-  const pre = window.location.pathname.indexOf('testnet') === -1 ? 'mainnet' : 'testnet';
-  return `/${pre}/explorer/tx/#${txHash}`;
+  return `/explorer/tx/#${txHash}`;
 }
 
 export async function queryTransfers (account) {
@@ -609,8 +677,7 @@ export async function queryTransfers (account) {
   const transfers = [];
 
   for (const log of logs) {
-    const evt = habitat.interface.parseLog(log);
-    const { token, from, to, value } = evt.args;
+    const { token, from, to, value } = log.args;
     const isDeposit = from === ethers.constants.AddressZero;
     const isIncoming = to === account;
     if (tokens.indexOf(token) === -1) {
@@ -624,40 +691,34 @@ export async function queryTransfers (account) {
   return { tokens, transfers: transfers.reverse() };
 }
 
-export async function fetchModuleInformation (_condition) {
-  // query transactions with the `SubmitModule` type
-  // xxx filter only by `condition`
-  const condition = _condition.toLowerCase();
-  for (const tx of await doQueryByPrimaryTypes(['SubmitModule'])) {
-    if (tx.message.contractAddress.toLowerCase() === condition) {
-      return JSON.parse(tx.message.metadata);
-    }
+export async function fetchModuleInformation (condition) {
+  const logs = await doQueryWithOptions({ maxResults: 1, fromBlock: 1 }, 'ModuleRegistered', condition);
+
+  if (!logs.length) {
+    return {};
   }
+
+  return decodeMetadata(logs[0].args.metadata);
 }
 
-export async function fetchVaultInformation (vaultAddress) {
-  const { habitat } = await getProviders();
-  const filter = habitat.filters.VaultCreated(null, null, vaultAddress);
-  // xxx: because deposit transaction don't match the message format yet
-  filter.address = null;
-  filter.fromBlock = 1;
+export async function fetchVaultInformation (txHash) {
+  const receipt = await getReceipt(txHash);
+  const { communityId, condition, vaultAddress } = receipt.events[0].args;
+  const metadata = decodeMetadata(receipt.events[1].args.metadata);
 
-  const logs = await habitat.provider.send('eth_getLogs', [filter]);
-  if (!logs.length) {
-    // no information
-    return;
-  }
+  metadata.title = metadata.title || '???';
 
-  const event = habitat.interface.parseLog(logs[logs.length - 1]);
-  const ret = {};
-  try {
-    const metadata = JSON.parse(event.args.metadata);
-    ret.name = metadata.title || '???';
-  } catch (e) {
-    console.warn(e);
-  }
+  return { communityId, condition, vaultAddress, metadata };
+}
 
-  return ret;
+export async function getTransactionHashForVaultAddress (vaultAddress) {
+  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
+  return logs[0].transactionHash;
+}
+
+export async function getTransactionHashForCommunityId (communityId) {
+  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'CommunityCreated', null, communityId);
+  return logs[0].transactionHash;
 }
 
 export async function simulateProcessProposal ({ proposalId, internalActions, externalActions }) {
@@ -727,19 +788,17 @@ export async function queryTransactionHashForProposal (proposalId) {
 export async function fetchLatestVote (account, proposalId) {
   const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'VotedOnProposal', account, proposalId);
   const log = logs[logs.length - 1];
-  const { habitat } = await getProviders();
 
-  return habitat.interface.parseLog(log).args;
+  return log.args;
 }
 
 export async function getTotalDelegatedAmountForToken (tokenAddr, account) {
-  const { habitat } = await getProviders();
   const logs = await doQueryWithOptions({ toBlock: 1 }, 'DelegatedAmount', account, null, tokenAddr);
   const map = {};
   let cumulative = ethers.BigNumber.from(0);
 
   for (const log of logs) {
-    const { account, value } = habitat.interface.parseLog(log).args;
+    const { account, value } = log.args;
     if (map[account]) {
       continue;
     }
@@ -756,7 +815,7 @@ export async function getDelegatedAmountsForToken (governanceToken, delegatee) {
   let total = ethers.BigNumber.from(0);
 
   for (const log of await doQueryWithOptions({ toBlock: 1 }, 'DelegatedAmount', null, delegatee, governanceToken)) {
-    const { account, value } = habitat.interface.parseLog(log).args;
+    const { account, value } = log.args;
     if (tmp[account]) {
       continue;
     }
@@ -765,8 +824,70 @@ export async function getDelegatedAmountsForToken (governanceToken, delegatee) {
     total = total.add(value);
   }
 
-  const used = await habitat.getActiveDelegatedVotingStake(governanceToken, delegatee);
+  const used = await habitat.callStatic.getActiveDelegatedVotingStake(governanceToken, delegatee);
   const free = total.sub(used);
 
   return { total, free, used };
+}
+
+export async function getGasTank (account) {
+  const { value, remainingEstimate } = await fetchJson(`${EVOLUTION_ENDPOINT}/gasTank/${account}`);
+
+  return { value: BigInt(value), remainingEstimate: BigInt(remainingEstimate) };
+}
+
+export function onChainUpdate (callback) {
+  function onMessage (evt) {
+    if (evt.source !== window) {
+      console.log('unknown source', evt);
+      window.addEventListener('message', onMessage, { once: true });
+      return;
+    }
+
+    if (evt.data === 'chainUpdate') {
+      callback();
+    } else {
+      window.addEventListener('message', onMessage, { once: true });
+    }
+  }
+
+  window.addEventListener('message', onMessage, { once: true });
+}
+
+let _logCache = Object.create(null);
+
+function _getLogCache (key) {
+  return _logCache[key];
+}
+
+function _setLogCache (key, logs) {
+  _logCache[key] = logs;
+}
+
+function _genKey (...args) {
+  return window.btoa(JSON.stringify(args));
+}
+
+{
+  let prevBlockN = 0;
+  let prevTxs = 0;
+  let connStatus = walletIsConnected();
+  async function _chainUpdateCheck () {
+    console.log('update check');
+    const { childProvider } = await getProviders();
+    const block = await childProvider.send('eth_getBlockByNumber', ['latest']);
+    const blockN = Number(block.number);
+    const nTxs = block.transactions.length;
+    const connected = walletIsConnected();
+
+    if (blockN !== prevBlockN || nTxs !== prevTxs || connected !== connStatus) {
+      console.log('chainUpdate');
+      connStatus = connected;
+      prevBlockN = blockN;
+      prevTxs = nTxs;
+      _logCache = Object.create(null);
+      window.postMessage('chainUpdate', window.location.origin);
+    }
+  }
+  setInterval(_chainUpdateCheck, 3000);
 }

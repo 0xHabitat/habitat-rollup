@@ -485,6 +485,18 @@ img.minmax {
   overflow-x: hidden;
 }
 
+.beacon {
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  background: var(--color-bg);
+  animation: opacity .3s ease-in;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,.3);
+}
+
 .overlay.alert {
   background: #404040aa;
 }
@@ -724,4 +736,5 @@ button, .button {
 .noHover:focus,
 .noHover:active {
   transform: none;
+  box-shadow: inherit;
 }

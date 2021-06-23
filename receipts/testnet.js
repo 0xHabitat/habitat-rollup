@@ -3,12 +3,10 @@ import fs from 'fs';
 import assert from 'assert';
 import { Bridge, startServer } from '@NutBerry/NutBerry/dist/node.js';
 import { encodeInternalProposalActions, encodeExternalProposalActions } from './../src/rollup/test/utils.js';
-import { deploy, sendTransaction, wallet, bridgeL1, layer2, erc20 } from './utils.js';
+import { toMeta, deploy, sendTransaction, wallet, layer1, layer2, erc20 } from './utils.js';
 
 const COMMUNITIES = [
-  //{ title: 'LeapDAO', token: '0x78230e69d6e6449db1e11904e0bd81c018454d7a' },
-  //{ title: 'Strudel Finance', token: '0x297d33e17e61c2ddd812389c2105193f8348188a' },
-  { title: 'Habitat', token: '0x1170fc4d4a1b8e4d5498be7429a9ec3920f8f114' },
+  { title: 'Habitat', token: '0x1170fc4d4a1b8e4d5498be7429a9ec3920f8f114', bannerCid: 'bafkreifbkamle553sombbxlvfrtf4zmargw6quybuzq74pabfxwig6qawe' },
   { title: 'Other', token: '' },
 ];
 const LOREM_IPSUM = `
@@ -22,10 +20,6 @@ Sit ex necessitatibus ullam tempore sit est quo. Voluptatum omnis ipsum est perf
 
 Sed quibusdam illo non dicta vitae blanditiis omnis est. Nesciunt a voluptas rerum maiores eaque ab. Accusamus fuga est ea quis hic quia corrupti. Vero molestias quasi qui architecto doloribus eos. Odit dolores nam officia alias voluptatem. Praesentium deserunt et facere voluptatum porro neque ea quo.
 `;
-
-function toMeta (obj) {
-  return ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify(obj)));
-}
 
 async function main () {
   if ((await layer2.provider.getBlockNumber()) > 1) {
@@ -45,7 +39,7 @@ async function main () {
     for (const obj of COMMUNITIES) {
       let args = {
         governanceToken: obj.token,
-        metadata: toMeta({ title: obj.title }),
+        metadata: toMeta(obj),
       };
       let tmp = await sendTransaction('CreateCommunity', args, wallet, layer2);
       const communityId = tmp.events[0].args.communityId;
@@ -74,10 +68,10 @@ async function main () {
     // deposit
     const amount = '0x' + (100_000_000n * (10n ** 10n)).toString(16);
     const oldBlock = await layer2.provider.getBlockNumber();
-    let tx = await erc20.approve(bridgeL1.address, amount);
+    let tx = await erc20.approve(layer1.address, amount);
     let receipt = await tx.wait();
 
-    tx = await bridgeL1.deposit(erc20.address, amount, wallet.address);
+    tx = await layer1.deposit(erc20.address, amount, wallet.address);
     receipt = await tx.wait();
 
     // wait for deposit block to arrive

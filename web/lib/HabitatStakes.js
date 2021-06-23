@@ -5,9 +5,9 @@ import {
 import {
   getProviders,
   doQuery,
+  onChainUpdate
 } from './rollup.js';
 
-import './HabitatProposal.js';
 import './HabitatStake.js';
 
 const TEMPLATE =
@@ -31,12 +31,16 @@ export default class HabitatStakes extends HTMLElement {
       this.innerHTML = TEMPLATE;
       this._container = document.querySelector('#stakes');
 
-      setInterval(this.update.bind(this), 3000);
       this.update();
     }
   }
 
   async update () {
+    if (!this.isConnected) {
+      return;
+    }
+    onChainUpdate(this.update.bind(this));
+
     if (!walletIsConnected) {
       return;
     }
@@ -46,7 +50,7 @@ export default class HabitatStakes extends HTMLElement {
     const { habitat } = await getProviders();
     const tmp = {};
     for (const log of await doQuery('VotedOnProposal', account)) {
-      const { proposalId, signalStrength, shares } = habitat.interface.parseLog(log).args;
+      const { proposalId, signalStrength, shares } = log.args;
       tmp[proposalId] = { shares, signalStrength };
     }
 
@@ -68,9 +72,8 @@ export default class HabitatStakes extends HTMLElement {
       this._container.appendChild(ele);
     }
 
-    if (this._container.children.length === 0) {
-      this.querySelector('#info').textContent = 'You staked nothing yet.';
-    }
+    this.querySelector('#info').textContent =
+      this._container.children.length === 0 ? 'You staked nothing yet.' : '';
   }
 }
 

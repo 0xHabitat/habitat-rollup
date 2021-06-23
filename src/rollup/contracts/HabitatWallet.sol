@@ -6,7 +6,7 @@ import './HabitatBase.sol';
 /// @notice Functionality for user wallets and token accounting.
 // Audit-1: ok
 contract HabitatWallet is HabitatBase {
-  event TokenTransfer(address indexed token, address indexed from, address indexed to, uint256 value);
+  event TokenTransfer(address indexed token, address indexed from, address indexed to, uint256 value, uint256 epoch);
   event DelegatedAmount(address indexed account, address indexed delegatee, address indexed token, uint256 value);
 
   /// @notice Returns the (free) balance (amount of `token`) for `account`.
@@ -25,85 +25,83 @@ contract HabitatWallet is HabitatBase {
   /// @dev State transition when a user transfers a token.
   /// Updates Total Value Locked and does accounting needed for staking rewards.
   function _transferToken (address token, address from, address to, uint256 value) internal virtual {
-    if (from != to) {
-      bool isERC721 = _getTokenType(token) > 1;
+    bool isERC721 = _getTokenType(token) > 1;
 
-      // update from
-      if (isERC721) {
-        require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
-        HabitatBase._setStorage(_ERC721_KEY(token, value), to);
+    // update from
+    if (isERC721) {
+      require(HabitatBase.getErc721Owner(token, value) == from, 'OWNER');
+      HabitatBase._setStorage(_ERC721_KEY(token, value), to);
+    }
+
+    uint256 currentEpoch = getCurrentEpoch();
+    // both ERC-20 & ERC-721
+    uint256 balanceDelta = isERC721 ? 1 : value;
+    // update `from`
+    if (from != address(0)) {
+      // not a deposit - check stake
+      {
+        uint256 availableAmount = getUnlockedBalance(token, from);
+        require(availableAmount >= balanceDelta, 'LOCK');
       }
 
-      uint256 currentEpoch = getCurrentEpoch();
-      // both ERC-20 & ERC-721
-      uint256 balanceDelta = isERC721 ? 1 : value;
-      // update `from`
-      if (from != address(0)) {
-        // not a deposit - check stake
-        {
-          uint256 availableAmount = getUnlockedBalance(token, from);
-          require(availableAmount >= balanceDelta, 'LOCK');
-        }
+      // can revert
+      HabitatBase._decrementStorage(_ERC20_KEY(token, from), balanceDelta);
 
-        // can revert
-        HabitatBase._decrementStorage(_ERC20_KEY(token, from), balanceDelta);
+      // update historic total user balance
+      HabitatBase._setStorageInfinityIfZero(
+        _STAKING_EPOCH_TUB_KEY(currentEpoch, token, from),
+        getBalance(token, from)
+      );
+    }
+    // update `to`
+    {
+      if (to == address(0)) {
+        // exit
+        if (isERC721) {
+          _setERC721Exit(token, from, value);
+        } else {
+          _incrementExit(token, from, value);
+        }
+      } else {
+        // can throw
+        HabitatBase._incrementStorage(_ERC20_KEY(token, to), balanceDelta);
 
         // update historic total user balance
         HabitatBase._setStorageInfinityIfZero(
-          _STAKING_EPOCH_TUB_KEY(currentEpoch, token, from),
-          getBalance(token, from)
-        );
-      }
-      // update `to`
-      {
-        if (to == address(0)) {
-          // exit
-          if (isERC721) {
-            _setERC721Exit(token, from, value);
-          } else {
-            _incrementExit(token, from, value);
-          }
-        } else {
-          // can throw
-          HabitatBase._incrementStorage(_ERC20_KEY(token, to), balanceDelta);
-
-          // update historic total user balance
-          HabitatBase._setStorageInfinityIfZero(
-            _STAKING_EPOCH_TUB_KEY(currentEpoch, token, to),
-            getBalance(token, to)
-          );
-        }
-      }
-
-      {
-        // TVL
-        bool fromVault = HabitatBase._getStorage(_VAULT_CONDITION_KEY(from)) != 0;
-        bool toVault = !fromVault && HabitatBase._getStorage(_VAULT_CONDITION_KEY(to)) != 0;
-
-        // considerations
-        // - transfer from vault to vault
-        // - deposits (from = 0)
-        // - exits (to == 0)
-        // - transfer from user to vault
-        // - transfer from vault to user
-        if (fromVault || from == address(0)) {
-          HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
-        } else if (toVault || (!fromVault && to == address(0))) {
-          HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
-        }
-      }
-
-      {
-        // update tvl for epoch - accounting for staking rewards
-        HabitatBase._setStorage(
-          _STAKING_EPOCH_TVL_KEY(currentEpoch, token),
-          HabitatBase._getStorage(_TOKEN_TVL_KEY(token))
+          _STAKING_EPOCH_TUB_KEY(currentEpoch, token, to),
+          getBalance(token, to)
         );
       }
     }
 
+    {
+      // TVL
+      bool fromVault = HabitatBase._getStorage(_VAULT_CONDITION_KEY(from)) != 0;
+      bool toVault = !fromVault && HabitatBase._getStorage(_VAULT_CONDITION_KEY(to)) != 0;
+
+      // considerations
+      // - transfer from vault to vault
+      // - deposits (from = 0)
+      // - exits (to == 0)
+      // - transfer from user to vault
+      // - transfer from vault to user
+      if (fromVault || from == address(0)) {
+        HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
+      } else if (toVault || (!fromVault && to == address(0))) {
+        HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
+      }
+    }
+
+    {
+      // update tvl for epoch - accounting for staking rewards
+      HabitatBase._setStorage(
+        _STAKING_EPOCH_TVL_KEY(currentEpoch, token),
+        HabitatBase._getStorage(_TOKEN_TVL_KEY(token))
+      );
+    }
+
     if (_shouldEmitEvents()) {
-      emit TokenTransfer(token, from, to, value);
+      emit TokenTransfer(token, from, to, value, currentEpoch);
       // transactions should be submitted before the next epoch
       _emitTransactionDeadline(HabitatBase._secondsUntilNextEpoch());
     }

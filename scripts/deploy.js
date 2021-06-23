@@ -4,6 +4,7 @@ import fs from 'fs';
 import ethers from 'ethers';
 
 const artifact = JSON.parse(fs.readFileSync(process.argv[2]));
+const args = JSON.parse(process.argv[3]);
 
 async function deploy (wallet, txOverrides, logFile) {
   const _factory = new ethers.ContractFactory(
@@ -14,7 +15,7 @@ async function deploy (wallet, txOverrides, logFile) {
 
   logFile.write(`deploying: ${artifact.contractName}...\n`);
 
-  const contract = await _factory.deploy(txOverrides);
+  const contract = await _factory.deploy(...args, txOverrides);
   const tx = await contract.deployTransaction.wait();
 
   logFile.write(`\n
@@ -35,8 +36,7 @@ Contract: ${artifact.contractName}
   const rpcUrl = process.env.ROOT_RPC_URL;
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const gasPrice = process.env.GAS_GWEI;
-  const txOverrides = {
-  };
+  const txOverrides = {};
 
   if (gasPrice) {
     txOverrides.gasPrice = ethers.utils.parseUnits(gasPrice, 'gwei');

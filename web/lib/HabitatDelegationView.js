@@ -15,6 +15,7 @@ import {
   doQueryWithOptions,
   getBlockExplorerLink,
   getUsername,
+  onChainUpdate
 } from './rollup.js';
 
 import './HabitatTokenAmount.js';
@@ -29,7 +30,7 @@ const TEMPLATE =
 
 <div class='flex col'>
   <div class='flex col align-left'>
-    <p>Here you can delegate a specific amount to another person.</p>
+    <p>Delegate a specific amount to another person.</p>
     <p class='smaller bold'>The amount can be changed any time.</p>
   </div>
   <space></space>
@@ -38,11 +39,11 @@ const TEMPLATE =
     <input id='token' list='tokenlist' autocomplete='off'>
   </label>
   <label>
-    How much
+    Amount
     <input id='amount' type='number' value='1'>
   </label>
   <label>
-    Delegatee
+    To
     <input id='delegatee' autocomplete='off'>
   </label>
   <button id='delegatee'>Change</button>
@@ -72,7 +73,6 @@ export default class HabitatDelegationView extends HTMLElement {
         this.changeAmount.bind(this)
       );
 
-      //setInterval(this.update.bind(this), 3000);
       this.update();
       // async
       setupTokenlist();
@@ -92,7 +92,6 @@ export default class HabitatDelegationView extends HTMLElement {
       delegatee,
     };
     await sendTransaction('DelegateAmount', args);
-    await this.update();
   }
 
   async populateChange ({ token, value, delegatee }) {
@@ -104,6 +103,11 @@ export default class HabitatDelegationView extends HTMLElement {
   }
 
   async update () {
+    if (!this.isConnected) {
+      return;
+    }
+    onChainUpdate(this.update.bind(this));
+
     if (!walletIsConnected) {
       return;
     }
@@ -111,11 +115,11 @@ export default class HabitatDelegationView extends HTMLElement {
     const signer = await getSigner();
     const account = await signer.getAddress();
     const { habitat } = await getProviders();
-    const tmp = {};
     const template = this.querySelector('template#col');
+    const tmp = {};
 
     for (const log of await doQueryWithOptions({ toBlock: 1 }, 'DelegatedAmount', account)) {
-      const { delegatee, token, value } = habitat.interface.parseLog(log).args;
+      const { delegatee, token, value } = log.args;
       const k = 'x' + delegatee + token;
       if (tmp[k]) {
         continue;

@@ -547,4 +547,16 @@ contract HabitatBase is NutBerryFlavorV1, UpgradableRollup {
       ret := iszero(origin())
     }
   }
+
+  function getLastClaimedEpoch (address token, address account) external returns (uint256) {
+    return _getStorage(_STAKING_EPOCH_LAST_CLAIMED_KEY(token, account));
+  }
+
+  function getHistoricTub (address token, address account, uint256 epoch) external returns (uint256) {
+    return _getStorage(_STAKING_EPOCH_TUB_KEY(epoch, token, account));
+  }
+
+  function getHistoricTvl (address token, uint256 epoch) external returns (uint256) {
+    return _getStorage(_STAKING_EPOCH_TVL_KEY(epoch, token));
+  }
 }

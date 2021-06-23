@@ -3,7 +3,10 @@ pragma solidity >=0.7.6;
 
 import '../IModule.sol';
 
-/// @notice This Module is always open and requires a minimum .001% balance regarding the total value locked of the governance token.
+/// @notice Signaling - used for gathering feedback and sentiment.
+/// * Continous voting, no deadlines and always open.
+/// * No quorum required.
+/// * 0.001% of TVL needed to propose.
 // Audit-1: ok
 contract FeatureFarmSignaling is IModule {
   /// @notice Called if a proposal gets created.

@@ -14,6 +14,7 @@ export const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
   'function approve(address spender,uint256 value) returns (bool)',
   'function transfer(address,uint256) returns (bool)',
+  'function transferFrom(address,address,uint256) returns (bool)'
 ];
 
 const PERMIT_STRUCT = [
@@ -50,6 +51,8 @@ export function getNetwork () {
 export function setNetwork (id) {
 }
 
+export const RPC_CORS_HEADER_FIX = { 'content-type': 'text/plain' };
+
 export function getProvider (chainId) {
   if (chainId === undefined) {
     chainId = ROOT_CHAIN_ID;
@@ -59,7 +62,7 @@ export function getProvider (chainId) {
   if (!provider || (provider._network && provider._network.chainId !== chainId)) {
     const name = getNetworkName(chainId);
     const url = name === 'unknown' ? DEV_ENV_L1_RPC : `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
-    provider = new ethers.providers.JsonRpcProvider(url, 'any');
+    provider = new ethers.providers.JsonRpcProvider({ url, headers: url.indexOf('infura') === -1 ? {} : RPC_CORS_HEADER_FIX }, 'any');
     // workaround that ethers.js requests eth_chainId for almost any call.
     const network = ethers.providers.getNetwork(chainId);
     provider.detectNetwork = async () => network;
@@ -443,18 +446,19 @@ export function renderAddress (str) {
 
 export function renderAmount (val, decimals) {
   const v = Number(decimals ? ethers.utils.formatUnits(val, decimals) : val);
+  const intl = Intl.NumberFormat();
 
   if (v < 1e3) {
-    return `${v.toFixed(2)}`;
+    return intl.format(v);
   }
   if (v < 1e6) {
-    return `${(v / 1e3).toFixed(2)}K`;
+    return `${intl.format(v / 1e3)}K`;
   }
   if (v < 1e9) {
-    return `${(v / 1e6).toFixed(2)}M`;
+    return `${intl.format(v / 1e6)}M`;
   }
 
-  return `${(v / 1e9).toFixed(2)}MM`;
+  return `${intl.format(v / 1e9)}G`;
 }
 
 export function selectOnFocus (selectorOrElement) {
@@ -508,21 +512,32 @@ export async function setupTokenlist () {
     datalist.appendChild(opt);
   }
 
+  {
+    // special - ETH
+    const opt = document.createElement('option');
+    opt.value = 'ETH';
+    datalist.append(opt);
+  }
+
   datalist.id = 'tokenlist';
   document.body.appendChild(datalist);
 }
 
 export async function getToken (val) {
   const defaultProvider = getProvider();
-  const token = ethers.utils.getAddress(val.split(' ').pop());
-  if (token.toLowerCase() === ethers.constants.AddressZero) {
+
+  if (val === 'ETH') {
+    const { WETH } = getConfig();
+    const _erc = await getErc20(WETH);
     return { isETH: true, address: WETH, _decimals: 18,
       balanceOf: defaultProvider.getBalance.bind(defaultProvider),
+      interface: _erc.interface,
     };
   }
 
+  const token = ethers.utils.getAddress(val.split(' ').pop());
   const tokenAddress = ethers.utils.isAddress(token) ? token : await defaultProvider.resolveName(token);
-  const erc20 = await getErc20(tokenAddress);
+  const erc20 = await _getTokenCached(tokenAddress);
 
   return erc20;
 }
@@ -623,4 +638,20 @@ export function stringDance (ele, str, _childs, idx, _skip) {
       }
     );
   }
+}
+
+export function encodeMultiCall (ary) {
+  let calldata = '0x';
+
+  for (const obj of ary) {
+    const data = obj.calldata.replace('0x', '');
+    const dataSize = data.length / 2;
+
+    calldata += obj.address.replace('0x', '').toLowerCase().padStart(64, '0') +
+      BigInt(obj.value).toString(16).padStart(64, '0') +
+      dataSize.toString(16).padStart(64, '0') +
+      data;
+  }
+
+  return calldata;
 }

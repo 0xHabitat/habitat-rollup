@@ -423,24 +423,82 @@ describe('HabitatV1', async function () {
         await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /OCV1/);
       });
 
-      it('submit voting modules', async () => {
+      it('register voting module with wrong type - should fail', async () => {
+        const condition = conditions['FeatureFarmSignaling'];
+        const args = [
+          0,
+          condition,
+          ethers.utils.keccak256(await rootProvider.send('eth_getCode', [condition, 'latest'])),
+          ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({})))
+        ];
+
+        await assertRevert(bridge.registerModule(...args, { gasLimit: GAS_LIMIT }));
+      });
+
+      it('register voting module with wrong codeHash - should fail', async () => {
+        const condition = conditions['FeatureFarmSignaling'];
+        const args = [
+          1,
+          condition,
+          ethers.utils.keccak256('0xff'),
+          ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({})))
+        ];
+
+        await assertRevert(bridge.registerModule(...args, { gasLimit: GAS_LIMIT }));
+      });
+
+      it('register voting module with invalid contract - should fail', async () => {
+        const condition = bridge.address;
+        const args = [
+          1,
+          condition,
+          ethers.utils.keccak256(await rootProvider.send('eth_getCode', [condition, 'latest'])),
+          ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({})))
+        ];
+
+        await assertRevert(bridge.registerModule(...args, { gasLimit: GAS_LIMIT }));
+      });
+
+      it('register voting module with address zero - should fail', async () => {
+        const condition = ethers.constants.AddressZero;
+        const args = [
+          1,
+          condition,
+          ethers.utils.keccak256(await rootProvider.send('eth_getCode', [condition, 'latest'])),
+          ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({})))
+        ];
+
+        await assertRevert(bridge.registerModule(...args, { gasLimit: GAS_LIMIT }));
+      });
+
+      it('register voting modules', async () => {
         for (const conditionName in conditions) {
           const condition = conditions[conditionName];
           const expectRevert = !!deployedConditions[condition];
-          const args = {
-            contractAddress: condition,
-            metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
-          };
+          const args = [
+            1,
+            condition,
+            ethers.utils.keccak256(await rootProvider.send('eth_getCode', [condition, 'latest'])),
+            ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({})))
+          ];
 
-          if (expectRevert) {
-            await assert.rejects(createTransaction('SubmitModule', args, alice, habitat), /OSM1/);
-            return;
-          }
-
-          const { txHash, receipt } = await createTransaction('SubmitModule', args, alice, habitat);
+          const oldBlock = await habitatNode.getBlockNumber();
+          const tx = await bridge.registerModule(...args);
+          const receipt = await tx.wait();
           assert.equal(receipt.status, '0x1', conditionName);
-          assert.equal(receipt.logs.length, 0);
+          assert.equal(receipt.logs.length, 1);
           deployedConditions[condition] = true;
+
+          {
+            await waitForValueChange(oldBlock, () => habitatNode.getBlockNumber());
+            const customMessageBlock = await habitat.provider.send('eth_getBlockByNumber', [oldBlock, true]);
+            const [tx] = customMessageBlock.transactions;
+            assert.equal(tx.primaryType, 'CustomBlockBeacon');
+
+            const receipt = await habitat.provider.send('eth_getTransactionReceipt', [tx.hash]);
+            assert.equal(receipt.status, expectRevert ? '0x0' : '0x1', 'tx status');
+            assert.equal(receipt.logs.length, expectRevert ? 0 : 1, '# logs');
+          }
         }
       });
 

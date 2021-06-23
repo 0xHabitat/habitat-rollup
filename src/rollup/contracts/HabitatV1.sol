@@ -62,8 +62,8 @@ contract HabitatV1 is
 
   /// @inheritdoc HabitatBase
   function EPOCH_GENESIS () public virtual override pure returns (uint256) {
-    // 2021-05-03T00:00:00.000Z
-    return 1620000000;
+    // Date.parse('2021-06-23') / 1000
+    return 1624406400;
   }
 
   /// @inheritdoc HabitatBase

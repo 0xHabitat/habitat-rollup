@@ -1,6 +1,7 @@
 import ethers from 'ethers';
 import fs from 'fs';
 import assert from 'assert';
+import { deflateRawSync } from 'zlib';
 
 import TransactionBuilder from '@NutBerry/NutBerry/dist/TransactionBuilder.js';
 import TYPED_DATA from './../src/rollup/habitatV1.js';
@@ -44,8 +45,14 @@ export async function deploy (artifact, args, wallet, txOverrides = {}) {
     wallet
   );
 
+  if (process.env.gwei) {
+    txOverrides.gasPrice = BigInt(process.env.gwei) * (10n ** 9n);
+  }
+
   let contract = await _factory.deploy(...args, txOverrides);
+  console.log('deploying...', artifact.contractName);
   let tx = await contract.deployTransaction.wait();
+  console.log(tx);
 
   return contract;
 }
@@ -56,42 +63,63 @@ export const wallet = new ethers.Wallet(
   rootProvider
 );
 
-const HabitatV1Testnet = JSON.parse(fs.readFileSync('./build/contracts/HabitatV1Testnet.json'));
+const HabitatV1 = JSON.parse(fs.readFileSync('./build/contracts/HabitatV1Testnet.json'));
 const RollupProxy = JSON.parse(fs.readFileSync('./build/contracts/RollupProxy.json'));
 const ExecutionProxy = JSON.parse(fs.readFileSync('./build/contracts/ExecutionProxy.json'));
 const ERC20 = JSON.parse(fs.readFileSync('./build/contracts/HabitatToken.json'));
 const configPath = process.argv[2];
+
+if (!configPath) {
+  console.log(`invoke with ${process.argv[1]} path/to/config.json`);
+  process.exit(1);
+}
+
 export const config = {};
 if (!fs.existsSync(configPath)) {
-  const implementation = await deploy(HabitatV1Testnet, [], wallet);
+  const implementation = await deploy(HabitatV1, [], wallet);
   const proxy = await deploy(RollupProxy, [implementation.address], wallet);
-  config.bridgeL1 = (new ethers.Contract(proxy.address, HabitatV1Testnet.abi, wallet)).address;
+  config.layer1 = (new ethers.Contract(proxy.address, HabitatV1.abi, wallet)).address;
   config.execProxy = (await deploy(ExecutionProxy, [], wallet)).address;
   config.erc20 = (await deploy(ERC20, [], wallet)).address;
   fs.writeFileSync(configPath, JSON.stringify(config));
 } else {
   Object.assign(config, JSON.parse(fs.readFileSync(configPath)));
 }
-export const bridgeL1 = new ethers.Contract(config.bridgeL1, HabitatV1Testnet.abi, wallet);
+export const layer1 = new ethers.Contract(config.layer1, HabitatV1.abi, wallet);
 export const erc20 = new ethers.Contract(config.erc20, ERC20.abi, wallet);
 {
   const br = new Bridge(
     {
-      debugMode: true,
+      //debugMode: true,
       privKey: wallet._signingKey().privateKey,
       rootRpcUrl: process.env.ROOT_RPC_URL,
-      contract: bridgeL1.address,
-      typedData: TYPED_DATA
+      contract: layer1.address,
+      typedData: TYPED_DATA,
+      submitSolutionThreshold: 1
     }
   );
   await startServer(br, { host: '0.0.0.0', rpcPort: 8111 });
   await br.init();
 
   // try to forward the chain at a interval
-  setInterval(async () => {
-    await br.forwardChain();
-    // forward
-    //await br.directReplay(BigInt((await bridgeL1.finalizedHeight()).add(1)));
-  }, 3000);
+  async function forward () {
+    try {
+      const finalizedHeight = BigInt(await layer1.finalizedHeight());
+      console.log({finalizedHeight});
+      await br.forwardChain();
+      if (br.debugMode) {
+        await br.directReplay(finalizedHeight + 1n);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    setTimeout(forward, 10000);
+  }
+  //forward();
 }
-export const layer2 = bridgeL1.connect(new ethers.providers.JsonRpcProvider('http://localhost:8111'));
+export const layer2 = layer1.connect(new ethers.providers.JsonRpcProvider('http://localhost:8111'));
+
+export function toMeta (obj) {
+  return ethers.utils.hexlify(deflateRawSync(JSON.stringify(obj)));
+}

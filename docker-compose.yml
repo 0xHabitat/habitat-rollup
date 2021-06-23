@@ -34,8 +34,9 @@ services:
     image: node:14-alpine
     working_dir: /app
     entrypoint: /bin/sh
-    command: -c "
-      printf '@NutBerry:registry=https://github.com/\n//github.com/:_authToken='$GITHUB_CREDENTIAL > .npmrc && yarn"
+    # not needed anymore (private repo)
+    # printf '@NutBerry:registry=https://github.com/\n//github.com/:_authToken='$GITHUB_CREDENTIAL > .npmrc && yarn"
+    command: -c "yarn"
     tty: true
     stdin_open: true
     environment:
@@ -49,6 +50,8 @@ services:
       - GITHUB_ORG=0xHabitat
       - GITHUB_API_KEY=$GITHUB_API_KEY
       - INFURA_API_KEY=$INFURA_API_KEY
+      - L2_RPC_URL=http://dev:8111/
+      - OPERATOR_ADDRESS=0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39
     ports:
       - 1111:8080
     volumes:

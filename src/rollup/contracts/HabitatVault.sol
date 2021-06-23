@@ -8,21 +8,13 @@ import './HabitatBase.sol';
 contract HabitatVault is HabitatBase {
   event VaultCreated(bytes32 indexed communityId, address indexed condition, address indexed vaultAddress);
 
-  /// @dev Lookup condition (module) for `vault` and verify the codehash
+  /// @dev Lookup condition (module) for `vault`, reverts on error.
   /// @return address if the contract on L1
   function _getVaultCondition (address vault) internal returns (address) {
     address contractAddress = address(HabitatBase._getStorage(_VAULT_CONDITION_KEY(vault)));
-    require(contractAddress != address(0), 'GVC1');
+    uint256 codeHash = HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress));
 
-    uint256 expectedHash = HabitatBase._getStorage(_MODULE_HASH_KEY(contractAddress));
-    require(expectedHash != 0, 'GVC2');
-
-    bool valid;
-    assembly {
-      valid := eq( extcodehash(contractAddress), expectedHash )
-    }
-
-    require(valid == true, 'GVC3');
+    require(contractAddress != address(0) && codeHash != 0, 'GVC1');
 
     return contractAddress;
   }
