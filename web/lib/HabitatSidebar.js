@@ -144,10 +144,11 @@ class HabitatSidebar extends HTMLElement {
   }
 
   async update () {
+    onChainUpdate(this.update.bind(this));
+
     if (!this.isConnected) {
       return;
     }
-    onChainUpdate(this.update.bind(this));
 
     if (!walletIsConnected()) {
       return;

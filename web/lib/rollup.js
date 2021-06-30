@@ -885,8 +885,8 @@ function _genKey (...args) {
       connStatus = connected;
       prevBlockN = blockN;
       prevTxs = nTxs;
-      _logCache = Object.create(null);
       setTimeout(() => {
+        _logCache = Object.create(null);
         window.postMessage('chainUpdate', window.location.origin);
       }, 300);
     }
