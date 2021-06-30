@@ -73,7 +73,7 @@ export default class HabitatStakes extends HTMLElement {
     }
 
     this.querySelector('#info').textContent =
-      this._container.children.length === 0 ? 'You staked nothing yet.' : '';
+      this._container.children.length === 0 ? 'You staked on no proposals yet.' : '';
   }
 }
 

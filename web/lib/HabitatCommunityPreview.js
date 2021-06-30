@@ -21,7 +21,7 @@ const TEMPLATE =
 </style>
 <div class='communityBox'>
   <space></space>
-  <a id='title'></a>
+  <a class='bold big' id='title'></a>
   <space></space>
   <a id='banner'><img></a>
 </div>

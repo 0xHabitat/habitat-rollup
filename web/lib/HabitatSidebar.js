@@ -83,7 +83,7 @@ const NAV_TEMPLATE =
     <space></space>
     <div class='no-max-width' style='display:grid;width:calc(100% - 1em);'>
       <div>
-        <p>♢ Mainnet</p>
+        <p class='icon-eth'>Mainnet</p>
         <space></space>
         <p id='mainnetBalance' class='bl'>0 HBT</p>
       </div>

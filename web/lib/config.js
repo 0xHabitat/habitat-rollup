@@ -1,6 +1,7 @@
 const DEV_ENV_BASE = `http://${window.location.hostname}`;
-export const DEV_ENV = window.location.hostname.indexOf('localhost') !== -1;
-export const ROOT_CHAIN_ID = window.location.href.indexOf('testnet') === -1 ? 1 : 4;
+const WANT_TESTNET = window.location.href.indexOf('testnet') !== -1;
+export const DEV_ENV = WANT_TESTNET && window.location.hostname.indexOf('localhost') !== -1;
+export const ROOT_CHAIN_ID = WANT_TESTNET ? 4 : 1;
 export const L2_RPC_URL = DEV_ENV ? `${DEV_ENV_BASE}:8111/` : `https://mainnet-habitat-l2.fly.dev/`;
 export const DEV_ENV_L1_RPC = `${DEV_ENV_BASE}:8222/`;
 export const CONFIGS = {

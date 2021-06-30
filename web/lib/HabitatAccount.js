@@ -144,7 +144,7 @@ const ACCOUNT_TEMPLATE =
       <a target='#wallet-overview' class='bold secondary'>Balance</a>
     </div>
     <div>
-      <a target='#wallet-stakes' class='bold secondary'>Stakes</a>
+      <a target='#wallet-stakes' class='bold secondary'>Proposals</a>
     </div>
     <div>
       <a target='#wallet-delegation' class='bold secondary'>Delegation</a>
@@ -200,14 +200,21 @@ const ACCOUNT_TEMPLATE =
         <div class='left box' style='grid-row:1/1;grid-column:2/2;'>
           <h6>⛽️ Gas Tank Balance</h6>
           <space></space>
-          <h1 id='gasTankBalance'> </h1>
-          <p class='smaller' style='color:var(--color-grey);'>For roundabout <span id='gasTankRemaining'></span> Transactions.</p>
+          <div style='display:grid;grid-template-rows:1fr 1fr;'>
+            <div>
+              <h1 id='gasTankBalance'> </h1>
+              <p class='smaller' style='color:var(--color-grey);'>For roundabout <span id='gasTankRemaining'></span> Transactions.</p>
+            </div>
+            <div style='place-self:end left;'>
+              <p class='smaller' style='color:var(--color-grey);'>⚠️ You can't remove balance from gas tank.</p>
+            </div>
+          </div>
         </div>
 
         <div class='left box' style='grid-row:1/1;grid-column:3/3;'>
           <h6>💸 Yield</h6>
           <space></space>
-          <div style='display:grid;grid-template-columns:repeat(2, 12ch);gap:.5em;'>
+          <div style='display:grid;grid-template-columns:repeat(2, auto);gap:.5em;'>
             <div>
               <h1 style='' id='rewardYield'> </h1>
               <space></space>

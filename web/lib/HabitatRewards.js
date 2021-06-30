@@ -29,7 +29,7 @@ const TEMPLATE =
   <div class='flex row evenly'>
 
     <div class='center box' style='grid-row:1/1;grid-column:2/2;'>
-      <h6>𖧨 Current Epoch</h6>
+      <h6>⏳ Current Epoch</h6>
       <space></space>
       <h1 id='currentEpoch'> </h1>
       <p id='time' class='smaller'></p>

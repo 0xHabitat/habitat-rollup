@@ -190,7 +190,6 @@ habitat-transfer-box input[list] {
 
 #sign {
   margin-top: -1.5em;
-  margin-bottom: 3em;
   background-color: var(--color-bg-invert);
   color: var(--color-bg);
 }
@@ -234,11 +233,11 @@ habitat-transfer-box input[list] {
     <label>
       <input id='to' autocomplete='off' list='networklist' placeholder='To'>
     </label>
-
-    <p id='feedback'> </p>
   </div>
 
   <button id='sign' class='bigger'>Good Feeling</button>
+  <space></space>
+  <p id='feedback' class='big'> </p>
 </div>
 `;
 

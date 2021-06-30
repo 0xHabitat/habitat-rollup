@@ -14,7 +14,7 @@ class HabitatCommunities extends HabitatPanel {
 </style>
 <space></space>
 <div id='buttons' class='flex row' style='place-content:flex-end;'>
-  <button id='community' class='small'>Create</button>
+  <button id='community'>Create</button>
 </div>
 <space></space>
 <div id='communities' class='flex row center evenly'></div>
