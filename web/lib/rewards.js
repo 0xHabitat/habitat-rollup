@@ -51,7 +51,7 @@ export async function calculateRewards (token) {
     const tvl = historicTvl.sub(historicPoolBalance);
 
     let reward = BigInt(0);
-    if (tvl.gt(0)) {
+    if (tvl.gt(0) && historicUserBalance.gt(0)) {
       reward = BigInt(historicPoolBalance.div(tvl.div(historicUserBalance)));
     }
     if (!reward) {
