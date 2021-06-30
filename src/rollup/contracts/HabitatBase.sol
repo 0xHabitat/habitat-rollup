@@ -526,11 +526,6 @@ contract HabitatBase is NutBerryFlavorV1, UpgradableRollup {
     return _sload(key);
   }
 
-  function _secondsUntilNextEpoch () internal virtual returns (uint256) {
-    uint256 genesis = EPOCH_GENESIS();
-    return ((SECONDS_PER_EPOCH() - _getTime()) - genesis) % genesis;
-  }
-
   /// @notice Epoch should be greater than 0.
   function getCurrentEpoch () public virtual returns (uint256) {
     return ((_getTime() - EPOCH_GENESIS()) / SECONDS_PER_EPOCH()) + 1;

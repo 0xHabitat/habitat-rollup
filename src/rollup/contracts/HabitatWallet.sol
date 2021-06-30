@@ -103,7 +103,8 @@ contract HabitatWallet is HabitatBase {
     if (_shouldEmitEvents()) {
       emit TokenTransfer(token, from, to, value, currentEpoch);
       // transactions should be submitted before the next epoch
-      _emitTransactionDeadline(HabitatBase._secondsUntilNextEpoch());
+      uint256 nextEpochTimestamp = EPOCH_GENESIS() + (SECONDS_PER_EPOCH() * (currentEpoch + 1));
+      _emitTransactionDeadline(nextEpochTimestamp);
     }
   }
 
