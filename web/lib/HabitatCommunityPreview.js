@@ -48,7 +48,7 @@ export default class HabitatCommunityPreview extends HTMLElement {
     const link = `#habitat-community,${evt.transactionHash}`;
 
     let ele = this.querySelector('a#title');
-    ele.textContent = ((metadata ? metadata.title : '') || '???') + ' Community';
+    ele.textContent = (metadata ? metadata.title : '') || '???';
     ele.href = link;
     this.querySelector('a#banner').href = link;
 
