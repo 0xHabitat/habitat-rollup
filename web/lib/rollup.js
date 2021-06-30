@@ -886,7 +886,9 @@ function _genKey (...args) {
       prevBlockN = blockN;
       prevTxs = nTxs;
       _logCache = Object.create(null);
-      window.postMessage('chainUpdate', window.location.origin);
+      setTimeout(() => {
+        window.postMessage('chainUpdate', window.location.origin);
+      }, 300);
     }
   }
   setInterval(_chainUpdateCheck, 3000);

@@ -82,13 +82,8 @@ async function deposit ({ token, amount }) {
       }
 
       if (!permit) {
-        multi.push(
-          {
-            address: token.address,
-            calldata: token.interface.encodeFunctionData('approve', [MULTI_CALL_HELPER, value]),
-            value: 0
-          }
-        );
+        const tx = await token.connect(signer).approve(habitat.address, value);
+        await tx.wait();
       }
     }
   }
