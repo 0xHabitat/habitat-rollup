@@ -22,13 +22,13 @@ import {
   getBlockExplorerLink,
   getGasTank,
   queryTransfers,
+  doQueryCustom,
   sendTransaction,
   getTotalDelegatedAmountForToken,
 } from './rollup.js';
-import {
-  UsernameFlow
-} from './flows.js';
+import { UsernameFlow } from './flows.js';
 import { calculateRewards } from './rewards.js';
+import TYPED_DATA from './typedData.js';
 
 import HabitatPanel from './HabitatPanel.js';
 import './HabitatTransferBox.js';
@@ -191,6 +191,10 @@ const ACCOUNT_TEMPLATE =
 <section class='tabcontainer'>
   <section class='tab' id='wallet-overview'>
     <div class='flex col'>
+
+    <div style='place-self:flex-end;' class='flex'>
+      <button id='add747' class='smaller noHover'>Add HBT to <img style='display:inline;height:1em' src='/lib/assets/icons/metamask-fox.svg'></button>
+    </div>
 
       <div id='wallet-overview-inner'>
         <div class='box' style='grid-row:1/4;grid-column:1/2;padding:0;max-width:max-content;'>
@@ -369,14 +373,14 @@ async function updateErc20 () {
       const isExit = to === ethers.constants.AddressZero;
       const erc = await getErc20(token);
       const amount = renderAmount(value, erc._decimals);
-      let type = 'Outgoing';
+      let type = Number(to) < 0xffffffff ? 'Gas Top Up' : 'Outgoing';
 
       if (isDeposit) {
         type = 'Deposit';
       } else if (isExit) {
         type = 'Exit';
       } else if (isIncoming) {
-        type = 'Incoming';
+        type = Number(from) < 0xffffffff ? 'Operator Reward' : 'Incoming';
       }
 
       // token
@@ -442,6 +446,26 @@ class HabitatAccount extends HabitatPanel {
     }
 
     wrapListener(this.querySelector('button#name'), (evt) => new UsernameFlow(evt.target));
+    wrapListener(
+      this.querySelector('#add747'),
+      async () => {
+        // EIP-747
+        const signer = await getSigner();
+        await signer.provider.send(
+          'metamask_watchAsset',
+          {
+            type: 'ERC20',
+            options: {
+              address: HBT,
+              symbol: 'HBT',
+              decimals: 10,
+              image: `${window.location.origin}/lib/assets/logo.png`,
+            }
+          }
+        );
+      }
+    );
+
     this.updateAccount();
   }
 

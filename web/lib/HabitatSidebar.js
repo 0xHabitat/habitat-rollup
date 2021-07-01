@@ -73,7 +73,6 @@ const NAV_TEMPLATE =
         <a class='button black' href='#habitat-communities'>Communities</a>
         <a class='button' target='_blank' href='/evolution/'>Evolution</a>
         <a class='button' target='_blank' href='/explorer/'>Block Explorer</a>
-        <button id='add747' style='' class='purple smaller noHover'>Add HBT to MetaMask</button>
       </div>
       <space></space>
     </div>
@@ -119,26 +118,6 @@ class HabitatSidebar extends HTMLElement {
       this.update();
       window.location.hash = '#habitat-account';
     });
-
-    wrapListener(
-      this.querySelector('#add747'),
-      async () => {
-        // EIP-747
-        const signer = await getSigner();
-        await signer.provider.send(
-          'metamask_watchAsset',
-          {
-            type: 'ERC20',
-            options: {
-              address: HBT,
-              symbol: 'HBT',
-              decimals: 10,
-              image: `${window.location.origin}/lib/assets/logo.png`,
-            }
-          }
-        );
-      }
-    );
 
     this.update();
   }

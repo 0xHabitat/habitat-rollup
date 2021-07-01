@@ -383,13 +383,8 @@ export async function doQuery (name, ...args) {
   return doQueryWithOptions({ fromBlock: 1 }, name, ...args);
 }
 
-export async function doQueryByPrimaryTypes (primaryTypes) {
+export async function doQueryCustom (filter) {
   const { habitat } = await getProviders();
-  const filter = {
-    fromBlock: 1,
-    primaryTypes,
-  };
-
   return await habitat.provider.send('eth_getLogs', [filter]);
 }
 
@@ -665,13 +660,19 @@ export function getBlockExplorerLink (txHash) {
 }
 
 export async function queryTransfers (account) {
+  function logSort (a, b) {
+    return (Number(b.blockNumber) + Number(b.transactionIndex)) -
+      (Number(a.blockNumber) + Number(a.transactionIndex));
+  }
+
   const { habitat } = await getProviders();
+  const options = { toBlock: 1 };
   // to
-  let logs = await doQuery('TokenTransfer', null, null, account);
+  let logs = await doQueryWithOptions(options, 'TokenTransfer', null, null, account);
   // from
-  logs = logs.concat(await doQuery('TokenTransfer', null, account));
+  logs = logs.concat(await doQueryWithOptions(options, 'TokenTransfer', null, account));
   // sort
-  logs = logs.sort((a, b) => b.blockNumber - a.blockNumber);
+  logs = logs.sort(logSort);
   // todo sort and filter
   const tokens = [];
   const transfers = [];
