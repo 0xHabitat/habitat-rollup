@@ -30,76 +30,86 @@ async function fetch (url, headers, payload) {
   );
 }
 
-const BRIDGE_ABI = [
-  'event BlockBeacon()',
-  'event Deposit(address token, address owner, uint256 value)',
-  'event NewSolution(bytes32 solutionHash, uint256 blockNumber)',
-  'event RollupUpgrade(address target)',
-  'event Withdraw(address token, address owner, uint256 value)',
-];
 const FETCH_TIMEOUT_MS = 10000;
 const UPDATE_INTERVAL = 30000;
 const ADDRS = process.env.ADDRS.split(',');
 const MIN_BALANCE = Number(process.env.MIN_BALANCE) || .3;
-const { BRIDGE_ADDRESS, WEBHOOK } = process.env;
+const { RPC_URL, INTERNAL_RPC_URL, L2_RPC_API_KEY, WEBHOOK } = process.env;
+const CACHE = Object.create(null);
+const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 
-const bridgeInterface = new ethers.utils.Interface(BRIDGE_ABI);
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-const eventFilter = {
-  fromBlock: '0x0',
-  toBlock: '0x0',
-  address: BRIDGE_ADDRESS,
-  topics: [
-    [
-      bridgeInterface.getEventTopic('BlockBeacon'),
-      bridgeInterface.getEventTopic('Deposit'),
-      bridgeInterface.getEventTopic('NewSolution'),
-      bridgeInterface.getEventTopic('RollupUpgrade'),
-      bridgeInterface.getEventTopic('Withdraw'),
-    ]
-  ],
-};
-let lastMessage = 0;
+async function postMessage (content) {
+  const resp = await fetch(WEBHOOK, { 'content-type': 'application/json' }, JSON.stringify({ content }));
+  console.log({ content, resp });
+}
 
-async function pager (str) {
-  const resp = await fetch(WEBHOOK, { 'content-type': 'application/json' }, JSON.stringify({ content: str }));
-  console.log({ str, resp });
+async function pager (k, str) {
+  if (CACHE[k] === str) {
+    console.log(`${k} - did not change`);
+    return;
+  }
+
+  const lines = str.split('\n');
+  let content = '';
+
+  while (lines.length) {
+    const line = lines.shift();
+    if (!line) {
+      continue;
+    }
+    content += '`' + line + '`\n';
+    if (content.length > 1800) {
+      await postMessage(content);
+      content = '';
+    }
+  }
+
+  if (content) {
+    await postMessage(content);
+  }
+
+  CACHE[k] = str;
 }
 
 async function checkBalances () {
+  let content = '';
   for (const addr of ADDRS) {
     const balance = Number(ethers.utils.formatUnits(await provider.getBalance(addr), 18));
-    if (balance < MIN_BALANCE) {
-      await pager(`Balance of ${addr} = ${balance}`);
-    }
+    //if (balance < MIN_BALANCE) {
+    content += `Balance of ${addr} = ${balance}\n`;
+    //}
   }
+  await pager('balance', content);
 }
 
 async function checkEvents () {
-  const latestBlock = await provider.getBlockNumber();
-  const latestBlockStr = '0x' + latestBlock.toString(16);
-  if (Number(eventFilter.toBlock) >= latestBlock) {
+  const ret = await ethers.utils.fetchJson(
+    INTERNAL_RPC_URL,
+    JSON.stringify({ auth: L2_RPC_API_KEY, method: 'debug_rollupStats' })
+  );
+
+  if (ret.error) {
+    console.error(ret.error);
+    await pager('chainError', ret.error.message);
     return;
   }
-  if (eventFilter.fromBlock === '0x0') {
-    eventFilter.fromBlock = latestBlockStr;
-  } else {
-    eventFilter.fromBlock = '0x' + (Number(eventFilter.toBlock) + 1).toString(16)
-  }
-  eventFilter.toBlock = latestBlockStr;
 
-  console.dir({ eventFilter });
-
-  const networkName = (await provider.getNetwork()).name;
-  const logs = await provider.send('eth_getLogs', [eventFilter]);
-  for (const log of logs) {
-    try {
-      const evt = bridgeInterface.parseLog(log);
-      await pager(`${evt.name} https://${networkName}.etherscan.io/tx/${log.transactionHash}`);
-    } catch (e) {
-      console.error(e);
-    }
+  const { result } = ret;
+  let str = `
+🧱 Finalized Height: ${result.finalizedHeight}
+⏳ # Of pending Blocks awaiting finalisation: ${result.blockWindow.length}
+🚎 # of not yet submitted transactions: ${result.nUnsubmittedTransactions}
+🤺 Fraud Proof Challenge active: ${result.challengeOffset ? 'yes' : 'no' }
+`;
+  for (const stat of result.blockWindow) {
+    const correctSolution =
+      stat.submittedSolutionHash ? (stat.submittedSolutionHash === stat.expectedSolutionHash ? '✅' : '❌') : '-';
+    const disputed = stat.disputed ? 'yes' : 'no';
+    const finalisable = stat.canFinalize ? 'yes' : 'no';
+    str +=
+      `| # 🧱 ${stat.blockNumber} | solution submitted: ${stat.submittedSolutionHash ? '👍' : '👎'} | solution correct: ${correctSolution} | disputed: ${disputed} | can be finalised: ${finalisable} |\n`
   }
+  await pager('chain', str);
 }
 
 setInterval(checkBalances, UPDATE_INTERVAL);
