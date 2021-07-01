@@ -38,7 +38,7 @@ import './HabitatStakes.js';
 import './HabitatRewards.js';
 import './HabitatDelegationView.js';
 
-const { HBT } = getConfig();
+const { HBT, DEFAULT_ROLLUP_OPERATOR_ADDRESS } = getConfig();
 let walletContainer;
 let tokenContract;
 let account;
@@ -371,9 +371,10 @@ async function updateErc20 () {
       const isDeposit = from === ethers.constants.AddressZero;
       const isIncoming = to === account;
       const isExit = to === ethers.constants.AddressZero;
+      const isTopUp = to.toLowerCase() === DEFAULT_ROLLUP_OPERATOR_ADDRESS;
       const erc = await getErc20(token);
       const amount = renderAmount(value, erc._decimals);
-      let type = Number(to) < 0xffffffff ? 'Gas Top Up' : 'Outgoing';
+      let type = '';
 
       if (isDeposit) {
         type = 'Deposit';
@@ -381,6 +382,10 @@ async function updateErc20 () {
         type = 'Exit';
       } else if (isIncoming) {
         type = Number(from) < 0xffffffff ? 'Operator Reward' : 'Incoming';
+      } else if (isTopUp) {
+        type = 'Gas Tank Top-up';
+      } else {
+        type = Number(to) < 0xffffffff ? 'Top-up Fee' : 'Outgoing';
       }
 
       // token

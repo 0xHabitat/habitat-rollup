@@ -684,9 +684,7 @@ export async function queryTransfers (account) {
     if (tokens.indexOf(token) === -1) {
       tokens.push(token);
     }
-    if (transfers.findIndex((e) => e.transactionHash === log.transactionHash) === -1) {
-      transfers.push(Object.assign({ token, from, to, value }, { transactionHash: log.transactionHash }));
-    }
+    transfers.push(Object.assign({ token, from, to, value }, { transactionHash: log.transactionHash }));
   }
 
   return { tokens, transfers: transfers.reverse() };
