@@ -50,7 +50,7 @@ class HabitatCommunity extends HabitatPanel {
   }
 
   get title () {
-    return 'Habitat Community';
+    return super.title || 'Habitat Community';
   }
 
   // render balances
@@ -168,7 +168,7 @@ class HabitatCommunity extends HabitatPanel {
   }
 
   async render () {
-    const [, txHash]= this.getAttribute('args').split(',');
+    const [, txHash] = this.getAttribute('args').split(',');
     {
       const receipt = await getReceipt(txHash);
       this.communityId = receipt.events[0].args.communityId;
