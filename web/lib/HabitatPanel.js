@@ -23,6 +23,9 @@ const TEMPLATE =
   height: 100%;
   padding-bottom: 3em;
 }
+.contentHidden #content {
+  content-visibility: hidden;
+}
 </style>
 <div id='titlebar'>
   <a id='close' style='color:beige;'>&#10006;</a>

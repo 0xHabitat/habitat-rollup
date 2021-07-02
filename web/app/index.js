@@ -21,10 +21,13 @@ function onNavigate (evt) {
     const pos = skipped ? i - 1 : i;
     child.style.top = `${2 * pos}em`;
     child.style.marginLeft = `${1 * len-pos}em`;
+    child.classList.add('contentHidden');
+    // remove once content-visibility is more widely supported
     child.style.height = '2em';
   }
 
   ele.style.height = 'initial';
+  ele.classList.remove('contentHidden');
   ele.style.animation = '';
   ele.onanimationend = () => {
     ele.style.animation = 'none';
