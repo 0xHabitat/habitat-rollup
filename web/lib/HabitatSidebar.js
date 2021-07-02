@@ -32,7 +32,7 @@ const NAV_TEMPLATE =
   overflow: hidden;
   padding: 0;
   margin: 2em auto;
-  background-color: var(--color-bg-yellow);
+  background-color: none;
 }
 .sidebar button,
 .sidebar .button {

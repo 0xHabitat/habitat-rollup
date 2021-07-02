@@ -13,6 +13,8 @@ export async function calculateRewards (token) {
   const signer = await getSigner();
   const account = await signer.getAddress();
   const currentEpoch = Number(await habitat.callStatic.getCurrentEpoch());
+  const currentPoolBalance =
+    BigInt(await habitat.callStatic.getBalance(token.address, `0x${currentEpoch.toString(16).padStart(40, '0')}`));
   let totalRewards = BigInt(0);
   let lastClaimedEpoch = 0;
 
@@ -77,5 +79,5 @@ export async function calculateRewards (token) {
   const epochGenesis = Number(await habitat.callStatic.EPOCH_GENESIS());
   const secondsUntilNextEpoch = (epochGenesis + (currentEpoch * secondsPerEpoch)) - ~~(Date.now() / 1000);
 
-  return { claimable, outstanding, currentEpoch, sinceEpoch, secondsUntilNextEpoch, rewards };
+  return { claimable, outstanding, currentEpoch, currentPoolBalance, sinceEpoch, secondsUntilNextEpoch, rewards };
 }
