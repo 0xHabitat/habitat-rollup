@@ -870,20 +870,23 @@ function _genKey (...args) {
 {
   let prevBlockN = 0;
   let prevTxs = 0;
-  let connStatus = walletIsConnected();
+  let prevAccountAddr;
   async function _chainUpdateCheck () {
     console.log('update check');
     const { childProvider } = await getProviders();
     const block = await childProvider.send('eth_getBlockByNumber', ['latest']);
     const blockN = Number(block.number);
     const nTxs = block.transactions.length;
-    const connected = walletIsConnected();
+    let accountAddr;
+    if (walletIsConnected()) {
+      accountAddr = await (await getSigner()).getAddress();
+    }
 
-    if (blockN !== prevBlockN || nTxs !== prevTxs || connected !== connStatus) {
+    if (blockN !== prevBlockN || nTxs !== prevTxs || accountAddr !== prevAccountAddr) {
       console.log('chainUpdate');
-      connStatus = connected;
       prevBlockN = blockN;
       prevTxs = nTxs;
+      prevAccountAddr = accountAddr;
       setTimeout(() => {
         _logCache = Object.create(null);
         window.postMessage('chainUpdate', window.location.origin);
