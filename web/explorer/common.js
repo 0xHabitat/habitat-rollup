@@ -73,7 +73,7 @@ export async function renderTransaction (container, hash) {
           if (Number.isInteger(Number(key))) {
             continue;
           }
-          args[key] = evt.args[key];
+          args[key] = evt.args[key].toString();
         }
         const sig = formatString(evt.signature);
         sig.style.color = 'var(--color-grey)';
