@@ -63,9 +63,10 @@ const NAV_TEMPLATE =
       </div>
       <space></space>
       <div id='walletbox' class='flex col'>
+      <div class='dropdown'>
         <a href='' id='connect' class='noHover' style='border:none;font-size:1.2em;'>Connect</a>
-        <p id='status' class='smaller'></p>
       </div>
+      <p id='status' class='smaller'></p>
     </div>
     <space></space>
     <div class='flex col evenly'>

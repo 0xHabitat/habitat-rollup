@@ -5,7 +5,7 @@ import {
   ethers,
   getSigner,
   signPermit,
-  setupTokenlist,
+  setupTokenlistV2,
   encodeMultiCall
 } from './utils.js';
 import {
@@ -174,6 +174,9 @@ habitat-transfer-box input {
 habitat-transfer-box input[list] {
   cursor: pointer;
 }
+habitat-transfer-box .dropdown::after {
+  left: -2rem;
+}
 
 #mid {
   background-color: var(--color-accent-grey);
@@ -206,19 +209,27 @@ habitat-transfer-box input[list] {
   <option value='${TYPE_TOP_UP}'>
 </datalist>
 <div class='flex col'>
-  <label>
-    <input id='action' autocomplete='off' list='actionlist' placeholder='Choose Action...'>
-  </label>
+  <div style='padding:0 1em;width:100%;'>
+    <label>
+      <div class='dropdown'>
+        <input id='action' autocomplete='off' list='actionlist' placeholder='Choose Action...'>
+      </div>
+    </label>
+  </div>
 
   <div id='mid'>
     <label>
-      <input id='from' list='networklist' placeholder='Network'>
+      <div class='dropdown'>
+        <input id='from' list='networklist' placeholder='Network'>
+      </div>
     </label>
 
     <div id='ab'>
       <label>
         <br>
-        <input id='token' autocomplete='off' list='tokenlist' placeholder='Token'>
+        <div class='dropdown'>
+          <input id='token' autocomplete='off' list='tokenlistv2' placeholder='Token'>
+        </div>
       </label>
       <label>
         <div style='margin-left:.5em;'>
@@ -231,7 +242,9 @@ habitat-transfer-box input[list] {
     <object type='image/svg+xml' style='height:2em;' data='/lib/assets/arrow-group.svg'></object>
 
     <label>
-      <input id='to' autocomplete='off' list='networklist' placeholder='To'>
+      <div class='dropdown'>
+        <input id='to' autocomplete='off' list='networklist' placeholder='To'>
+      </div>
     </label>
   </div>
 
@@ -253,7 +266,7 @@ export default class HabitatTransferBox extends HTMLElement {
   connectedCallback () {
     if (!this.children.length) {
       this.innerHTML = TEMPLATE;
-      setupTokenlist();
+      setupTokenlistV2();
 
       this._from = this.querySelector('#from');
       this._to = this.querySelector('#to');

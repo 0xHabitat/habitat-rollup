@@ -194,3 +194,25 @@ body.with-burger-menu #menu {
   right: 1em;
   bottom: .5em;
 }
+
+.dropdown {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+}
+
+.dropdown::after {
+  content: '\25be';
+  place-self: center right;
+  position: relative;
+}
+
+.dropdown > input[list] {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dropdown > input[list]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}

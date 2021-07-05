@@ -523,8 +523,54 @@ export async function setupTokenlist () {
   document.body.appendChild(datalist);
 }
 
+export async function setupTokenlistV2 () {
+  if (document.querySelector('datalist#tokenlist')) {
+    return;
+  }
+
+  const src = '/lib/tokens.uniswap.org';
+  const { tokens } = await (await fetch(src)).json();
+  const datalist = document.createElement('datalist');
+
+  for (const token of tokens) {
+    if (token.chainId !== ROOT_CHAIN_ID) {
+      continue;
+    }
+
+    const opt = document.createElement('option');
+    opt.value = token.name;
+    opt.textContent = token.address;
+    datalist.appendChild(opt);
+  }
+
+  {
+    // special - ETH
+    const opt = document.createElement('option');
+    opt.value = 'ETH';
+    datalist.append(opt);
+  }
+
+  datalist.id = 'tokenlistv2';
+  document.body.appendChild(datalist);
+}
+
 export async function getToken (val) {
   const defaultProvider = getProvider();
+
+  if (val.length < 42) {
+    const tag = '#tokenlistv2';
+    const ele = document.querySelector(tag);
+    if (!ele) {
+      await setupTokenlistV2();
+      ele = document.querySelector(tag);
+    }
+
+    for (const option of ele.children) {
+      if (option.value === val) {
+        val = option.textContent;
+      }
+    }
+  }
 
   if (val === 'ETH') {
     const { WETH } = getConfig();
