@@ -407,7 +407,14 @@ export async function getUsername (address, force = false) {
 
   if (logs.length) {
     try {
-      username = ethers.utils.toUtf8String(logs[logs.length - 1].topics[2]).split('\u0000')[0];
+      const tmp = ethers.utils.toUtf8String(logs[logs.length - 1].topics[2]).split('\u0000');
+      while (tmp.length) {
+        const str = tmp.pop();
+        if (str) {
+          username = str;
+          break;
+        }
+      }
     } catch (e) {
       console.warn(e);
     }
