@@ -538,7 +538,7 @@ export async function setupTokenlistV2 () {
     }
 
     const opt = document.createElement('option');
-    opt.value = token.name;
+    opt.value = `${token.symbol} ${token.name}`;
     opt.textContent = token.address;
     datalist.appendChild(opt);
   }
@@ -557,7 +557,7 @@ export async function setupTokenlistV2 () {
 export async function getToken (val) {
   const defaultProvider = getProvider();
 
-  if (val.length < 42) {
+  if (val.length < 42 && val !== 'ETH') {
     const tag = '#tokenlistv2';
     const ele = document.querySelector(tag);
     if (!ele) {

@@ -8,6 +8,7 @@ import {
   getErc20,
   getSigner,
   getTokenName,
+  getToken,
 } from '/lib/utils.js';
 import {
   getProviders,
@@ -32,6 +33,7 @@ class HabitatCommunity extends HabitatPanel {
   <space></space>
   <div id='buttons' class='flex row center evenly'>
     <habitat-circle tag='Members' id='members'></habitat-circle>
+    <habitat-circle tag='TVL' id='tvl'></habitat-circle>
   </div>
   <div id='buttons' class='flex row center evenly'>
     <button class='flow' id='treasury'>Create a Treasury</button>
@@ -171,7 +173,9 @@ class HabitatCommunity extends HabitatPanel {
     const [, txHash] = this.getAttribute('args').split(',');
     {
       const receipt = await getReceipt(txHash);
-      this.communityId = receipt.events[0].args.communityId;
+      const args = receipt.events[0].args;
+      this.communityId = args.communityId;
+      this.governanceToken = args.governanceToken;
       const meta = decodeMetadata(receipt.events[1].args.metadata);
       this.setTitle(meta.title);
     }
@@ -190,8 +194,16 @@ class HabitatCommunity extends HabitatPanel {
     );
 
     const { habitat } = await getProviders();
-    const totalMembers = Number(await habitat.callStatic.getTotalMemberCount(this.communityId));
-    this.querySelector('habitat-circle#members').setValue(100, totalMembers, totalMembers !== 1 ? 'Members' : 'Member');
+    {
+      const totalMembers = Number(await habitat.callStatic.getTotalMemberCount(this.communityId));
+      this.querySelector('habitat-circle#members').setValue(100, totalMembers, totalMembers !== 1 ? 'Members' : 'Member');
+    }
+
+    {
+      const tkn = await getToken(this.governanceToken);
+      const tvl = renderAmount(await habitat.callStatic.getTotalValueLocked(this.governanceToken), tkn._decimals);
+      this.querySelector('habitat-circle#tvl').setValue(100, tvl, 'TVL');
+    }
     await this.fetchVaults(this.communityId);
   }
 }

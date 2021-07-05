@@ -67,6 +67,12 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
       this._ctx.canvas.height = h;
 
       wrapListener(this.querySelector('#create'), this.create.bind(this));
+
+      this._ctx.font = '128px Everett';
+      this._ctx.fillStyle = 'rgba(255,255,255,.5)';
+      this._ctx.fillRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.width);
+      this._ctx.fillStyle = 'rgba(0,0,0,.5)';
+      this._ctx.fillText('+', (w / 2) - 54, (h / 2) + 54);
       setupTokenlist();
     }
   }
