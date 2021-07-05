@@ -12,14 +12,14 @@ function onNavigate (evt) {
   ele.remove();
 
   const len = content.children.length;
-  ele.style.top = `${2 * len}em`;
+  ele.style.top = `${2 + (2 * len)}em`;
   ele.style.marginLeft = '0';
 
   let skipped = false;
   for (let i = 0; i < len; i++) {
     const child = content.children[i];
     const pos = skipped ? i - 1 : i;
-    child.style.top = `${2 * pos}em`;
+    child.style.top = `${2 + (2 * pos)}em`;
     child.style.marginLeft = `${1 * len-pos}em`;
     child.classList.add('contentHidden');
     // remove once content-visibility is more widely supported

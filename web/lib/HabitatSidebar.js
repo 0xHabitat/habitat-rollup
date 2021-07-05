@@ -63,10 +63,12 @@ const NAV_TEMPLATE =
       </div>
       <space></space>
       <div id='walletbox' class='flex col'>
-      <div class='dropdown'>
-        <a href='' id='connect' class='noHover' style='border:none;font-size:1.2em;'>Connect</a>
+        <div class='dropdown'>
+          <a href='' id='connect' class='noHover' style='border:none;font-size:1.2em;'>Connect</a>
+        </div>
+        <space></space>
+        <p id='status' class='smaller'></p>
       </div>
-      <p id='status' class='smaller'></p>
     </div>
     <space></space>
     <div class='flex col evenly'>
@@ -79,23 +81,31 @@ const NAV_TEMPLATE =
     </div>
   </div>
 
-  <div id='balances' class='flex col evenly'>
+  <div id='balances' class='flex col evenly' style='padding:.5em;'>
     <space></space>
     <div class='no-max-width' style='display:grid;width:calc(100% - 1em);'>
       <div>
-        <p class='icon-eth'>Mainnet</p>
+        <div style='padding: 0 1em;'>
+          <p class='icon-eth'>Mainnet</p>
+        </div>
         <space></space>
         <p id='mainnetBalance' class='bl'>0 HBT</p>
       </div>
       <space></space>
+      <space></space>
       <div>
-        <p>🏕 Rollup</p>
+        <div style='padding: 0 1em;'>
+          <p>🏕 Rollup</p>
+        </div>
         <space></space>
         <p id='rollupBalance' class='bl'>0 HBT</p>
       </div>
       <space></space>
+      <space></space>
       <div class='left'>
-        <p>⛽️ Gas</p>
+        <div style='padding: 0 1em;'>
+          <p>⛽️ Gas</p>
+        </div>
         <space></space>
         <p id='gasTankBalance' class='bl'>0 HBT</p>
       </div>

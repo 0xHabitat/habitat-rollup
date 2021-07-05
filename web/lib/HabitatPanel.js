@@ -8,7 +8,7 @@ const TEMPLATE =
   background:black;
   color:white;
   padding:.3em;
-  font-weight: bold;
+  font-weight: normal;
 }
 #titlebar > a {
   margin: 0;
