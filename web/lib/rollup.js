@@ -79,7 +79,11 @@ export async function sendTransaction (primaryType, message) {
   const tx = Object.assign({ message, primaryType }, TYPED_DATA);
   const sig = await signer.provider.send('eth_signTypedData_v3', [signerAddress, JSON.stringify(tx)]);
   const { r, s, v } = ethers.utils.splitSignature(sig);
-  const txHash = (await fetchJson(`${EVOLUTION_ENDPOINT}/submitTransaction/`, { primaryType, message, r, s, v })).result;
+  const operatorMessage = (await fetchJson(`${EVOLUTION_ENDPOINT}/submitTransaction/`, { primaryType, message, r, s, v }));
+  if (operatorMessage.error) {
+    throw new Error(operatorMessage.error.message);
+  }
+  const txHash = operatorMessage.result;
   const receipt = await habitat.provider.getTransactionReceipt(txHash);
 
   console.log({ receipt });

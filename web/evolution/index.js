@@ -63,7 +63,7 @@ let totalHolders = 0;
 async function fetchWrapper (...args) {
   const ret = await (await fetch(...args)).json();
   if (ret.error) {
-    throw new Error(ret.error);
+    throw new Error(ret.error.message);
   }
 
   return ret;
@@ -99,7 +99,7 @@ async function submitVote (domain, message, sig) {
   const ret = await fetchWrapper(SUBMIT_VOTE_URL, { 'method': 'POST', body: payload });
 
   if (ret.error) {
-    throw new Error(ret.error);
+    throw new Error(ret.error.message);
   }
 
   return ret;

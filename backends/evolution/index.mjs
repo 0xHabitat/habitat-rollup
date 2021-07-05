@@ -71,7 +71,7 @@ async function startServer ({ host, port }) {
       resp.end(deflate ? deflateRawSync(res) : res);
     } catch (e) {
       console.log(e);
-      const ret = `{"error":"${e.message || ''}"}`;
+      const ret = `{"error":{"code":-32000,"message":"${e.message || ''}"}}`;
       resp.end(deflate ? deflateRawSync(ret) : ret);
     }
 
