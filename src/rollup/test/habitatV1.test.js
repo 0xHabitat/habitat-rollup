@@ -89,6 +89,7 @@ describe('HabitatV1', async function () {
   let leftOverStake = 0n;
   let startEpoch = 0;
   let endEpoch = 1;
+  let vaults = [];
 
   afterEach(async() => {
     for (const wallet of [alice, bob, charlie]) {
@@ -102,6 +103,15 @@ describe('HabitatV1', async function () {
       const votingStake = BigInt(await habitat.callStatic.getActiveVotingStake(erc20.address, wallet.address));
       assert.equal(free, balance - totalAllowance - votingStake, 'free');
     }
+
+    let tvl = 0n;
+    for (const key in balances) {
+      if (vaults.indexOf(key) === -1) {
+        tvl += balances[key];
+      }
+    }
+
+    assert.equal((await habitat.callStatic.getTotalValueLocked(erc20.address)).toString(), tvl.toString(), 'tvl');
   });
 
   after('cleanup', async () => {
@@ -154,25 +164,29 @@ describe('HabitatV1', async function () {
         await createTransaction('ModifyRollupStorage', args, alice, habitat);
       }
 
-      async function doDeposit (signer) {
+      async function doDeposit (signer, vault) {
         const user = await signer.getAddress();
+        const receiver = vault || user;
 
         await (await erc20.transfer(user, depositAmount)).wait();
         await (await erc20.connect(signer).approve(bridge.address, depositAmount)).wait();
 
         const oldBlock = await habitatNode.getBlockNumber();
-        const oldBalance = await habitat.callStatic.getBalance(erc20.address, user);
+        const oldBalance = await habitat.callStatic.getBalance(erc20.address, receiver);
 
-        const tx = await bridge.connect(signer).deposit(erc20.address, depositAmount, await signer.getAddress());
+        const tx = await bridge.connect(signer).deposit(erc20.address, depositAmount, receiver);
         const receipt = await tx.wait();
 
         await waitForValueChange(oldBlock, () => habitatNode.getBlockNumber());
 
-        const newBalance = await habitat.callStatic.getBalance(erc20.address, user);
+        const newBalance = await habitat.callStatic.getBalance(erc20.address, receiver);
         assert.equal(newBalance.toString(), oldBalance.add(depositAmount).toString(), 'token balance should match');
-        cumulativeDeposits += BigInt(depositAmount);
+
+        if (!vault) {
+          cumulativeDeposits += BigInt(depositAmount);
+        }
         assert.equal((await habitat.callStatic.getTotalValueLocked(erc20.address)).toString(), cumulativeDeposits.toString(), 'tvl');
-        balances[user] = (balances[user] || 0n) + depositAmount;
+        balances[receiver] = (balances[receiver] || 0n) + depositAmount;
       }
 
       async function doNftDeposit (signer) {
@@ -512,6 +526,35 @@ describe('HabitatV1', async function () {
         await assert.rejects(createTransaction('CreateVault', args, alice, habitat), /OCV1/);
       });
 
+
+      // try deposit to vault & check tvl
+      {
+        let vault;
+        it('alice: create a vault', async () => {
+          const moduleName = 'SevenDayVoting';
+          const args = {
+            communityId,
+            condition: conditions[moduleName],
+            metadata: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify({}))),
+          };
+          const { txHash, receipt } = await createTransaction('CreateVault', args, alice, habitat);
+          assert.equal(receipt.status, '0x1');
+          assert.equal(receipt.logs.length, 2);
+          const evt = habitat.interface.parseLog(receipt.logs[0]).args;
+          assert.equal(evt.communityId, args.communityId);
+          assert.equal(evt.condition, args.condition);
+
+          vault = evt.vaultAddress;
+          vaults.push(vault);
+        });
+
+        it('submitBlock', () => submitBlock(bridge, rootProvider, habitatNode));
+
+        it('deposit to vault: alice', async () => {
+          await doDeposit(alice, vault);
+        });
+      }
+
       function votingRound (moduleName) {
         describe(`${moduleName} voting`, () => {
           function delegate (from, to, amount) {
@@ -568,6 +611,7 @@ describe('HabitatV1', async function () {
             assert.equal(evt.condition, args.condition);
 
             vault = evt.vaultAddress;
+            vaults.push(vault);
           });
 
           it('create execution proxy for vault', async () => {
@@ -1145,6 +1189,7 @@ describe('HabitatV1', async function () {
                 logEpoch++;
                 // balance of wallet should increase by reward
                 balances[wallet.address] += expectedReward;
+                balances[log.from] -= expectedReward;
               }
               assert.equal(receipt.logs.length, claimableEpochs + rewardEvents, '#log events');
             }

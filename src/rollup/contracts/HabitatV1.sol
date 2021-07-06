@@ -71,4 +71,34 @@ contract HabitatV1 is
     // 7 days
     return 604800;
   }
+
+  /// @notice Used for fixing rollup storage due to logic bugs.
+  function onModifyRollupStorage (address msgSender, uint256 nonce, bytes calldata data) external virtual override {
+    HabitatBase._commonChecks();
+    HabitatBase._checkUpdateNonce(msgSender, nonce);
+
+    {
+      // MODIFIY_ROLLUP_STORAGE_ERRATA_KEY
+      uint256 storageKey = 0xa7be6244e780b8d3f5c3e14f6a3ffd87b6bbc48b7b9cb71a2e521495d8905ecc;
+      uint256 currentErrata = HabitatBase._getStorage(storageKey);
+      require(currentErrata == 0, 'OMRS1');
+      HabitatBase._setStorage(storageKey, 1);
+    }
+
+    {
+      // #1 - depositing from L1 to a vault on L2 resulted in incorrectly
+      // increasing TVL
+      // This happened 2x with HBT in epoch #2.
+      uint256 epoch = 2;
+      address token = 0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415;
+      // cumulative amount of HBT to remove from TVL
+      uint256 tvlToRemove = 16800100000000000;
+
+      HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), tvlToRemove);
+      HabitatBase._setStorage(
+        _STAKING_EPOCH_TVL_KEY(epoch, token),
+        HabitatBase._getStorage(_TOKEN_TVL_KEY(token))
+      );
+    }
+  }
 }

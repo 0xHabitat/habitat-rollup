@@ -849,7 +849,6 @@ export async function getGasTank (account) {
 export function onChainUpdate (callback) {
   function onMessage (evt) {
     if (evt.source !== window) {
-      console.log('unknown source', evt);
       window.addEventListener('message', onMessage, { once: true });
       return;
     }

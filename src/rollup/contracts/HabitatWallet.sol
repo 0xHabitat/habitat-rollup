@@ -74,21 +74,26 @@ contract HabitatWallet is HabitatBase {
       }
     }
 
+    // TVL
     {
-      // TVL
-      bool fromVault = HabitatBase._getStorage(_VAULT_CONDITION_KEY(from)) != 0;
-      bool toVault = !fromVault && HabitatBase._getStorage(_VAULT_CONDITION_KEY(to)) != 0;
+      // from == address(0) = deposit
+      // to == address(0) = exit
+      // classify deposits and exits in the same way as vaults (exempt from TVL)
+      bool fromVault = from == address(0) || HabitatBase._getStorage(_VAULT_CONDITION_KEY(from)) != 0;
+      bool toVault = to == address(0) || HabitatBase._getStorage(_VAULT_CONDITION_KEY(to)) != 0;
 
       // considerations
-      // - transfer from vault to vault
-      // - deposits (from = 0)
-      // - exits (to == 0)
-      // - transfer from user to vault
-      // - transfer from vault to user
-      if (fromVault || from == address(0)) {
-        HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
-      } else if (toVault || (!fromVault && to == address(0))) {
+      // - transfer from user to user, do nothing
+      // - transfer from vault to vault, do nothing
+      // - deposits (from = 0), increase if !toVault
+      // - exits (to == 0), decrease if !fromVault
+      // - transfer from user to vault, decrease
+      // - transfer from vault to user, increase
+      if (toVault && !fromVault) {
         HabitatBase._decrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
+      }
+      if (fromVault && !toVault) {
+        HabitatBase._incrementStorage(_TOKEN_TVL_KEY(token), balanceDelta);
       }
     }
 
@@ -111,7 +116,7 @@ contract HabitatWallet is HabitatBase {
   /// @dev State transition when a user deposits a token.
   function onDeposit (address owner, address token, uint256 value, uint256 tokenType) external {
     HabitatBase._commonChecks();
-      _setTokenType(token, tokenType);
+    _setTokenType(token, tokenType);
     _transferToken(token, address(0), owner, value);
   }
 
