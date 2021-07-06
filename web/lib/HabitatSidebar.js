@@ -4,7 +4,7 @@ import {
   renderAmount,
   walletIsConnected,
   getConfig,
-  getToken,
+  getTokenV2,
   ethers
 } from './utils.js';
 import {
@@ -158,10 +158,10 @@ class HabitatSidebar extends HTMLElement {
     center.textContent = await getUsername(account);
     this._walletContainer.classList.add('connected');
 
-    const token = await getToken(HBT);
+    const token = await getTokenV2(HBT);
     const { habitat } = await getProviders();
     {
-      const value = await token.balanceOf(account);
+      const value = await token.contract.balanceOf(account);
       const e = this.querySelector('#mainnetBalance');
       e.setAttribute('owner', account);
       e.setAttribute('amount', value);
