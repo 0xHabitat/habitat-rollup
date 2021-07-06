@@ -1,6 +1,6 @@
 import {
   wrapListener,
-  getToken,
+  getTokenV2,
   getConfig,
   ethers,
   getSigner,
@@ -339,11 +339,11 @@ export default class HabitatTransferBox extends HTMLElement {
 
       if (type === TYPE_EXIT && this._token.value) {
         try {
-          const token = await getToken(this._token.value);
+          const token = await getTokenV2(this._token.value);
           const signer = await getSigner();
           const account = signer.getAddress();
           const available = await getErc20Exit(token.address, account);
-          this._maxAmount.textContent = ethers.utils.formatUnits(available, token._decimals).toString();
+          this._maxAmount.textContent = ethers.utils.formatUnits(available, token.decimals).toString();
         } catch (e) {
           console.error(e);
         }
@@ -369,8 +369,8 @@ export default class HabitatTransferBox extends HTMLElement {
     let available = '0';
     if (this._token.value && type !== TYPE_EXIT) {
       const signer = await getSigner();
-      const account = signer.getAddress();
-      const token = await getToken(this._token.value);
+      const account = await signer.getAddress();
+      const token = await getTokenV2(this._token.value);
       let availableAmount = BigInt(0);
       if (this._from.value === L1_STR) {
         availableAmount = BigInt(await token.balanceOf(account));
@@ -378,7 +378,7 @@ export default class HabitatTransferBox extends HTMLElement {
         const { habitat } = await getProviders();
         availableAmount = BigInt(await habitat.callStatic.getBalance(token.address, account));
       }
-      available = ethers.utils.formatUnits(availableAmount, token._decimals);
+      available = ethers.utils.formatUnits(availableAmount, token.decimals);
     }
     this._maxAmount.textContent = available;
   }
@@ -391,7 +391,7 @@ export default class HabitatTransferBox extends HTMLElement {
       return;
     }
 
-    const token = await getToken(this._token.value);
+    const token = await getTokenV2(this._token.value);
     const amount = this.querySelector('#amount').value;
     const feedback = this.querySelector('#feedback');
 

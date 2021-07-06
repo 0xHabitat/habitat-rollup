@@ -40,6 +40,7 @@ const PERMIT_DAI = new ethers.utils.Interface(
 const PERMIT_EIP_2612 = new ethers.utils.Interface(
   ['function permit(address owner,address spender,uint256 value,uint256 deadline,uint8 v,bytes32 r,bytes32 s)']
 );
+const ERC_INTERFACE = new ethers.utils.Interface(ERC20_ABI);
 
 document._utilsCache = {};
 document._utilsProviders = {};
@@ -596,7 +597,7 @@ export async function getTokenV2 (val) {
   const cache = document._tokensV2 || Object.create(null);
   document._tokensV2 = cache;
 
-  const tokenTag = val.split(' ').pop().toLowerCase();
+  const tokenTag = val.split(' ').shift().toLowerCase();
 
   if (cache[tokenTag]) {
     return cache[tokenTag];
@@ -624,6 +625,7 @@ export async function getTokenV2 (val) {
   }
 
   if (!tokenInfo) {
+    const defaultProvider = getProvider();
     const tokenAddress = (ethers.utils.isAddress(tokenTag) ? tokenTag : await defaultProvider.resolveName(tokenTag)).toLowerCase();
     const contract = await _getTokenCached(tokenAddress);
 
@@ -636,11 +638,20 @@ export async function getTokenV2 (val) {
     };
   }
 
-  if (isETH) {
+  if (isETH || tokenInfo.address === ethers.constants.AddressZero) {
     tokenInfo = Object.assign({}, tokenInfo);
     tokenInfo.symbol = 'ETH';
     tokenInfo.name = 'ETH';
     tokenInfo.isETH = true;
+    const defaultProvider = getProvider();
+    tokenInfo.balanceOf = (a) => defaultProvider.getBalance(a);
+    tokenInfo.interface = ERC_INTERFACE;
+  } else {
+    const defaultProvider = getProvider();
+    tokenInfo.balanceOf = function (a) {
+      return defaultProvider.send('eth_call', [{ to: tokenInfo.address, data: ERC_INTERFACE.encodeFunctionData('balanceOf', [a]) }, 'latest']);
+    }
+    tokenInfo.interface = ERC_INTERFACE;
   }
 
   cache[tokenTag] = tokenInfo;
