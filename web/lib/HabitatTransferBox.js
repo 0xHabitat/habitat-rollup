@@ -28,6 +28,9 @@ const TYPE_TRANSFER = 'Transfer';
 const TYPE_EXIT = 'Exit';
 const TYPE_TOP_UP = 'Top Up Gas Tank';
 
+const WITHDRAW_WARNING = `A Withdraw request can take 7-10 days.`;
+const EXIT_NOTE = `Collect funds after a Withdraw is finalized.`;
+
 async function l2Transfer ({ to, token, amount }) {
   const value = ethers.utils.parseUnits(amount, token._decimals).toHexString();
   const args = {
@@ -203,10 +206,10 @@ habitat-transfer-box .dropdown::after {
 </datalist>
 <datalist id='actionlist'>
   <option value='${TYPE_DEPOSIT}'>
-  <option value='${TYPE_WITHDRAW}'>
   <option value='${TYPE_TRANSFER}'>
-  <option value='${TYPE_EXIT}'>
   <option value='${TYPE_TOP_UP}'>
+  <option value='${TYPE_WITHDRAW}'>${WITHDRAW_WARNING}</option>
+  <option value='${TYPE_EXIT}'>${EXIT_NOTE}</option>
 </datalist>
 <div class='flex col'>
   <div style='padding:0 1em;width:100%;'>
