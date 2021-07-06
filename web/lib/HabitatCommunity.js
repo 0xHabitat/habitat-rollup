@@ -3,12 +3,9 @@ import {
   wrapListener,
   renderAddress,
   renderAmount,
-  getEtherscanTokenLink,
   getEtherscanLink,
-  getErc20,
   getSigner,
-  getTokenName,
-  getToken,
+  getTokenV2,
 } from '/lib/utils.js';
 import {
   getProviders,
@@ -23,6 +20,7 @@ import {
 } from '/lib/rollup.js';
 import { CreateTreasuryFlow } from '/lib/flows.js';
 import HabitatPanel from '/lib/HabitatPanel.js';
+import './HabitatTokenAmount.js';
 
 class HabitatCommunity extends HabitatPanel {
   static TEMPLATE =
@@ -64,17 +62,15 @@ class HabitatCommunity extends HabitatPanel {
     child.className = 'align-right grid-col';
     child.style.gridTemplateColumns = 'repeat(2, auto)';
     child.style.maxWidth = 'fit-content';
-    child.innerHTML = '<p></p><a></a>'.repeat(tokens.length);
+    child.innerHTML = '<habitat-token-amount></habitat-token-amount>'.repeat(tokens.length);
     const children = child.children;
     let childPtr = 0;
     for (let i = 0, len = tokens.length; i < len; i++) {
-      const token = tokens[i];
-      const erc = await getErc20(token);
-      const balance = await habitat.callStatic.getBalance(token, vaultAddress);
-      const tokenName = await getTokenName(token);
-      children[childPtr++].textContent = renderAmount(balance, erc._decimals);
-      children[childPtr].textContent = erc._symbol;
-      children[childPtr++].href = getEtherscanTokenLink(token, vaultAddress);
+      const tokenAddr = tokens[i];
+      const balance = await habitat.callStatic.getBalance(tokenAddr, vaultAddress);
+      children[childPtr].setAttribute('token', tokenAddr);
+      children[childPtr].setAttribute('owner', vaultAddress);
+      children[childPtr++].setAttribute('amount', balance);
     }
 
     const sep = document.createElement('div');
@@ -200,8 +196,8 @@ class HabitatCommunity extends HabitatPanel {
     }
 
     {
-      const tkn = await getToken(this.governanceToken);
-      const tvl = renderAmount(await habitat.callStatic.getTotalValueLocked(this.governanceToken), tkn._decimals);
+      const tkn = await getTokenV2(this.governanceToken);
+      const tvl = renderAmount(await habitat.callStatic.getTotalValueLocked(this.governanceToken), tkn.decimals);
       this.querySelector('habitat-circle#tvl').setValue(100, tvl, 'TVL');
     }
     await this.fetchVaults(this.communityId);

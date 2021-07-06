@@ -1,6 +1,5 @@
 import {
   getSigner,
-  getErc20,
   wrapListener,
   renderAddress,
   renderAmount,
@@ -10,7 +9,7 @@ import {
   getNetwork,
   getConfig,
   getAttributes,
-  getToken,
+  getTokenV2,
   secondsToString,
   ethers
 } from './utils.js';
@@ -37,6 +36,7 @@ import './HabitatCircle.js';
 import './HabitatStakes.js';
 import './HabitatRewards.js';
 import './HabitatDelegationView.js';
+import './HabitatTokenElement.js';
 
 const { HBT, DEFAULT_ROLLUP_OPERATOR_ADDRESS } = getConfig();
 let walletContainer;
@@ -53,7 +53,7 @@ const ACCOUNT_ERC20_PRE_TEMPLATE =
 
 const ACCOUNT_ERC20_TEMPLATE =
 `
-<a target='_blank'></a>
+<habitat-token-element></habitat-token-element>
 <p></p>
 <p></p>
 <p></p>
@@ -68,14 +68,14 @@ const ACCOUNT_EXITS_PRE_TEMPLATE =
 
 const ACCOUNT_EXITS_TEMPLATE =
 `
-<a target='_blank'></a>
+<habitat-token-element></habitat-token-element>
 <p></p>
 <p></p>
 `;
 
 const ACCOUNT_TRANSFER_TEMPLATE =
 `
-<a target='_blank'></a>
+<habitat-token-element></habitat-token-element>
 <p></p>
 <a target='_blank'></a>
 `;
@@ -128,8 +128,19 @@ const ACCOUNT_TEMPLATE =
 </style>
 <section style='background-color:var(--color-bg-yellow);min-height:100%;'>
 <div class='flex row' style='justify-content:space-between;width:100%;min-height:4em;'>
-  <div class='left' style='margin-left:1em;width:42ch;max-width:100%;'>
-    <label>Loading...<habitat-slider id='progress'></habitat-slider></label>
+   <div class='flex row tabs left'>
+    <div class='active'>
+      <a target='#wallet-overview' class='secondary'>Balance</a>
+    </div>
+    <div>
+      <a target='#wallet-stakes' class='secondary'>Proposals</a>
+    </div>
+    <div>
+      <a target='#wallet-delegation' class='secondary'>Delegation</a>
+    </div>
+    <div>
+      <a target='#wallet-rewards' class='secondary'>Rewards</a>
+    </div>
   </div>
 
   <div class='flex row'>
@@ -138,24 +149,6 @@ const ACCOUNT_TEMPLATE =
   </div>
 </div>
 <sep></sep>
-<section>
-  <div class='flex row tabs left'>
-    <div class='active'>
-      <a target='#wallet-overview' class='bold secondary'>Balance</a>
-    </div>
-    <div>
-      <a target='#wallet-stakes' class='bold secondary'>Proposals</a>
-    </div>
-    <div>
-      <a target='#wallet-delegation' class='bold secondary'>Delegation</a>
-    </div>
-    <div>
-      <a target='#wallet-rewards' class='bold secondary'>Rewards</a>
-    </div>
-  </div>
-</section>
-
-<space></space>
 
 <style>
 .tabcontainer {
@@ -275,8 +268,6 @@ const ACCOUNT_TEMPLATE =
 `;
 
 async function updateErc20 () {
-  // xxx
-  const slider = document.querySelector('habitat-slider#progress');
   const { habitat, bridge } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
@@ -294,16 +285,7 @@ async function updateErc20 () {
   document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
 
   if (!tokens.length) {
-    slider.parentElement.style.display = 'none';
     return;
-  }
-  slider.parentElement.style.display = 'revert';
-
-  const maxSliderLen = (tokens.length * 2) + transfers.length;
-  let sliderV = 0;
-  function updateSlider () {
-    sliderV++;
-    slider.setRange(sliderV, sliderV, maxSliderLen);
   }
 
   {
@@ -313,47 +295,17 @@ async function updateErc20 () {
     const children = child.children;
     let childPtr = 4;
     for (let i = 0, len = tokens.length; i < len; i++) {
-      updateSlider();
-      const token = tokens[i];
-      const erc = await getErc20(token);
-      const balance = await habitat.callStatic.getBalance(token, account);
-      const tokenName = await getTokenName(token);
-      const stakedBalance = await habitat.callStatic.getActiveVotingStake(token, account);
-      const delegatedBalance = await getTotalDelegatedAmountForToken(token, account);
-      children[childPtr].textContent = tokenName;
-      children[childPtr++].href = getEtherscanTokenLink(token, account);
-      children[childPtr++].textContent = renderAmount(balance, erc._decimals);
-      children[childPtr++].textContent = renderAmount(stakedBalance, erc._decimals);
-      children[childPtr++].textContent = renderAmount(delegatedBalance, erc._decimals);
+      const tokenAddr = tokens[i];
+      const token = await getTokenV2(tokenAddr);
+      const balance = await habitat.callStatic.getBalance(tokenAddr, account);
+      const stakedBalance = await habitat.callStatic.getActiveVotingStake(tokenAddr, account);
+      const delegatedBalance = await getTotalDelegatedAmountForToken(tokenAddr, account);
+      children[childPtr++].setAttribute('token', tokenAddr);
+      children[childPtr++].textContent = renderAmount(balance, token.decimals);
+      children[childPtr++].textContent = renderAmount(stakedBalance, token.decimals);
+      children[childPtr++].textContent = renderAmount(delegatedBalance, token.decimals);
     }
     const container = document.querySelector('#erc20');
-    if (container) {
-      container.replaceChildren(child);
-    }
-  }
-
-  {
-    // exits
-    const child = document.createElement('div');
-    child.innerHTML = ACCOUNT_EXITS_PRE_TEMPLATE + ACCOUNT_EXITS_TEMPLATE.repeat(tokens.length);
-    const children = child.children;
-    let childPtr = 3;
-    for (let i = 0, len = tokens.length; i < len; i++) {
-      updateSlider();
-      const token = tokens[i];
-      const { pendingAmount, availableAmount } = await getExitStatus(token, account);
-
-      const erc = await getErc20(token);
-      const amount = ethers.utils.formatUnits(availableAmount, erc._decimals);
-      const disabled = !availableAmount.gt(0);
-
-      children[childPtr].textContent = await getTokenName(token);
-      children[childPtr++].href = getEtherscanTokenLink(token, account);
-      children[childPtr++].textContent = renderAmount(pendingAmount, erc._decimals);
-      children[childPtr++].textContent = renderAmount(availableAmount, erc._decimals);
-      //wrapListener(children[childPtr++], (evt) => document.querySelector('habitat-transfer-box').doExit(token, amount));
-    }
-    const container = document.querySelector('#exits');
     if (container) {
       container.replaceChildren(child);
     }
@@ -366,14 +318,13 @@ async function updateErc20 () {
     const children = child.children;
     let childPtr = 3;
     for (let i = 0, len = transfers.length; i < len; i++) {
-      updateSlider();
       const { token, from, to, value, transactionHash } = transfers[(len - 1) - i];
       const isDeposit = from === ethers.constants.AddressZero;
       const isIncoming = to === account;
       const isExit = to === ethers.constants.AddressZero;
       const isTopUp = to.toLowerCase() === DEFAULT_ROLLUP_OPERATOR_ADDRESS;
-      const erc = await getErc20(token);
-      const amount = renderAmount(value, erc._decimals);
+      const erc = await getTokenV2(token);
+      const amount = renderAmount(value, erc.decimals);
       let type = '';
 
       if (isDeposit) {
@@ -389,8 +340,7 @@ async function updateErc20 () {
       }
 
       // token
-      children[childPtr].textContent = await getTokenName(token);
-      children[childPtr++].href = getEtherscanTokenLink(token, account);
+      children[childPtr++].setAttribute('token', token);
       // amount
       children[childPtr++].textContent = amount;
 
@@ -412,7 +362,30 @@ async function updateErc20 () {
     }
   }
 
-  slider.parentElement.style.display = 'none';
+  {
+    // exits
+    const child = document.createElement('div');
+    child.innerHTML = ACCOUNT_EXITS_PRE_TEMPLATE + ACCOUNT_EXITS_TEMPLATE.repeat(tokens.length);
+    const children = child.children;
+    let childPtr = 3;
+    for (let i = 0, len = tokens.length; i < len; i++) {
+      const tokenAddr = tokens[i];
+      const { pendingAmount, availableAmount } = await getExitStatus(tokenAddr, account);
+
+      const token = await getTokenV2(tokenAddr);
+      const amount = ethers.utils.formatUnits(availableAmount, token.decimals);
+      const disabled = !availableAmount.gt(0);
+
+      children[childPtr++].setAttribute('token', tokenAddr);
+      children[childPtr++].textContent = renderAmount(pendingAmount, token.decimals);
+      children[childPtr++].textContent = renderAmount(availableAmount, token.decimals);
+      //wrapListener(children[childPtr++], (evt) => document.querySelector('habitat-transfer-box').doExit(tokenAddr, amount));
+    }
+    const container = document.querySelector('#exits');
+    if (container) {
+      container.replaceChildren(child);
+    }
+  }
 }
 
 function onTab (evt) {
@@ -489,11 +462,11 @@ class HabitatAccount extends HabitatPanel {
     const user = await getUsername(account, true);
     this.querySelector('#greeting').textContent = user;
 
-    const token = await getToken(HBT);
+    const token = await getTokenV2(HBT);
     {
       const { value, remainingEstimate } = await getGasTank(account);
       this.querySelector('#gasTankRemaining').textContent = remainingEstimate.toString();
-      this.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token._decimals)} HBT`;
+      this.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} HBT`;
     }
 
     await updateErc20();
@@ -501,7 +474,7 @@ class HabitatAccount extends HabitatPanel {
     // rewards
     {
       const { claimable, sinceEpoch, secondsUntilNextEpoch } = await calculateRewards(token);
-      this.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token._decimals)} HBT`;
+      this.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token.decimals)} HBT`;
       this.querySelector('#nextYield').textContent = secondsToString(secondsUntilNextEpoch);
       const claimBtn = this.querySelector('#claim');
       wrapListener(claimBtn, () => sendTransaction('ClaimStakingReward', { sinceEpoch, token: token.address }));

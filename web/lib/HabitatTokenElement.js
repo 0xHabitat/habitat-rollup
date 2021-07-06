@@ -1,5 +1,4 @@
 import {
-  renderAmount,
   getTokenV2,
   getEtherscanTokenLink,
 } from './utils.js';
@@ -7,7 +6,7 @@ import {
 const TEMPLATE =
 `
 <style>
-habitat-token-amount img {
+habitat-token-element img {
   height: 1em;
   width: 1em;
   margin-right: .3em;
@@ -19,12 +18,10 @@ habitat-token-amount img {
 </a>
 `;
 const ATTR_TOKEN = 'token';
-const ATTR_OWNER = 'owner';
-const ATTR_AMOUNT = 'amount';
 
-export default class HabitatTokenAmount extends HTMLElement {
+export default class HabitatTokenElement extends HTMLElement {
   static get observedAttributes() {
-    return [ATTR_TOKEN, ATTR_OWNER, ATTR_AMOUNT];
+    return [ATTR_TOKEN];
   }
 
   constructor() {
@@ -49,13 +46,11 @@ export default class HabitatTokenAmount extends HTMLElement {
 
   async update () {
     const token = await getTokenV2(this.getAttribute(ATTR_TOKEN));
-    const owner = this.getAttribute(ATTR_OWNER);
-    const value = this.getAttribute(ATTR_AMOUNT) || '0';
+    this.children[1].href = getEtherscanTokenLink(token.address);
 
-    this.children[1].href = getEtherscanTokenLink(token.address, owner);
-    this.children[1].children[0].src = token.logoURI;
-    this.children[1].children[1].textContent = `${renderAmount(value, token.decimals)} ${token.symbol}`;
+    const children = this.children[1].children;
+    children[0].src = token.logoURI;
+    children[1].textContent = token.symbol;
   }
 }
-
-customElements.define('habitat-token-amount', HabitatTokenAmount);
+customElements.define('habitat-token-element', HabitatTokenElement);

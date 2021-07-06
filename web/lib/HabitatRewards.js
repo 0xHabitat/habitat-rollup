@@ -13,14 +13,14 @@ import {
 } from './rollup.js';
 import { calculateRewards } from './rewards.js';
 
-const EPOCH_PRE_TEMPLATE = '<p>Epoch #</p><p>Reward</p>';
-const EPOCH_TEMPLATE = '<p></p><p></p>';
+const EPOCH_PRE_TEMPLATE = '<p>Epoch #</p><p>Reward</p><p>Epoch ends in</p>';
+const EPOCH_TEMPLATE = '<p></p><p></p><p></p>';
 const TEMPLATE =
 `
 <style>
 #epochs {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: .5em;
 }
 </style>
@@ -110,7 +110,6 @@ export default class HabitatRewards extends HTMLElement {
     this.querySelector('#claim').disabled = !claimable;
     this.querySelector('#claimable').textContent = `${renderAmount(claimable, token._decimals)} ${token._symbol}`;
     this.querySelector('#outstanding').textContent = `${renderAmount(outstanding, token._decimals)} ${token._symbol}`;
-    this.querySelector('#time').textContent = `${secondsToString(secondsUntilNextEpoch)}until epoch ends`;
     this._claimArgs = {
       token: token.address,
       sinceEpoch: sinceEpoch
@@ -118,11 +117,12 @@ export default class HabitatRewards extends HTMLElement {
 
     const grid = this.querySelector('#epochs');
     grid.innerHTML = EPOCH_PRE_TEMPLATE + EPOCH_TEMPLATE.repeat(rewards.length);
-    let childPtr = 2;
+    let childPtr = 3;
     const children = grid.children;
-    for (const { epoch, reward } of rewards) {
+    for (const { epoch, reward, timestamp } of rewards) {
       children[childPtr++].textContent = epoch.toString();
       children[childPtr++].textContent = `${renderAmount(reward, token._decimals)} ${token._symbol}`;
+      children[childPtr++].textContent = secondsToString(timestamp);
     }
   }
 }

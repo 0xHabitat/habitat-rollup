@@ -166,7 +166,7 @@ export async function displayFeedback (tag, target, tx) {
 export function secondsToString (val) {
   let seconds = Number(val);
   if (seconds <= 0) {
-    return '';
+    return '-';
   }
 
   const MIN = 60;
@@ -245,7 +245,7 @@ export function getEtherscanLink (hashOrAddress) {
 
 export function getEtherscanTokenLink (tokenAddr, account) {
   const base = ROOT_CHAIN_ID === 1 ? 'https://etherscan.io' : `https://${ethers.providers.getNetwork(ROOT_CHAIN_ID).name}.etherscan.io`;
-  return `${base}/token/${tokenAddr}?a=${account}`;
+  return `${base}/token/${tokenAddr}${account ? '?a=' + account : ''}`;
 }
 
 export function alertModal (str) {
@@ -492,14 +492,19 @@ export function checkScroll (selectorOrElement, callback) {
   _check();
 }
 
+export async function getTokenList () {
+  const src = '/lib/tokenlist.json';
+  const { tokens } = await (await fetch(src)).json();
+
+  return tokens;
+}
+
 export async function setupTokenlist () {
   if (document.querySelector('datalist#tokenlist')) {
     return;
   }
 
-  //const src = 'https://gateway.ipfs.io/ipns/tokens.uniswap.org';
-  const src = '/lib/tokens.uniswap.org';
-  const { tokens } = await (await fetch(src)).json();
+  const tokens = await getTokenList();
   const datalist = document.createElement('datalist');
 
   for (const token of tokens) {
@@ -528,8 +533,7 @@ export async function setupTokenlistV2 () {
     return;
   }
 
-  const src = '/lib/tokens.uniswap.org';
-  const { tokens } = await (await fetch(src)).json();
+  const tokens = await getTokenList();
   const datalist = document.createElement('datalist');
 
   for (const token of tokens) {
@@ -586,6 +590,61 @@ export async function getToken (val) {
   const erc20 = await _getTokenCached(tokenAddress);
 
   return erc20;
+}
+
+export async function getTokenV2 (val) {
+  const cache = document._tokensV2 || Object.create(null);
+  document._tokensV2 = cache;
+
+  const tokenTag = val.split(' ').pop().toLowerCase();
+
+  if (cache[tokenTag]) {
+    return cache[tokenTag];
+  }
+
+  console.log('cache miss', tokenTag);
+
+  const isETH = tokenTag === 'eth';
+  const search = isETH ? 'weth' : tokenTag;
+  const tokens = await getTokenList();
+  let tokenInfo;
+  for (const e of tokens) {
+    if (e.chainId !== ROOT_CHAIN_ID) {
+      continue;
+    }
+
+    if (
+      e.address.toLowerCase() === search ||
+      e.symbol.toLowerCase() === search ||
+      e.name.toLowerCase() === search
+    ) {
+      tokenInfo = e;
+      break;
+    }
+  }
+
+  if (!tokenInfo) {
+    const tokenAddress = (ethers.utils.isAddress(tokenTag) ? tokenTag : await defaultProvider.resolveName(tokenTag)).toLowerCase();
+    const contract = await _getTokenCached(tokenAddress);
+
+    tokenInfo = {
+      name: contract._name,
+      symbol: contract._symbol,
+      decimals: contract._decimals,
+      address: tokenAddress,
+      logoURI : '/lib/assets/icons/unknown.svg',
+    };
+  }
+
+  if (isETH) {
+    tokenInfo = Object.assign({}, tokenInfo);
+    tokenInfo.symbol = 'ETH';
+    tokenInfo.name = 'ETH';
+    tokenInfo.isETH = true;
+  }
+
+  cache[tokenTag] = tokenInfo;
+  return tokenInfo;
 }
 
 export async function _getTokenCached (address) {

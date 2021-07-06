@@ -38,6 +38,10 @@ export async function calculateRewards (token) {
     }
   }
 
+  const secondsPerEpoch = Number(await habitat.callStatic.SECONDS_PER_EPOCH());
+  const epochGenesis = Number(await habitat.callStatic.EPOCH_GENESIS());
+  const dateNow = ~~(Date.now() / 1000);
+  const secondsUntilNextEpoch = (epochGenesis + (currentEpoch * secondsPerEpoch)) - dateNow;
   let claimable = BigInt(0);
   let outstanding = BigInt(0);
   let sinceEpoch = 0;
@@ -51,6 +55,7 @@ export async function calculateRewards (token) {
     const historicUserBalance = await habitat.callStatic.getHistoricTub(token.address, account, epoch);
     const historicTvl = await habitat.callStatic.getHistoricTvl(token.address, epoch);
     const tvl = historicTvl.sub(historicPoolBalance);
+    const timestamp = (epochGenesis + (epoch * secondsPerEpoch)) - dateNow;
 
     let reward = BigInt(0);
     if (tvl.gt(0) && historicUserBalance.gt(0)) {
@@ -58,9 +63,6 @@ export async function calculateRewards (token) {
       if (divisor.gt(0)) {
         reward = BigInt(historicPoolBalance.div(divisor));
       }
-    }
-    if (!reward) {
-      continue;
     }
     if (!sinceEpoch) {
       sinceEpoch = epoch;
@@ -72,12 +74,8 @@ export async function calculateRewards (token) {
       claimable += reward;
     }
 
-    rewards.push({ epoch, reward });
+    rewards.push({ epoch, reward, timestamp });
   }
-
-  const secondsPerEpoch = Number(await habitat.callStatic.SECONDS_PER_EPOCH());
-  const epochGenesis = Number(await habitat.callStatic.EPOCH_GENESIS());
-  const secondsUntilNextEpoch = (epochGenesis + (currentEpoch * secondsPerEpoch)) - ~~(Date.now() / 1000);
 
   return { claimable, outstanding, currentEpoch, currentPoolBalance, sinceEpoch, secondsUntilNextEpoch, rewards };
 }

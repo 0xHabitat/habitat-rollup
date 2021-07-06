@@ -15,6 +15,7 @@ import {
 } from './rollup.js';
 
 import './HabitatColorToggle.js';
+import './HabitatTokenAmount.js';
 
 const { HBT } = getConfig();
 
@@ -54,6 +55,9 @@ const NAV_TEMPLATE =
   padding: .5em;
   background-color: var(--color-bg);
 }
+.bl a {
+  color: var(--color-text);
+}
 </style>
 <div class='sidebar'>
   <div id='top'>
@@ -89,7 +93,7 @@ const NAV_TEMPLATE =
           <p class='icon-eth'>Mainnet</p>
         </div>
         <space></space>
-        <p id='mainnetBalance' class='bl'>0 HBT</p>
+        <p class='bl flex center'><habitat-token-amount id='mainnetBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
       </div>
       <space></space>
       <space></space>
@@ -98,7 +102,7 @@ const NAV_TEMPLATE =
           <p>🏕 Rollup</p>
         </div>
         <space></space>
-        <p id='rollupBalance' class='bl'>0 HBT</p>
+        <p class='bl flex center'><habitat-token-amount id='rollupBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
       </div>
       <space></space>
       <space></space>
@@ -107,7 +111,7 @@ const NAV_TEMPLATE =
           <p>⛽️ Gas</p>
         </div>
         <space></space>
-        <p id='gasTankBalance' class='bl'>0 HBT</p>
+        <p class='bl flex center'><habitat-token-amount id='gasTankBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
       </div>
     </div>
     <space></space>
@@ -158,15 +162,21 @@ class HabitatSidebar extends HTMLElement {
     const { habitat } = await getProviders();
     {
       const value = await token.balanceOf(account);
-      this.querySelector('#mainnetBalance').textContent = `${renderAmount(value, token._decimals)} ${token._symbol}`;
+      const e = this.querySelector('#mainnetBalance');
+      e.setAttribute('owner', account);
+      e.setAttribute('amount', value);
     }
     {
       const value = await habitat.callStatic.getBalance(token.address, account);
-      this.querySelector('#rollupBalance').textContent = `${renderAmount(value, token._decimals)} ${token._symbol}`;
+      const e = this.querySelector('#rollupBalance');
+      e.setAttribute('owner', account);
+      e.setAttribute('amount', value);
     }
     {
       const { value } = await getGasTank(account);
-      this.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token._decimals)} ${token._symbol}`;
+      const e = this.querySelector('#gasTankBalance');
+      e.setAttribute('owner', account);
+      e.setAttribute('amount', value);
     }
   }
 }
