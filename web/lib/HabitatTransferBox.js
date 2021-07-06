@@ -44,7 +44,7 @@ async function l2Transfer ({ to, token, amount }) {
 
 async function l1Transfer ({ to, token, amount }) {
   const value = ethers.utils.parseUnits(amount, token._decimals).toHexString();
-  const tx = await token.connect(await getSigner()).transfer(to, value);
+  const tx = await token.contract.connect(await getSigner()).transfer(to, value);
 
   return tx.wait();
 }
@@ -68,11 +68,11 @@ async function deposit ({ token, amount }) {
       }
     );
   } else {
-    const allowance = await token.allowance(account, habitat.address);
+    const allowance = await token.contract.allowance(account, habitat.address);
     if (allowance.lt(value)) {
       let permit;
       try {
-        permit = await signPermit(token, signer, MULTI_CALL_HELPER, value);
+        permit = await signPermit(token.contract, signer, MULTI_CALL_HELPER, value);
         multi.push(
           {
             address: token.address,
@@ -85,7 +85,7 @@ async function deposit ({ token, amount }) {
       }
 
       if (!permit) {
-        const tx = await token.connect(signer).approve(habitat.address, value);
+        const tx = await token.contract.connect(signer).approve(habitat.address, value);
         await tx.wait();
       }
     }
@@ -376,7 +376,7 @@ export default class HabitatTransferBox extends HTMLElement {
       const token = await getTokenV2(this._token.value);
       let availableAmount = BigInt(0);
       if (this._from.value === L1_STR) {
-        availableAmount = BigInt(await token.balanceOf(account));
+        availableAmount = BigInt(await token.contract.balanceOf(account));
       } else {
         const { habitat } = await getProviders();
         availableAmount = BigInt(await habitat.callStatic.getBalance(token.address, account));

@@ -644,14 +644,11 @@ export async function getTokenV2 (val) {
     tokenInfo.name = 'ETH';
     tokenInfo.isETH = true;
     const defaultProvider = getProvider();
-    tokenInfo.balanceOf = (a) => defaultProvider.getBalance(a);
+    tokenInfo.contract = { balanceOf: (a) => defaultProvider.getBalance(a) };
     tokenInfo.interface = ERC_INTERFACE;
   } else {
-    const defaultProvider = getProvider();
-    tokenInfo.balanceOf = function (a) {
-      return defaultProvider.send('eth_call', [{ to: tokenInfo.address, data: ERC_INTERFACE.encodeFunctionData('balanceOf', [a]) }, 'latest']);
-    }
     tokenInfo.interface = ERC_INTERFACE;
+    tokenInfo.contract = await getErc20(tokenInfo.address);
   }
 
   cache[tokenTag] = tokenInfo;
