@@ -205,6 +205,7 @@ body.with-burger-menu #menu {
   content: '\25be';
   place-self: center right;
   position: relative;
+  pointer-events: none;
 }
 
 .dropdown > input[list] {

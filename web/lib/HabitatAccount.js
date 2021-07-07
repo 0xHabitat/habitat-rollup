@@ -211,16 +211,31 @@ const ACCOUNT_TEMPLATE =
         <div class='left box' style='grid-row:1/1;grid-column:3/3;'>
           <h6>💸 Yield</h6>
           <space></space>
-          <div style='display:grid;grid-template-columns:repeat(2, auto);gap:.5em;'>
+          <div style='display:grid;grid-template-columns:repeat(2, 1fr);gap:.7em;'>
             <div>
-              <h1 style='' id='rewardYield'> </h1>
+              <div class='flex row' style='flex-wrap:nowrap;'>
+                <img id='rewardYieldIcon' style='width:3em;height:3em;'>
+                <h1 style='white-space:pre;' id='rewardYield'> </h1>
+              </div>
               <space></space>
               <button id='claim' class='boxBtn'>Claim</button>
-            </div>
-            <div>
-              <p class='smaller' style='color:var(--color-grey);'>Rewards earned based on deposited HBT amount and Rollup activity.</p>
               <space></space>
               <p class='smaller' style='color:var(--color-grey);'>Next yield added in <span id='nextYield'></span></p>
+            </div>
+            <div>
+              <p style='color:var(--color-grey);' class='smaller'>Your Stake:</p>
+              <p id='stake'> </p>
+              <space></space>
+
+              <p style='color:var(--color-grey);' class='smaller'>Your Share in the Pool:</p>
+              <p id='yieldShare'> </p>
+              <space></space>
+
+              <p style='color:var(--color-grey);' class='smaller'>Estimated Yield Per Epoch:</p>
+              <p id='yield'> </p>
+              <space></space>
+
+              <p class='smaller' style='color:var(--color-grey);'>Rewards earned based on deposited HBT amount and Rollup activity.</p>
             </div>
           </div>
         </div>
@@ -469,17 +484,32 @@ class HabitatAccount extends HabitatPanel {
       this.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} HBT`;
     }
 
-    await updateErc20();
-
     // rewards
     {
-      const { claimable, sinceEpoch, secondsUntilNextEpoch } = await calculateRewards(token);
+      const {
+        claimable,
+        sinceEpoch,
+        secondsUntilNextEpoch,
+        currentStake,
+        estimatedYieldEpoch,
+        currentPoolShare,
+        poolShareDivider,
+      } = await calculateRewards(token);
+
+      this.querySelector('#rewardYieldIcon').src = token.logoURI;
       this.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token.decimals)} HBT`;
       this.querySelector('#nextYield').textContent = secondsToString(secondsUntilNextEpoch);
       const claimBtn = this.querySelector('#claim');
       wrapListener(claimBtn, () => sendTransaction('ClaimStakingReward', { sinceEpoch, token: token.address }));
       claimBtn.disabled = !claimable;
+
+      this.querySelector('#stake').textContent = `${renderAmount(currentStake, token.decimals)} ${token.symbol}`;
+      this.querySelector('#yieldShare').textContent =
+        `${((Number(currentPoolShare) / Number(poolShareDivider)) * 100).toFixed(4)}%`;
+      this.querySelector('#yield').textContent = `${renderAmount(estimatedYieldEpoch, token.decimals)} ${token.symbol}`;
     }
+
+    await updateErc20();
   }
 }
 customElements.define('habitat-account', HabitatAccount);

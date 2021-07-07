@@ -26,6 +26,7 @@ const TEMPLATE =
 <a target='_blank'></a>
 <habitat-token-amount></habitat-token-amount>
 <button class='smaller secondary purple'>Change Allowance</button>
+<button class='smaller secondary purple'>Remove</button>
 </template>
 
 <div class='flex col'>
@@ -54,9 +55,19 @@ const TEMPLATE =
 <space></space>
 <div>
   <space></space>
-  <div class='auto-col-grid align-right' style='grid-template-columns:repeat(3,auto);'></div>
+  <div class='auto-col-grid align-right' style='grid-template-columns:repeat(4,auto);'></div>
   <space></space>
 </div>`;
+
+// TODO: automatically free any locked stakes
+async function removeDelegation ({ token, value, delegatee }) {
+  const args = {
+    token,
+    value: '0x0',
+    delegatee,
+  };
+  await sendTransaction('DelegateAmount', args);
+}
 
 export default class HabitatDelegationView extends HTMLElement {
   constructor() {
@@ -126,6 +137,10 @@ export default class HabitatDelegationView extends HTMLElement {
       }
       tmp[k] = true;
 
+      if (value.eq(0)) {
+        continue;
+      }
+
       const updateOnly = this.querySelector('#' + k);
       if (updateOnly) {
         updateOnly.setAttribute('amount', value.toString());
@@ -145,6 +160,13 @@ export default class HabitatDelegationView extends HTMLElement {
         ele.children[2],
         async () => {
           await this.populateChange({ token, value, delegatee });
+        }
+      );
+
+      wrapListener(
+        ele.children[3],
+        async () => {
+          await removeDelegation({ token, value, delegatee });
         }
       );
 

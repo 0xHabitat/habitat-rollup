@@ -58,6 +58,10 @@ const NAV_TEMPLATE =
 .bl a {
   color: var(--color-text);
 }
+.sidebar .target {
+  background-color: var(--color-bg-invert);
+  color: var(--color-bg);
+}
 </style>
 <div class='sidebar'>
   <div id='top'>
@@ -77,7 +81,7 @@ const NAV_TEMPLATE =
     <space></space>
     <div class='flex col evenly'>
       <div class='no-max-width' style='display:grid;'>
-        <a class='button black' href='#habitat-communities'>Communities</a>
+        <a class='button' href='#habitat-communities'>Communities</a>
         <a class='button' target='_blank' href='/evolution/'>Evolution</a>
         <a class='button' target='_blank' href='/explorer/'>Block Explorer</a>
       </div>
@@ -128,11 +132,24 @@ class HabitatSidebar extends HTMLElement {
     this.innerHTML = NAV_TEMPLATE;
     this._walletContainer = this.querySelector('#walletbox');
 
-    wrapListener(this.querySelector('a#connect'), async () => {
+    wrapListener(this.querySelector('a#connect').parentElement, async () => {
       await getSigner();
       this.update();
       window.location.hash = '#habitat-account';
     });
+
+    const onNavigate = () => {
+      const ele = this.querySelector('.target');
+      if (ele) {
+        ele.classList.remove('target');
+      }
+      const target = this.querySelector(`a[href="${window.location.hash}"`);
+      if (target) {
+        target.classList.add('target');
+      }
+    }
+    window.addEventListener('hashchange', onNavigate, false);
+    onNavigate();
 
     this.update();
   }
