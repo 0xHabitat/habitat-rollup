@@ -32,7 +32,7 @@ const WITHDRAW_WARNING = `A Withdraw request can take 7-10 days.`;
 const EXIT_NOTE = `Collect funds after a Withdraw is finalized.`;
 
 async function l2Transfer ({ to, token, amount }) {
-  const value = ethers.utils.parseUnits(amount, token._decimals).toHexString();
+  const value = ethers.utils.parseUnits(amount, token.decimals).toHexString();
   const args = {
     token: token.address,
     to,
@@ -43,7 +43,7 @@ async function l2Transfer ({ to, token, amount }) {
 }
 
 async function l1Transfer ({ to, token, amount }) {
-  const value = ethers.utils.parseUnits(amount, token._decimals).toHexString();
+  const value = ethers.utils.parseUnits(amount, token.decimals).toHexString();
   const tx = await token.contract.connect(await getSigner()).transfer(to, value);
 
   return tx.wait();
@@ -55,7 +55,7 @@ async function deposit ({ token, amount }) {
   const signer = await getSigner();
   const account = await signer.getAddress();
   const { habitat } = await getProviders();
-  const value = ethers.utils.parseUnits(amount, token._decimals).toHexString();
+  const value = ethers.utils.parseUnits(amount, token.decimals).toHexString();
   const multi = [];
 
   if (token.isETH) {
@@ -145,7 +145,7 @@ async function exit ({ token, amount }) {
 }
 
 async function withdraw ({ token, amount }) {
-  const value = ethers.utils.parseUnits(amount, token._decimals).toHexString();
+  const value = ethers.utils.parseUnits(amount, token.decimals).toHexString();
   const args = {
     token: token.address,
     to: ethers.constants.AddressZero,
@@ -155,7 +155,7 @@ async function withdraw ({ token, amount }) {
 }
 
 async function topUpGas ({ token, amount }) {
-  const value = ethers.utils.parseUnits(amount, token._decimals).toHexString();
+  const value = ethers.utils.parseUnits(amount, token.decimals).toHexString();
   const args = {
     operator: DEFAULT_ROLLUP_OPERATOR_ADDRESS,
     token: token.address,
