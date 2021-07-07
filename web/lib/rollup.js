@@ -77,7 +77,7 @@ export async function sendTransaction (primaryType, message) {
   console.log({ callResult });
 
   const tx = Object.assign({ message, primaryType }, TYPED_DATA);
-  const sig = await signer.provider.send('eth_signTypedData_v3', [signerAddress, JSON.stringify(tx)]);
+  const sig = await signer.provider.send('eth_signTypedData_v4', [signerAddress, JSON.stringify(tx)]);
   const { r, s, v } = ethers.utils.splitSignature(sig);
   const operatorMessage = (await fetchJson(`${EVOLUTION_ENDPOINT}/submitTransaction/`, { primaryType, message, r, s, v }));
   if (operatorMessage.error) {
