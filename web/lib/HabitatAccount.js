@@ -195,7 +195,7 @@ const ACCOUNT_TEMPLATE =
         </div>
 
         <div class='left box' style='grid-row:1/1;grid-column:2/2;'>
-          <h6>⛽️ Gas Tank Balance</h6>
+          <h6>⛽️ Gas Balance</h6>
           <space></space>
           <div style='display:grid;grid-template-rows:1fr 1fr;'>
             <div>
@@ -214,7 +214,6 @@ const ACCOUNT_TEMPLATE =
           <div style='display:grid;grid-template-columns:repeat(2, 1fr);gap:.7em;'>
             <div>
               <div class='flex row' style='flex-wrap:nowrap;'>
-                <img id='rewardYieldIcon' style='width:3em;height:3em;'>
                 <h1 style='white-space:pre;' id='rewardYield'> </h1>
               </div>
               <space></space>
@@ -349,7 +348,7 @@ async function updateErc20 () {
       } else if (isIncoming) {
         type = Number(from) < 0xffffffff ? 'Operator Reward' : 'Incoming';
       } else if (isTopUp) {
-        type = 'Gas Tank Top-up';
+        type = 'Gas Top-up';
       } else {
         type = Number(to) < 0xffffffff ? 'Top-up Fee' : 'Outgoing';
       }
@@ -496,7 +495,6 @@ class HabitatAccount extends HabitatPanel {
         poolShareDivider,
       } = await calculateRewards(token);
 
-      this.querySelector('#rewardYieldIcon').src = token.logoURI;
       this.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token.decimals)} HBT`;
       this.querySelector('#nextYield').textContent = secondsToString(secondsUntilNextEpoch);
       const claimBtn = this.querySelector('#claim');
