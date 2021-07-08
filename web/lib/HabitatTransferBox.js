@@ -236,7 +236,7 @@ habitat-transfer-box .dropdown::after {
       </label>
       <label>
         <div style='margin-left:.5em;'>
-          <span>Current Balance: <a href='' id='available'></a></span>
+          <span>Available Balance: <a href='' id='available'></a></span>
         </div>
         <input id='amount' type='number' placeholder='Amount'>
       </label>
@@ -379,7 +379,7 @@ export default class HabitatTransferBox extends HTMLElement {
         availableAmount = BigInt(await token.contract.balanceOf(account));
       } else {
         const { habitat } = await getProviders();
-        availableAmount = BigInt(await habitat.callStatic.getBalance(token.address, account));
+        availableAmount = BigInt(await habitat.callStatic.getUnlockedBalance(token.address, account));
       }
       available = ethers.utils.formatUnits(availableAmount, token.decimals);
     }
