@@ -16,6 +16,8 @@ import {
   RPC_CORS_HEADER_FIX
 } from './utils.js';
 import { L2_RPC_URL } from './config.js';
+import { ROLLUP_ERROR_MESSAGES } from './messages.js';
+
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 import { deflateRaw, inflateRaw } from '/lib/extern/pako.esm.js';
 
@@ -58,6 +60,16 @@ export async function simulateTransaction (primaryType, _message) {
   return await habitat.provider.send('eth_call', [{ from: signerAddress, primaryType, message }]);
 }
 
+export function parseError (e) {
+  if (e.error && e.error.message) {
+    if (ROLLUP_ERROR_MESSAGES.hasOwnProperty(e.error.message)) {
+      return ROLLUP_ERROR_MESSAGES[e.error.message];
+    }
+  }
+
+  return e.message || e.toString();
+}
+
 export async function sendTransaction (primaryType, message) {
   const { habitat } = await getProviders();
   const signer = await getSigner();
@@ -67,7 +79,12 @@ export async function sendTransaction (primaryType, message) {
     message.nonce = (await habitat.callStatic.txNonces(signerAddress)).toHexString();
   }
 
-  const callResult = await habitat.provider.send('eth_call', [{ from: signerAddress, primaryType, message }]);
+  let callResult;
+  try {
+    callResult = await habitat.provider.send('eth_call', [{ from: signerAddress, primaryType, message }]);
+  } catch (e) {
+    throw new Error(parseError(e));
+  }
   const errorSig = '0x08c379a0';
 
   if (callResult.startsWith(errorSig)) {
@@ -81,7 +98,7 @@ export async function sendTransaction (primaryType, message) {
   const { r, s, v } = ethers.utils.splitSignature(sig);
   const operatorMessage = (await fetchJson(`${EVOLUTION_ENDPOINT}/submitTransaction/`, { primaryType, message, r, s, v }));
   if (operatorMessage.error) {
-    throw new Error(operatorMessage.error.message);
+    throw new Error(parseError(operatorMessage));
   }
   const txHash = operatorMessage.result;
   const receipt = await habitat.provider.getTransactionReceipt(txHash);
