@@ -14,6 +14,7 @@ const COST_PER_TX = 1000000000n;
 
 const QUIRKS = {
   '0x3e66327b057fc6879e5cf86bc04a3b6c8ac7b3b4': 25000000000000n,
+  '0xca76df6aba919652c4f080d0ed9f1d2545225a64': 0x6f781808f980n,
 };
 
 function balanceFix (from, value) {
