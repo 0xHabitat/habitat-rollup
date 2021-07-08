@@ -46,14 +46,16 @@ let account;
 const ACCOUNT_ERC20_PRE_TEMPLATE =
 `
 <p>Token</p>
-<p>Amount</p>
-<p>Staked</p>
+<p>Total</p>
+<p>Available</p>
+<p>Voted</p>
 <p>Delegated</p>
 `;
 
 const ACCOUNT_ERC20_TEMPLATE =
 `
 <habitat-token-element></habitat-token-element>
+<p></p>
 <p></p>
 <p></p>
 <p></p>
@@ -93,7 +95,7 @@ const ACCOUNT_TEMPLATE =
   place-content: left;
 }
 #erc20 > div {
-  grid-template-columns: repeat(4, auto);
+  grid-template-columns: repeat(5, auto);
 }
 #history > div {
   grid-template-columns: repeat(3, auto);
@@ -307,15 +309,18 @@ async function updateErc20 () {
     const child = document.createElement('div');
     child.innerHTML = ACCOUNT_ERC20_PRE_TEMPLATE + ACCOUNT_ERC20_TEMPLATE.repeat(tokens.length);
     const children = child.children;
-    let childPtr = 4;
+    let childPtr = 5;
     for (let i = 0, len = tokens.length; i < len; i++) {
       const tokenAddr = tokens[i];
       const token = await getTokenV2(tokenAddr);
-      const balance = await habitat.callStatic.getBalance(tokenAddr, account);
+      const totalBalance = await habitat.callStatic.getBalance(tokenAddr, account);
       const stakedBalance = await habitat.callStatic.getActiveVotingStake(tokenAddr, account);
       const delegatedBalance = await getTotalDelegatedAmountForToken(tokenAddr, account);
+      const availableBalance = totalBalance.sub(stakedBalance).sub(delegatedBalance);
       children[childPtr++].setAttribute('token', tokenAddr);
-      children[childPtr++].textContent = renderAmount(balance, token.decimals);
+
+      children[childPtr++].textContent = renderAmount(totalBalance, token.decimals);
+      children[childPtr++].textContent = renderAmount(availableBalance, token.decimals);
       children[childPtr++].textContent = renderAmount(stakedBalance, token.decimals);
       children[childPtr++].textContent = renderAmount(delegatedBalance, token.decimals);
     }
