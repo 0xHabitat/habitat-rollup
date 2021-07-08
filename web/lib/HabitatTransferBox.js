@@ -257,6 +257,21 @@ habitat-transfer-box .dropdown::after {
 </div>
 `;
 
+window.addEventListener('DOMContentLoaded', function (e) {
+  const actionValue = window.document.querySelector('#action');
+  const tokenValue = window.document.querySelector('#token');
+  const navAction = localStorage.getItem('habitat-transfer-box-action');
+  if (navAction && actionValue !== null) {
+    actionValue.value = navAction;
+    actionValue.dispatchEvent(new Event('change'));
+
+    if (navAction === TYPE_TOP_UP && tokenValue !== null) {
+      tokenValue.value = 'HBT Habitat Token';
+      tokenValue.dispatchEvent(new Event('change'));
+    }
+  }
+});
+
 export default class HabitatTransferBox extends HTMLElement {
   static get observedAttributes() {
     return [];
@@ -433,6 +448,8 @@ export default class HabitatTransferBox extends HTMLElement {
       }
 
       feedback.textContent = '🙌 success';
+      // Clear navigation action
+      localStorage.setItem('habitat-transfer-box-action', '');
     } catch (e) {
       feedback.textContent = ' ';
       throw e;

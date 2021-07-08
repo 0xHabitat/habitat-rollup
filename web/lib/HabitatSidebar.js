@@ -62,6 +62,19 @@ const NAV_TEMPLATE =
   background-color: var(--color-bg-invert);
   color: var(--color-bg);
 }
+
+.balance-title {
+  padding-left: 1em;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.action-link {
+  font-size: 11px;
+  text-decoration: underline;
+}
+
 </style>
 <div class='sidebar'>
   <div id='top'>
@@ -93,8 +106,9 @@ const NAV_TEMPLATE =
     <space></space>
     <div class='no-max-width' style='display:grid;width:calc(100% - 1em);'>
       <div>
-        <div style='padding: 0 1em;'>
-          <p class='icon-eth'>Mainnet</p>
+        <div class='balance-title'>
+          <span class='icon-eth'>Mainnet</span>
+          <span><a href='' id="withdraw" class="action-link">Withdraw</a></span>
         </div>
         <space></space>
         <p class='bl flex center'><habitat-token-amount id='mainnetBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
@@ -102,8 +116,9 @@ const NAV_TEMPLATE =
       <space></space>
       <space></space>
       <div>
-        <div style='padding: 0 1em;'>
-          <p>🏕 Rollup</p>
+        <div class='balance-title'>
+          <span onClick="clickAction('Roll')">🏕 Rollup</span>
+          <span><a href='' id="deposit" class="action-link">Deposit</a></span>
         </div>
         <space></space>
         <p class='bl flex center'><habitat-token-amount id='rollupBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
@@ -111,8 +126,9 @@ const NAV_TEMPLATE =
       <space></space>
       <space></space>
       <div class='left'>
-        <div style='padding: 0 1em;'>
-          <p>⛽️ Gas</p>
+        <div class='balance-title'>
+          <span>⛽️ Gas</span>
+          <span><a href='' id='topup' class="action-link">Top up</a></span>
         </div>
         <space></space>
         <p class='bl flex center'><habitat-token-amount id='gasTankBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
@@ -151,7 +167,30 @@ class HabitatSidebar extends HTMLElement {
     window.addEventListener('hashchange', onNavigate, false);
     onNavigate();
 
+    this.wrapActions();
     this.update();
+  }
+
+  wrapActions() {
+    wrapListener(this.querySelector('a#topup'), async () => {
+      this.updateDOM('Top Up Gas Tank');
+    });
+    wrapListener(this.querySelector('a#deposit'), async () => {
+      this.updateDOM('Deposit');
+    });
+    wrapListener(this.querySelector('a#withdraw'), async () => {
+      this.updateDOM('Withdraw');
+    });
+  }
+
+  // Update navigation action
+  updateDOM(action) {
+    localStorage.setItem('habitat-transfer-box-action', action);
+    window.location.hash = '#habitat-account';
+    window.document.dispatchEvent(new Event("DOMContentLoaded", {
+      bubbles: true,
+      cancelable: true
+    }));
   }
 
   async update () {
