@@ -3,6 +3,7 @@
 import http from 'http';
 import url from 'url';
 import fs from 'fs';
+import { createHash } from 'crypto';
 
 function onRequest (req, resp) {
   let path = url.parse(req.url).pathname;
@@ -44,6 +45,17 @@ function onRequest (req, resp) {
       resp.end('404');
       return;
     }
+
+    const eTag = createHash('sha1').update(buf).digest('hex');
+    const ifNoneMatch = req.headers['if-none-match'] || '';
+    if (ifNoneMatch === eTag) {
+      // not modified
+      resp.writeHead(304);
+      resp.end();
+      return;
+    }
+
+    resp.setHeader('etag', eTag);
 
     if (path.endsWith('.js')) {
       resp.setHeader('content-type', 'application/javascript');

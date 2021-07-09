@@ -15,10 +15,10 @@ import {
   doQueryWithOptions,
   getProposalInformation,
 } from './rollup.js';
-import HabitatCircle from '/lib/HabitatCircle.js';
+import { COMMON_STYLESHEET } from './component.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <div style='border:1px solid var(--color-text);padding:.3em;border-radius: .3em;'>
   <div>
     <label>
@@ -71,14 +71,14 @@ export default class HabitatVotingSub extends HTMLElement {
 
   constructor() {
     super();
-  }
 
-  connectedCallback () {
-    this.innerHTML = TEMPLATE;
-    this._personalBtn = this.querySelector('button#personal');
-    this._delegateBtn = this.querySelector('button#delegate');
-    this._slider = this.querySelector('habitat-slider');
-    this._inputShares = this.querySelector('#shares');
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+
+    this._personalBtn = this.shadowRoot.querySelector('button#personal');
+    this._delegateBtn = this.shadowRoot.querySelector('button#delegate');
+    this._slider = this.shadowRoot.querySelector('habitat-slider');
+    this._inputShares = this.shadowRoot.querySelector('#shares');
     this._flavor = 'binary';
 
     wrapListener(
@@ -90,7 +90,7 @@ export default class HabitatVotingSub extends HTMLElement {
       this.switchToDelegate.bind(this)
     );
 
-    for (const ele of this.querySelectorAll('button#vote')) {
+    for (const ele of this.shadowRoot.querySelectorAll('button#vote')) {
       ele.disabled = true;
       wrapListener(
         ele,
@@ -115,8 +115,9 @@ export default class HabitatVotingSub extends HTMLElement {
         }
       );
     }
+  }
 
-    //this.update();
+  connectedCallback () {
   }
 
   disconnectedCallback () {
@@ -169,7 +170,7 @@ export default class HabitatVotingSub extends HTMLElement {
     } = await fetchProposalStats({ communityId, proposalId });
 
     const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
-    for (const ele of this.querySelectorAll('button#vote')) {
+    for (const ele of this.shadowRoot.querySelectorAll('button#vote')) {
       ele.disabled = votingDisabled;
     }
 
@@ -200,8 +201,8 @@ export default class HabitatVotingSub extends HTMLElement {
 
     this._inputShares.value = userShares.toString();
     this._inputShares.max = userBalance.toString();
-    this.querySelector('#feedback').textContent = feedback;
-    this.querySelector(`div#${flavor}`).style.display = 'block';
+    this.shadowRoot.querySelector('#feedback').textContent = feedback;
+    this.shadowRoot.querySelector(`div#${flavor}`).style.display = 'block';
     this._flavor = flavor;
     this._communityId = communityId;
     this._proposalId = proposalId;

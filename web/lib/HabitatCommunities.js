@@ -32,9 +32,9 @@ class HabitatCommunities extends HabitatPanel {
 
   async render () {
     wrapListener(
-      this.querySelector('button#community'),
+      this.shadowRoot.querySelector('button#community'),
       (evt) => {
-        this.querySelector('#communities').prepend(document.createElement('habitat-community-preview-creator'));
+        this.shadowRoot.querySelector('#communities').prepend(document.createElement('habitat-community-preview-creator'));
       }
     );
 
@@ -43,7 +43,7 @@ class HabitatCommunities extends HabitatPanel {
     filter.toBlock = await habitat.provider.getBlockNumber();
 
     checkScroll(
-      this.querySelector('#content'),
+      this.shadowRoot.querySelector('#content'),
       async () => {
         for await (const evt of pullEvents(habitat, filter)) {
           if (!this._loaded[evt.transactionHash]) {
@@ -73,7 +73,7 @@ class HabitatCommunities extends HabitatPanel {
   }
 
   async renderCommunity (evt, prepend = false) {
-    const container = this.querySelector('#communities');
+    const container = this.shadowRoot.querySelector('#communities');
     const ele = document.createElement('habitat-community-preview');
     // happens asyncly
     ele.update(evt);

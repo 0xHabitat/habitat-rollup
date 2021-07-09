@@ -93,6 +93,7 @@ section, div {
   display: block;
   margin: 0;
   transition: .3s ease-in;
+  transition-property: transform, opacity;
 }
 
 a, p {

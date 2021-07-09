@@ -283,7 +283,7 @@ const ACCOUNT_TEMPLATE =
 </section>
 `;
 
-async function updateErc20 () {
+async function updateErc20 (root) {
   const { habitat, bridge } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
@@ -298,7 +298,7 @@ async function updateErc20 () {
     }
   }
 
-  document.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
+  root.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
 
   if (!tokens.length) {
     return;
@@ -324,7 +324,7 @@ async function updateErc20 () {
       children[childPtr++].textContent = renderAmount(stakedBalance, token.decimals);
       children[childPtr++].textContent = renderAmount(delegatedBalance, token.decimals);
     }
-    const container = document.querySelector('#erc20');
+    const container = root.querySelector('#erc20');
     if (container) {
       container.replaceChildren(child);
     }
@@ -375,7 +375,7 @@ async function updateErc20 () {
       //children[childPtr].textContent = renderAddress(transactionHash);
       //children[childPtr++].href = getBlockExplorerLink(transactionHash);
     }
-    const container = document.querySelector('#history');
+    const container = root.querySelector('#history');
     if (container) {
       container.replaceChildren(child);
     }
@@ -398,9 +398,9 @@ async function updateErc20 () {
       children[childPtr++].setAttribute('token', tokenAddr);
       children[childPtr++].textContent = renderAmount(pendingAmount, token.decimals);
       children[childPtr++].textContent = renderAmount(availableAmount, token.decimals);
-      //wrapListener(children[childPtr++], (evt) => document.querySelector('habitat-transfer-box').doExit(tokenAddr, amount));
+      //wrapListener(children[childPtr++], (evt) => root.querySelector('habitat-transfer-box').doExit(tokenAddr, amount));
     }
-    const container = document.querySelector('#exits');
+    const container = root.querySelector('#exits');
     if (container) {
       container.replaceChildren(child);
     }
@@ -410,7 +410,7 @@ async function updateErc20 () {
 function onTab (evt) {
   const ACTIVE = 'active';
   const target = evt.target.getAttribute('target');
-  const targetSection = document.querySelector(target);
+  const targetSection = this.shadowRoot.querySelector(target);
   const parentContainer = targetSection.parentElement;
 
   evt.target.parentElement.parentElement.querySelector('.active').classList.remove(ACTIVE);
@@ -438,13 +438,13 @@ class HabitatAccount extends HabitatPanel {
   }
 
   async render () {
-    for (const e of this.querySelectorAll('.tabs div > a')) {
-      wrapListener(e, onTab);
+    for (const e of this.shadowRoot.querySelectorAll('.tabs div > a')) {
+      wrapListener(e, onTab.bind(this));
     }
 
-    wrapListener(this.querySelector('button#name'), (evt) => new UsernameFlow(evt.target));
+    wrapListener(this.shadowRoot.querySelector('button#name'), (evt) => new UsernameFlow(evt.target));
     wrapListener(
-      this.querySelector('#add747'),
+      this.shadowRoot.querySelector('#add747'),
       async () => {
         // EIP-747
         const signer = await getSigner();
@@ -479,13 +479,13 @@ class HabitatAccount extends HabitatPanel {
     const signer = await getSigner();
     const account = await signer.getAddress();
     const user = await getUsername(account, true);
-    this.querySelector('#greeting').textContent = user;
+    this.shadowRoot.querySelector('#greeting').textContent = user;
 
     const token = await getTokenV2(HBT);
     {
       const { value, remainingEstimate } = await getGasTank(account);
-      this.querySelector('#gasTankRemaining').textContent = remainingEstimate.toString();
-      this.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} HBT`;
+      this.shadowRoot.querySelector('#gasTankRemaining').textContent = remainingEstimate.toString();
+      this.shadowRoot.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} HBT`;
     }
 
     // rewards
@@ -500,19 +500,19 @@ class HabitatAccount extends HabitatPanel {
         poolShareDivider,
       } = await calculateRewards(token);
 
-      this.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token.decimals)} HBT`;
-      this.querySelector('#nextYield').textContent = secondsToString(secondsUntilNextEpoch);
-      const claimBtn = this.querySelector('#claim');
+      this.shadowRoot.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token.decimals)} HBT`;
+      this.shadowRoot.querySelector('#nextYield').textContent = secondsToString(secondsUntilNextEpoch);
+      const claimBtn = this.shadowRoot.querySelector('#claim');
       wrapListener(claimBtn, () => sendTransaction('ClaimStakingReward', { sinceEpoch, token: token.address }));
       claimBtn.disabled = !claimable;
 
-      this.querySelector('#stake').textContent = `${renderAmount(currentStake, token.decimals)} ${token.symbol}`;
-      this.querySelector('#yieldShare').textContent =
+      this.shadowRoot.querySelector('#stake').textContent = `${renderAmount(currentStake, token.decimals)} ${token.symbol}`;
+      this.shadowRoot.querySelector('#yieldShare').textContent =
         `${((Number(currentPoolShare) / Number(poolShareDivider)) * 100).toFixed(4)}%`;
-      this.querySelector('#yield').textContent = `${renderAmount(estimatedYieldEpoch, token.decimals)} ${token.symbol}`;
+      this.shadowRoot.querySelector('#yield').textContent = `${renderAmount(estimatedYieldEpoch, token.decimals)} ${token.symbol}`;
     }
 
-    await updateErc20();
+    await updateErc20(this.shadowRoot);
   }
 }
 customElements.define('habitat-account', HabitatAccount);

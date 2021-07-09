@@ -23,7 +23,7 @@ const TEMPLATE =
 `
 <div class='listitem'>
   <space></space>
-  <div class='flex col evenly' style='width:20ch;max-width:100%;'>
+  <div class='flex col evenly'>
     <p class='bold' id='title'> </p>
     <p class='' id='community'> </p>
     <space></space>

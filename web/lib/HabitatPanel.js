@@ -1,4 +1,5 @@
 import { onChainUpdate } from './rollup.js';
+import { COMMON_STYLESHEET } from './component.js';
 
 const TEMPLATE =
 `
@@ -23,8 +24,9 @@ const TEMPLATE =
   height: 100%;
   padding-bottom: 3em;
 }
-.contentHidden #content {
+:host(.contentHidden) #content {
   content-visibility: hidden;
+  visibility: hidden;
 }
 </style>
 <div id='titlebar'>
@@ -43,19 +45,27 @@ export default class HabitatPanel extends HTMLElement {
 
   constructor() {
     super();
+
+    this.attachShadow({ mode: 'open' });
+    const template = document.createElement('template');
+    template.innerHTML = TEMPLATE;
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), template.content);
+
+    this.shadowRoot.querySelector('a#close').addEventListener('click', () => {
+      this.remove();
+      window.location.hash = '';
+    }, false);
+
+    this.shadowRoot.querySelector('#content').innerHTML = this.constructor.TEMPLATE;
+
+    // defer
+    window.requestAnimationFrame(() => {
+      this.classList.add('habitat-panel');
+      onChainUpdate(this._chainUpdateCallback.bind(this));
+    });
   }
 
   connectedCallback () {
-    if (!this.children.length) {
-      this.classList.add('habitat-panel');
-      this.innerHTML = TEMPLATE;
-      this.querySelector('a#close').addEventListener('click', () => {
-        this.remove();
-        window.location.hash = '';
-      }, false);
-      this.querySelector('#content').innerHTML = this.constructor.TEMPLATE;
-      onChainUpdate(this._chainUpdateCallback.bind(this));
-    }
   }
 
   get title () {
@@ -64,14 +74,14 @@ export default class HabitatPanel extends HTMLElement {
 
   setTitle (str) {
     this._title = str;
-    this.querySelector('a#title').textContent = str;
+    this.shadowRoot.querySelector('a#title').textContent = str;
     document.title = str;
   }
 
   attributeChangedCallback (name, oldValue, newValue) {
     if (name === 'args') {
       this.setTitle(this.title);
-      this.querySelector('a#title').href = newValue;
+      this.shadowRoot.querySelector('a#title').href = newValue;
     }
 
     if (oldValue !== newValue) {
