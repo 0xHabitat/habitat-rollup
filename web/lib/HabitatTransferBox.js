@@ -331,8 +331,8 @@ export default class HabitatTransferBox extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'args') {
-      const actionValue = window.document.querySelector('#action');
-      const tokenValue = window.document.querySelector('#token');
+      const actionValue = this.querySelector('#action');
+      const tokenValue = this.querySelector('#token');
       if (newValue && actionValue !== null) {
         newValue = decodeURI(newValue)
         actionValue.value = newValue;
