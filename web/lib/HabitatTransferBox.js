@@ -274,7 +274,7 @@ window.addEventListener('DOMContentLoaded', function (e) {
 
 export default class HabitatTransferBox extends HTMLElement {
   static get observedAttributes() {
-    return [];
+    return ['args'];
   }
 
   constructor() {
@@ -329,7 +329,21 @@ export default class HabitatTransferBox extends HTMLElement {
   adoptedCallback () {
   }
 
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'args') {
+      const actionValue = window.document.querySelector('#action');
+      const tokenValue = window.document.querySelector('#token');
+      if (newValue && actionValue !== null) {
+        newValue = decodeURI(newValue)
+        actionValue.value = newValue;
+        actionValue.dispatchEvent(new Event('change'));
+    
+        if (newValue === TYPE_TOP_UP && tokenValue !== null) {
+          tokenValue.value = 'HBT Habitat Token';
+          tokenValue.dispatchEvent(new Event('change'));
+        }
+      }
+    }
   }
 
   async onSelect (evt) {
@@ -448,8 +462,6 @@ export default class HabitatTransferBox extends HTMLElement {
       }
 
       feedback.textContent = '🙌 success';
-      // Clear navigation action
-      localStorage.setItem('habitat-transfer-box-action', '');
     } catch (e) {
       feedback.textContent = ' ';
       throw e;
