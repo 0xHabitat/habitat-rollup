@@ -614,7 +614,7 @@ export async function getTokenV2 (val) {
   console.log('cache miss', tokenTag);
 
   const isETH = tokenTag === 'eth';
-  const search = isETH ? 'weth' : tokenTag;
+  const search = tokenTag;
   const tokens = await getTokenList();
   let tokenInfo;
   for (const e of tokens) {
