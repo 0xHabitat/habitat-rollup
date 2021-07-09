@@ -1,4 +1,4 @@
-import { getSigner, setupTokenlist, getErc20, getToken, getTokenSymbol, walletIsConnected } from './utils.js';
+import { getSigner, setupTokenlistV2, getErc20, getTokenV2, walletIsConnected } from './utils.js';
 import {
   getProviders,
   sendTransaction,
@@ -201,170 +201,6 @@ export class BaseFlow {
   }
 }
 
-export class DepositFlow extends BaseFlow {
-  constructor (root, ctx) {
-    super(root, ctx);
-
-    this.runNext(this.setupWallet);
-  }
-
-  async setupFlow () {
-    await setupTokenlist();
-    this.input.setAttribute('list', 'tokenlist');
-
-    this.ask(
-      'Which Token do you like to deposit?',
-      'Select',
-      'token',
-      this.amountStep
-    );
-  }
-
-  async amountStep (ctx) {
-    this.input.setAttribute('list', '');
-
-    ctx.erc20 = await getToken(ctx.token);
-    ctx.tokenSymbol = await getTokenSymbol(ctx.erc20.address);
-
-    this.ask(
-      `How much ${ctx.tokenSymbol} do you want to deposit?`,
-      'Deposit amount',
-      'amount',
-      this.confirmDeposit
-    );
-  }
-
-  async confirmDeposit (ctx) {
-    const number = parseFloat(ctx.amount);
-    if (!number || number <= 0) {
-      throw new Error('Invalid Amount.');
-    }
-
-    const available = await ctx.erc20.balanceOf(await ctx.signer.getAddress());
-    if (available.lt(ethers.utils.parseUnits(number.toString(), ctx.erc20._decimals))) {
-      throw new Error(`You only have ${ethers.utils.formatUnits(available, ctx.erc20._decimals)} available.`);
-    }
-
-    this.confirm(
-      'Confirm',
-      `Tap 'Confirm' to deposit ${ctx.amount} ${ctx.tokenSymbol}.`,
-      this.onConfirmDeposit
-    );
-  }
-
-  async onConfirmDeposit (ctx) {
-    const decimals = await ctx.erc20.decimals();
-    ctx.amount = ethers.utils.parseUnits(ctx.amount, decimals);
-
-    this.runNext(this.deposit);
-  }
-
-  async deposit (ctx) {
-    const signer = await getSigner();
-    const { habitat } = await getProviders();
-    const allowance = await ctx.erc20.allowance(await signer.getAddress(), habitat.address);
-    const erc20 = ctx.erc20.connect(signer);
-
-    if (allowance.lt(ctx.amount)) {
-      this.write('Allowance too low.\nPlease sign a transaction to increase the token allowance first.');
-      const tx = await erc20.approve(habitat.address, ctx.amount);
-      this.write(`Waiting for the transaction to be mined...`);
-      await tx.wait();
-    }
-
-    this.write('Waiting for wallet...');
-    const tx = await habitat.connect(signer).deposit(erc20.address, ctx.amount, await signer.getAddress());
-    this.write(`Waiting for the transaction to be mined...`);
-    await tx.wait();
-
-    this.confirm(
-      'Done',
-      `Deposit Completed 🙌`,
-      this.onDone
-    );
-  }
-}
-
-// xxx implement and combine Exit & Withdraw steps
-export class WithdrawFlow extends BaseFlow {
-  constructor (root, ctx) {
-    super(root, ctx);
-
-    if (this.context.token && this.context.amount) {
-      this.runNext(this.onConfirmAmount);
-    } else if (this.context.token) {
-      this.runNext(this.amountStep);
-    } else {
-      this.runNext(this.setupFlow);
-    }
-  }
-
-  async setupFlow () {
-    await setupTokenlist();
-    this.input.setAttribute('list', 'tokenlist');
-
-    this.ask(
-      'Which Token do you want to withdraw?',
-      'Select',
-      'token',
-      this.amountStep
-    );
-  }
-
-  async amountStep (ctx) {
-    this.input.setAttribute('list', '');
-    const erc20 = await getToken(ctx.token);
-    const tokenSymbol = await getTokenSymbol(erc20.address);
-
-    this.ask(
-      `How much ${tokenSymbol} do you want to withdraw?`,
-      'Withdraw amount',
-      'amount',
-      this.onConfirmAmount
-    );
-  }
-
-  async onConfirmAmount (ctx) {
-    const erc20 = await getToken(ctx.token);
-    const tokenSymbol = await getTokenSymbol(erc20.address);
-    const wanted = ethers.utils.parseUnits(ctx.amount, erc20._decimals);
-    const { habitat } = await getProviders();
-    const signer = await getSigner();
-    const account = await signer.getAddress();
-    const availableForExit =
-      (await getErc20Exit(erc20.address, account)).toHexString();
-
-    if (wanted.gt(availableForExit)) {
-      this.write('You have to request an exit first.\nYou can withdraw the amount once it is finalized.');
-      const args = {
-        token: erc20.address,
-        to: ethers.constants.AddressZero,
-        value: wanted.toHexString(),
-      };
-      ctx.receipt = await sendTransaction('TransferToken', args);
-
-      this.confirm(
-        'Understood',
-        `The Exit is now queued. You can check the status of pending Exits on this page.`,
-        this.onDone
-      );
-      return;
-    }
-
-    // rootnet
-    this.write('Waiting for wallet...');
-    const tx = await habitat.connect(signer).withdraw(account, erc20.address, 0);
-    this.write(`Waiting for the transaction to be mined...`);
-    await tx.wait();
-
-    this.confirm(
-      'Done',
-      `Withdraw transaction hash: ${tx.hash}.`,
-      this.onDone
-    );
-  }
-}
-
 export class CreateCommunityFlow extends BaseFlow {
   constructor (root, ctx) {
     super(root, ctx);
@@ -382,8 +218,8 @@ export class CreateCommunityFlow extends BaseFlow {
   }
 
   async confirmName (ctx) {
-    await setupTokenlist();
-    this.input.setAttribute('list', 'tokenlist');
+    await setupTokenlistV2(this.container);
+    this.input.setAttribute('list', 'tokenlistv2');
 
     this.ask(
       `What is the Governance Token of the community?`,
@@ -395,9 +231,9 @@ export class CreateCommunityFlow extends BaseFlow {
 
   async confirmGovernanceToken (ctx) {
     this.input.setAttribute('list', '');
-    ctx.erc20 = await getToken(ctx.governanceToken);
+    ctx.erc20 = await getTokenV2(ctx.governanceToken);
     ctx.governanceToken = ctx.erc20.address;
-    const tknName = await ctx.erc20.name();
+    const tknName = ctx.erc20.name;
 
     this.confirm(
       'Looks Good',
@@ -444,7 +280,7 @@ export class CreateTreasuryFlow extends CreateCommunityFlow {
     if (ctx.name.length > 32) {
       throw new Error('name too long');
     }
-    await setupModulelist();
+    await setupModulelist(this.container);
     this.input.setAttribute('list', 'modulelist');
 
     this.ask(
@@ -548,8 +384,8 @@ export class TransferFlow extends BaseFlow {
   }
 
   async setupFlow () {
-    await setupTokenlist();
-    this.input.setAttribute('list', 'tokenlist');
+    await setupTokenlistV2(this.container);
+    this.input.setAttribute('list', 'tokenlistv2');
 
     this.ask(
       'Which Token do you like to Transfer?',
@@ -561,8 +397,8 @@ export class TransferFlow extends BaseFlow {
 
   async amountStep (ctx) {
     this.input.setAttribute('list', '');
-    ctx.erc20 = await getToken(ctx.token);
-    ctx.tokenSymbol = await getTokenSymbol(ctx.erc20.address);
+    ctx.erc20 = await getTokenV2(ctx.token);
+    ctx.tokenSymbol = ctx.erc20.symbol;
 
     this.ask(
       `How much ${ctx.tokenSymbol} do you want to Transfer?`,
@@ -600,7 +436,7 @@ export class TransferFlow extends BaseFlow {
   }
 
   async doTransfer (ctx) {
-    const amount = ethers.utils.parseUnits(ctx.amount, ctx.erc20._decimals).toHexString();
+    const amount = ethers.utils.parseUnits(ctx.amount, ctx.erc20.decimals).toHexString();
     const args = {
       token: ctx.erc20.address,
       to: ctx.receiver,

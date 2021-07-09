@@ -1,7 +1,7 @@
 import {
-  setupTokenlist,
+  setupTokenlistV2,
   wrapListener,
-  getToken
+  getTokenV2,
 } from './utils.js';
 import {
   encodeMetadata,
@@ -31,7 +31,7 @@ const TEMPLATE =
   <space></space>
   <div class='flex col'>
     <input id='title' placeholder='Name of Community'>
-    <input id='token' placeholder='Governance Token' list='tokenlist'>
+    <input id='token' placeholder='Governance Token' list='tokenlistv2'>
   </div>
   <space></space>
   <input style='display:none;' id='file' type='file' accept='image/*'>
@@ -73,7 +73,7 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
       this._ctx.fillRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.width);
       this._ctx.fillStyle = 'rgba(0,0,0,.5)';
       this._ctx.fillText('+', (w / 2) - 54, (h / 2) + 54);
-      setupTokenlist();
+      setupTokenlistV2(this);
     }
   }
 
@@ -104,7 +104,7 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
   }
 
   async create () {
-    const token = await getToken(this.querySelector('#token').value);
+    const token = await getTokenV2(this.querySelector('#token').value);
     const title = this.querySelector('#title').value;
     const meta = {
       title

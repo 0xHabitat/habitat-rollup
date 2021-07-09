@@ -5,8 +5,7 @@
   secondsToString,
   renderAmount,
   walletIsConnected,
-  getTokenSymbol,
-  getToken,
+  getTokenV2,
   ethers,
 } from '/lib/utils.js';
 import {
@@ -249,9 +248,9 @@ habitat-slider {
         // type
         childs[childPtr++].textContent = action.type;
         // xxx check if token is nft
-        const erc = await getToken(action.token);
+        const erc = await getTokenV2(action.token);
         childs[childPtr].href = getEtherscanTokenLink(erc.address);
-        childs[childPtr++].textContent = `${renderAmount(action.value, erc._decimals)} ${await getTokenSymbol(erc.address)}`;
+        childs[childPtr++].textContent = `${renderAmount(action.value, erc.decimals)} ${erc.symbol}`;
         childs[childPtr++].textContent = action.receiver;
       }
     }

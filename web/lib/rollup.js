@@ -456,9 +456,13 @@ export async function resolveUsername (str) {
   }
 }
 
-export async function setupModulelist () {
-  if (document.querySelector('datalist#modulelist')) {
-    return;
+export async function setupModulelist (root) {
+  if (root) {
+    const datalist = document.body.querySelector('datalist#modulelist');
+    if (datalist) {
+      root.append(datalist.cloneNode(true));
+      return;
+    }
   }
 
   const FLAVOR_TYPES = ['binary', 'signal'];
@@ -489,7 +493,10 @@ export async function setupModulelist () {
   }
 
   datalist.id = 'modulelist';
-  document.body.appendChild(datalist);
+  document.body.append(datalist);
+  if (root) {
+    root.append(datalist.cloneNode(true));
+  }
 }
 
 export async function fetchProposalStats ({ proposalId, communityId }) {

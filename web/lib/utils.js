@@ -203,8 +203,10 @@ export function wrapListener (selectorOrElement, func, eventName = 'click') {
   async function handler (evt) {
     evt.preventDefault();
     evt.stopImmediatePropagation();
+    const target = evt.target;
+
     if (eventName !== 'keyup') {
-      evt.target.disabled = true;
+      target.disabled = true;
     } else {
       const now = Date.now();
       const delta = now - _lastInteraction;
@@ -222,7 +224,7 @@ export function wrapListener (selectorOrElement, func, eventName = 'click') {
       alertModal((e.error ? e.error.message : '') || e.message || e.toString());
     }
 
-    evt.target.disabled = false;
+    target.disabled = false;
   }
 
   el.disabled = false;
@@ -529,9 +531,12 @@ export async function setupTokenlist () {
   document.body.appendChild(datalist);
 }
 
-export async function setupTokenlistV2 () {
-  if (document.querySelector('datalist#tokenlist')) {
-    return;
+export async function setupTokenlistV2 (root) {
+  if (root) {
+    const datalist = document.body.querySelector('datalist#tokenlist');
+    if (datalist) {
+      root.append(datalist.cloneNode(true));
+    }
   }
 
   const tokens = await getTokenList();
@@ -543,9 +548,8 @@ export async function setupTokenlistV2 () {
     }
 
     const opt = document.createElement('option');
-    opt.value = `${token.symbol} ${token.name}`;
-    opt.textContent = token.address;
-    datalist.appendChild(opt);
+    opt.value = `${token.symbol} (${token.name})`;
+    datalist.append(opt);
   }
 
   {
@@ -556,7 +560,11 @@ export async function setupTokenlistV2 () {
   }
 
   datalist.id = 'tokenlistv2';
-  document.body.appendChild(datalist);
+
+  document.body.append(datalist);
+  if (root) {
+    root.append(datalist.cloneNode(true));
+  }
 }
 
 export async function getToken (val) {

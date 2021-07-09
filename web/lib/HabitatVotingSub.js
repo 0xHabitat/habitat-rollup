@@ -2,7 +2,7 @@ import {
   wrapListener,
   renderAmount,
   getSigner,
-  getToken,
+  getTokenV2,
   ethers,
 } from './utils.js';
 import {
@@ -178,17 +178,17 @@ export default class HabitatVotingSub extends HTMLElement {
     if (this._delegateBtn.classList.contains(SELECTED)) {
       const signer = await getSigner();
       const account = await signer.getAddress();
-      const erc = await getToken(governanceToken);
+      const erc = await getTokenV2(governanceToken);
       const { total, used, free } = await getDelegatedAmountsForToken(governanceToken, account);
       const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'DelegateeVotedOnProposal', account, proposalId);
       if (logs.length) {
         const { signalStrength, shares } = logs[0].args;
 
-        userShares = ethers.utils.formatUnits(shares, erc._decimals);
-        feedback = `You Voted with ${renderAmount(shares, erc._decimals)} out of ${renderAmount(total, erc._decimals)} ${erc._symbol}.`;
+        userShares = ethers.utils.formatUnits(shares, erc.decimals);
+        feedback = `You Voted with ${renderAmount(shares, erc.decimals)} out of ${renderAmount(total, erc.decimals)} ${erc.symbol}.`;
         defaultSliderValue = Number(signalStrength);
       } else {
-        feedback = `You can vote up to ${renderAmount(free, erc._decimals)} ${erc._symbol}.`;
+        feedback = `You can vote up to ${renderAmount(free, erc.decimals)} ${erc.symbol}.`;
       }
     } else {
       feedback =
