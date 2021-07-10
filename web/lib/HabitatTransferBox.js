@@ -306,15 +306,35 @@ export default class HabitatTransferBox extends HTMLElement {
         }, false);
       }
     }
+
+    window.addEventListener('message', this);
   }
 
   disconnectedCallback () {
+    window.removeEventListener('message', this);
   }
 
   adoptedCallback () {
   }
 
   attributeChangedCallback (name, oldValue, newValue) {
+  }
+
+  handleEvent (evt) {
+    if (evt.data.type === 'hbt-transfer-box-action') {
+      const newValue = evt.data.value;
+      const actionValue = this.querySelector('#action');
+      const tokenValue = this.querySelector('#token');
+      if (newValue && actionValue !== null) {
+        actionValue.value = newValue;
+        actionValue.dispatchEvent(new Event('change'));
+
+        if (newValue === TYPE_TOP_UP && tokenValue !== null) {
+          tokenValue.value = 'HBT Habitat Token';
+          tokenValue.dispatchEvent(new Event('change'));
+        }
+      }
+    }
   }
 
   async onSelect (evt) {

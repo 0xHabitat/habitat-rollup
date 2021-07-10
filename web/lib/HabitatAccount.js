@@ -193,7 +193,7 @@ const ACCOUNT_TEMPLATE =
 
       <div id='wallet-overview-inner'>
         <div class='box' style='grid-row:1/4;grid-column:1/2;padding:0;max-width:max-content;'>
-          <habitat-transfer-box></habitat-transfer-box>
+          <habitat-transfer-box id='transfer-box'></habitat-transfer-box>
         </div>
 
         <div class='left box' style='grid-row:1/1;grid-column:2/2;'>
@@ -514,5 +514,6 @@ class HabitatAccount extends HabitatPanel {
 
     await updateErc20(this.shadowRoot);
   }
+
 }
 customElements.define('habitat-account', HabitatAccount);
