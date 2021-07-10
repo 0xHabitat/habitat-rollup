@@ -259,7 +259,7 @@ habitat-transfer-box .dropdown::after {
 
 export default class HabitatTransferBox extends HTMLElement {
   static get observedAttributes() {
-    return [''];
+    return [];
   }
 
   constructor() {
@@ -305,21 +305,22 @@ export default class HabitatTransferBox extends HTMLElement {
           evt.target.value = '';
         }, false);
       }
-
-      window.addEventListener('message', this.updateNavAction.bind(this));
     }
+
+    window.addEventListener('message', this);
   }
 
   disconnectedCallback () {
+    window.removeEventListener('message', this);
   }
 
   adoptedCallback () {
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
+  attributeChangedCallback (name, oldValue, newValue) {
   }
 
-  updateNavAction(evt) {
+  handleEvent (evt) {
     if (evt.data.type === 'hbt-transfer-box-action') {
       const newValue = evt.data.value;
       const actionValue = this.querySelector('#action');
@@ -327,7 +328,7 @@ export default class HabitatTransferBox extends HTMLElement {
       if (newValue && actionValue !== null) {
         actionValue.value = newValue;
         actionValue.dispatchEvent(new Event('change'));
-    
+
         if (newValue === TYPE_TOP_UP && tokenValue !== null) {
           tokenValue.value = 'HBT Habitat Token';
           tokenValue.dispatchEvent(new Event('change'));
