@@ -113,6 +113,7 @@ a {
 
 span, label, pre {
   line-height: 1;
+  color: var(--color-text);
 }
 
 p {
@@ -516,7 +517,6 @@ label {
   text-align: left;
   font-size: .7rem;
   margin: 1rem auto;
-  color: var(--color-text);
   font-weight: bold;
   line-height: 1.3;
 }
