@@ -269,7 +269,7 @@ export default class HabitatTransferBox extends HTMLElement {
   connectedCallback () {
     if (!this.children.length) {
       this.innerHTML = TEMPLATE;
-      setupTokenlistV2();
+      setupTokenlistV2(this);
 
       this._from = this.querySelector('#from');
       this._to = this.querySelector('#to');

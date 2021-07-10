@@ -26,7 +26,7 @@ class HabitatMenu extends HTMLElement {
     });
 
     document.body.addEventListener("click", (e) => {
-      if (e.target.parentNode.id === "menu") return;
+      if (e.target.parentNode && e.target.parentNode.id === "menu") return;
       document.getElementById("burger").checked = false;
     });
 

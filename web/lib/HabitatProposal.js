@@ -5,8 +5,7 @@
   secondsToString,
   renderAmount,
   walletIsConnected,
-  getTokenSymbol,
-  getToken,
+  getTokenV2,
   ethers,
 } from '/lib/utils.js';
 import {
@@ -131,8 +130,8 @@ habitat-slider {
     const { votingStatus, secondsTillClose, quorumPercent } = await simulateProcessProposal({ proposalId, internalActions, externalActions });
     const tillClose = secondsTillClose === -1 ? '∞' : secondsToString(secondsTillClose);
 
-    this.querySelector('#finalize').disabled = !(votingStatus > VotingStatus.OPEN);
-    this.querySelector('#execProposal').disabled = !(proposalStatus.eq(VotingStatus.PASSED) && tx.message.externalActions !== '0x');
+    this.shadowRoot.querySelector('#finalize').disabled = !(votingStatus > VotingStatus.OPEN);
+    this.shadowRoot.querySelector('#execProposal').disabled = !(proposalStatus.eq(VotingStatus.PASSED) && tx.message.externalActions !== '0x');
 
     // some metadata below the proposal
     {
@@ -144,7 +143,7 @@ habitat-slider {
         'Quorum Threshold reached by': `${quorumPercent}%`,
       };
 
-      const container = this.querySelector('#proposalStats');
+      const container = this.shadowRoot.querySelector('#proposalStats');
       const ele = formatObject(obj);
       ele.className = 'grid-2';
       container.innerHTML = '';
@@ -153,7 +152,7 @@ habitat-slider {
 
     // statistics
     {
-      const circles = this.querySelector('#circles');
+      const circles = this.shadowRoot.querySelector('#circles');
       circles.innerHTML = CIRCLES;
       circles.querySelector('#participation').setValue(participationRate, `${participationRate.toFixed(2)}%`);
       circles.querySelector('#votes').setValue(100, totalVotes, totalVotes !== 1 ? 'Votes' : 'Vote');
@@ -162,7 +161,7 @@ habitat-slider {
   }
 
   get title () {
-    return this.querySelector('h1#title').textContent;
+    return this.shadowRoot.querySelector('h1#title').textContent;
   }
 
   async chainUpdateCallback () {
@@ -189,12 +188,12 @@ habitat-slider {
     communityId = await habitat.callStatic.communityOfVault(tx.message.vault);
     proposalId = proposalEvent.args.proposalId;
 
-    this.querySelector('#visitVault').href = `#habitat-vault,${await getTransactionHashForVaultAddress(tx.message.vault)}`;
+    this.shadowRoot.querySelector('#visitVault').href = `#habitat-vault,${await getTransactionHashForVaultAddress(tx.message.vault)}`;
     {
-      renderLabels(metadata.labels || [], this.querySelector('#labels'));
+      renderLabels(metadata.labels || [], this.shadowRoot.querySelector('#labels'));
 
-      const titleElement = this.querySelector('h1#title');
-      const bodyElement = this.querySelector('#proposal');
+      const titleElement = this.shadowRoot.querySelector('h1#title');
+      const bodyElement = this.shadowRoot.querySelector('#proposal');
 
       titleElement.textContent = metadata.title || '<no title>';
       // proposal body
@@ -212,7 +211,7 @@ habitat-slider {
           link.href = metadata.src;
           link.className = 'button secondary purple smaller';
           link.textContent = metadata.src;
-          this.querySelector('#container').insertBefore(link, bodyElement.parentElement);
+          this.shadowRoot.querySelector('#container').insertBefore(link, bodyElement.parentElement);
         } catch (e) {
           console.warn(e);
         }
@@ -226,7 +225,7 @@ habitat-slider {
     const internalActions = decodeInternalProposalActions(tx.message.internalActions);
     const externalActions = decodeExternalProposalActions(tx.message.externalActions);
     {
-      const grid = this.querySelector('.proposalActions');
+      const grid = this.shadowRoot.querySelector('.proposalActions');
       grid.innerHTML = '<p></p><a target="_blank"></a><p></p>'.repeat(internalActions.length + externalActions.length);
       const childs = grid.children;
       let childPtr = 0;
@@ -249,27 +248,30 @@ habitat-slider {
         // type
         childs[childPtr++].textContent = action.type;
         // xxx check if token is nft
-        const erc = await getToken(action.token);
+        const erc = await getTokenV2(action.token);
         childs[childPtr].href = getEtherscanTokenLink(erc.address);
-        childs[childPtr++].textContent = `${renderAmount(action.value, erc._decimals)} ${await getTokenSymbol(erc.address)}`;
+        childs[childPtr++].textContent = `${renderAmount(action.value, erc.decimals)} ${erc.symbol}`;
         childs[childPtr++].textContent = action.receiver;
       }
     }
 
     {
-      wrapListener('habitat-voting-sub', async () => {
+      wrapListener(this.shadowRoot.querySelector('habitat-voting-sub'), async () => {
         await this.updateProposal();
       }, 'update');
-      wrapListener(this.querySelector('button#finalize'), () => this.processProposal(proposalId, tx));
+      wrapListener(this.shadowRoot.querySelector('button#finalize'), () => this.processProposal(proposalId, tx));
 
       // any actions we can execute?
       // TODO: calculate estimate of bridge finalization time
       if (externalActions.length) {
-        wrapListener(this.querySelector('button#execProposal'), () => this.executeProposal(tx.message.vault, proposalId, tx.message.externalActions));
+        wrapListener(
+          this.shadowRoot.querySelector('button#execProposal'),
+          () => this.executeProposal(tx.message.vault, proposalId, tx.message.externalActions)
+        );
       }
     }
 
-    this.querySelector('habitat-voting-sub').setAttribute('hash', txHash);
+    this.shadowRoot.querySelector('habitat-voting-sub').setAttribute('hash', txHash);
     await this.updateProposal();
   }
 }

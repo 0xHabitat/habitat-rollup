@@ -1,7 +1,7 @@
 import {
   walletIsConnected,
   getSigner,
-  getToken,
+  getTokenV2,
   renderAmount,
   wrapListener,
   secondsToString,
@@ -90,7 +90,7 @@ export default class HabitatRewards extends HTMLElement {
     onChainUpdate(this.update.bind(this));
 
     const { HBT } = getConfig();
-    const token = await getToken(HBT);
+    const token = await getTokenV2(HBT);
     const {
       claimable,
       outstanding,
@@ -104,12 +104,12 @@ export default class HabitatRewards extends HTMLElement {
 
     {
       this.querySelector('#currentEpoch').textContent = currentEpoch.toString();
-      this.querySelector('#currentPoolBalance').textContent = `${renderAmount(currentPoolBalance, token._decimals)} ${token._symbol}`;
+      this.querySelector('#currentPoolBalance').textContent = `${renderAmount(currentPoolBalance, token.decimals)} ${token.symbol}`;
     }
 
     this.querySelector('#claim').disabled = !claimable;
-    this.querySelector('#claimable').textContent = `${renderAmount(claimable, token._decimals)} ${token._symbol}`;
-    this.querySelector('#outstanding').textContent = `${renderAmount(outstanding, token._decimals)} ${token._symbol}`;
+    this.querySelector('#claimable').textContent = `${renderAmount(claimable, token.decimals)} ${token.symbol}`;
+    this.querySelector('#outstanding').textContent = `${renderAmount(outstanding, token.decimals)} ${token.symbol}`;
     this._claimArgs = {
       token: token.address,
       sinceEpoch: sinceEpoch
@@ -121,7 +121,7 @@ export default class HabitatRewards extends HTMLElement {
     const children = grid.children;
     for (const { epoch, reward, timestamp } of rewards) {
       children[childPtr++].textContent = epoch.toString();
-      children[childPtr++].textContent = `${renderAmount(reward, token._decimals)} ${token._symbol}`;
+      children[childPtr++].textContent = `${renderAmount(reward, token.decimals)} ${token.symbol}`;
       children[childPtr++].textContent = secondsToString(timestamp);
     }
   }

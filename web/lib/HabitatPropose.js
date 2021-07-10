@@ -9,11 +9,8 @@ import {
   encodeMetadata,
 } from '/lib/rollup.js';
 import {
-  getErc20,
   wrapListener,
   getSigner,
-  getTokenName,
-  renderAmount,
   ethers,
 } from '/lib/utils.js';
 import {
@@ -89,10 +86,10 @@ class HabitatPropose extends HabitatPanel {
 
   async doSubmit (evt) {
     const { habitat, rootProvider } = await getProviders();
-    const container = this.querySelector('#propose');
-    const actions = this.querySelector('.actions');
-    const inputs = this.querySelectorAll('button input textarea');
-    const src = this.querySelector('input#url').value;
+    const container = this.shadowRoot.querySelector('#propose');
+    const actions = this.shadowRoot.querySelector('.actions');
+    const inputs = this.shadowRoot.querySelectorAll('button input textarea');
+    const src = this.shadowRoot.querySelector('input#url').value;
     const labels = [];
     let title = '';
     let details = '';
@@ -147,16 +144,16 @@ class HabitatPropose extends HabitatPanel {
 
     // cache
     githubIssue = issue;
-    this.querySelector('h1#title').textContent = issue.title;
+    this.shadowRoot.querySelector('h1#title').textContent = issue.title;
     this.setTitle(issue.title);
     // xxx: consider using an iframe for embedding
-    this.querySelector('#body').innerHTML = issue.body_html;
-    renderLabels(issue.labels, this.querySelector('#labels'));
+    this.shadowRoot.querySelector('#body').innerHTML = issue.body_html;
+    renderLabels(issue.labels, this.shadowRoot.querySelector('#labels'));
   }
 
   async render () {
     async function addAction (obj) {
-      const grid = this.querySelector('#proposalActions');
+      const grid = this.shadowRoot.querySelector('#proposalActions');
       let args = [];
 
       if (obj.contractAddress) {
@@ -174,12 +171,12 @@ class HabitatPropose extends HabitatPanel {
         args = [
           'Token Transfer',
           obj.receiver,
-          `${obj.amount} ${obj.erc20._symbol}`
+          `${obj.amount} ${obj.erc20.symbol}`
         ];
         internalActions.push('0x1');
         internalActions.push(obj.erc20.address);
         internalActions.push(obj.receiver);
-        internalActions.push(ethers.utils.parseUnits(obj.amount, obj.erc20._decimals).toHexString());
+        internalActions.push(ethers.utils.parseUnits(obj.amount, obj.erc20.decimals).toHexString());
       }
 
       for (const arg of args) {
@@ -189,15 +186,15 @@ class HabitatPropose extends HabitatPanel {
       }
     }
 
-    wrapListener(this.querySelector('input#url'), this.renderIssue.bind(this), 'change');
-    wrapListener(this.querySelector('button#submit'), this.doSubmit.bind(this));
-    wrapListener(this.querySelector('button#execution'), (evt) => new AddExecutionFlow(evt.target, { callback: addAction.bind(this) }));
-    wrapListener(this.querySelector('button#transfer'), (evt) => new AddTransferFlow(evt.target, { callback: addAction.bind(this) }));
+    wrapListener(this.shadowRoot.querySelector('input#url'), this.renderIssue.bind(this), 'change');
+    wrapListener(this.shadowRoot.querySelector('button#submit'), this.doSubmit.bind(this));
+    wrapListener(this.shadowRoot.querySelector('button#execution'), (evt) => new AddExecutionFlow(evt.target, { callback: addAction.bind(this) }));
+    wrapListener(this.shadowRoot.querySelector('button#transfer'), (evt) => new AddTransferFlow(evt.target, { callback: addAction.bind(this) }));
 
     const [, txHash] = this.getAttribute('args').replace('#', '').split(',');
     const vaultInfo = await fetchVaultInformation(txHash);
     const title =  `For Treasury: ${vaultInfo.metadata.title}`;
-    this.querySelector('#vaultName').textContent = title;
+    this.shadowRoot.querySelector('#vaultName').textContent = title;
     this.setTitle(`Proposal ${title}`);
     vaultAddress = vaultInfo.vaultAddress;
   }

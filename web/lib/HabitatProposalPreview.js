@@ -98,8 +98,6 @@ export default class HabitatProposalPreview extends HTMLElement {
     }
 
     const { flavor } = await getModuleInformation(vaultAddress);
-    const slider = this.querySelector('habitat-slider');
-
     const {
       totalShares,
       defaultSliderValue,
@@ -132,10 +130,6 @@ export default class HabitatProposalPreview extends HTMLElement {
     const votingElement = this.querySelector('habitat-voting-sub');
     votingElement.addEventListener('update', () => this.update(), { once: true });
     votingElement.setAttribute(ATTR_HASH, txHash);
-
-    if (slider.value == slider.defaultValue) {
-      slider.setRange(1, 100, 100, defaultSliderValue);
-    }
   }
 }
 

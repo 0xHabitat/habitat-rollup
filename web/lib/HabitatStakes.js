@@ -29,7 +29,7 @@ export default class HabitatStakes extends HTMLElement {
   connectedCallback () {
     if (!this.children.length) {
       this.innerHTML = TEMPLATE;
-      this._container = document.querySelector('#stakes');
+      this._container = this.querySelector('#stakes');
 
       this.update();
     }

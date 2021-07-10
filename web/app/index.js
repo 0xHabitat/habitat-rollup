@@ -9,30 +9,32 @@ function onNavigate (evt) {
   const args = hash.substring(1, hash.length).split(',');
   const name = args[0];
   const ele = document.querySelector(`[args="${hash}"]`) || document.createElement(name);
-  ele.remove();
 
   const len = content.children.length;
-  ele.style.top = `${2 + (2 * len)}em`;
-  ele.style.marginLeft = '0';
-
-  let skipped = false;
+  const maxCollapsed = ele.isConnected ? len - 1 : len;
+  let pos = 0;
   for (let i = 0; i < len; i++) {
     const child = content.children[i];
-    const pos = skipped ? i - 1 : i;
+    if (child === ele) {
+      continue;
+    }
     child.style.top = `${2 + (2 * pos)}em`;
-    child.style.marginLeft = `${1 * len-pos}em`;
+    child.style.transform = `translateX(${1 * maxCollapsed - pos}em)`;
     child.classList.add('contentHidden');
-    // remove once content-visibility is more widely supported
-    child.style.height = '2em';
+    child.style.zIndex = pos;
+    pos++;
   }
-
-  ele.style.height = 'initial';
+  ele.style.zIndex = pos;
+  ele.style.top = `${2 + (2 * pos)}em`;
+  ele.style.transform = 'none';
   ele.classList.remove('contentHidden');
   ele.style.animation = '';
   ele.onanimationend = () => {
     ele.style.animation = 'none';
   }
-  content.append(ele);
+  if (!ele.isConnected) {
+    content.append(ele);
+  }
   ele.setAttribute('args', window.location.hash)
 }
 

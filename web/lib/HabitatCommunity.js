@@ -115,7 +115,7 @@ class HabitatCommunity extends HabitatPanel {
       }
     }
 
-    const container = this.querySelector('#vaults');
+    const container = this.shadowRoot.querySelector('#vaults');
     if (append) {
       container.appendChild(child);
     } else {
@@ -156,7 +156,7 @@ class HabitatCommunity extends HabitatPanel {
     filter.toBlock = await habitat.provider.getBlockNumber();
 
     checkScroll(
-      this.querySelector('#vaults'),
+      this.shadowRoot.querySelector('#vaults'),
       async () => {
         for await (const evt of pullEvents(habitat, filter)) {
           await this.renderVault(evt);
@@ -177,7 +177,7 @@ class HabitatCommunity extends HabitatPanel {
     }
 
     wrapListener(
-      this.querySelector('button#treasury'),
+      this.shadowRoot.querySelector('button#treasury'),
       (evt) => {
         new CreateTreasuryFlow(
           evt.target,
@@ -192,13 +192,13 @@ class HabitatCommunity extends HabitatPanel {
     const { habitat } = await getProviders();
     {
       const totalMembers = Number(await habitat.callStatic.getTotalMemberCount(this.communityId));
-      this.querySelector('habitat-circle#members').setValue(100, totalMembers, totalMembers !== 1 ? 'Members' : 'Member');
+      this.shadowRoot.querySelector('habitat-circle#members').setValue(100, totalMembers, totalMembers !== 1 ? 'Members' : 'Member');
     }
 
     {
       const tkn = await getTokenV2(this.governanceToken);
       const tvl = renderAmount(await habitat.callStatic.getTotalValueLocked(this.governanceToken), tkn.decimals);
-      this.querySelector('habitat-circle#tvl').setValue(100, tvl, 'TVL');
+      this.shadowRoot.querySelector('habitat-circle#tvl').setValue(100, tvl, 'TVL');
     }
     await this.fetchVaults(this.communityId);
   }

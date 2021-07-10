@@ -1,9 +1,9 @@
 import {
   walletIsConnected,
   getSigner,
-  setupTokenlist,
+  setupTokenlistV2,
   ethers,
-  getToken,
+  getTokenV2,
   wrapListener,
   renderAddress,
 } from './utils.js';
@@ -37,7 +37,7 @@ const TEMPLATE =
   <space></space>
   <label>
     Token
-    <input id='token' list='tokenlist' autocomplete='off'>
+    <input id='token' list='tokenlistv2' autocomplete='off'>
   </label>
   <label>
     Amount
@@ -86,7 +86,7 @@ export default class HabitatDelegationView extends HTMLElement {
 
       this.update();
       // async
-      setupTokenlist();
+      setupTokenlistV2(this);
     }
   }
 
@@ -95,8 +95,8 @@ export default class HabitatDelegationView extends HTMLElement {
     if (!delegatee) {
       throw new Error('user not found');
     }
-    const token = await getToken(this.querySelector('input#token').value);
-    const value = ethers.utils.parseUnits(this.querySelector('input#amount').value, token._decimals).toHexString();
+    const token = await getTokenV2(this.querySelector('input#token').value);
+    const value = ethers.utils.parseUnits(this.querySelector('input#amount').value, token.decimals).toHexString();
     const args = {
       token: token.address,
       value,
@@ -106,9 +106,9 @@ export default class HabitatDelegationView extends HTMLElement {
   }
 
   async populateChange ({ token, value, delegatee }) {
-    const erc = await getToken(token);
+    const erc = await getTokenV2(token);
     this.querySelector('input#token').value = token;
-    this.querySelector('input#amount').value = ethers.utils.formatUnits(value, erc._decimals);
+    this.querySelector('input#amount').value = ethers.utils.formatUnits(value, erc.decimals);
     this.querySelector('input#delegatee').value = delegatee;
     this.querySelector('button#delegatee').focus();
   }

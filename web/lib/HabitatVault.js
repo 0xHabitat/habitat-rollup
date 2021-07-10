@@ -10,6 +10,7 @@ import {
   fetchVaultInformation
 } from '/lib/rollup.js';
 import HabitatPanel from '/lib/HabitatPanel.js';
+import './HabitatProposalPreview.js';
 
 class HabitatVault extends HabitatPanel {
   static TEMPLATE =
@@ -46,7 +47,7 @@ class HabitatVault extends HabitatPanel {
     const filter = habitat.filters.ProposalCreated(this.vaultAddress);
     filter.toBlock = await habitat.provider.getBlockNumber();
 
-    const container = this.querySelector('#proposals');
+    const container = this.shadowRoot.querySelector('#proposals');
     for await (const evt of pullEvents(habitat, filter)) {
       if (this._loaded[evt.transactionHash]) {
         continue;
@@ -63,8 +64,8 @@ class HabitatVault extends HabitatPanel {
     const { vaultAddress, communityId, metadata } = await fetchVaultInformation(txHash);
 
     this.vaultAddress = vaultAddress;
-    this.querySelector('a#propose').href = `#habitat-propose,${txHash}`;
-    this.querySelector('a#back').href = `#habitat-community,${await getTransactionHashForCommunityId(communityId)}`;
+    this.shadowRoot.querySelector('a#propose').href = `#habitat-propose,${txHash}`;
+    this.shadowRoot.querySelector('a#back').href = `#habitat-community,${await getTransactionHashForCommunityId(communityId)}`;
     this.setTitle(metadata.title);
 
     await this.fetchProposals();

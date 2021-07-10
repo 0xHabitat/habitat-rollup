@@ -1,4 +1,5 @@
 @import '/lib/fonts/Everett.css';
+@import '/lib/assets/base.css';
 @import '/lib/assets/icons.css';
 
 * {
@@ -216,4 +217,8 @@ body.with-burger-menu #menu {
 
 .dropdown > input[list]::-webkit-calendar-picker-indicator {
   opacity: 0;
+}
+
+button, .button {
+  display: revert;
 }

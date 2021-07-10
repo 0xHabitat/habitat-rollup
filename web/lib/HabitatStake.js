@@ -1,7 +1,7 @@
 import {
   walletIsConnected,
   getSigner,
-  _getTokenCached,
+  getTokenV2,
   renderAmount,
   ethers,
   wrapListener,
@@ -23,7 +23,7 @@ const TEMPLATE =
 `
 <div class='listitem'>
   <space></space>
-  <div class='flex col evenly' style='width:20ch;max-width:100%;'>
+  <div class='flex col evenly'>
     <p class='bold' id='title'> </p>
     <p class='' id='community'> </p>
     <space></space>
@@ -88,15 +88,15 @@ export default class HabitatStake extends HTMLElement {
     this.querySelector('#link').href = info.link;
     this.querySelector('#community').textContent = communityInfo.title;
 
-    const token = await _getTokenCached(communityInfo.governanceToken);
-    const units = ethers.utils.formatUnits(shares, token._decimals);
+    const token = await getTokenV2(communityInfo.governanceToken);
+    const units = ethers.utils.formatUnits(shares, token.decimals);
     const slider = this.querySelector('habitat-slider');
     const input = this.querySelector('input');
     const circle = this.querySelector('habitat-circle');
 
     slider.setRange(0, units, units, units);
     slider.addEventListener('change', () => {
-      circle.setValue(slider.percent, renderAmount(input.value), token._symbol);
+      circle.setValue(slider.percent, renderAmount(input.value), token.symbol);
       if (document.activeElement !== input) {
         input.value = Number(slider.value).toFixed(2);
       }
