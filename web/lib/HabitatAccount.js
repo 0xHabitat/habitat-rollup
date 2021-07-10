@@ -515,16 +515,5 @@ class HabitatAccount extends HabitatPanel {
     await updateErc20();
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'args') {
-      const args = newValue.substring(1, newValue.length).split(',');
-      const transBox = this.querySelector('#transfer-box');
-      if (transBox && args[1] !== undefined) {
-        transBox.setAttribute('args', args[1]);
-      }
-    }
-    super.attributeChangedCallback(name, oldValue, newValue);
-  }
-
 }
 customElements.define('habitat-account', HabitatAccount);

@@ -8,7 +8,7 @@ function onNavigate (evt) {
   }
   const args = hash.substring(1, hash.length).split(',');
   const name = args[0];
-  const ele = document.querySelector(`[identifier="${name}"]`) || document.createElement(name);
+  const ele = document.querySelector(`[args="${hash}"]`) || document.createElement(name);
   ele.remove();
 
   const len = content.children.length;
@@ -34,7 +34,6 @@ function onNavigate (evt) {
   }
   content.append(ele);
   ele.setAttribute('args', window.location.hash)
-  ele.setAttribute('identifier', name);
 }
 
 window.addEventListener('DOMContentLoaded', onNavigate, false);

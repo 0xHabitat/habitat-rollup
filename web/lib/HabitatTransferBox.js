@@ -257,24 +257,9 @@ habitat-transfer-box .dropdown::after {
 </div>
 `;
 
-window.addEventListener('DOMContentLoaded', function (e) {
-  const actionValue = window.document.querySelector('#action');
-  const tokenValue = window.document.querySelector('#token');
-  const navAction = localStorage.getItem('habitat-transfer-box-action');
-  if (navAction && actionValue !== null) {
-    actionValue.value = navAction;
-    actionValue.dispatchEvent(new Event('change'));
-
-    if (navAction === TYPE_TOP_UP && tokenValue !== null) {
-      tokenValue.value = 'HBT Habitat Token';
-      tokenValue.dispatchEvent(new Event('change'));
-    }
-  }
-});
-
 export default class HabitatTransferBox extends HTMLElement {
   static get observedAttributes() {
-    return ['args'];
+    return [''];
   }
 
   constructor() {
@@ -320,6 +305,8 @@ export default class HabitatTransferBox extends HTMLElement {
           evt.target.value = '';
         }, false);
       }
+
+      window.addEventListener('message', this.updateNavAction.bind(this));
     }
   }
 
@@ -330,11 +317,14 @@ export default class HabitatTransferBox extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'args') {
+  }
+
+  updateNavAction(evt) {
+    if (evt.data.type === 'hbt-transfer-box-action') {
+      const newValue = evt.data.value;
       const actionValue = this.querySelector('#action');
       const tokenValue = this.querySelector('#token');
       if (newValue && actionValue !== null) {
-        newValue = decodeURI(newValue)
         actionValue.value = newValue;
         actionValue.dispatchEvent(new Event('change'));
     

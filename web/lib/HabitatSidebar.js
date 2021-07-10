@@ -108,7 +108,7 @@ const NAV_TEMPLATE =
       <div>
         <div class='balance-title'>
           <span class='icon-eth'>Mainnet</span>
-          <span><a href='#habitat-account,Withdraw' id="withdraw" class="action-link">Withdraw</a></span>
+          <span><a href='' id="withdraw" class="action-link">Withdraw</a></span>
         </div>
         <space></space>
         <p class='bl flex center'><habitat-token-amount id='mainnetBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
@@ -118,7 +118,7 @@ const NAV_TEMPLATE =
       <div>
         <div class='balance-title'>
           <span>🏕 Rollup</span>
-          <span><a href='#habitat-account,Deposit' id="deposit" class="action-link">Deposit</a></span>
+          <span><a href='' id="deposit" class="action-link">Deposit</a></span>
         </div>
         <space></space>
         <p class='bl flex center'><habitat-token-amount id='rollupBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
@@ -128,7 +128,7 @@ const NAV_TEMPLATE =
       <div class='left'>
         <div class='balance-title'>
           <span>⛽️ Gas</span>
-          <span><a href='#habitat-account,Top Up Gas Tank' id='topup' class="action-link">Top up</a></span>
+          <span><a href='' id='topup' class="action-link">Top up</a></span>
         </div>
         <space></space>
         <p class='bl flex center'><habitat-token-amount id='gasTankBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
@@ -166,7 +166,27 @@ class HabitatSidebar extends HTMLElement {
     }
     window.addEventListener('hashchange', onNavigate, false);
     onNavigate();
-    this.update();
+    this.wrapActions();
+    this.update();  
+  }
+
+  wrapActions() {
+    wrapListener(this.querySelector('a#topup'), () => {
+      this.updateDOM('Top Up Gas Tank');
+    });
+    wrapListener(this.querySelector('a#deposit'), () => {
+      this.updateDOM('Deposit');
+    });
+    wrapListener(this.querySelector('a#withdraw'), () => {
+      this.updateDOM('Withdraw');
+    });
+  }
+
+  updateDOM(action) {
+    window.location.hash = '#habitat-account';
+    window.postMessage({
+      type: 'hbt-transfer-box-action', value: action
+    }, window.location.origin);
   }
 
   async update () {
