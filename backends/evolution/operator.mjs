@@ -9,8 +9,8 @@ import TYPED_DATA from './typedData.mjs';
 
 const { L2_RPC_URL, OPERATOR_ADDRESS, L2_RPC_API_KEY, OPERATOR_TOKEN } = process.env;
 const QUIRK_MODE = !!process.env.QUIRK_MODE;
-// constant atm / 0.1 HBT
-const COST_PER_TX = 1000000000n;
+// default 0.1 HBT
+let ratePerTx = 1000000000n;
 
 const QUIRKS = {
   '0x3e66327b057fc6879e5cf86bc04a3b6c8ac7b3b4': 25000000000000n,
@@ -57,13 +57,13 @@ export async function getGasAccount (account) {
     }
 
     const txCount = BigInt(await fetchJson('eth_getTransactionCount', [from]));
-    const consumed = COST_PER_TX * txCount;
+    const consumed = ratePerTx * txCount;
     value -= consumed;
     value = balanceFix(from, value);
     if (value < 0n) {
       value = 0n;
     }
-    const remainingEstimate = value / COST_PER_TX;
+    const remainingEstimate = value / ratePerTx;
 
     return { value, remainingEstimate };
   } catch (e) {
@@ -127,4 +127,13 @@ export async function submitTransaction (_args, jsonOject) {
     console.error(e);
     throw new Error('unknown error');
   }
+}
+
+export async function setTransactionRates (_args, jsonObject) {
+  // TODO: HMAC w/ nonce or similiar
+  if (jsonObject.auth !== L2_RPC_API_KEY) {
+    throw new Error('auth');
+  }
+  ratePerTx = BigInt(jsonObject.params.ratePerTx);
+  return {};
 }

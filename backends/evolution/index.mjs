@@ -2,7 +2,7 @@ import http from 'http';
 import { deflateRawSync } from 'zlib';
 
 import { getStats, getSignals, submitVote, updateConfig } from './evolution.mjs';
-import { getGasTank, submitTransaction } from './operator.mjs';
+import { getGasTank, submitTransaction, setTransactionRates } from './operator.mjs';
 
 const DEFAULT_HEADERS = {
   'access-control-allow-origin': '*',
@@ -92,4 +92,5 @@ REQUEST_HANDLERS['signals'] = getSignals;
 REQUEST_HANDLERS['submitVote'] = submitVote;
 REQUEST_HANDLERS['gasTank'] = getGasTank;
 REQUEST_HANDLERS['submitTransaction'] = submitTransaction;
+REQUEST_HANDLERS['setTransactionRates'] = setTransactionRates;
 await startServer({ host: HOST, port: PORT });
