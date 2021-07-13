@@ -21,7 +21,11 @@ const TEMPLATE =
   overflow: hidden;
   overflow-y: scroll;
   box-sizing: border-box;
-  height: 100%;
+  position: absolute;
+  top: 2em;
+  right: 0;
+  bottom: 0;
+  left: 0;
   padding-bottom: 3em;
 }
 :host(.contentHidden) #content {
