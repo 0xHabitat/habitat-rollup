@@ -65,6 +65,7 @@ export function parseError (e) {
     if (ROLLUP_ERROR_MESSAGES.hasOwnProperty(e.error.message)) {
       return ROLLUP_ERROR_MESSAGES[e.error.message];
     }
+    return e.error.message;
   }
 
   return e.message || e.toString();
