@@ -16,11 +16,12 @@ import {
   submitVote,
 } from './rollup.js';
 
+import { COMMON_STYLESHEET } from './component.js';
 import './HabitatSlider.js';
 import './HabitatCircle.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <div class='listitem'>
   <space></space>
   <div class='flex col evenly'>
@@ -57,12 +58,12 @@ export default class HabitatStake extends HTMLElement {
 
   constructor() {
     super();
+
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
   }
 
   connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-    }
   }
 
   disconnectedCallback () {
@@ -84,20 +85,20 @@ export default class HabitatStake extends HTMLElement {
     const info = await getProposalInformation(txHash);
     const communityInfo = await getCommunityInformation(info.communityId);
 
-    this.querySelector('#title').textContent = info.title;
-    this.querySelector('#link').href = info.link;
-    this.querySelector('#community').textContent = communityInfo.title;
+    this.shadowRoot.querySelector('#title').textContent = info.title;
+    this.shadowRoot.querySelector('#link').href = info.link;
+    this.shadowRoot.querySelector('#community').textContent = communityInfo.title;
 
     const token = await getTokenV2(communityInfo.governanceToken);
     const units = ethers.utils.formatUnits(shares, token.decimals);
-    const slider = this.querySelector('habitat-slider');
-    const input = this.querySelector('input');
-    const circle = this.querySelector('habitat-circle');
+    const slider = this.shadowRoot.querySelector('habitat-slider');
+    const input = this.shadowRoot.querySelector('input');
+    const circle = this.shadowRoot.querySelector('habitat-circle');
 
     slider.setRange(0, units, units, units);
     slider.addEventListener('change', () => {
       circle.setValue(slider.percent, renderAmount(input.value), token.symbol);
-      if (document.activeElement !== input) {
+      if (this.shadowRoot.activeElement !== input) {
         input.value = Number(slider.value).toFixed(2);
       }
     }, false);
@@ -107,7 +108,7 @@ export default class HabitatStake extends HTMLElement {
     }, false);
 
     wrapListener(
-      this.querySelector('button'),
+      this.shadowRoot.querySelector('button'),
       async () => {
         const shares = input.value;
         await submitVote(info.communityId, proposalId, Number(shares) ? signalStrength : 0, shares);
