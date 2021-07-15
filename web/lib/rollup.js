@@ -866,9 +866,13 @@ export async function getDelegatedAmountsForToken (governanceToken, delegatee) {
 }
 
 export async function getGasTank (account) {
-  const { value, remainingEstimate } = await fetchJson(`${EVOLUTION_ENDPOINT}/gasTank/${account}`);
+  const { value, ratePerTx, remainingEstimate } = await fetchJson(`${EVOLUTION_ENDPOINT}/gasTank/${account}`);
 
-  return { value: BigInt(value), remainingEstimate: BigInt(remainingEstimate) };
+  return {
+    value: BigInt(value),
+    ratePerTx: BigInt(ratePerTx),
+    remainingEstimate: BigInt(remainingEstimate),
+  };
 }
 
 export function onChainUpdate (callback) {

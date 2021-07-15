@@ -202,6 +202,7 @@ const ACCOUNT_TEMPLATE =
           <div style='display:grid;grid-template-rows:1fr 1fr;'>
             <div>
               <h1 id='gasTankBalance'> </h1>
+              <p class='smaller' style='color:var(--color-grey);'>Estimated price per Transaction: <span id='ratePerTx'></span></p>
               <p class='smaller' style='color:var(--color-grey);'>For roundabout <span id='gasTankRemaining'></span> Transactions.</p>
             </div>
             <div style='place-self:end left;'>
@@ -483,9 +484,10 @@ class HabitatAccount extends HabitatPanel {
 
     const token = await getTokenV2(HBT);
     {
-      const { value, remainingEstimate } = await getGasTank(account);
+      const { value, ratePerTx, remainingEstimate } = await getGasTank(account);
       this.shadowRoot.querySelector('#gasTankRemaining').textContent = remainingEstimate.toString();
-      this.shadowRoot.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} HBT`;
+      this.shadowRoot.querySelector('#ratePerTx').textContent = `${renderAmount(ratePerTx, token.decimals)} ${token.symbol}`;
+      this.shadowRoot.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} ${token.symbol}`;
     }
 
     // rewards
