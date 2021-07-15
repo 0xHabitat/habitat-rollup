@@ -31,7 +31,7 @@ async function fetch (url, headers, payload) {
 }
 
 const FETCH_TIMEOUT_MS = 10000;
-const UPDATE_INTERVAL = 30000;
+const UPDATE_INTERVAL = Number(process.env.UPDATE_INTERVAL) || 30000;
 const ADDRS = process.env.ADDRS.split(',');
 const MIN_BALANCE = Number(process.env.MIN_BALANCE) || .3;
 const { RPC_URL, INTERNAL_RPC_URL, L2_RPC_API_KEY, WEBHOOK } = process.env;
@@ -106,8 +106,9 @@ async function checkEvents () {
       stat.submittedSolutionHash ? (stat.submittedSolutionHash === stat.expectedSolutionHash ? '✅' : '❌') : '-';
     const disputed = stat.disputed ? 'yes' : 'no';
     const finalisable = stat.canFinalize ? 'yes' : 'no';
+    const regularFinalisationBlock = stat.regularFinalizationTarget ? stat.regularFinalizationTarget : '-';
     str +=
-      `| # 🧱 ${stat.blockNumber} | solution submitted: ${stat.submittedSolutionHash ? '👍' : '👎'} | solution correct: ${correctSolution} | disputed: ${disputed} | can be finalised: ${finalisable} |\n`
+      `| # 🧱 ${stat.blockNumber} | solution submitted: ${stat.submittedSolutionHash ? '👍' : '👎'} | solution correct: ${correctSolution} | disputed: ${disputed} | can be finalised: ${finalisable} | ${regularFinalisationBlock} |\n`
   }
   await pager('chain', str);
 }

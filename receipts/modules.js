@@ -6,6 +6,7 @@ import { toMeta, wallet, layer1, layer2, sendTransaction, deploy } from './utils
 const OneThirdParticipationThreshold = JSON.parse(fs.readFileSync('./build/contracts/OneThirdParticipationThreshold.json'));
 const SevenDayVoting = JSON.parse(fs.readFileSync('./build/contracts/SevenDayVoting.json'));
 const FeatureFarmSignaling = JSON.parse(fs.readFileSync('./build/contracts/FeatureFarmSignaling.json'));
+const TwoThirdVotingThreshold = JSON.parse(fs.readFileSync('./build/contracts/TwoThirdVotingThreshold.json'));
 
 function fixDoc (str) {
   let ret = str;
@@ -49,6 +50,15 @@ export const MODULES = [
       details: fixDoc(FeatureFarmSignaling.userdoc.notice),
     },
   },
+  {
+    artefact: TwoThirdVotingThreshold,
+    metadata: {
+      flavor: 'binary',
+      version: 1,
+      name: 'Multisig-like, 2/3 TVL voting threshold',
+      details: fixDoc(TwoThirdVotingThreshold.userdoc.notice),
+    },
+  }
 ];
 
 const blockN = await layer2.provider.getBlockNumber();
