@@ -642,7 +642,6 @@ export async function getTokenV2 (val) {
       symbol: contract._symbol,
       decimals: contract._decimals,
       address: tokenAddress,
-      logoURI : '/lib/assets/icons/unknown.svg',
     };
   }
 
@@ -657,6 +656,10 @@ export async function getTokenV2 (val) {
   } else {
     tokenInfo.interface = ERC_INTERFACE;
     tokenInfo.contract = await getErc20(tokenInfo.address);
+  }
+
+  if (!tokenInfo.logoURI) {
+    tokenInfo.logoURI = '/lib/assets/icons/unknown.svg';
   }
 
   cache[tokenTag] = tokenInfo;
