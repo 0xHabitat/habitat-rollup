@@ -51,7 +51,8 @@ services:
       - GITHUB_API_KEY=$GITHUB_API_KEY
       - INFURA_API_KEY=$INFURA_API_KEY
       - L2_RPC_URL=http://dev:8111/
-      - OPERATOR_ADDRESS=0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39
+      - OPERATOR_ADDRESS=0x2951da2ba72dfe30da94988b4b3835a62f438c78
+      - OPERATOR_TOKEN=0x0ace32f6e87ac1457a5385f8eb0208f37263b415
     ports:
       - 1111:8080
     volumes:
