@@ -510,7 +510,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   let totalVotes = 0;
   for (const log of await doQuery('VotedOnProposal', null, proposalId)) {
     const { account, signalStrength, shares } = log.args;
-    if (!signals[account]) {
+    if (signals[account] === undefined) {
       totalVotes++;
     }
     signals[account] = signalStrength;
