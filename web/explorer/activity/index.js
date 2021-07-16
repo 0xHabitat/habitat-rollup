@@ -16,7 +16,7 @@ async function render () {
   const { childProvider } = await getProviders();
   const filter = {
     fromBlock: 1,
-    primaryTypes: TYPED_DATA.primaryTypes,
+    primaryTypes: ['Deposit'].concat(TYPED_DATA.primaryTypes),
   };
   const txs = (await childProvider.send('eth_getLogs', [filter])).sort(sortFunc);
   const container = document.querySelector('.transactions');
