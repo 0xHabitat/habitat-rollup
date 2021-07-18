@@ -58,7 +58,7 @@ const NAV_TEMPLATE =
 .bl a {
   color: var(--color-text);
 }
-.sidebar .target {
+.sidebar .button.target {
   background-color: var(--color-bg-invert);
   color: var(--color-bg);
 }
@@ -187,7 +187,7 @@ class HabitatSidebar extends HTMLElement {
     window.addEventListener('hashchange', onNavigate, false);
     onNavigate();
     this.wrapActions();
-    this.update();  
+    this.update();
   }
 
   wrapActions() {

@@ -153,7 +153,7 @@ const ACCOUNT_YIELD_CARD_TEMPLATE =
     </div>
     <div class='left box flip-card-back'>
       <h6 class='right-title'><em target='wrapper-yield' class='icon-info icon-flip'>${SVG_INFO_ICON}</em></h6>
-      <p>The Habitat rollup is generating profits based on the activity and usage of the network. These profits are fairly distributed among all users and their individual amout of deposited HBT tokens on the rollup.</p>
+      <p>The Habitat rollup is generating profits based on the activity and usage of the network. These profits are fairly distributed among all users and their individual amount of deposited HBT tokens on the rollup.</p>
       <p>The exact yield is depending on the fees earned during one epoch. An epoch is 7 days long. When you withdraw HBT before the epoch ends you won’t get any yield!</p>
     </div>
   </div>
@@ -245,11 +245,15 @@ const ACCOUNT_TEMPLATE =
 .flip-card-back > p {
   color: var(--color-text-invert);
   margin-top: 1rem !important;
-  font-size: 1rem;  
+  font-size: .9rem;
 }
 
 .flip {
   transform: rotateY(180deg);
+}
+
+.icon-info {
+  cursor: pointer;
 }
 
 .icon-info > svg > path {
@@ -558,10 +562,12 @@ class HabitatAccount extends HabitatPanel {
     for (const e of this.shadowRoot.querySelectorAll('em.icon-info')) {
       wrapListener(e, () => {
         const wrapper = this.shadowRoot.querySelector(`#${e.getAttribute('target')}`);
-        wrapper.classList.toggle('flip');
-        setTimeout(() => {
-          wrapper.classList.remove('flip');
-        }, 5000); // return to front side of card
+        const flipped = wrapper.classList.toggle('flip');
+        if (flipped) {
+          setTimeout(() => {
+            wrapper.classList.remove('flip');
+          }, 30000); // return to front side of card
+        }
       });
     }
 
