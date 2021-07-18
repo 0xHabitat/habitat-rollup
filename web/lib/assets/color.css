@@ -14,6 +14,7 @@
   --color-red: #c71585;
   --color-green: #66cdaa;
   --color-text: #202020;
+  --color-text-invert: #ffffff;
   --color-bg: #ffffff;
   --color-bg-invert: #202020;
   --color-error: #eb4d62;
@@ -32,6 +33,7 @@
   --color-brand3: #404050;
   --color-brand4: #604050;
   --color-text: #ffffff;
+  --color-text-invert: #202020;
   --color-bg: #202020;
   --color-bg-invert: #ffffff;
   --border-radius-frame: 6px;

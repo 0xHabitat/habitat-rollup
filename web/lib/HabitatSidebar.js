@@ -75,6 +75,23 @@ const NAV_TEMPLATE =
   text-decoration: underline;
 }
 
+.settings {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.7em;
+  padding-bottom: 0.7em;
+}
+
+.settings > span {
+  align-self: center;
+}
+
+.color-toggle {
+  transform: none;
+}
+
 </style>
 <div class='sidebar'>
   <div id='top'>
@@ -135,7 +152,10 @@ const NAV_TEMPLATE =
       </div>
     </div>
     <space></space>
-    <habitat-color-toggle style='position:relative;padding-bottom:1.5em;transform:none;'></habitat-color-toggle>
+    <div class='settings'>
+      <span><a href='#habitat-account'> ⚙ User Settings</a></span>
+      <span><habitat-color-toggle class='color-toggle'></habitat-color-toggle></span>
+    </div>
   </div>
 </div>`;
 
