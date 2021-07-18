@@ -25,7 +25,7 @@ habitat-color-toggle {
 }
 
 div#colorSchemeToggle {
-  font-size: 30px;
+  font-size: 1.5em;
   width: 32px;
   height: 32px;
   overflow: hidden;
