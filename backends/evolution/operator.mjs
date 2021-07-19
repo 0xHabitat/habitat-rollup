@@ -16,6 +16,10 @@ const HISTORIC_GAS_PRICES = [
     blockNumber: 142,
     value: 2500000000n,
   },
+  {
+    blockNumber: 156,
+    value: 5000000000n,
+  },
 ];
 const { L2_RPC_URL, OPERATOR_ADDRESS, L2_RPC_API_KEY, OPERATOR_TOKEN } = process.env;
 const QUIRK_MODE = !!process.env.QUIRK_MODE;
