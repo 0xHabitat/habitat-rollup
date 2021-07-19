@@ -58,6 +58,7 @@ const TEMPLATE =
     </div>
 
   </div>
+  <space></space>
   <div class='center box'>
     <div id='epochs'></div>
   </div>

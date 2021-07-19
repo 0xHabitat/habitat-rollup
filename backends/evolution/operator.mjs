@@ -47,6 +47,10 @@ function getGasRate (blockNum, i = 0) {
   return [ret, i - 1];
 }
 
+function getLatestGasRate () {
+  return HISTORIC_GAS_PRICES[HISTORIC_GAS_PRICES.length - 1].value;
+}
+
 async function fetchJson (method, params) {
   const resp = await ethers.utils.fetchJson(L2_RPC_URL, JSON.stringify({ id: 1, method, params }));
   if (resp.error) {
@@ -92,6 +96,9 @@ export async function getGasAccount (account) {
     value = balanceFix(from, value);
     if (value < 0n) {
       value = 0n;
+    }
+    if (!ratePerTx) {
+      ratePerTx = getLatestGasRate();
     }
     const remainingEstimate = value / ratePerTx;
 

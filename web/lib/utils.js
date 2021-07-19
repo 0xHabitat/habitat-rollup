@@ -496,10 +496,13 @@ export function checkScroll (selectorOrElement, callback) {
 }
 
 export async function getTokenList () {
-  const src = '/lib/tokenlist.json';
-  const { tokens } = await (await fetch(src)).json();
+  if (!document._tokenlist) {
+    const src = '/lib/tokenlist.json';
+    const { tokens } = await (await fetch(src)).json();
+    document._tokenlist = tokens;
+  }
 
-  return tokens;
+  return document._tokenlist;
 }
 
 export async function setupTokenlist () {

@@ -18,6 +18,7 @@ class HabitatCommunities extends HabitatPanel {
 </div>
 <space></space>
 <div id='communities' class='flex row center evenly'></div>
+<space></space>
 `;
 
   constructor() {

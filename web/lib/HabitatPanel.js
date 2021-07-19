@@ -26,7 +26,6 @@ const TEMPLATE =
   right: 0;
   bottom: 0;
   left: 0;
-  padding-bottom: 3em;
 }
 :host(.contentHidden) #content {
   content-visibility: hidden;

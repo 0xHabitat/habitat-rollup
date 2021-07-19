@@ -180,6 +180,9 @@ const ACCOUNT_TEMPLATE =
 #exits > div {
   grid-template-columns: repeat(3, auto);
 }
+.tab {
+  padding: 0 1em;
+}
 .tabs {
   margin: 2em;
   gap: 4em;
@@ -217,26 +220,24 @@ const ACCOUNT_TEMPLATE =
 
 .flip-card {
   perspective: 40em;
-  padding: 1em;
+  padding: 0;
 }
 
 .flip-wrapper {
-  display: flex;
-  min-height: 15em;
+  display: block;
   transition: transform 0.8s;
   transform-style: preserve-3d;
 }
 
 .flip-card-front, .flip-card-back {
-  position: absolute;
-  margin-left: 0;
-  width: 100%;
-  height: 100%;
+  position: relative;
   -webkit-backface-visibility: hidden; /* Safari */
   backface-visibility: hidden;
 }
 
 .flip-card-back {
+  position: absolute;
+  top: 0;
   color: var(--color-text-invert);
   transform: rotateY(180deg);
   background-color: var(--color-bg-invert);
@@ -303,7 +304,7 @@ const ACCOUNT_TEMPLATE =
 }
 #wallet-overview-inner {
   display: grid;
-  gap: 0;
+  gap: 1em;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: auto;
 }
@@ -327,6 +328,7 @@ const ACCOUNT_TEMPLATE =
     <div style='place-self:flex-end;' class='flex'>
       <button id='add747' class='smaller noHover'>Add HBT to <img style='display:inline;height:1em' src='/lib/assets/icons/metamask-fox.svg'></button>
     </div>
+    <space></space>
 
       <div id='wallet-overview-inner'>
         <div class='box' style='grid-row:1/4;grid-column:1/2;padding:0;max-width:max-content;'>
