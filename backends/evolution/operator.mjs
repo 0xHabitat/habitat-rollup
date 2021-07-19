@@ -98,9 +98,7 @@ export async function getGasAccount (account) {
     if (value < 0n) {
       value = 0n;
     }
-    if (!ratePerTx) {
-      ratePerTx = getLatestGasRate();
-    }
+    ratePerTx = getLatestGasRate();
     const remainingEstimate = value / ratePerTx;
 
     return { value, consumed, ratePerTx, remainingEstimate };
