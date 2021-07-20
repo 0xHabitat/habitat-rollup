@@ -42,7 +42,7 @@ button, .button, button *, .button * {
     <div>
       <label>
         <input id='url'>
-        ⚠️ Please enter a GitHub link or <a target='_blank'>create</a> an issue first.
+        ⚠️ Please enter a GitHub link or <a target='_blank' href='https://github.com/0xHabitat/improvements-and-bugs/issues/new/choose'>create</a> an issue first.
       </label>
     </div>
     <div>
