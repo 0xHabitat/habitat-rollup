@@ -5,9 +5,7 @@ import {
   getConfig,
   getSigner,
   getProvider,
-  getErc20,
-  getToken,
-  getTokenSymbol,
+  getTokenV2,
   walletIsConnected,
   secondsToString,
   renderAddress,
@@ -119,8 +117,19 @@ export async function sendTransaction (primaryType, message) {
     }
   }
 
-  window.postMessage('chainUpdate', window.location.origin);
   return receipt;
+}
+
+export async function signBatch (txs) {
+  const { habitat } = await getProviders();
+  const signer = await getSigner();
+  const signerAddress = await signer.getAddress();
+  let nonce = BigInt(await habitat.callStatic.txNonces(signerAddress));
+
+  for (const tx of txs) {
+    tx.message.nonce = '0x' + (nonce++).toString(16);
+    await sendTransaction(tx.primaryType, tx.message);
+  }
 }
 
 export async function getReceipt (txHash) {
@@ -230,9 +239,9 @@ export function decodeExternalProposalActions (hexString) {
 export function decodeInternalProposalActions (hexString) {
   // xxx support all types
   const TYPES = [
-    'reserved',
-    'token transfer',
-    'update metadata',
+    'Reserved',
+    'Token Transfer',
+    'Update Metadata',
   ];
   const res = [];
   for (let i = hexString[1] === 'x' ? 2 : 0, len = hexString.length; i < len;) {
@@ -385,10 +394,27 @@ export async function doQueryWithOptions (options, name, ...args) {
     }
   }
 
+  function encode (v) {
+    if (v == undefined) {
+      return null;
+    }
+    return ethers.utils.hexZeroPad(ethers.utils.hexlify(v), 32);
+  }
+
   const { habitat } = await getProviders();
-  const filter = habitat.filters[name](...args);
-  // xxx: because deposit transaction don't match the message format yet
-  filter.address = null;
+  const filter = {};
+  filter.topics = [habitat.interface.getEventTopic(name)];
+  for (const arg of args) {
+    if (Array.isArray(arg)) {
+      const ret = [];
+      for (const x of arg) {
+        ret.push(encode(x));
+      }
+      filter.topics.push(ret);
+      continue;
+    }
+    filter.topics.push(encode(arg));
+  }
   Object.assign(filter, options);
 
   const logs = await habitat.provider.send('eth_getLogs', [filter]);
@@ -503,8 +529,8 @@ export async function setupModulelist (root) {
 export async function fetchProposalStats ({ proposalId, communityId }) {
   const { habitat } = await getProviders();
   const governanceToken = await habitat.callStatic.tokenOfCommunity(communityId);
-  const erc20 = await getErc20(governanceToken);
-  const tokenSymbol = await getTokenSymbol(governanceToken);
+  const token = await getTokenV2(governanceToken);
+  const tokenSymbol = token.symbol;
   const signals = {};
   const votes = {};
   let totalVotes = 0;
@@ -513,57 +539,106 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     if (signals[account] === undefined) {
       totalVotes++;
     }
-    signals[account] = signalStrength;
+    signals[account] = Number(signalStrength);
     votes[account] = shares;
   }
-  let defaultSliderValue = 50;
+  const delegatedSignals = {};
+  const delegatedVotes = {};
+  for (const log of await doQuery('DelegateeVotedOnProposal', null, proposalId)) {
+    const { account, signalStrength, shares } = log.args;
+    if (delegatedSignals[account] === undefined) {
+      totalVotes++;
+    }
+    delegatedSignals[account] = Number(signalStrength);
+    delegatedVotes[account] = shares;
+  }
 
   // statistics
-  const numSignals = Object.keys(signals).length;
   let cumulativeSignals = 0;
   for (const k in signals) {
     cumulativeSignals += signals[k];
   }
+  for (const k in delegatedSignals) {
+    cumulativeSignals += delegatedSignals[k];
+  }
 
-  const signalStrength = cumulativeSignals / numSignals;
-  const totalShares = ethers.utils.formatUnits(await habitat.callStatic.getTotalVotingShares(proposalId), erc20._decimals);
+  const numSignals = Object.keys(signals).length + Object.keys(delegatedSignals).length;
+  const signalStrength = numSignals > 0 ? cumulativeSignals / numSignals : 0;
+  const totalShares = ethers.utils.formatUnits(await habitat.callStatic.getTotalVotingShares(proposalId), token.decimals);
   const totalMembers = Number(await habitat.callStatic.getTotalMemberCount(communityId));
   const participationRate = (totalVotes / totalMembers) * 100;
   const proposalStatus = await habitat.callStatic.getProposalStatus(proposalId);
 
+  let defaultSliderValue = 50;
   let userShares = ethers.BigNumber.from(0);
   let userSignal = 0;
   let userBalance = ethers.BigNumber.from(0);
+  let delegatedUserShares = '0';
+  let delegatedUserSignal = 0;
   if (walletIsConnected()) {
     const signer = await getSigner();
     const account = await signer.getAddress();
     const userVote = votes[account] || ethers.BigNumber.from(0);
 
     // xxx: take active voting stake into account
-    userBalance = ethers.utils.formatUnits(await habitat.callStatic.getBalance(erc20.address, account), erc20._decimals);
+    userBalance = ethers.utils.formatUnits(await habitat.callStatic.getBalance(token.address, account), token.decimals);
     if (userVote.gt(0)) {
-      userShares = ethers.utils.formatUnits(userVote, erc20._decimals);
+      userShares = ethers.utils.formatUnits(userVote, token.decimals);
       userSignal = signals[account];
       if (userSignal) {
         defaultSliderValue = userSignal;
       }
     }
+
+    delegatedUserShares = ethers.utils.formatUnits(delegatedVotes[account] || ethers.BigNumber.from(0), token.decimals);
+    delegatedUserSignal = delegatedSignals[account] || 0;
   }
+  let totalYes = 0;
+  let totalNo = 0;
+  let totalYesShares = ethers.BigNumber.from(0);
+  let totalNoShares = ethers.BigNumber.from(0);
+
+  for (const { s, v } of [{ s: signals, v: votes }, { s: delegatedSignals, v: delegatedVotes }]) {
+    for (const account in s) {
+      const signal = s[account];
+      const shares = v[account];
+
+      if (signal > 50) {
+        totalYes++;
+        totalYesShares = totalYesShares.add(shares);
+      } else if (signal !== 0) {
+        totalNo++;
+        totalNoShares = totalNoShares.add(shares);
+      }
+    }
+  }
+  totalYesShares = ethers.utils.formatUnits(totalYesShares, token.decimals);
+  totalNoShares = ethers.utils.formatUnits(totalNoShares, token.decimals);
 
   return {
+    token,
     totalVotes,
     totalShares,
     totalMembers,
+    totalYes,
+    totalYesShares,
+    totalNo,
+    totalNoShares,
     participationRate,
     defaultSliderValue,
     signals,
     signalStrength,
+    votes,
     userShares,
     userSignal,
     tokenSymbol,
     proposalStatus,
     userBalance,
     governanceToken,
+    delegatedSignals,
+    delegatedVotes,
+    delegatedUserShares,
+    delegatedUserSignal,
   };
 }
 
@@ -572,8 +647,8 @@ export async function submitVote (communityId, proposalId, signalStrength, _shar
   const signer = await getSigner();
   const account = await signer.getAddress();
   const governanceToken = await habitat.callStatic.tokenOfCommunity(communityId);
-  const token = await getToken(governanceToken);
-  const shares = ethers.utils.parseUnits(_shares, await token._decimals).toHexString();
+  const token = await getTokenV2(governanceToken);
+  const shares = ethers.utils.parseUnits(_shares.toString(), token.decimals).toHexString();
   const args = {
     proposalId,
     shares,
@@ -619,6 +694,18 @@ export async function getModuleInformation (vaultAddress) {
   return metadata;
 }
 
+export async function getTransactionMetadata (txHash) {
+  const { habitat } = await getProviders();
+  const tx = await habitat.provider.send('eth_getTransactionByHash', [txHash]);
+  try {
+    return decodeMetadata(tx.message.metadata);
+  } catch (e) {
+    console.warn(e);
+  }
+
+  return {};
+}
+
 export async function getProposalInformation (txHash) {
   // xxx
   const { habitat } = await getProviders();
@@ -626,7 +713,7 @@ export async function getProposalInformation (txHash) {
   const receipt = await getReceipt(txHash);
   const evt = receipt.events[0];
   const proposalId = evt.args.proposalId;
-  const startDate = evt.args.startDate;
+  const startDate = Number(evt.args.startDate);
   const vaultAddress = evt.args.vault;
   const communityId = await habitat.callStatic.communityOfVault(vaultAddress);
   let metadata = {};
@@ -696,20 +783,10 @@ export function getBlockExplorerLink (txHash) {
 }
 
 export async function queryTransfers (account) {
-  function logSort (a, b) {
-    return (Number(b.blockNumber) + Number(b.transactionIndex)) -
-      (Number(a.blockNumber) + Number(a.transactionIndex));
-  }
-
   const { habitat } = await getProviders();
   const options = { toBlock: 1 };
-  // to
-  let logs = await doQueryWithOptions(options, 'TokenTransfer', null, null, account);
-  // from
-  logs = logs.concat(await doQueryWithOptions(options, 'TokenTransfer', null, account));
-  // sort
-  logs = logs.sort(logSort);
-  // todo sort and filter
+  // to or from
+  const logs = await doQueryWithOptions(options, 'TokenTransfer', null, [null, account], [null, account]);
   const tokens = [];
   const transfers = [];
 
@@ -932,5 +1009,6 @@ function _genKey (...args) {
       }, 300);
     }
   }
+  document._fakeUpdate = () => prevBlockN = 1;
   setInterval(_chainUpdateCheck, 3000);
 }

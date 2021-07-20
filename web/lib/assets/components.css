@@ -41,16 +41,19 @@ habitat-circle.signal {
 
 #labels > p {
   border: 1px solid;
-  border-radius: 1rem;
-  padding: .2rem;
-  margin: 0 .3rem 0 0;
-  font-size: .7rem;
+  border-radius: 1em;
+  padding: .5em;
+  margin: 0 .3em 0 0;
+  font-size: .7em;
   font-weight: bold;
   color: var(--color-text);
+  background: none;
 }
 
 #labels {
   display: flex;
   flex-direction: row;
   margin: .5rem 0;
+  color: var(--color-grey);
+  font-weight: lighter;
 }

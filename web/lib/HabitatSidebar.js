@@ -11,7 +11,8 @@ import {
   getUsername,
   getProviders,
   getGasTank,
-  onChainUpdate
+  onChainUpdate,
+  signBatch,
 } from './rollup.js';
 
 import './HabitatColorToggle.js';
@@ -92,6 +93,19 @@ const NAV_TEMPLATE =
   transform: none;
 }
 
+#txBundle {
+  display: none;
+}
+
+#txGrid {
+  display: grid;
+  gap: .1rem;
+  grid-template-columns: 1fr;
+}
+
+#txGrid > * {
+  font-weight: lighter;
+}
 </style>
 <div class='sidebar'>
   <div id='top'>
@@ -109,10 +123,17 @@ const NAV_TEMPLATE =
       </div>
     </div>
     <space></space>
+
+    <div id='txBundle' class='flex col s'>
+      <p class='m'>🚩 Pending Transactions:</p>
+      <div id='txGrid'></div>
+      <button id='txSign' class='m black'>Sign</button>
+    </div>
+
     <div class='flex col evenly'>
       <div class='no-max-width' style='display:grid;'>
         <a class='button' href='#habitat-communities'>Communities</a>
-        <a class='button' target='_blank' href='/evolution/'>Evolution</a>
+        <a class='button' href='#habitat-evolution'>Evolution</a>
         <a class='button' target='_blank' href='/explorer/'>Block Explorer</a>
       </div>
       <space></space>
@@ -173,6 +194,12 @@ class HabitatSidebar extends HTMLElement {
       this.update();
       window.location.hash = '#habitat-account';
     });
+    wrapListener(this.querySelector('#txSign'), async () => {
+      await signBatch(this._txBundle);
+
+      const container = this.querySelector('#txBundle');
+      container.style.display = 'none';
+    });
 
     const onNavigate = () => {
       const ele = this.querySelector('.target');
@@ -185,9 +212,34 @@ class HabitatSidebar extends HTMLElement {
       }
     }
     window.addEventListener('hashchange', onNavigate, false);
+    window.addEventListener('message', this);
+
     onNavigate();
     this.wrapActions();
     this.update();
+  }
+
+  disconnectedCallback () {
+    window.removeEventListener('message', this);
+  }
+
+  handleEvent (evt) {
+    if (evt.data && evt.data.type === 'hbt-tx-bundle') {
+      this._txBundle = evt.data.value;
+
+      const container = this.querySelector('#txBundle');
+      container.style.display = evt.data.value.length ? 'flex' : 'none';
+
+      const grid = this.querySelector('#txGrid');
+      grid.innerHTML = '';
+
+      for (const tx of evt.data.value) {
+        const e = document.createElement('p');
+        e.textContent = `${tx.info}`;
+        grid.append(e);
+      }
+      return;
+    }
   }
 
   wrapActions() {

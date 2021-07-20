@@ -641,9 +641,9 @@ export async function getTokenV2 (val) {
     const contract = await _getTokenCached(tokenAddress);
 
     tokenInfo = {
-      name: contract._name,
-      symbol: contract._symbol,
-      decimals: contract._decimals,
+      name: contract._name || '<NO NAME>',
+      symbol: contract._symbol || '<NO SYMBOL>',
+      decimals: contract._decimals || 1,
       address: tokenAddress,
     };
   }
@@ -781,4 +781,9 @@ export function encodeMultiCall (ary) {
   }
 
   return calldata;
+}
+
+const dateTimeFormat = new Intl.DateTimeFormat([], { dateStyle: 'short', timeStyle: 'long' });
+export function formatDate (v) {
+  return dateTimeFormat.format(v);
 }

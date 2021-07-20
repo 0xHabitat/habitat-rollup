@@ -275,6 +275,10 @@ footer a {
   justify-content: space-around;
 }
 
+.between {
+  justify-content: space-between;
+}
+
 .flexSpaceBetween {
   display: flex;
   flex-direction: row;
