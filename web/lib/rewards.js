@@ -39,7 +39,7 @@ export async function calculateRewards (token) {
     }
   }
 
-  async function getTub (oldVal, epoch) {
+  async function getTub (oldValue, epoch) {
     const newValue = await habitat.callStatic.getHistoricTub(token.address, account, epoch);
 
     // 0 means no record / no change
