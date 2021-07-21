@@ -31,21 +31,21 @@ habitat-color-toggle {
 
 div#colorSchemeToggle {
   font-size: 1.5em;
-  width: 32px;
-  height: 32px;
+  width: 1em;
+  height: 1em;
   overflow: hidden;
   cursor: pointer;
   -webkit-user-select: none;
 }
 
 div#colorSchemeToggle > div > div {
-  width: 32px;
-  height: 32px;
-  line-height: 33px;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
 }
 
 div#colorSchemeToggle.light > div {
-  margin-top: -32px;
+  margin-top: -1em;
 }
 
 .bgwhite {
