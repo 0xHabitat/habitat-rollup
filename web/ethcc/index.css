@@ -1,0 +1,72 @@
+@import '/lib/fonts/Everett.css';
+@import '/lib/assets/base.css';
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --font-family-default: 'Everett';
+  --font-family-mono: 'Everett';
+}
+
+body {
+  font-size: 16px;
+}
+
+a, p {
+  margin: 0;
+  font-size: 1em;
+}
+
+.s {
+  font-size: .75em;
+}
+
+.m {
+  font-size: 1em;
+}
+
+.l {
+  font-size: 1.25em;
+}
+
+.xl {
+  font-size: 2em;
+  line-height: 1.5em;
+}
+
+ul, ol {
+  line-height: 1;
+  text-align: left;
+  padding: 0 0 0 2em;
+}
+
+li {
+  line-height: 1.2;
+  font-size: .9em;
+  font-weight: lighter;
+}
+
+.box {
+  background: white;
+  border-radius: 1em;
+  max-width: 20em;
+  padding: 0;
+  box-shadow: 1px 4px 4px rgba(0, 0, 0, 0.2);
+}
+
+.boxHeader {
+  background: linear-gradient(81.08deg, #D0CEFF 2.54%, #C4F5FF 45.58%, #BBF4E2 87.27%);
+  padding: .5em;
+  border-radius: 0 1em 0 1em;
+}
+
+.boxHeader > p {
+  font-size: .7em;
+}
+
+.boxContent {
+  padding: .5em;
+  font-size: .8em;
+}
