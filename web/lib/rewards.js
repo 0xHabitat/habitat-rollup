@@ -1,7 +1,8 @@
 import {
   getSigner,
   getToken,
-  getConfig
+  getConfig,
+  ethers,
 } from './utils.js';
 import {
   getProviders,
@@ -38,6 +39,23 @@ export async function calculateRewards (token) {
     }
   }
 
+  async function getTub (oldVal, epoch) {
+    const newValue = await habitat.callStatic.getHistoricTub(token.address, account, epoch);
+
+    // 0 means no record / no change
+    if (newValue.eq(0)) {
+      return oldValue;
+    }
+
+    // -1 means drained (no balance)
+    if (newValue.eq(ethers.constants.MaxUint256)) {
+      return 0;
+    }
+
+    // default to newValue
+    return newValue;
+  }
+
   const secondsPerEpoch = Number(await habitat.callStatic.SECONDS_PER_EPOCH());
   const epochGenesis = Number(await habitat.callStatic.EPOCH_GENESIS());
   const dateNow = ~~(Date.now() / 1000);
@@ -46,13 +64,15 @@ export async function calculateRewards (token) {
   let outstanding = BigInt(0);
   let sinceEpoch = 0;
   let rewards = [];
+  let historicUserBalance = ethers.BigNumber.from(0);
   for (let epoch = lastClaimedEpoch; epoch <= currentEpoch; epoch++) {
+    historicUserBalance = await getTub(historicUserBalance, epoch);
+
     const poolAddr = '0x' + epoch.toString(16).padStart(40, '0');
     const historicPoolBalance = await habitat.callStatic.getHistoricTub(token.address, poolAddr, epoch);
     if (historicPoolBalance.lt(1)) {
       continue;
     }
-    const historicUserBalance = await habitat.callStatic.getHistoricTub(token.address, account, epoch);
     const historicTvl = await habitat.callStatic.getHistoricTvl(token.address, epoch);
     const tvl = historicTvl.sub(historicPoolBalance);
     const timestamp = (epochGenesis + (epoch * secondsPerEpoch)) - dateNow;
