@@ -447,9 +447,9 @@ export function renderAddress (str) {
   return str.substring(0, 6) + '...' + str.substring(str.length - 4, str.length);
 }
 
-export function renderAmount (val, decimals) {
+export function renderAmount (val, decimals, precision = 3) {
   const v = Number(decimals ? ethers.utils.formatUnits(val, decimals) : val);
-  const intl = Intl.NumberFormat();
+  const intl = new Intl.NumberFormat([], { maximumFractionDigits: precision });
 
   if (v < 1e3) {
     return intl.format(v);

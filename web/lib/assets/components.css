@@ -24,9 +24,9 @@ habitat-path #path > a {
 }
 
 .circle > .inner {
-  width: 90%;
-  height: 90%;
-  margin: 5%;
+  width: calc(100% - 1em);
+  height: calc(100% - 1em);
+  margin: .5em;
   border-radius: 100%;
   background-color: var(--color-bg);
 }

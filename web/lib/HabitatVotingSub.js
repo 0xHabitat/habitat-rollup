@@ -169,7 +169,7 @@ export default class HabitatVotingSub extends HTMLElement {
         governanceToken,
     } = await fetchProposalStats({ communityId, proposalId });
 
-    const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
+    const votingDisabled = proposalStatus > VotingStatus.OPEN;
     for (const ele of this.shadowRoot.querySelectorAll('button#vote')) {
       ele.disabled = votingDisabled;
     }

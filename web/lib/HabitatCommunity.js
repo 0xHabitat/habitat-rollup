@@ -197,7 +197,7 @@ class HabitatCommunity extends HabitatPanel {
 
     {
       const tkn = await getTokenV2(this.governanceToken);
-      const tvl = renderAmount(await habitat.callStatic.getTotalValueLocked(this.governanceToken), tkn.decimals);
+      const tvl = renderAmount(await habitat.callStatic.getTotalValueLocked(this.governanceToken), tkn.decimals, 0);
       this.shadowRoot.querySelector('habitat-circle#tvl').setValue(100, tvl, 'TVL');
     }
     await this.fetchVaults(this.communityId);

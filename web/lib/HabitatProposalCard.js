@@ -655,24 +655,34 @@ export default class HabitatProposalCard extends HTMLElement {
     // will trigger recalculation
     this.shares = this.userVotedShares + this.cumulativeUserVotedShares;
 
-    const simResult = await simulateProcessProposal(
-      {
-        proposalId: this.data.proposalId,
-        internalActions: this.data.tx.message.internalActions,
-        externalActions: this.data.tx.message.externalActions,
-      }
-    );
-    const votingDisabled = simResult.votingStatus > VotingStatus.OPEN;
+
     const { startDate } = this.data;
-    const status = votingDisabled ? 'Proposal Concluded' : secondsToString(~~(Date.now() / 1000) - startDate);
-    const tillClose = simResult.secondsTillClose === -1 ? '∞' : secondsToString(simResult.secondsTillClose);
+    let statusText = '-';
+    let tillClose = '-';
+    let endText = 'closed';
+    let quorumText = '100%';
+    if (this.data.proposalStatus > VotingStatus.OPEN) {
+      statusText = this.data.proposalStatusText;
+    } else {
+      const simResult = await simulateProcessProposal(
+        {
+          proposalId: this.data.proposalId,
+          internalActions: this.data.tx.message.internalActions,
+          externalActions: this.data.tx.message.externalActions,
+        }
+      );
+      const votingDisabled = simResult.votingStatus > VotingStatus.OPEN;
+      statusText = votingDisabled ? 'Proposal Concluded' : secondsToString(~~(Date.now() / 1000) - startDate);
+      tillClose = simResult.secondsTillClose === -1 ? '∞' : secondsToString(simResult.secondsTillClose);
+      endText = simResult.secondsTillClose === -1 ? '-' : formatDate((startDate + simResult.secondsTillClose) * 1000);
+      quorumText = `${simResult.quorumPercent}%`;
+    }
 
     this.shadowRoot.querySelector('#startDate').textContent = formatDate(startDate * 1000);
-    this.shadowRoot.querySelector('#endDate').textContent =
-    simResult.secondsTillClose === -1 ? '-' : formatDate((startDate + simResult.secondsTillClose) * 1000);
+    this.shadowRoot.querySelector('#endDate').textContent = endText;
     this.shadowRoot.querySelector('#tillClose').textContent = tillClose;
-    this.shadowRoot.querySelector('#time').textContent = status;
-    this.shadowRoot.querySelector('#quorum').textContent = `${simResult.quorumPercent}%`;
+    this.shadowRoot.querySelector('#time').textContent = statusText;
+    this.shadowRoot.querySelector('#quorum').textContent = quorumText;
   }
 
   async buildTransactions (delegatedFor) {

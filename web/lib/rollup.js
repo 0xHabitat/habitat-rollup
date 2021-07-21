@@ -527,6 +527,18 @@ export async function setupModulelist (root) {
 }
 
 export async function fetchProposalStats ({ proposalId, communityId }) {
+  let proposalClosedBlockN = 0;
+  let proposalClosedTxIndex = 0;
+  {
+    const logs = await doQueryWithOptions({ maxResults: 1, toBlock: 1 }, 'ProposalProcessed', proposalId);
+    if (logs.length) {
+      const log = logs[0];
+
+      proposalClosedBlockN = Number(log.blockNumber)
+      proposalClosedTxIndex = Number(log.transactionIndex);
+    }
+  }
+  const filterOptions = { fromBlock: 1, toBlock: proposalClosedBlockN || 'latest' };
   const { habitat } = await getProviders();
   const governanceToken = await habitat.callStatic.tokenOfCommunity(communityId);
   const token = await getTokenV2(governanceToken);
@@ -534,7 +546,11 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   const signals = {};
   const votes = {};
   let totalVotes = 0;
-  for (const log of await doQuery('VotedOnProposal', null, proposalId)) {
+  for (const log of await doQueryWithOptions(filterOptions, 'VotedOnProposal', null, proposalId)) {
+    if (Number(log.blockNumber) === proposalClosedBlockN && Number(log.transactionIndex) >= proposalClosedTxIndex) {
+      break;
+    }
+
     const { account, signalStrength, shares } = log.args;
     if (signals[account] === undefined) {
       totalVotes++;
@@ -544,7 +560,11 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   }
   const delegatedSignals = {};
   const delegatedVotes = {};
-  for (const log of await doQuery('DelegateeVotedOnProposal', null, proposalId)) {
+  for (const log of await doQueryWithOptions(filterOptions, 'DelegateeVotedOnProposal', null, proposalId)) {
+    if (Number(log.blockNumber) === proposalClosedBlockN && Number(log.transactionIndex) >= proposalClosedTxIndex) {
+      break;
+    }
+
     const { account, signalStrength, shares } = log.args;
     if (delegatedSignals[account] === undefined) {
       totalVotes++;
@@ -561,13 +581,6 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
   for (const k in delegatedSignals) {
     cumulativeSignals += delegatedSignals[k];
   }
-
-  const numSignals = Object.keys(signals).length + Object.keys(delegatedSignals).length;
-  const signalStrength = numSignals > 0 ? cumulativeSignals / numSignals : 0;
-  const totalShares = ethers.utils.formatUnits(await habitat.callStatic.getTotalVotingShares(proposalId), token.decimals);
-  const totalMembers = Number(await habitat.callStatic.getTotalMemberCount(communityId));
-  const participationRate = (totalVotes / totalMembers) * 100;
-  const proposalStatus = await habitat.callStatic.getProposalStatus(proposalId);
 
   let defaultSliderValue = 50;
   let userShares = ethers.BigNumber.from(0);
@@ -612,8 +625,16 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
       }
     }
   }
+  const totalShares = ethers.utils.formatUnits(totalYesShares.add(totalNoShares), token.decimals);
   totalYesShares = ethers.utils.formatUnits(totalYesShares, token.decimals);
   totalNoShares = ethers.utils.formatUnits(totalNoShares, token.decimals);
+
+  const numSignals = Object.keys(signals).length + Object.keys(delegatedSignals).length;
+  const signalStrength = numSignals > 0 ? cumulativeSignals / numSignals : 0;
+  const totalMembers = Number(await habitat.callStatic.getTotalMemberCount(communityId));
+  const participationRate = (totalVotes / totalMembers) * 100;
+  const proposalStatus = Number(await habitat.callStatic.getProposalStatus(proposalId));
+  const proposalStatusText = VOTING_STATUS_TEXT[proposalStatus] || `Number:${proposalStatus}`;
 
   return {
     token,
@@ -633,6 +654,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
     userSignal,
     tokenSymbol,
     proposalStatus,
+    proposalStatusText,
     userBalance,
     governanceToken,
     delegatedSignals,
@@ -751,7 +773,14 @@ export const VotingStatus = {
   OPEN: 1,
   CLOSED: 2,
   PASSED: 3,
-}
+};
+
+const VOTING_STATUS_TEXT = [
+  'Unknown',
+  'Open',
+  'Closed',
+  'Passed',
+];
 
 const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
 

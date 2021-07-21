@@ -118,14 +118,14 @@ export default class HabitatProposalPreview extends HTMLElement {
         externalActions: tx.message.externalActions,
       }
     );
-    const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
+    const votingDisabled = proposalStatus > VotingStatus.OPEN;
     const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(startDate);
     const tillClose = simResult.secondsTillClose === -1 ? '∞' : secondsToString(simResult.secondsTillClose);
 
     this.querySelector('#tillClose').textContent = `Closes in ${tillClose}`;
     this.querySelector('#time').textContent = status;
     this.querySelector('#quorum').textContent = `Quorum Threshold is ${simResult.quorumPercent}% reached`;
-    this.querySelector('habitat-circle').setValue(signalStrength, renderAmount(totalShares), tokenSymbol);
+    this.querySelector('habitat-circle').setValue(signalStrength, renderAmount(totalShares, 0, 1), tokenSymbol);
 
     const votingElement = this.querySelector('habitat-voting-sub');
     votingElement.addEventListener('update', () => this.update(), { once: true });

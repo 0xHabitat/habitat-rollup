@@ -116,7 +116,7 @@ button, .button {
       <p id='tvl' class='xl light'> </p>
     </div>
 
-    <div class='flex col left'>
+    <div class='flex col left' style='margin:1em 0;'>
       <div class='box flex col center highlightPersonal'>
         <p class='s'>PERSONAL VOTES</p>
         <p id='personalVotes' class='bold s'> </p>
@@ -169,7 +169,7 @@ button, .button {
 
   <div id='tab-governance' class='tab'>
     <div class='flex row between'>
-      <p class='l light'>Active</p>
+      <p class='l light'>🏦 Recent Proposals</p>
       <div>
         <button id='submitTopic' class='s'>+ Submit Topic</button>
       </div>
@@ -278,12 +278,12 @@ button, .button {
     // members, votes
     {
       const totalReserve = await habitat.callStatic.getBalance(token.address, EVOLUTION_ACTION_VAULT);
-      this.shadowRoot.querySelector('#totalReserve').textContent = `${renderAmount(totalReserve, token.decimals)} ${token.symbol}`;
+      this.shadowRoot.querySelector('#totalReserve').textContent = `${renderAmount(totalReserve, token.decimals, 1)} ${token.symbol}`;
 
       const memberCount = await habitat.callStatic.getTotalMemberCount(EVOLUTION_COMMUNITY_ID);
       this.shadowRoot.querySelector('#memberCount').textContent = renderAmount(memberCount);
 
-      this.shadowRoot.querySelector('#tvl').textContent = `${renderAmount(tvl, token.decimals)} ${token.symbol}`;
+      this.shadowRoot.querySelector('#tvl').textContent = `${renderAmount(tvl, token.decimals, 1)} ${token.symbol}`;
     }
 
     // tabs

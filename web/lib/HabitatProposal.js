@@ -124,14 +124,14 @@ habitat-slider {
       tokenSymbol,
       proposalStatus,
     } = await fetchProposalStats({ communityId, proposalId });
-    const votingDisabled = proposalStatus.gt(VotingStatus.OPEN);
+    const votingDisabled = proposalStatus > VotingStatus.OPEN;
     const status = votingDisabled ? 'Proposal Concluded' : humanProposalTime(tx.message.startDate);
     const { internalActions, externalActions } = tx.message;
     const { votingStatus, secondsTillClose, quorumPercent } = await simulateProcessProposal({ proposalId, internalActions, externalActions });
     const tillClose = secondsTillClose === -1 ? '∞' : secondsToString(secondsTillClose);
 
     this.shadowRoot.querySelector('#finalize').disabled = !(votingStatus > VotingStatus.OPEN);
-    this.shadowRoot.querySelector('#execProposal').disabled = !(proposalStatus.eq(VotingStatus.PASSED) && tx.message.externalActions !== '0x');
+    this.shadowRoot.querySelector('#execProposal').disabled = !(proposalStatus === VotingStatus.PASSED && tx.message.externalActions !== '0x');
 
     // some metadata below the proposal
     {
@@ -154,9 +154,9 @@ habitat-slider {
     {
       const circles = this.shadowRoot.querySelector('#circles');
       circles.innerHTML = CIRCLES;
-      circles.querySelector('#participation').setValue(participationRate, `${participationRate.toFixed(2)}%`);
+      circles.querySelector('#participation').setValue(participationRate, `${participationRate.toFixed(1)}%`);
       circles.querySelector('#votes').setValue(100, totalVotes, totalVotes !== 1 ? 'Votes' : 'Vote');
-      circles.querySelector('#shares').setValue(signalStrength, renderAmount(totalShares), totalShares !== 1 ? 'Shares' : 'Share');
+      circles.querySelector('#shares').setValue(signalStrength, renderAmount(totalShares, 0, 1), totalShares !== 1 ? 'Shares' : 'Share');
     }
   }
 
