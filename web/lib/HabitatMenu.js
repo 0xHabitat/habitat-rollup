@@ -4,11 +4,11 @@ const TEMPLATE =
   <input type="checkbox" id="burger"/>
   <label for="burger"></label>
   <ul id="menu-items">
-    <li><a href="/" class="lightred"><span class="icon">🏕️</span> Home</a></li>
-    <li><a href="/evolution/" class="lightgreen"><span class="icon">🌱</span> Evolution</a></li>
-    <li><a href="/token/" class="lightstraw"><span class="icon">🌞</span> Token</a></li>
-    <li><a href="/lp/" class="lightblue"><span class="icon">💎</span> Mining</a></li>
-    <li><a href="/app/" class="lightgrey"><span class="icon">🌈</span> App</a></li>
+    <li><a href="/" class="lightred"><span class="icon"><emoji-camping></emoji-camping></span> Home</a></li>
+    <li><a href="/evolution/" class="lightgreen"><span class="icon"><emoji-seedling></emoji-seedling></span> Evolution</a></li>
+    <li><a href="/token/" class="lightstraw"><span class="icon"><emoji-sunface></emoji-sunface></span> Token</a></li>
+    <li><a href="/lp/" class="lightblue"><span class="icon"><emoji-diamond></emoji-diamond></span> Mining</a></li>
+    <li><a href="/app/" class="lightgrey"><span class="icon"><emoji-rainbow></emoji-rainbow></span> App</a></li>
   </ul>
 </nav>`;
 

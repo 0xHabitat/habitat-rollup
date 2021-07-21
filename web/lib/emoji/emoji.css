@@ -1,0 +1,410 @@
+emoji-bank {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./bank.png');
+}
+emoji-seedling {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./seedling.png');
+}
+emoji-camping {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./camping.png');
+}
+emoji-fuelpump {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./fuelpump.png');
+}
+emoji-sunface {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./sunface.png');
+}
+emoji-crescent-moon {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./crescent-moon.png');
+}
+emoji-sunny {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./sunny.png');
+}
+emoji-diamond {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./diamond.png');
+}
+emoji-rainbow {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./rainbow.png');
+}
+emoji-unicorn {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./unicorn.png');
+}
+emoji-point-down {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./point-down.png');
+}
+emoji-point-right {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./point-right.png');
+}
+emoji-point-left {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./point-left.png');
+}
+emoji-point-up {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./point-up.png');
+}
+emoji-gamepad {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./gamepad.png');
+}
+emoji-fire {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./fire.png');
+}
+emoji-snowflake {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./snowflake.png');
+}
+emoji-rice-ear {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./rice-ear.png');
+}
+emoji-thermometer {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./thermometer.png');
+}
+emoji-sparkles {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./sparkles.png');
+}
+emoji-bug {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./bug.png');
+}
+emoji-tada {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./tada.png');
+}
+emoji-cash {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./cash.png');
+}
+emoji-flower {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./flower.png');
+}
+emoji-construction {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./construction.png');
+}
+emoji-pick {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./pick.png');
+}
+emoji-sad {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./sad.png');
+}
+emoji-herb {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./herb.png');
+}
+emoji-sat-antenna {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./sat-antenna.png');
+}
+emoji-raising-hands {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./raising-hands.png');
+}
+emoji-warning {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./warning.png');
+}
+emoji-dizzy {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./dizzy.png');
+}
+emoji-airplane {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./airplane.png');
+}
+emoji-hourglass {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./hourglass.png');
+}
+emoji-full-moon {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./full-moon.png');
+}
+emoji-last-quarter-moon {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./last-quarter-moon.png');
+}
+emoji-toolbox {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./toolbox.png');
+}
+emoji-balance-scale {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./balance-scale.png');
+}
+emoji-white-flag {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./white-flag.png');
+}
+emoji-triangular-flag {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./triangular-flag.png');
+}
+emoji-glowing-star {
+  display: inline-block;
+  height: 1.5ch;
+  width: 1.5ch;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./glowing-star.png');
+}

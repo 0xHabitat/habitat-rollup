@@ -48,8 +48,8 @@ TEMPLATE.innerHTML = `
   </div>
   <div id='signal' class='flex row center' style='display:none;width:30ch;'>
     <div style="width:100%;height:1.4rem;font-size:.7rem;">
-      <h3 class="left inline" style="float:left;text-shadow:0 0 2px #909090;">❄️</h3>
-      <h3 class="right inline" style="float:right;text-shadow:0 0 2px #909090;">🔥</h3>
+      <h3 class="left inline" style="float:left;text-shadow:0 0 2px #909090;"><emoji-snowflake></emoji-snowflake></h3>
+      <h3 class="right inline" style="float:right;text-shadow:0 0 2px #909090;"><emoji-fire></emoji-fire></h3>
     </div>
     <habitat-slider></habitat-slider>
     <label>

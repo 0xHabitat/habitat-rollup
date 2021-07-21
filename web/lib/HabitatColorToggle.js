@@ -70,7 +70,7 @@ function onClick (evt) {
 function addColorSchemeToggle (_ele) {
   ele = _ele;
   ele.className = getColor();
-  ele.innerHTML = '<div><div>☀️</div><div>🌙</div></div>';
+  ele.innerHTML = '<div><div><emoji-sunny></emoji-sunny></div><div><emoji-crescent-moon></emoji-crescent-moon></div></div>';
   ele.addEventListener('click', onClick, false);
 }
 

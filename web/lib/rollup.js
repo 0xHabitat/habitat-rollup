@@ -538,7 +538,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
       proposalClosedTxIndex = Number(log.transactionIndex);
     }
   }
-  const filterOptions = { fromBlock: 1, toBlock: proposalClosedBlockN || 'latest' };
+  const filterOptions = { fromBlock: 1, toBlock: proposalClosedBlockN || 0 };
   const { habitat } = await getProviders();
   const governanceToken = await habitat.callStatic.tokenOfCommunity(communityId);
   const token = await getTokenV2(governanceToken);

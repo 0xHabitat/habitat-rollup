@@ -164,7 +164,7 @@ async function update () {
     const highlight = account && addr === account;
     const poolShare = ((share / PRECISION) * 100).toFixed(2);
     html +=
-      `<p>${highlight ? '<bold>🌟' + (i + 1) + '</bold>' : i + 1}.</p><p>${renderAddress(addr)}</p><p>${renderAmount(reward)} HBT</p><p>${renderAmount(expectedReward)} HBT</p><p>${poolShare}%</p>`;
+      `<p>${highlight ? '<bold><emoji-glowing-star></emoji-glowing-star><span>' + (i + 1) + '</span></bold>' : i + 1}.</p><p>${renderAddress(addr)}</p><p>${renderAmount(reward)} HBT</p><p>${renderAmount(expectedReward)} HBT</p><p>${poolShare}%</p>`;
     csv += `${i + 1},${addr},${poolShare},${reward}\n`;
   }
   document.querySelector('#leaderboard').innerHTML = html;

@@ -94,7 +94,7 @@ const ACCOUNT_GAS_TANK_CARD_TEMPLATE =
 <div class='flip-card' style='grid-row:1/1;grid-column:2/2;'>
   <div id='wrapper-gas' class='flip-wrapper'>
     <div class='left box flip-card-front'>
-      <h6 class='spaced-title'><span>⛽️ Gas Tank Balance</span><em target='wrapper-gas' class='icon-info'>${SVG_INFO_ICON}</em></h6>
+      <h6 class='spaced-title'><span><emoji-fuelpump></emoji-fuelpump><span> Gas Tank Balance</span></span><em target='wrapper-gas' class='icon-info'>${SVG_INFO_ICON}</em></h6>
       <space></space>
       <div style='display:grid;grid-template-rows:1fr 1fr;'>
         <div>
@@ -103,7 +103,7 @@ const ACCOUNT_GAS_TANK_CARD_TEMPLATE =
           <p class='smaller' style='color:var(--color-grey);'>For roundabout <span id='gasTankRemaining'></span> Transactions.</p>
         </div>
         <div style='place-self:end left;'>
-          <p class='smaller' style='color:var(--color-grey);'>⚠️ You can't remove balance from gas tank.</p>
+          <p class='smaller' style='color:var(--color-grey);'><span><emoji-warning></emoji-warning><span>You can't remove balance from gas tank.</span></span></p>
         </div>
       </div>
     </div>
@@ -122,7 +122,7 @@ const ACCOUNT_YIELD_CARD_TEMPLATE =
 <div class='flip-card' style='grid-row:1/1;grid-column:3/3;'>
   <div id='wrapper-yield' class='flip-wrapper'>
     <div class='left box flip-card-front'>
-      <h6 class='spaced-title'><span>💸 Rollup Yield </span><em target='wrapper-yield' class='icon-info'>${SVG_INFO_ICON}</em></h6>
+      <h6 class='spaced-title'><span><emoji-cash></emoji-cash><span> Rollup Yield </span></span><em target='wrapper-yield' class='icon-info'>${SVG_INFO_ICON}</em></h6>
       <space></space>
       <div style='display:grid;grid-template-columns:repeat(2, 1fr);gap:.7em;'>
         <div>
@@ -340,13 +340,13 @@ const ACCOUNT_TEMPLATE =
         ${ACCOUNT_YIELD_CARD_TEMPLATE}
 
         <div class='left box' style='grid-row:2/4;grid-column:2/4;'>
-          <h6>🏕 Rollup Balances</h6>
+          <h6><span><emoji-camping></emoji-camping><span> Rollup Balances</span></span></h6>
           <space></space>
           <div id='erc20'></div>
         </div>
 
         <div class='left box' style='grid-row:4/8;grid-column:2/4;'>
-          <h6>💫 Activities</h6>
+          <h6><span><emoji-dizzy></emoji-dizzy><span> Activities</span></span></h6>
           <space></space>
           <div id='history'></div>
         </div>
@@ -357,7 +357,7 @@ const ACCOUNT_TEMPLATE =
         </div>
 
         <div class='box left' style='grid-row:4;grid-column:1/1;'>
-          <h6>✈️ Withdrawals</h6>
+          <h6><span><emoji-airplane></emoji-airplane><span> Withdrawals</span></span></h6>
           <space></space>
           <div id='exits'></div>
           <space></space>

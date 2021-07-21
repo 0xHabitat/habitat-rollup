@@ -96,7 +96,7 @@ button, .button {
 <section>
   <div class='left'>
     <space></space>
-    <p class='l'>🌿 Evolution of Habitat</p>
+    <p class='l'><span><emoji-herb></emoji-herb><span> Evolution of Habitat</span></span></p>
     <space></space>
   </div>
 
@@ -133,10 +133,10 @@ button, .button {
   <div class='flex col center'>
     <div id='tabnav' class='flex row evenly'>
       <div id='tab-signal'>
-        <p class='l'>📡 Community Signals</p>
+        <p class='l'><span><emoji-sat-antenna></emoji-sat-antenna><span> Community Signals</span></span></p>
       </div>
       <div id='tab-governance'>
-        <p class='l'>🏦 Rollup Governance</p>
+        <p class='l'><span><emoji-bank></emoji-bank><span> Rollup Governance</span></span></p>
       </div>
     </div>
     <space></space>
@@ -158,7 +158,7 @@ button, .button {
 <div id='tabs'>
   <div id='tab-signal' class='tab'>
     <div class='flex row between'>
-      <p class='l light'>📡 Recent Signals</p>
+      <p class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
       <div>
         <button id='submitTopic' class='s'>+ Submit Topic</button>
       </div>
@@ -169,7 +169,7 @@ button, .button {
 
   <div id='tab-governance' class='tab'>
     <div class='flex row between'>
-      <p class='l light'>🏦 Recent Proposals</p>
+      <p class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
       <div>
         <button id='submitTopic' class='s'>+ Submit Topic</button>
       </div>

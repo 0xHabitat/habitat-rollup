@@ -5,6 +5,11 @@
 @import 'menu.css';
 @import 'animations.css';
 @import 'components.css';
+@import '../emoji/emoji.css';
+
+* {
+  vertical-align: bottom;
+}
 
 #gradient-canvas {
   position:absolute;

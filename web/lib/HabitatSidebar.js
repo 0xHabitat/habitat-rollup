@@ -155,7 +155,7 @@ const NAV_TEMPLATE =
       <space></space>
       <div>
         <div class='balance-title'>
-          <span>🏕 Rollup</span>
+          <span><emoji-camping></emoji-camping><span> Rollup</span></span>
           <span><a href='' id="deposit" class="action-link">Deposit</a></span>
         </div>
         <space></space>
@@ -165,7 +165,7 @@ const NAV_TEMPLATE =
       <space></space>
       <div class='left'>
         <div class='balance-title'>
-          <span>⛽️ Gas</span>
+          <span><emoji-fuelpump></emoji-fuelpump><span> Gas</span></span>
           <span><a href='' id='topup' class="action-link">Top up</a></span>
         </div>
         <space></space>
@@ -277,7 +277,7 @@ class HabitatSidebar extends HTMLElement {
     const center = this._walletContainer.querySelector('#connect');
     const walletStatus = this._walletContainer.querySelector('#status');
 
-    walletStatus.textContent = '🙌 Connected';
+    walletStatus.innerHTML = '<emoji-raising-hands></emoji-raising-hands><span> Connected</span>';
 
     center.textContent = await getUsername(account);
     this._walletContainer.classList.add('connected');

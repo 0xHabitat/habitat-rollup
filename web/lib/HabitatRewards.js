@@ -29,7 +29,7 @@ const TEMPLATE =
   <div class='flex row evenly'>
 
     <div class='center box' style='grid-row:1/1;grid-column:2/2;'>
-      <h6>⏳ Current Epoch</h6>
+      <h6><emoji-hourglass></emoji-hourglass><span> Current Epoch</span></h6>
       <space></space>
       <div style='display:grid;grid-template-columns:1fr 1fr;gap:.5em;'>
         <div>
@@ -44,7 +44,7 @@ const TEMPLATE =
     </div>
 
     <div class='center box' style='grid-row:1/1;grid-column:2/2;'>
-      <h6>🌕 Claimable</h6>
+      <h6><emoji-full-moon></emoji-full-moon><span> Claimable</span></h6>
       <space></space>
       <h1 id='claimable'> </h1>
       <space></space>
@@ -52,7 +52,7 @@ const TEMPLATE =
     </div>
 
     <div class='center box' style='grid-row:1/1;grid-column:2/2;'>
-      <h6>🌓 Outstanding</h6>
+      <h6><emoji-last-quarter-moon></emoji-last-quarter-moon><span> Outstanding</span></h6>
       <space></space>
       <h1 id='outstanding'> </h1>
     </div>
