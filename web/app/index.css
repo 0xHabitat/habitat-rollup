@@ -9,8 +9,11 @@
 :root {
   --font-family-default: 'Everett';
   --font-family-mono: 'Everett';
-  --section-width-left: 23ch;
-  --section-width-panel: calc(99vw - var(--section-width-left));
+  --section-pos-left: 0;
+  --section-panel-left: 23ch;
+  --section-panel-right: 0;
+  --section-width-panel: calc(99vw - var(--section-panel-left));
+  --panel-padding: 4em;
   --color-bg-yellow: #FFFEC8;
   --color-accent-grey: #f0f0f0;
   --color-box: #fafafa;
@@ -24,6 +27,18 @@
   --color-accent-grey: #404040;
   --color-box: #404040;
   --color-grey: #909090;
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --section-pos-left: -23ch;
+    --section-panel-left: 0;
+    --panel-padding: .5em;
+  }
+
+  #sidebar-btn {
+    display: block;
+  }
 }
 
 body {
@@ -106,8 +121,8 @@ button, .button {
 habitat-panel, .habitat-panel {
   position: absolute;
   bottom: 0;
-  right: 0;
-  left: var(--section-width-left);
+  right: var(--section-panel-right);
+  left: var(--section-panel-left);
   transition: all .1s ease-out;
   animation: panel .3s ease-in;
   border-radius: 1em 0 0 0;
@@ -116,7 +131,9 @@ habitat-panel, .habitat-panel {
 }
 
 section#left {
-  width: var(--section-width-left);
+  position: absolute;
+  left: var(--section-pos-left);
+  width: 23ch;
   overflow: hidden;
 }
 
@@ -154,10 +171,6 @@ select:focus {
 }
 
 @media (max-width: 1100px) {
-  :root {
-    --section-width-left: 0em;
-  }
-
   #sidebar-btn {
     display: block;
   }
@@ -168,7 +181,9 @@ select:focus {
 }
 
 #sidebar-toggle:checked ~ section {
-  --section-width-left: 23ch;
+  --section-pos-left: 0;
+  --section-panel-left: 23ch;
+  --section-panel-right: -23ch;
 }
 
 #sidebar-toggle:checked ~ #sidebar-btn {
@@ -273,4 +288,8 @@ button, .button {
 
 #boxleg:hover {
   transform: none;
+}
+
+.mtb {
+  margin: 1em 0;
 }

@@ -223,7 +223,7 @@ button, .button, button *, .button * {
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
     </div>
     <a id='id' class='s lbl' style='align-self:start;'> </a>
-    <div class='flex col'>
+    <div class='flex col mtb'>
       <div id='changeSignal' class='flex row flavor-signal'>
         <button id='sub' class='shareBtn left'><span style='vertical-align:text-top;'>-</span></button>
         <input id='inputShares' placeholder='0'>

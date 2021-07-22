@@ -35,7 +35,7 @@ button {
 }
 #tabs > div {
   position: absolute;
-  width: calc(100% - 8em);
+  width: calc(100% - var(--panel-padding) * 2);
   transform: rotateY(90deg);
 }
 #tabs > div.selected {
@@ -62,6 +62,7 @@ button {
   margin: 1em auto;
 }
 button#submit {
+  display: none;
   position: fixed;
   right: 1em;
   top: 50vh;
@@ -92,7 +93,7 @@ button, .button {
 }
 </style>
 <button id='submit' class='s'>Submit</button>
-<div style='padding:0 4em;'>
+<div style='padding:0 var(--panel-padding);'>
 <section>
   <div class='left'>
     <space></space>
@@ -101,22 +102,22 @@ button, .button {
   </div>
 
   <div class='flex row center evenly'>
-    <div class='box flex col center'>
+    <div class='box flex col center mtb'>
       <p class='s'>RESERVE</p>
       <p id='totalReserve' class='xl light'> </p>
     </div>
 
-    <div class='box flex col center'>
+    <div class='box flex col center mtb'>
       <p class='s'>MEMBERS</p>
       <p id='memberCount' class='xl light'> </p>
     </div>
 
-    <div class='box flex col center'>
+    <div class='box flex col center mtb'>
       <p class='s'>Total Value Locked</p>
       <p id='tvl' class='xl light'> </p>
     </div>
 
-    <div class='flex col left' style='margin:1em 0;'>
+    <div class='flex col left mtb'>
       <div class='box flex col center highlightPersonal'>
         <p class='s'>PERSONAL VOTES</p>
         <p id='personalVotes' class='bold s'> </p>

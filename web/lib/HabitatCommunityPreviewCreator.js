@@ -19,7 +19,7 @@ const TEMPLATE =
 }
 .communityBox canvas {
   width: 40ch;
-  height: 20ch;
+  max-width: 100%;
   border-radius: 2em;
 }
 .communityBox input {

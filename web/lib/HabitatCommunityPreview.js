@@ -12,10 +12,11 @@ const TEMPLATE =
   border-radius: 2em;
   background-color: var(--color-accent-grey);
   cursor: pointer;
+  min-height: 20ch;
 }
 .communityBox img {
   width: 40ch;
-  height: 20ch;
+  max-width: 100%;
   border-radius: 2em;
 }
 </style>

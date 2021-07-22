@@ -748,3 +748,9 @@ button, .button {
   transform: none;
   box-shadow: inherit;
 }
+
+@media (max-width: 1100px) {
+  input {
+    min-width: 100%;
+  }
+}
