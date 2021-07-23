@@ -2,14 +2,14 @@ version: '3'
 
 services:
   geth:
-    image: ethereum/client-go:v1.10.5
+    image: ethereum/client-go:v1.10.6
     tty: true
     volumes:
       - ./scripts:/scripts
     ports:
       - 8222:8222
     environment:
-      - GETH_ARGS=--networkid=99 --maxpeers=0 --nodiscover --nousb --miner.noverify --miner.gaslimit=12000000 --miner.gastarget=12000000 --miner.gasprice=0x01 --http --http.port=8222 --http.api=eth,net,web3,debug,personal,miner --allow-insecure-unlock --http.addr=0.0.0.0 --http.corsdomain=* --http.vhosts=*
+      - GETH_ARGS=--networkid=99 --maxpeers=0 --nodiscover --miner.noverify --miner.gaslimit=24000000 --miner.gasprice=1 --http --http.port=8222 --http.api=eth,net,web3,debug,personal,miner --allow-insecure-unlock --http.addr=0.0.0.0 --http.corsdomain=* --http.vhosts=*
     entrypoint: '/bin/sh -c "geth $$GETH_ARGS init /scripts/genesis.json && geth $$GETH_ARGS --preload /scripts/chainInit.js console"'
 
   web:
