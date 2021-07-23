@@ -49,7 +49,7 @@ export async function calculateRewards (token) {
 
     // -1 means drained (no balance)
     if (newValue.eq(ethers.constants.MaxUint256)) {
-      return 0;
+      return ethers.BigNumber.from(0);
     }
 
     // default to newValue
