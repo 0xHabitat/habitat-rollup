@@ -125,15 +125,13 @@ const ACCOUNT_YIELD_CARD_TEMPLATE =
     <div class='left box flip-card-front'>
       <h6 class='spaced-title'><span><emoji-cash></emoji-cash><span> Rollup Yield </span></span><em target='wrapper-yield' class='icon-info'>${SVG_INFO_ICON}</em></h6>
       <space></space>
-      <div style='display:grid;grid-template-columns:repeat(2, 1fr);gap:.7em;'>
-        <div>
-          <div class='flex row' style='flex-wrap:nowrap;'>
-            <h1 style='white-space:pre;' id='rewardYield'> </h1>
-          </div>
-          <space></space>
+      <div class='flex col'>
+        <div class='flex col'>
+          <h1 style='white-space:pre;' id='rewardYield'> </h1>
           <button id='claim' class='boxBtn'>Claim</button>
           <space></space>
           <p class='smaller' style='color:var(--color-grey);'>Next yield added in <span id='nextYield'></span></p>
+          <space></space>
         </div>
         <div>
           <p style='color:var(--color-grey);' class='smaller'>Your Stake:</p>
@@ -200,15 +198,6 @@ const ACCOUNT_TEMPLATE =
 #tabnav .selected {
   border-bottom-color: var(--color-bg-invert) !important;
   transition: border .1s ease-in;
-}
-#tokenActions > button {
-  visibility: hidden;
-  opacity: 0;
-  border: none;
-}
-#tokenActions > button.expanded {
-  visibility: visible;
-  opacity: 1;
 }
 
 .spaced-title {
@@ -278,13 +267,10 @@ const ACCOUNT_TEMPLATE =
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: auto;
 }
-@media (max-width: 1000px) {
-  .box {
-    max-width: max-content;
-  }
+@media (max-width: 1200px) {
   #wallet-overview-inner {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-grow: 1;
     flex-wrap: wrap;
     place-content: center;
@@ -343,11 +329,6 @@ const ACCOUNT_TEMPLATE =
           <div id='history'></div>
         </div>
 
-        <div id='tokenActions' class='flex row' style='visibility:hidden'>
-          <button id='transfer' class='flow'></button>
-          <button id='withdraw' class='flow'></button>
-        </div>
-
         <div class='box left' style='grid-row:4;grid-column:1/1;'>
           <h6><span><emoji-airplane></emoji-airplane><span> Withdrawals</span></span></h6>
           <space></space>
@@ -391,8 +372,6 @@ async function updateErc20 (root) {
     }
   }
 
-  root.querySelector('#tokenActions').style.visibility = tokens.length ? 'visible' : 'hidden';
-
   if (!tokens.length) {
     return;
   }
@@ -433,7 +412,7 @@ async function updateErc20 (root) {
       const { token, from, to, value, transactionHash } = transfers[(len - 1) - i];
       const isDeposit = from === ethers.constants.AddressZero;
       const isIncoming = to === account;
-      const isExit = to === ethers.constants.AddressZero;
+      const isWithdraw = to === ethers.constants.AddressZero;
       const isTopUp = to.toLowerCase() === DEFAULT_ROLLUP_OPERATOR_ADDRESS;
       const erc = await getTokenV2(token);
       const amount = renderAmount(value, erc.decimals);
@@ -441,8 +420,8 @@ async function updateErc20 (root) {
 
       if (isDeposit) {
         type = 'Deposit';
-      } else if (isExit) {
-        type = 'Exit';
+      } else if (isWithdraw) {
+        type = 'Withdraw';
       } else if (isIncoming) {
         type = Number(from) < 0xffffffff ? 'Operator Reward' : 'Incoming';
       } else if (isTopUp) {
