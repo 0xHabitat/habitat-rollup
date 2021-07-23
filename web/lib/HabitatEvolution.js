@@ -17,6 +17,7 @@ import HabitatPanel from '/lib/HabitatPanel.js';
 import './HabitatToggle.js';
 import './HabitatProposalCard.js';
 import HabitatProposeCard from './HabitatProposeCard.js';
+import { setupTabs } from './tabs.js';
 
 const { HBT, EVOLUTION_SIGNAL_VAULT, EVOLUTION_ACTION_VAULT, EVOLUTION_COMMUNITY_ID } = getConfig();
 const VAULTS = {
@@ -31,7 +32,8 @@ class HabitatEvolution extends HabitatPanel {
 button {
   margin: 0;
 }
-#tabs {
+.light {
+  font-weight: 300;
 }
 #tabs > div {
   position: absolute;
@@ -40,9 +42,6 @@ button {
 }
 #tabs > div.selected {
   transform: none;
-}
-.light {
-  font-weight: 300;
 }
 #tabnav > div {
   padding-bottom: .5em;
@@ -185,9 +184,9 @@ button, .button {
   constructor() {
     super();
 
-    this.shadowRoot.querySelector('#tabnav #tab-signal').addEventListener('click', () => this.switchTab('tab-signal'), false);
-    this.shadowRoot.querySelector('#tabnav #tab-governance').addEventListener('click', () => this.switchTab('tab-governance'), false);
-    this.switchTab('tab-signal');
+    setupTabs(this.shadowRoot, (node) => {
+      this.activeTab = node;
+    });
 
     for (const node of this.shadowRoot.querySelectorAll('#submitTopic')) {
       node.addEventListener('click', () => {
@@ -201,26 +200,6 @@ button, .button {
 
     wrapListener(this.shadowRoot.querySelector('#submit'), this.submitChanges.bind(this));
     this.shadowRoot.querySelector('#delegateModeToggle').addEventListener('toggle', this.onToggle.bind(this), false);
-  }
-
-  switchTab (id) {
-    const n = 'selected';
-    const tabnav = this.shadowRoot.querySelector('#tabnav');
-    for (const node of tabnav.children) {
-      if (node.id === id) {
-        node.classList.add(n);
-        continue;
-      }
-      node.classList.remove(n);
-    }
-    for (const node of this.shadowRoot.querySelector('#tabs').children) {
-      if (node.id === id) {
-        node.classList.add(n);
-        this.activeTab = node;
-        continue;
-      }
-      node.classList.remove(n);
-    }
   }
 
   get title () {

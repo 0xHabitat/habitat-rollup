@@ -27,6 +27,7 @@ import {
 } from './rollup.js';
 import { UsernameFlow } from './flows.js';
 import { calculateRewards } from './rewards.js';
+import { setupTabs } from './tabs.js';
 import TYPED_DATA from './typedData.js';
 
 import HabitatPanel from './HabitatPanel.js';
@@ -180,23 +181,25 @@ const ACCOUNT_TEMPLATE =
 #exits > div {
   grid-template-columns: repeat(3, auto);
 }
-.tab {
-  padding: 0 1em;
+#tabs > div {
+  position: absolute;
+  width: calc(100% - var(--panel-padding) * 2);
+  transform: rotateY(90deg);
 }
-.tabs {
-  margin: 2em;
-  gap: 4em;
+#tabs > div.selected {
+  transform: none;
 }
-.tabs a {
-  font-size: 1.5em;
-  color: var(--color-black);
+#tabnav > div {
+  padding-bottom: .5em;
+  border-bottom: 2px solid transparent;
 }
-.tabs > div {
-  background: none;
-  border-bottom: 1px solid transparent;
+#tabnav p {
+  margin: 0 1em;
+  cursor: pointer;
 }
-.tabs > div.active {
-  border-bottom-color: var(--color-bg-invert);
+#tabnav .selected {
+  border-bottom-color: var(--color-bg-invert) !important;
+  transition: border .1s ease-in;
 }
 #tokenActions > button {
   visibility: hidden;
@@ -265,42 +268,9 @@ const ACCOUNT_TEMPLATE =
   fill: var(--color-text-invert) !important;
 }
 
-</style>
-<section style='background-color:var(--color-bg-yellow);min-height:100%;'>
-<div class='flex row' style='justify-content:space-between;width:100%;min-height:4em;'>
-   <div class='flex row tabs left'>
-    <div class='active'>
-      <a target='#wallet-overview' class='secondary'>Balance</a>
-    </div>
-    <div>
-      <a target='#wallet-stakes' class='secondary'>Proposals</a>
-    </div>
-    <div>
-      <a target='#wallet-delegation' class='secondary'>Delegation</a>
-    </div>
-    <div>
-      <a target='#wallet-rewards' class='secondary'>Rewards</a>
-    </div>
-  </div>
-
-  <div class='flex row'>
-    <h6 id='greeting'> </h6>
-    <button id='name' class='flow smaller'>Change Username</button>
-  </div>
-</div>
-<sep></sep>
-
-<style>
-.tabcontainer {
-  width: max-content;
-  overflow: hidden;
-  display: flex;
-  flex-wrap: nowrap;
-  transition: .5s all ease-in;
-}
-
-.tabcontainer > section {
-  width: var(--section-width-panel);
+#content {
+  background-color: var(--color-bg-yellow) !important;
+  padding: 0 var(--panel-padding);
 }
 #wallet-overview-inner {
   display: grid;
@@ -313,22 +283,44 @@ const ACCOUNT_TEMPLATE =
     max-width: max-content;
   }
   #wallet-overview-inner {
-    grid-template-columns: auto;
-  }
-  #wallet-overview-inner > .box {
-    grid-column: auto !important;
-    grid-row: auto !important;
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    flex-wrap: wrap;
+    place-content: center;
   }
 }
 </style>
-<section class='tabcontainer'>
-  <section class='tab' id='wallet-overview'>
-    <div class='flex col'>
-
-    <div style='place-self:flex-end;' class='flex'>
-      <button id='add747' class='smaller noHover'>Add HBT to <img style='display:inline;height:1em' src='/lib/assets/icons/metamask-fox.svg'></button>
+<div class='flex row' style='justify-content:space-between;width:100%;min-height:4em;'>
+  <div id='tabnav' class='flex row left'>
+    <div id='wallet-overview'>
+      <p class='l'>Balance</p>
     </div>
-    <space></space>
+    <div id='wallet-stakes'>
+      <p class='l'>Proposals</p>
+    </div>
+    <div id='wallet-delegation'>
+      <p class='l'>Delegation</p>
+    </div>
+    <div id='wallet-rewards'>
+      <p class='l'>Rewards</p>
+    </div>
+  </div>
+
+  <div class='flex row'>
+    <h6 id='greeting'> </h6>
+    <button id='name' class='flow smaller'>Change Username</button>
+  </div>
+</div>
+<sep></sep>
+<div id='tabs'>
+  <div class='tab' id='wallet-overview'>
+    <div class='flex col center'>
+
+      <div style='place-self:flex-end;' class='flex'>
+        <button id='add747' class='smaller noHover'>Add HBT to <img style='display:inline;height:1em' src='/lib/assets/icons/metamask-fox.svg'></button>
+      </div>
+      <space></space>
 
       <div id='wallet-overview-inner'>
         <div class='box' style='grid-row:1/4;grid-column:1/2;padding:0;max-width:max-content;'>
@@ -364,21 +356,24 @@ const ACCOUNT_TEMPLATE =
         </div>
       </div>
     </div>
-  </section>
+    <space></space>
+  </div>
 
-  <section class='tab' id='wallet-stakes'>
+  <div class='tab' id='wallet-stakes'>
     <habitat-stakes></habitat-stakes>
-  </section>
+    <space></space>
+  </div>
 
-  <section class='tab' id='wallet-delegation'>
+  <div class='tab' id='wallet-delegation'>
     <habitat-delegation-view></habitat-delegation-view>
-  </section>
+    <space></space>
+  </div>
 
-  <section class='tab' id='wallet-rewards'>
+  <div class='tab' id='wallet-rewards'>
     <habitat-rewards></habitat-rewards>
-  </section>
-
-</section>
+    <space></space>
+  </div>
+</div>
 `;
 
 async function updateErc20 (root) {
@@ -505,40 +500,11 @@ async function updateErc20 (root) {
   }
 }
 
-function onTab (evt) {
-  const ACTIVE = 'active';
-  const target = evt.target.getAttribute('target');
-  const targetSection = this.shadowRoot.querySelector(target);
-  const parentContainer = targetSection.parentElement;
-
-  evt.target.parentElement.parentElement.querySelector('.active').classList.remove(ACTIVE);
-  evt.target.parentElement.classList.add(ACTIVE);
-
-  for (let i = 0, len = parentContainer.children.length; i < len; i++) {
-    const section = parentContainer.children[i];
-    if (section === targetSection) {
-      const foo = window.getComputedStyle(section).getPropertyValue('--section-width-panel');
-      parentContainer.style.transform = `translateX( calc( ${foo} * -${1 * i}) )`;
-      break;
-    }
-  }
-}
-
 class HabitatAccount extends HabitatPanel {
   static TEMPLATE = ACCOUNT_TEMPLATE;
 
   constructor() {
     super();
-  }
-
-  get title () {
-    return 'Account Overview';
-  }
-
-  async render () {
-    for (const e of this.shadowRoot.querySelectorAll('.tabs div > a')) {
-      wrapListener(e, onTab.bind(this));
-    }
 
     wrapListener(this.shadowRoot.querySelector('button#name'), (evt) => new UsernameFlow(evt.target));
     wrapListener(
@@ -573,6 +539,14 @@ class HabitatAccount extends HabitatPanel {
       });
     }
 
+    setupTabs(this.shadowRoot);
+  }
+
+  get title () {
+    return 'Account Overview';
+  }
+
+  async render () {
     this.updateAccount();
   }
 
