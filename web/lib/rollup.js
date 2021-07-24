@@ -807,6 +807,37 @@ export async function getExitStatus (tokenAddr, accountAddr) {
   return { pendingAmount, availableAmount };
 }
 
+export async function getExitStatusV2 (tokenAddr, accountAddr) {
+  const tmp = {};
+  const { habitat, bridge } = await getProviders();
+  const pending = Number(await bridge.finalizedHeight()) + 1;
+
+  // query transfer to zero from finalizedBlock + 1 - latest
+  for (const log of await doQueryWithOptions({ fromBlock: pending }, 'TokenTransfer', tokenAddr, accountAddr, ethers.constants.AddressZero)) {
+    const obj = tmp[log.blockNumber];
+    if (obj) {
+      obj.value = obj.value.add(log.args.value);
+    } else {
+      const e = { value: log.args.value, finalityEstimate: 0 };
+      tmp[log.blockNumber] = e;
+    }
+  }
+
+  const blockNumbers = Object.keys(tmp);
+  const estimates = await habitat.provider.send('rollup_estimateFinality', blockNumbers);
+  const pendingAmounts = [];
+
+  for (let i = 0, len = blockNumbers.length; i < len; i++) {
+    const e = tmp[blockNumbers[i]];
+    const estimate = estimates[i];
+    e.finalityEstimate = estimate;
+    pendingAmounts.push(e);
+  }
+
+  const availableAmount = await getErc20Exit(tokenAddr, accountAddr);
+  return { pendingAmounts, availableAmount };
+}
+
 export function getBlockExplorerLink (txHash) {
   return `/explorer/tx/#${txHash}`;
 }

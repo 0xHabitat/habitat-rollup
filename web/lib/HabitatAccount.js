@@ -17,7 +17,7 @@ import {
   doQuery,
   getProviders,
   getUsername,
-  getExitStatus,
+  getExitStatusV2,
   getBlockExplorerLink,
   getGasTank,
   queryTransfers,
@@ -65,11 +65,12 @@ const ACCOUNT_ERC20_TEMPLATE =
 const ACCOUNT_EXITS_PRE_TEMPLATE =
 `
 <p>Token</p>
-<p>Pending</p>
-<p>Available</p>
+<p>Amount</p>
+<p>Status</p>
 `;
 
-const ACCOUNT_EXITS_TEMPLATE =
+const ACCOUNT_EXITS_TEMPLATE = document.createElement('template');
+ACCOUNT_EXITS_TEMPLATE.innerHTML =
 `
 <habitat-token-element></habitat-token-element>
 <p></p>
@@ -92,7 +93,7 @@ const SVG_INFO_ICON =
 
 const ACCOUNT_GAS_TANK_CARD_TEMPLATE =
 `
-<div class='flip-card' style='grid-row:1/1;grid-column:2/2;'>
+<div class='flip-card' style='grid-row:1/1;grid-column:3/6;'>
   <div id='wrapper-gas' class='flip-wrapper'>
     <div class='left box flip-card-front'>
       <h6 class='spaced-title'><span><emoji-fuelpump></emoji-fuelpump><span> Gas Tank Balance</span></span><em target='wrapper-gas' class='icon-info'>${SVG_INFO_ICON}</em></h6>
@@ -120,7 +121,7 @@ const ACCOUNT_GAS_TANK_CARD_TEMPLATE =
 
 const ACCOUNT_YIELD_CARD_TEMPLATE =
 `
-<div class='flip-card' style='grid-row:1/1;grid-column:3/3;'>
+<div class='flip-card' style='grid-row:1/1;grid-column:6/8;'>
   <div id='wrapper-yield' class='flip-wrapper'>
     <div class='left box flip-card-front'>
       <h6 class='spaced-title'><span><emoji-cash></emoji-cash><span> Rollup Yield </span></span><em target='wrapper-yield' class='icon-info'>${SVG_INFO_ICON}</em></h6>
@@ -264,7 +265,6 @@ const ACCOUNT_TEMPLATE =
 #wallet-overview-inner {
   display: grid;
   gap: 1em;
-  grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: auto;
 }
 @media (max-width: 1200px) {
@@ -275,6 +275,10 @@ const ACCOUNT_TEMPLATE =
     flex-wrap: wrap;
     place-content: center;
   }
+}
+.interactive {
+  text-decoration: underline;
+  cursor: pointer;
 }
 </style>
 <div class='flex row' style='justify-content:space-between;width:100%;min-height:4em;'>
@@ -309,7 +313,7 @@ const ACCOUNT_TEMPLATE =
       <space></space>
 
       <div id='wallet-overview-inner'>
-        <div class='box' style='grid-row:1/4;grid-column:1/2;padding:0;max-width:max-content;'>
+        <div class='box' style='grid-row:1/4;grid-column:1/3;padding:0;max-width:max-content;'>
           <habitat-transfer-box id='transfer-box'></habitat-transfer-box>
         </div>
 
@@ -317,19 +321,19 @@ const ACCOUNT_TEMPLATE =
 
         ${ACCOUNT_YIELD_CARD_TEMPLATE}
 
-        <div class='left box' style='grid-row:2/4;grid-column:2/4;'>
+        <div class='left box' style='grid-row:2/4;grid-column:3/8;'>
           <h6><span><emoji-camping></emoji-camping><span> Rollup Balances</span></span></h6>
           <space></space>
           <div id='erc20'></div>
         </div>
 
-        <div class='left box' style='grid-row:4/8;grid-column:2/4;'>
+        <div class='left box' style='grid-row:4/8;grid-column:4/8;'>
           <h6><span><emoji-dizzy></emoji-dizzy><span> Activities</span></span></h6>
           <space></space>
           <div id='history'></div>
         </div>
 
-        <div class='box left' style='grid-row:4;grid-column:1/1;'>
+        <div class='box left' style='grid-row:4;grid-column:1/4;'>
           <h6><span><emoji-airplane></emoji-airplane><span> Withdrawals</span></span></h6>
           <space></space>
           <div id='exits'></div>
@@ -456,21 +460,35 @@ async function updateErc20 (root) {
   {
     // exits
     const child = document.createElement('div');
-    child.innerHTML = ACCOUNT_EXITS_PRE_TEMPLATE + ACCOUNT_EXITS_TEMPLATE.repeat(tokens.length);
-    const children = child.children;
-    let childPtr = 3;
+    child.innerHTML = ACCOUNT_EXITS_PRE_TEMPLATE;
     for (let i = 0, len = tokens.length; i < len; i++) {
       const tokenAddr = tokens[i];
-      const { pendingAmount, availableAmount } = await getExitStatus(tokenAddr, account);
-
       const token = await getTokenV2(tokenAddr);
-      const amount = ethers.utils.formatUnits(availableAmount, token.decimals);
-      const disabled = !availableAmount.gt(0);
+      const { pendingAmounts, availableAmount } = await getExitStatusV2(tokenAddr, account);
 
-      children[childPtr++].setAttribute('token', tokenAddr);
-      children[childPtr++].textContent = renderAmount(pendingAmount, token.decimals);
-      children[childPtr++].textContent = renderAmount(availableAmount, token.decimals);
-      //wrapListener(children[childPtr++], (evt) => root.querySelector('habitat-transfer-box').doExit(tokenAddr, amount));
+      if (availableAmount.gt(0)) {
+        const amount = ethers.utils.formatUnits(availableAmount, token.decimals);
+        const template = ACCOUNT_EXITS_TEMPLATE.content.cloneNode(true);
+        const childs = template.children;
+
+        childs[0].setAttribute('token', tokenAddr);
+        childs[1].textContent = renderAmount(availableAmount, token.decimals);
+        childs[2].textContent = 'Ready to Exit';
+        childs[2].classList.add('interactive');
+        wrapListener(childs[2], (evt) => root.querySelector('habitat-transfer-box').doExit(tokenAddr, amount));
+        child.append(template);
+      }
+
+      for (const e of pendingAmounts) {
+        const template = ACCOUNT_EXITS_TEMPLATE.content.cloneNode(true);
+        const childs = template.children;
+
+        childs[0].setAttribute('token', tokenAddr);
+        childs[1].textContent = renderAmount(e.value, token.decimals);
+        childs[2].textContent = `Ready in ~${secondsToString(e.finalityEstimate)}`;
+
+        child.append(template);
+      }
     }
     const container = root.querySelector('#exits');
     if (container) {
