@@ -123,6 +123,9 @@ async function update (force = false) {
   }
   lastGlobalUpdate = now;
 
+  // trigger update check for repos
+  await updateConfig();
+
   const newIssueCache = Object.create(null);
   const newLinkIndex = Object.create(null);
   for (const repoName in globalRepoConfigs) {

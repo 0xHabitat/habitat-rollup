@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { fetchJson } from './utils.mjs';
 import TYPED_DATA from './typedData.mjs';
 
 // TODO
@@ -56,14 +57,6 @@ function getLatestGasRate () {
   return HISTORIC_GAS_PRICES[HISTORIC_GAS_PRICES.length - 1].value;
 }
 
-async function fetchJson (method, params) {
-  const resp = await ethers.utils.fetchJson(L2_RPC_URL, JSON.stringify({ id: 1, method, params }));
-  if (resp.error) {
-    throw new Error(resp.error.message);
-  }
-  return resp.result;
-}
-
 export async function getGasAccount (account) {
   // uint256 nonce, address operator, address token, uint256 amount
   const from = account.toLowerCase();
@@ -74,7 +67,7 @@ export async function getGasAccount (account) {
   };
 
   try {
-    const txs = await fetchJson('eth_getLogs', [filter]);
+    const txs = await fetchJson(L2_RPC_URL, 'eth_getLogs', [filter]);
     let value = 0n;
     let consumed = 0n;
     let ratePerTx = 0n;
@@ -159,12 +152,14 @@ export async function submitTransaction (_args, jsonOject) {
   }
 
   try {
-    const ret = await ethers.utils.fetchJson(
+    const ret = await fetchJson(
       L2_RPC_URL,
-      JSON.stringify({ id: 1, auth: L2_RPC_API_KEY, method: 'eth_sendRawTransaction', params: [jsonOject] })
+      'eth_sendRawTransaction',
+      [jsonOject],
+      { auth: L2_RPC_API_KEY }
     );
 
-    return ret;
+    return { result: ret };
   } catch (e) {
     console.error(e);
     throw new Error('unknown error');

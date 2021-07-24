@@ -3,6 +3,7 @@ import { deflateRawSync } from 'zlib';
 
 import { getStats, getSignals, submitVote, updateConfig } from './evolution.mjs';
 import { getGasTank, submitTransaction } from './operator.mjs';
+import './pager.mjs';
 
 const DEFAULT_HEADERS = {
   'access-control-allow-origin': '*',
@@ -74,9 +75,6 @@ async function startServer ({ host, port }) {
       const ret = `{"error":{"code":-32000,"message":"${e.message || ''}"}}`;
       resp.end(deflate ? deflateRawSync(ret) : ret);
     }
-
-    // trigger update check for repos
-    updateConfig();
   }
 
   const server = new http.Server(onRequest);
@@ -87,6 +85,7 @@ async function startServer ({ host, port }) {
 }
 
 process.on('SIGTERM', () => process.exit(0));
+process.on('SIGINT', () => process.exit(0));
 REQUEST_HANDLERS['stats'] = getStats;
 REQUEST_HANDLERS['signals'] = getSignals;
 REQUEST_HANDLERS['submitVote'] = submitVote;

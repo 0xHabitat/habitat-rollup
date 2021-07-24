@@ -1,5 +1,6 @@
 import https from 'https';
 import { parse } from 'url';
+import { ethers } from 'ethers';
 
 const FETCH_TIMEOUT_MS = 10000;
 
@@ -42,4 +43,15 @@ export function replaceAll (str, a, b) {
   }
 
   return ret;
+}
+
+export async function fetchJson (url, method, params, overrides = {}) {
+  const resp = await ethers.utils.fetchJson(
+    url,
+    JSON.stringify(Object.assign({ jsonrpc: '2.0', id: 1, method, params }, overrides))
+  );
+  if (resp.error) {
+    throw new Error(resp.error.message);
+  }
+  return resp.result;
 }
