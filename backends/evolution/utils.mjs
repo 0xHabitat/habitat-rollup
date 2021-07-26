@@ -4,15 +4,17 @@ import { ethers } from 'ethers';
 
 const FETCH_TIMEOUT_MS = 10000;
 
-export async function fetch (url, headers) {
+export async function fetch (url, headers, payload) {
   return new Promise(
     function (resolve, reject) {
       const options = parse(url);
       options.headers = { 'user-agent': 'curl/7.64.1' };
+      options.method = payload ? 'POST' : 'GET';
       if (headers) {
         Object.assign(options.headers, headers);
       }
-      const req = https.get(options);
+
+      const req = https.request(url, options);
       req.setTimeout(FETCH_TIMEOUT_MS, () => req.abort());
       req.on('error', reject);
       req.on('socket', (socket) => socket.setTimeout(FETCH_TIMEOUT_MS));
@@ -25,6 +27,7 @@ export async function fetch (url, headers) {
           resolve(data);
         });
       });
+      req.end(payload);
     }
   );
 }
