@@ -13,7 +13,7 @@
   --section-panel-left: 23ch;
   --section-panel-right: 0;
   --section-width-panel: calc(99vw - var(--section-panel-left));
-  --panel-padding: 4em;
+  --panel-padding: 2em;
   --color-bg-yellow: #FFFEC8;
   --color-accent-grey: #f0f0f0;
   --color-box: #fafafa;
