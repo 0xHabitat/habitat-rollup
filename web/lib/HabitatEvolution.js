@@ -12,6 +12,8 @@ import {
   getProviders,
   getDelegatedAmountsForToken,
   decodeMetadata,
+  getReceipt,
+  fetchModuleInformation,
 } from '/lib/rollup.js';
 import HabitatPanel from '/lib/HabitatPanel.js';
 import './HabitatToggle.js';
@@ -20,10 +22,6 @@ import HabitatProposeCard from './HabitatProposeCard.js';
 import { setupTabs } from './tabs.js';
 
 const { HBT, EVOLUTION_SIGNAL_VAULT, EVOLUTION_ACTION_VAULT, EVOLUTION_COMMUNITY_ID } = getConfig();
-const VAULTS = {
-  [EVOLUTION_SIGNAL_VAULT]: 'Signal',
-  [EVOLUTION_ACTION_VAULT]: 'Action',
-};
 
 class HabitatEvolution extends HabitatPanel {
   static TEMPLATE =
@@ -194,9 +192,9 @@ button, .button {
     for (const node of this.shadowRoot.querySelectorAll('#submitTopic')) {
       node.addEventListener('click', () => {
         const e = new HabitatProposeCard();
-        e.setAttribute('signal-vault', EVOLUTION_SIGNAL_VAULT);
-        e.setAttribute('action-vault', EVOLUTION_ACTION_VAULT);
-        e.setAttribute('proposal-type', VAULTS[this.activeTab.querySelector('#proposals').getAttribute('vault')]);
+        e.setAttribute('signal-vault', this.signalVault);
+        e.setAttribute('action-vault', this.actionVault);
+        e.setAttribute('proposal-type', this.vaults[this.activeTab.querySelector('#proposals').getAttribute('vault')]);
         this.activeTab.querySelector('#proposals').prepend(e);
       }, false);
     }
@@ -211,9 +209,9 @@ button, .button {
 
   get currentVault () {
     if (this.activeTab.id === 'tab-signal') {
-      return EVOLUTION_SIGNAL_VAULT;
+      return this.signalVault;
     }
-    return EVOLUTION_ACTION_VAULT;
+    return this.actionVault;
   }
 
   get delegationMode () {
@@ -228,6 +226,36 @@ button, .button {
   }
 
   async render () {
+    const [, txHash] = this.getAttribute('args').split(',');
+    if (txHash) {
+      const receipt = await getReceipt(txHash);
+      const { communityId } = receipt.events[0].args;
+
+      this.communityId = communityId;
+      this.vaults = {};
+
+      for (const log of await doQueryWithOptions({ toBlock: 1 }, 'VaultCreated', communityId)) {
+        const info = await fetchModuleInformation(log.args.condition);
+        const flavor = info.flavor || 'binary';
+        this.vaults[log.args.vaultAddress] = flavor;
+      }
+
+      // TODO
+      const vaults = Object.keys(this.vaults);
+      this.actionVault = vaults[0];
+      this.signalVault = vaults[1];
+    } else {
+      this.vaults = {
+        [EVOLUTION_SIGNAL_VAULT]: 'Signal',
+        [EVOLUTION_ACTION_VAULT]: 'Action',
+      };
+      this.actionVault = EVOLUTION_ACTION_VAULT;
+      this.signalVault = EVOLUTION_SIGNAL_VAULT;
+    }
+
+    this.shadowRoot.querySelector('#tab-governance #proposals').setAttribute('vault', this.actionVault);
+    this.shadowRoot.querySelector('#tab-signal #proposals').setAttribute('vault', this.signalVault);
+
     return this.chainUpdateCallback();
   }
 
@@ -260,7 +288,7 @@ button, .button {
 
     // members, votes
     {
-      const totalReserve = await habitat.callStatic.getBalance(token.address, EVOLUTION_ACTION_VAULT);
+      const totalReserve = await habitat.callStatic.getBalance(token.address, this.actionVault);
       this.shadowRoot.querySelector('#totalReserve').textContent = `${renderAmount(totalReserve, token.decimals, 1)} ${token.symbol}`;
 
       const memberCount = await habitat.callStatic.getTotalMemberCount(EVOLUTION_COMMUNITY_ID);
@@ -273,7 +301,7 @@ button, .button {
     {
       const refSignal = ethers.utils.formatUnits(tvl, token.decimals);
       const tabs = this.shadowRoot.querySelector('#tabs');
-      const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'ProposalCreated', [EVOLUTION_SIGNAL_VAULT, EVOLUTION_ACTION_VAULT]);
+      const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'ProposalCreated', [this.signalVault, this.actionVault]);
       for (const log of logs) {
         const vault = log.args[0];
         const proposals = tabs.querySelector(`[vault="${vault}"]`);
@@ -285,8 +313,8 @@ button, .button {
         const topic = metadata.topic;
         const e = document.createElement('habitat-proposal-card');
         e.setAttribute('hash', log.transactionHash);
-        e.setAttribute('signal-vault', EVOLUTION_SIGNAL_VAULT);
-        e.setAttribute('action-vault', EVOLUTION_ACTION_VAULT);
+        e.setAttribute('signal-vault', this.signalVault);
+        e.setAttribute('action-vault', this.actionVault);
         e.subtopicSupport = !topic;
         e.addEventListener('signalChange', (evt) => {
           this.submitChanges();
