@@ -733,7 +733,6 @@ export default class HabitatProposalCard extends HTMLElement {
       this.shadowRoot.querySelector('#execProposal').disabled = true;
     }
 
-      this.shadowRoot.querySelector('#execProposal').disabled = false;
     this.shadowRoot.querySelector('#startDate').textContent = formatDate(startDate * 1000);
     this.shadowRoot.querySelector('#endDate').textContent = endText;
     this.shadowRoot.querySelector('#tillClose').textContent = tillClose;
