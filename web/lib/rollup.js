@@ -1012,6 +1012,42 @@ export async function getGasTank (account) {
   };
 }
 
+export async function getStakedProposals () {
+  const txs = [];
+  const { habitat } = await getProviders();
+  const signer = await getSigner();
+  const account = await signer.getAddress();
+  const logs = await doQueryWithOptions({ toBlock: 1 }, 'VotedOnProposal', account);
+  const tmp = {};
+
+  for (const log of logs) {
+    const { proposalId, shares } = log.args;
+    if (tmp[proposalId]) {
+      continue;
+    }
+    tmp[proposalId] = true;
+
+    if (shares.eq(0)) {
+      continue;
+    }
+
+    txs.push(
+      {
+        info: `Remove Vote from ${renderAddress(proposalId)}`,
+        primaryType: 'VoteOnProposal',
+        message: {
+          proposalId,
+          shares: 0,
+          signalStrength: 0,
+          delegatedFor: ethers.constants.AddressZero
+        }
+      }
+    );
+  }
+
+  return txs;
+}
+
 export function onChainUpdate (callback) {
   function onMessage (evt) {
     if (evt.source !== window) {

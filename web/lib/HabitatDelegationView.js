@@ -17,11 +17,11 @@ import {
   getUsername,
   onChainUpdate
 } from './rollup.js';
-
+import { COMMON_STYLESHEET } from './component.js';
 import './HabitatTokenAmount.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <template id='col'>
 <a target='_blank'></a>
 <habitat-token-amount></habitat-token-amount>
@@ -72,31 +72,31 @@ async function removeDelegation ({ token, value, delegatee }) {
 export default class HabitatDelegationView extends HTMLElement {
   constructor() {
     super();
+
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+
+    this._container = this.shadowRoot.querySelector('.auto-col-grid');
+
+    wrapListener(
+      this.shadowRoot.querySelector('button#delegatee'),
+      this.changeAmount.bind(this)
+    );
   }
 
   connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-      this._container = this.querySelector('.auto-col-grid');
-
-      wrapListener(
-        this.querySelector('button#delegatee'),
-        this.changeAmount.bind(this)
-      );
-
-      this.update();
-      // async
-      setupTokenlistV2(this);
-    }
+    this.update();
+    // async
+    setupTokenlistV2(this.shadowRoot);
   }
 
   async changeAmount () {
-    const delegatee = await resolveName(this.querySelector('input#delegatee').value);
+    const delegatee = await resolveName(this.shadowRoot.querySelector('input#delegatee').value);
     if (!delegatee) {
       throw new Error('user not found');
     }
-    const token = await getTokenV2(this.querySelector('input#token').value);
-    const value = ethers.utils.parseUnits(this.querySelector('input#amount').value, token.decimals).toHexString();
+    const token = await getTokenV2(this.shadowRoot.querySelector('input#token').value);
+    const value = ethers.utils.parseUnits(this.shadowRoot.querySelector('input#amount').value, token.decimals).toHexString();
     const args = {
       token: token.address,
       value,
@@ -107,10 +107,10 @@ export default class HabitatDelegationView extends HTMLElement {
 
   async populateChange ({ token, value, delegatee }) {
     const erc = await getTokenV2(token);
-    this.querySelector('input#token').value = token;
-    this.querySelector('input#amount').value = ethers.utils.formatUnits(value, erc.decimals);
-    this.querySelector('input#delegatee').value = delegatee;
-    this.querySelector('button#delegatee').focus();
+    this.shadowRoot.querySelector('input#token').value = token;
+    this.shadowRoot.querySelector('input#amount').value = ethers.utils.formatUnits(value, erc.decimals);
+    this.shadowRoot.querySelector('input#delegatee').value = delegatee;
+    this.shadowRoot.querySelector('button#delegatee').focus();
   }
 
   async update () {
@@ -126,7 +126,7 @@ export default class HabitatDelegationView extends HTMLElement {
     const signer = await getSigner();
     const account = await signer.getAddress();
     const { habitat } = await getProviders();
-    const template = this.querySelector('template#col');
+    const template = this.shadowRoot.querySelector('template#col');
     const tmp = {};
 
     for (const log of await doQueryWithOptions({ toBlock: 1 }, 'DelegatedAmount', account)) {
@@ -141,13 +141,13 @@ export default class HabitatDelegationView extends HTMLElement {
         continue;
       }
 
-      const updateOnly = this.querySelector('#' + k);
+      const updateOnly = this.shadowRoot.querySelector('#' + k);
       if (updateOnly) {
         updateOnly.setAttribute('amount', value.toString());
         continue
       }
 
-      const ele = this.querySelector('#' + k) || template.content.cloneNode(true);
+      const ele = this.shadowRoot.querySelector('#' + k) || template.content.cloneNode(true);
       ele.children[0].textContent = await getUsername(delegatee);
       ele.children[0].href = getBlockExplorerLink(log.transactionHash);
 

@@ -1,19 +1,24 @@
 import {
   walletIsConnected,
   getSigner,
+  wrapListener,
 } from './utils.js';
 import {
   getProviders,
   doQuery,
-  onChainUpdate
+  onChainUpdate,
+  getStakedProposals,
 } from './rollup.js';
-
+import { COMMON_STYLESHEET } from './component.js';
 import './HabitatStake.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <div>
   <space></space>
+  <div class='flex row' style='place-content:flex-end;'>
+    <button id='freeVotes' class='s'>Remove all Votes</button>
+  </div>
   <div class='flex row evenly'>
     <p class='bold' id='info'></p>
   </div>
@@ -24,13 +29,26 @@ const TEMPLATE =
 export default class HabitatStakes extends HTMLElement {
   constructor() {
     super();
+
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+
+    this._container = this.shadowRoot.querySelector('#stakes');
+    wrapListener(this.shadowRoot.querySelector('#freeVotes'), async () => {
+      const txs = await getStakedProposals();
+      // dispatch (to sidebar)
+      window.postMessage({ type: 'hbt-tx-bundle', value: txs }, window.location.origin);
+    });
   }
 
   connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-      this._container = this.querySelector('#stakes');
+    onChainUpdate(this.onChainUpdateCallback.bind(this));
+    this.update();
+  }
 
+  onChainUpdateCallback () {
+    if (this.isConnected) {
+      onChainUpdate(this.onChainUpdateCallback.bind(this));
       this.update();
     }
   }
@@ -39,7 +57,6 @@ export default class HabitatStakes extends HTMLElement {
     if (!this.isConnected) {
       return;
     }
-    onChainUpdate(this.update.bind(this));
 
     if (!walletIsConnected) {
       return;
@@ -56,12 +73,17 @@ export default class HabitatStakes extends HTMLElement {
 
     for (const proposalId in tmp) {
       const { shares, signalStrength } = tmp[proposalId];
+      const attr = `[x-proposal="${proposalId}"]`;
       if (shares.eq(0)) {
+        const e = this._container.querySelector(attr);
+        if (e) {
+          e.remove();
+        }
         // ignore
         continue;
       }
 
-      if (this._container.querySelector(`[x-proposal="${proposalId}"]`)) {
+      if (this._container.querySelector(attr)) {
         continue;
       }
 
@@ -72,7 +94,7 @@ export default class HabitatStakes extends HTMLElement {
       this._container.appendChild(ele);
     }
 
-    this.querySelector('#info').textContent =
+    this.shadowRoot.querySelector('#info').textContent =
       this._container.children.length === 0 ? 'You staked on no proposals yet.' : '';
   }
 }
