@@ -59,7 +59,7 @@ async function checkEvents () {
     );
   } catch (e) {
     console.error(e);
-    await pager('chainError', e.message);
+    await pager('chainError', 'error getting rollup statistics');
     return;
   }
 
