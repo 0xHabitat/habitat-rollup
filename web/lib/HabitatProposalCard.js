@@ -17,6 +17,8 @@ import {
   simulateProcessProposal,
   getProposalInformation,
   onChainUpdate,
+  sendTransaction,
+  executeProposalActions,
 } from './rollup.js';
 import { COMMON_STYLESHEET } from './component.js';
 import HabitatProposeCard from './HabitatProposeCard.js';
@@ -46,6 +48,9 @@ TEMPLATE.innerHTML = `
   overflow: hidden;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+}
+#body {
+  max-width: 100%;
 }
 .shareBtn {
   width: 2em;
@@ -97,6 +102,9 @@ TEMPLATE.innerHTML = `
   height: 0;
   overflow: hidden;
   transform: rotateY(90deg);
+  -moz-backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .expanded {
   height: auto;
@@ -207,6 +215,11 @@ button, .button, button *, .button * {
   width: 3em;
   border-radius: 2em;
 }
+#processProposal,
+#execProposal {
+  width: 100%;
+  max-width: 100%;
+}
 </style>
 <div class='box'>
   <!---
@@ -258,6 +271,7 @@ button, .button, button *, .button * {
         <space></space>
         <div id='labels' class='flex row'></div>
       </div>
+      <div class='flex col align-left'>
       <div id='infobox' class='flex col align-left'>
         <p>INFORMATION</p>
         <space></space>
@@ -321,6 +335,15 @@ button, .button, button *, .button * {
         <p class='lbl s'>Link</p>
         <a target='_blank' id='externalLink' class='smaller center bold text-center'> </a>
         <space></space>
+
+      </div>
+
+      <div class='flex col align-left s' style='width:100%;'>
+        <space></space>
+        <button id='processProposal' disabled>Finalize Proposal</button>
+        <space></space>
+        <button id='execProposal' disabled>Execute Mainnet Actions</button>
+      </div>
 
       </div>
     </div>
@@ -399,6 +422,32 @@ export default class HabitatProposalCard extends HTMLElement {
         e.setAttribute(ATTR_SIGNAL_VAULT, this.getAttribute(ATTR_SIGNAL_VAULT));
         e.setAttribute(ATTR_ACTION_VAULT, this.getAttribute(ATTR_ACTION_VAULT));
         this.subSignals.prepend(e);
+      }
+    );
+
+    wrapListener(
+      this.shadowRoot.querySelector('#processProposal'),
+      async () => {
+        const args = {
+          proposalId: this.data.proposalId,
+          internalActions: this.data.tx.message.internalActions,
+          externalActions: this.data.tx.message.externalActions,
+        };
+
+        await sendTransaction('ProcessProposal', args);
+      }
+    );
+
+    wrapListener(
+      this.shadowRoot.querySelector('#execProposal'),
+      async () => {
+        const tx = await executeProposalActions(
+          this.data.tx.message.vault,
+          this.data.proposalId,
+          this.data.tx.message.externalActions
+        );
+        // lazy :)
+        window.open(getEtherscanLink(tx.hash), '_blank');
       }
     );
   }
@@ -655,7 +704,6 @@ export default class HabitatProposalCard extends HTMLElement {
     // will trigger recalculation
     this.shares = this.userVotedShares + this.cumulativeUserVotedShares;
 
-
     const { startDate } = this.data;
     let statusText = '-';
     let tillClose = '-';
@@ -663,6 +711,10 @@ export default class HabitatProposalCard extends HTMLElement {
     let quorumText = '100%';
     if (this.data.proposalStatus > VotingStatus.OPEN) {
       statusText = this.data.proposalStatusText;
+      this.shadowRoot.querySelector('#processProposal').disabled = true;
+
+      this.shadowRoot.querySelector('#execProposal').disabled =
+        this.data.proposalStats !== VotingStatus.PASSED || this.data.tx.message.externalActions === '0x';
     } else {
       const simResult = await simulateProcessProposal(
         {
@@ -676,8 +728,12 @@ export default class HabitatProposalCard extends HTMLElement {
       tillClose = simResult.secondsTillClose === -1 ? '∞' : secondsToString(simResult.secondsTillClose);
       endText = simResult.secondsTillClose === -1 ? '-' : formatDate((startDate + simResult.secondsTillClose) * 1000);
       quorumText = `${simResult.quorumPercent}%`;
+
+      this.shadowRoot.querySelector('#processProposal').disabled = !votingDisabled;
+      this.shadowRoot.querySelector('#execProposal').disabled = true;
     }
 
+      this.shadowRoot.querySelector('#execProposal').disabled = false;
     this.shadowRoot.querySelector('#startDate').textContent = formatDate(startDate * 1000);
     this.shadowRoot.querySelector('#endDate').textContent = endText;
     this.shadowRoot.querySelector('#tillClose').textContent = tillClose;
