@@ -39,6 +39,9 @@ button {
   position: absolute;
   width: calc(100% - var(--panel-padding) * 2);
   transform: rotateY(90deg);
+  -moz-backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 #tabs > div.selected {
   transform: none;

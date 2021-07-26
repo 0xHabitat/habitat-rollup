@@ -184,6 +184,9 @@ const ACCOUNT_TEMPLATE =
   position: absolute;
   width: calc(100% - var(--panel-padding) * 2);
   transform: rotateY(90deg);
+  -moz-backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 #tabs > div.selected {
   transform: none;
@@ -224,7 +227,8 @@ const ACCOUNT_TEMPLATE =
 
 .flip-card-front, .flip-card-back {
   position: relative;
-  -webkit-backface-visibility: hidden; /* Safari */
+  -moz-backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
