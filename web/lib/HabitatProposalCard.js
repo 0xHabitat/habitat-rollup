@@ -561,7 +561,7 @@ export default class HabitatProposalCard extends HTMLElement {
     let ret = this.userVotedShares;
 
     for (const node of this.childProposals) {
-      ret += node.cumulativeUserShares();
+      ret += node.cumulativeUserShares;
     }
 
     return ret;
@@ -571,7 +571,7 @@ export default class HabitatProposalCard extends HTMLElement {
     let ret = this.totalSharesExcludingUser;
 
     for (const node of this.childProposals) {
-      ret += node.cumulativeShares();
+      ret += node.cumulativeShares;
     }
 
     return ret;
