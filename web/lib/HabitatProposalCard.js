@@ -413,8 +413,9 @@ export default class HabitatProposalCard extends HTMLElement {
       const isSignalContainer = node.parentElement.classList.contains('flavor-signal');
       function change (self, v) {
         if (isSignalContainer) {
-          self.userSignal = 100;
-          node.value = Number(node.value) + v;
+          const n =  Number(node.value) + v;
+          node.value = n;
+          self.userSignal = n > 0 ? 100 : 0;
         } else {
           self.userSignal = v === 1 ? 100 : 1;
         }

@@ -18,6 +18,7 @@ import {
 import HabitatPanel from '/lib/HabitatPanel.js';
 import './HabitatToggle.js';
 import './HabitatProposalCard.js';
+import './HabitatTransactionCart.js';
 import HabitatProposeCard from './HabitatProposeCard.js';
 import { setupTabs } from './tabs.js';
 
@@ -63,8 +64,8 @@ button {
   max-width: 120ch;
   margin: 1em auto;
 }
-button#submit {
-  display: none;
+habitat-transaction-cart {
+  display: block;
   position: fixed;
   right: 1em;
   top: 50vh;
@@ -90,7 +91,6 @@ button, .button {
   color: var(--color-bg-button);
 }
 </style>
-<button id='submit' class='s'>Submit</button>
 <div style='padding:0 var(--panel-padding);'>
   <div style='margin: 0 auto;max-width:60em;'>
     <section>
@@ -190,6 +190,7 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
       </div>
     </div>
   </div>
+  <habitat-transaction-cart></habitat-transaction-cart>
 </div>
 `;
 
@@ -210,7 +211,6 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
       }, false);
     }
 
-    wrapListener(this.shadowRoot.querySelector('#submit'), this.submitChanges.bind(this));
     this.shadowRoot.querySelector('#delegateModeToggle').addEventListener('toggle', this.onToggle.bind(this), false);
   }
 
