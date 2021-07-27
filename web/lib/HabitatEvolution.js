@@ -287,18 +287,24 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
         account = await signer.getAddress();
       }
 
-      const userBalance =
-        account ? renderAmount(await habitat.callStatic.getBalance(token.address, account), token.decimals) : '-';
-      const freeUserBalance =
-        account ? renderAmount(await habitat.callStatic.getUnlockedBalance(token.address, account), token.decimals) : '-';
-      this.shadowRoot.querySelector('#personalVotes').textContent = `${freeUserBalance}/${userBalance} ${token.symbol}`;
+      let usedUserBalance = '-';
+      let userBalance = usedUserBalance;
+      let usedDelegatedBalance = usedUserBalance;
+      let delegatedBalance = usedUserBalance;
 
-      const { total, used } = account ? await getDelegatedAmountsForToken(token.address, account) : {};
-      const delegatedBalance =
-        account ? renderAmount(used, token.decimals) : '-';
-      const freeDelegatedBalance =
-        account ? renderAmount(total, token.decimals) : '-';
-      this.shadowRoot.querySelector('#delegatedVotes').textContent = `${freeDelegatedBalance}/${delegatedBalance} ${token.symbol}`;
+      if (account) {
+        const totalUserBalance = await habitat.callStatic.getBalance(token.address, account);
+        const voted = await habitat.callStatic.getActiveVotingStake(token.address, account);
+        userBalance = renderAmount(totalUserBalance, token.decimals);
+        usedUserBalance = renderAmount(voted, token.decimals);
+
+        const { total, used } = await getDelegatedAmountsForToken(token.address, account);
+        delegatedBalance = renderAmount(total, token.decimals);
+        usedDelegatedBalance = renderAmount(used, token.decimals);
+      }
+
+      this.shadowRoot.querySelector('#personalVotes').textContent = `${usedUserBalance}/${userBalance} ${token.symbol}`;
+      this.shadowRoot.querySelector('#delegatedVotes').textContent = `${usedDelegatedBalance}/${delegatedBalance} ${token.symbol}`;
     }
 
     // members, votes
