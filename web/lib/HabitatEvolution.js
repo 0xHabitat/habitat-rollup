@@ -34,14 +34,16 @@ button {
   font-weight: 300;
 }
 #tabs > div {
-  position: absolute;
-  width: calc(100% - var(--panel-padding) * 2);
+  height: 0;
+  opacity: 0;
   transform: rotateY(90deg);
   -moz-backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 #tabs > div.selected {
+  height: auto;
+  opacity: 1;
   transform: none;
 }
 #tabnav > div {
@@ -73,7 +75,7 @@ button#submit {
   --color-button: var(--color-bg-invert);
   --color-border-button: var(--color-bg-invert);
 }
-:host(.delegateMode) {
+.delegateMode {
   --color-bg-button: var(--color-bg-invert);
   --color-button: var(--color-bg);
   --color-border-button: #a0a0a0;
@@ -83,102 +85,111 @@ button, .button {
   color: var(--color-button);
   border-color: var(--color-border-button);
 }
-.highlightPersonal, .highlightPersonal * {
+.highlightDelegated, .highlightDelegated * {
   background-color: var(--color-button);
   color: var(--color-bg-button);
-}
-.highlightDelegated, .highlightDelegated * {
-  background-color: var(--color-bg-button);
-  color: var(--color-button);
 }
 </style>
 <button id='submit' class='s'>Submit</button>
 <div style='padding:0 var(--panel-padding);'>
-<section>
-  <div class='left'>
-    <space></space>
-    <p class='l'><span><emoji-herb></emoji-herb><span> Evolution of Habitat</span></span></p>
-    <space></space>
-  </div>
+  <div style='margin: 0 auto;max-width:60em;'>
+    <section>
+      <div class='left'>
+        <space></space>
+        <p class='l'><span><emoji-herb></emoji-herb><span> Evolution of Habitat</span></span></p>
+        <space></space>
+      </div>
 
-  <div class='flex row center evenly'>
-    <div class='box flex col center mtb'>
-      <p class='s'>RESERVE</p>
-      <p id='totalReserve' class='xl light'> </p>
-    </div>
+      <div class='flex row center evenly'>
+        <div class='box flex col center mtb'>
+          <p class='s'>RESERVE</p>
+          <p id='totalReserve' class='xl light'> </p>
+        </div>
 
-    <div class='box flex col center mtb'>
-      <p class='s'>MEMBERS</p>
-      <p id='memberCount' class='xl light'> </p>
-    </div>
+        <div class='box flex col center mtb'>
+          <p class='s'>MEMBERS</p>
+          <p id='memberCount' class='xl light'> </p>
+        </div>
 
-    <div class='box flex col center mtb'>
-      <p class='s'>Total Value Locked</p>
-      <p id='tvl' class='xl light'> </p>
-    </div>
+        <div class='box flex col center mtb'>
+          <p class='s'>Total Value Locked</p>
+          <p id='tvl' class='xl light'> </p>
+        </div>
 
-    <div class='flex col left mtb'>
-      <div class='box flex col center highlightPersonal'>
-        <p class='s'>PERSONAL VOTES</p>
-        <p id='personalVotes' class='bold s'> </p>
+        <div class='flex col left mtb'>
+          <div class='box flex col center'>
+            <p class='s'>PERSONAL VOTES</p>
+            <p id='personalVotes' class='bold s'> </p>
+          </div>
+          <space></space>
+          <div class='box flex col center highlightDelegated'>
+            <p class='s'>DELEGATED VOTES</p>
+            <p id='delegatedVotes' class='bold s'> </p>
+          </div>
+        </div>
+      </div>
+
+      <space></space>
+      <div class='flex col center'>
+        <div id='tabnav' class='flex row evenly'>
+          <div id='tab-signal'>
+            <p class='l'><span><emoji-sat-antenna></emoji-sat-antenna><span> Community Signals</span></span></p>
+          </div>
+          <div id='tab-governance'>
+            <p class='l'><span><emoji-bank></emoji-bank><span> Rollup Governance</span></span></p>
+          </div>
+        </div>
+        <space></space>
+      </div>
+
+      <space></space>
+      <div class='flex row center evenly'>
+        <div class='flex row' style='align-items:flex-end;'>
+          <habitat-toggle
+            id='delegateModeToggle'
+            left='Delegation Mode'
+            right='Delegation Mode'
+          ></habitat-toggle>
+        </div>
       </div>
       <space></space>
-      <div class='box flex col center highlightDelegated'>
-        <p class='s'>DELEGATED VOTES</p>
-        <p id='delegatedVotes' class='bold s'> </p>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <space></space>
-  <div class='flex col center'>
-    <div id='tabnav' class='flex row evenly'>
-      <div id='tab-signal'>
-        <p class='l'><span><emoji-sat-antenna></emoji-sat-antenna><span> Community Signals</span></span></p>
+    <div id='tabs'>
+      <div id='tab-signal' class='tab'>
+        <div class='flex'>
+          <p class='s light center'>
+Help Habitat grow and express your preferences. This area is about signaling your priority by adding HBT votes on single topics and their subtopics. To submit a new topic you need to hold at least 0.001% of the TVL of HBT.
+          </p>
+        </div>
+        <div class='flex row between'>
+          <p class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
+          <div>
+            <button id='submitTopic' class='s'>+ Submit Topic</button>
+          </div>
+        </div>
+        <space></space>
+        <section id='proposals' class='flex col center'></section>
       </div>
-      <div id='tab-governance'>
-        <p class='l'><span><emoji-bank></emoji-bank><span> Rollup Governance</span></span></p>
-      </div>
-    </div>
-    <space></space>
-    <p class='s light text-center'>
-    Eligendi dolor ipsam quo. Sunt consequatur suscipit dolorem veniam dolorem quia ex nam. Ullam explicabo temporibus ut quos magnam quod aliquid vitae. Reprehenderit tempore deleniti corrupti molestiae dolore. Qui occaecati ut cumque.
-    </p>
-  </div>
 
-  <space></space>
-  <div class='flex row center evenly'>
-    <div class='flex row' style='align-items:flex-end;'>
-      <habitat-toggle id='delegateModeToggle'></habitat-toggle>
-      <p style='margin-left:2em;' class='light'>Delegation Mode</p>
-    </div>
-  </div>
-  <space></space>
-</section>
-
-<div id='tabs'>
-  <div id='tab-signal' class='tab'>
-    <div class='flex row between'>
-      <p class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
-      <div>
-        <button id='submitTopic' class='s'>+ Submit Topic</button>
+      <div id='tab-governance' class='tab'>
+        <div class='flex'>
+          <p class='s light center'>
+Vote on important rollup governance decisions with HBT tokens.
+Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a prposal you need to own 0.1% of HBT on the rollup (TVL).
+          </p>
+        </div>
+        <div class='flex row between'>
+          <p class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
+          <div>
+            <button id='submitTopic' class='s'>+ Submit Proposal</button>
+          </div>
+        </div>
+        <space></space>
+        <section id='proposals' class='flex col center'></section>
       </div>
     </div>
-    <space></space>
-    <section id='proposals' vault='${EVOLUTION_SIGNAL_VAULT}' class='flex col center'></section>
   </div>
-
-  <div id='tab-governance' class='tab'>
-    <div class='flex row between'>
-      <p class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
-      <div>
-        <button id='submitTopic' class='s'>+ Submit Topic</button>
-      </div>
-    </div>
-    <space></space>
-    <section id='proposals' vault='${EVOLUTION_ACTION_VAULT}' class='flex col center'></section>
-  </div>
-</div>
 </div>
 `;
 
@@ -214,12 +225,16 @@ button, .button {
     return this.actionVault;
   }
 
+  get tabs () {
+    return this.shadowRoot.querySelector('#tabs');
+  }
+
   get delegationMode () {
-    return this.classList.contains('delegateMode');
+    return this.tabs.classList.contains('delegateMode');
   }
 
   onToggle () {
-    const delegateMode = this.classList.toggle('delegateMode');
+    const delegateMode = this.tabs.classList.toggle('delegateMode');
     for (const node of this.shadowRoot.querySelectorAll('habitat-proposal-card')) {
       node.setAttribute('delegate-mode', delegateMode || '');
     }
@@ -339,9 +354,11 @@ button, .button {
     }
 
     const batch = [];
-    for (const node of this.shadowRoot.querySelectorAll('habitat-proposal-card')) {
+    const cards = this.shadowRoot.querySelectorAll('habitat-proposal-card');
+    for (const node of cards) {
       batch.push(...(await node.buildTransactions(delegatedFor)));
     }
+
     // dispatch (to sidebar)
     window.postMessage({ type: 'hbt-tx-bundle', value: batch }, window.location.origin);
   }

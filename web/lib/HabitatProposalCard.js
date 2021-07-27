@@ -183,9 +183,13 @@ TEMPLATE.innerHTML = `
   font-weight: ligther;
 }
 #infobox {
-  padding: 1em;
+  line-height: 1;
+  padding: .5em 1em;
   border-radius: 1em;
   border: 1px solid var(--color-bg-invert);
+}
+#infobox > * {
+  line-height: 1.5;
 }
 #subProposals {
   padding-left: 2em;
@@ -230,9 +234,7 @@ button, .button, button *, .button * {
   <div class='flex row between'>
     <div class='flex col align-left' style='min-width:50%;max-width:40ch;'>
       <p id='title'> </p>
-      <space></space>
       <p id='details'> </p>
-      <space></space>
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
     </div>
     <a id='id' class='s lbl' style='align-self:start;'> </a>
@@ -260,81 +262,62 @@ button, .button, button *, .button * {
     <space></space>
     <div id='labels' class='flex row'></div>
     <div class='flex row between' style='align-items:start;'>
-      <div class='flex col align-left' style='max-width: 40ch;'>
-        <space></space>
+      <div class='flex col align-left' style='max-width: 40em;'>
         <p class='s lbl'>TITLE</p>
         <p class='bold l' id='title'>-</p>
-        <space></space>
         <space></space>
         <p class='s lbl'>INFO</p>
         <p class='m' id='body'>-</p>
         <space></space>
-        <div id='labels' class='flex row'></div>
       </div>
       <div class='flex col align-left'>
       <div id='infobox' class='flex col align-left'>
         <p>INFORMATION</p>
-        <space></space>
 
         <p class='lbl s'>proposer</p>
         <a target='_blank' id='proposer' class='smaller center bold text-center'> </a>
-        <space></space>
 
         <p class='lbl s'>total votes</p>
         <p id='totalVotes' class='text-center smaller bold'></p>
-        <space></space>
 
         <p class='lbl s'>total shares</p>
         <p id='totalShares' class='text-center smaller bold'></p>
-        <space></space>
 
         <p class='lbl s'>Shares - Yes</p>
         <p id='sharesYes' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>Shares - No</p>
         <p id='sharesNo' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>Average Signal</p>
         <p id='avgSignal' class='text-center smaller bold'></p>
-        <space></space>
 
         <p class='lbl s'>your vote</p>
         <p id='userShares' class='text-center smaller bold'></p>
-        <space></space>
 
         <p class='lbl s'>your signal</p>
         <p id='userSignal' class='text-center smaller bold'></p>
-        <space></space>
 
         <p class='lbl s'>open since</p>
         <p id='time' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>closes in</p>
         <p id='tillClose' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>quorum threshold</p>
         <p id='quorum' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>Participation</p>
         <p id='participationRate' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>start date</p>
         <p id='startDate' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>end date</p>
         <p id='endDate' class='smaller center bold text-center'> </p>
-        <space></space>
 
         <p class='lbl s'>Link</p>
         <a target='_blank' id='externalLink' class='smaller center bold text-center'> </a>
-        <space></space>
 
       </div>
 

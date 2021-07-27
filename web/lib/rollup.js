@@ -936,7 +936,7 @@ export async function deployModule ({ bytecode }) {
 export async function fetchIssue (url) {
   const issuePart = url.split('github.com/')[1];
   const apiUrl = `https://api.github.com/repos/${issuePart}`;
-  const resp = await fetch(apiUrl, { headers: { accept: 'application/vnd.github.v3.html+json' }});
+  const resp = await fetch(apiUrl, { headers: { accept: 'application/vnd.github.v3.full+json' }});
   const issue = await resp.json();
 
   return issue;
