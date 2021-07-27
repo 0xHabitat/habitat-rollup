@@ -176,7 +176,7 @@ Help Habitat grow and express your preferences. This area is about signaling you
         <div class='flex'>
           <p class='s light center'>
 Vote on important rollup governance decisions with HBT tokens.
-Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a prposal you need to own 0.1% of HBT on the rollup (TVL).
+Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a proposal you need to own 0.1% of HBT on the rollup (TVL).
           </p>
         </div>
         <div class='flex row between'>

@@ -29,7 +29,7 @@ TEMPLATE.innerHTML = `
 <style>
 #title {
   display: block;
-  height: 2em;
+  max-height: 2em;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 1em;
@@ -37,7 +37,7 @@ TEMPLATE.innerHTML = `
 #details {
   display: block;
   max-width: 100%;
-  height: 4em;
+  max-height: 4em;
   text-overflow: ellipsis;
   overflow: hidden;
   font-weight: lighter;
@@ -50,6 +50,7 @@ TEMPLATE.innerHTML = `
   white-space: nowrap !important;
 }
 #body {
+  width: 30em;
   max-width: 100%;
 }
 .shareBtn {
@@ -123,9 +124,11 @@ TEMPLATE.innerHTML = `
   height: 2em;
   position: relative;
   top: 2em;
+  margin-top: -1em;
   border: none;
   border-radius: 2em;
   background-color: #f0f0f0;
+  overflow: hidden;
 }
 .indicator #inner,
 .indicator #innerRight {
@@ -188,8 +191,14 @@ TEMPLATE.innerHTML = `
   border-radius: 1em;
   border: 1px solid var(--color-bg-invert);
 }
-#infobox > * {
+#infobox > .b {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  place-items: start;
+}
+#infobox > .b > * {
   line-height: 1.5;
+  margin: 0;
 }
 #subProposals {
   padding-left: 2em;
@@ -219,10 +228,22 @@ button, .button, button *, .button * {
   width: 3em;
   border-radius: 2em;
 }
-#processProposal,
-#execProposal {
+.lessmore {
+  cursor: pointer;
+  overflow: hidden;
+}
+.lessmore::after {
+  content: '';
+  display: block;
+  height: 1px;
   width: 100%;
-  max-width: 100%;
+  margin-top: 1px;
+  transform: translateX(-100%);
+  transition: transform .2s ease-in;
+  background-color: var(--color-bg-invert);
+}
+.lessmore:hover::after {
+  transform: translateX(0);
 }
 </style>
 <div class='box'>
@@ -233,8 +254,12 @@ button, .button, button *, .button * {
   -->
   <div class='flex row between'>
     <div class='flex col align-left' style='min-width:50%;max-width:40ch;'>
-      <p id='title'> </p>
+      <div class='lessmore'>
+        <p id='title'> </p>
+      </div>
+      <space></space>
       <p id='details'> </p>
+      <space></space>
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
     </div>
     <a id='id' class='s lbl' style='align-self:start;'> </a>
@@ -271,62 +296,72 @@ button, .button, button *, .button * {
         <space></space>
       </div>
       <div class='flex col align-left'>
-      <div id='infobox' class='flex col align-left'>
-        <p>INFORMATION</p>
+        <div id='infobox' class='flex col align-left'>
+          <div class='a'>
+            <p>INFORMATION</p>
+            <space></space>
+          </div>
 
-        <p class='lbl s'>proposer</p>
-        <a target='_blank' id='proposer' class='smaller center bold text-center'> </a>
+          <div class='b'>
+            <p class='lbl s'>proposer</p>
+            <a target='_blank' id='proposer' class='smaller center bold text-center'> </a>
 
-        <p class='lbl s'>total votes</p>
-        <p id='totalVotes' class='text-center smaller bold'></p>
+            <p class='lbl s'>Link</p>
+            <a target='_blank' id='externalLink' class='smaller center bold text-center'>-</a>
 
-        <p class='lbl s'>total shares</p>
-        <p id='totalShares' class='text-center smaller bold'></p>
+            <p class='lbl s'>total votes</p>
+            <p id='totalVotes' class='text-center smaller bold'></p>
 
-        <p class='lbl s'>Shares - Yes</p>
-        <p id='sharesYes' class='smaller center bold text-center'> </p>
+            <p class='lbl s'>total shares</p>
+            <p id='totalShares' class='text-center smaller bold'></p>
 
-        <p class='lbl s'>Shares - No</p>
-        <p id='sharesNo' class='smaller center bold text-center'> </p>
+            <p class='lbl s'>Shares - Yes</p>
+            <p id='sharesYes' class='smaller center bold text-center'> </p>
 
-        <p class='lbl s'>Average Signal</p>
-        <p id='avgSignal' class='text-center smaller bold'></p>
+            <p class='lbl s'>Shares - No</p>
+            <p id='sharesNo' class='smaller center bold text-center'> </p>
 
-        <p class='lbl s'>your vote</p>
-        <p id='userShares' class='text-center smaller bold'></p>
+            <p class='lbl s'>Average Signal</p>
+            <p id='avgSignal' class='text-center smaller bold'></p>
 
-        <p class='lbl s'>your signal</p>
-        <p id='userSignal' class='text-center smaller bold'></p>
+            <p class='lbl s'>quorum threshold</p>
+            <p id='quorum' class='smaller center bold text-center'> </p>
 
-        <p class='lbl s'>open since</p>
-        <p id='time' class='smaller center bold text-center'> </p>
+            <p class='lbl s'>Participation</p>
+            <p id='participationRate' class='smaller center bold text-center'> </p>
 
-        <p class='lbl s'>closes in</p>
-        <p id='tillClose' class='smaller center bold text-center'> </p>
+            <space></space>
+            <space></space>
+            <p class='lbl s'>your vote</p>
+            <p id='userShares' class='text-center smaller bold'></p>
 
-        <p class='lbl s'>quorum threshold</p>
-        <p id='quorum' class='smaller center bold text-center'> </p>
+            <p class='lbl s'>your signal</p>
+            <p id='userSignal' class='text-center smaller bold'></p>
+            <space></space>
+            <space></space>
 
-        <p class='lbl s'>Participation</p>
-        <p id='participationRate' class='smaller center bold text-center'> </p>
+            <p class='lbl s'>start date</p>
+            <p id='startDate' class='smaller center bold text-center'> </p>
 
-        <p class='lbl s'>start date</p>
-        <p id='startDate' class='smaller center bold text-center'> </p>
+            <p class='lbl s'>end date</p>
+            <p id='endDate' class='smaller center bold text-center'> </p>
 
-        <p class='lbl s'>end date</p>
-        <p id='endDate' class='smaller center bold text-center'> </p>
+            <p class='lbl s'>open since</p>
+            <p id='time' class='smaller center bold text-center'> </p>
 
-        <p class='lbl s'>Link</p>
-        <a target='_blank' id='externalLink' class='smaller center bold text-center'> </a>
+            <p class='lbl s'>closes in</p>
+            <p id='tillClose' class='smaller center bold text-center'> </p>
 
-      </div>
+          </div>
+        </div>
 
-      <div class='flex col align-left s' style='width:100%;'>
         <space></space>
-        <button id='processProposal' disabled>Finalize Proposal</button>
-        <space></space>
-        <button id='execProposal' disabled>Execute Mainnet Actions</button>
-      </div>
+        <div class='flex row align-left between s' style='width:100%;'>
+          <space></space>
+          <button id='processProposal' disabled>Finalize Proposal</button>
+          <space></space>
+          <button id='execProposal' disabled>Execute Mainnet Actions</button>
+        </div>
 
       </div>
     </div>
@@ -368,17 +403,10 @@ export default class HabitatProposalCard extends HTMLElement {
 
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
-    wrapListener(
-      this.shadowRoot.querySelector('a#expand'),
-      (evt) => {
-        const LESS = 'LESS INFO';
-        const MORE = 'MORE INFO';
-        evt.target.textContent = evt.target.textContent === LESS ? MORE : LESS;
-        for (const node of this.shadowRoot.querySelectorAll('.expandable')) {
-          node.classList.toggle('expanded');
-        }
-      }
-    );
+
+    // title, more info
+    wrapListener(this.shadowRoot.querySelector('#title'), this.toggleExpand.bind(this));
+    wrapListener(this.shadowRoot.querySelector('a#expand'), this.toggleExpand.bind(this));
 
     for (const node of this.shadowRoot.querySelectorAll('#inputShares')) {
       wrapListener(node, this.onSignalChange.bind(this), 'change');
@@ -769,9 +797,26 @@ export default class HabitatProposalCard extends HTMLElement {
       const accept = totalVotes > 0 ? (totalYes * 100) / totalVotes : 0;
       const reject = totalVotes > 0 ? (totalNo * 100) / totalVotes : 0;
 
-      this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = `calc(${100 - Math.min(100, accept)}% - 2em)`;
-      this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = `calc(${100 - Math.min(100, reject)}% - 2em)`;
+      let left = 'calc(100% - 2em)';
+      let right = left;
+      if (reject || accept) {
+        left = `${100 - Math.min(100, accept)}% `;
+        right = `${100 - Math.min(100, reject)}%`;
+      }
+      this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
+      this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
+
       return;
+    }
+  }
+
+  toggleExpand () {
+    const LESS = 'LESS INFO';
+    const MORE = 'MORE INFO';
+    const e = this.shadowRoot.querySelector('#expand');
+    e.textContent = e === LESS ? MORE : LESS;
+    for (const node of this.shadowRoot.querySelectorAll('.expandable')) {
+      node.classList.toggle('expanded');
     }
   }
 }
