@@ -815,7 +815,7 @@ export default class HabitatProposalCard extends HTMLElement {
     const LESS = 'LESS INFO';
     const MORE = 'MORE INFO';
     const e = this.shadowRoot.querySelector('#expand');
-    e.textContent = e === LESS ? MORE : LESS;
+    e.textContent = e.textContent === LESS ? MORE : LESS;
     for (const node of this.shadowRoot.querySelectorAll('.expandable')) {
       node.classList.toggle('expanded');
     }
