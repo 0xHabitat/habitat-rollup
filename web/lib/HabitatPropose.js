@@ -28,7 +28,7 @@ class HabitatPropose extends HabitatPanel {
 `
 <style>
 </style>
-<section class='bgwhite padh padv flex col center'>
+<section class='padh padv flex col center'>
   <div style='width:80ch;max-width:100%;min-height:100vh;'>
     <h1>Create a Proposal</h1>
     <h6 class='left' id='vaultName'> </h6>

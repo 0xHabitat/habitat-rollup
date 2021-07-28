@@ -27,6 +27,7 @@
   --color-accent-grey: #404040;
   --color-box: #404040;
   --color-grey: #909090;
+  --color-box-border: #bfbfbf;
 }
 
 @media (max-width: 1100px) {

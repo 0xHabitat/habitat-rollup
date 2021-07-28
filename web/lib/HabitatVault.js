@@ -17,7 +17,7 @@ class HabitatVault extends HabitatPanel {
   `
 <style>
 </style>
-<section class='bgwhite'>
+<section>
   <div class='flex evenly col center'>
     <h2>Proposals</h2>
   </div>

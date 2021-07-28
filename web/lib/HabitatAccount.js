@@ -268,7 +268,6 @@ const ACCOUNT_TEMPLATE =
 }
 
 #content {
-  background-color: var(--color-bg-yellow) !important;
   padding: 0 var(--panel-padding);
 }
 #wallet-overview-inner {

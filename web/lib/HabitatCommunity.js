@@ -27,7 +27,7 @@ class HabitatCommunity extends HabitatPanel {
 `
 <style>
 </style>
-<section class='bgwhite'>
+<section>
   <space></space>
   <div id='buttons' class='flex row center evenly'>
     <habitat-circle tag='Members' id='members'></habitat-circle>

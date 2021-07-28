@@ -26,6 +26,8 @@ const TEMPLATE =
   right: 0;
   bottom: 0;
   left: 0;
+  border-left: 1px solid black;
+  background: transparent;
 }
 :host(.contentHidden) #content {
   content-visibility: hidden;
@@ -36,7 +38,7 @@ const TEMPLATE =
   <a id='close' style='color:beige;'>&#10006;</a>
   <a id='title' style='color:white;width:100%;'></a>
 </div>
-<div id='content' style='background:var(--color-bg);'></div>
+<div id='content'></div>
 `;
 
 export default class HabitatPanel extends HTMLElement {
