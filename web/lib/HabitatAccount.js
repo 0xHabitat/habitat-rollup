@@ -180,16 +180,21 @@ const ACCOUNT_TEMPLATE =
 #exits > div {
   grid-template-columns: repeat(3, auto);
 }
+#tabs {
+  perspective: 1000px;
+  perspective-origin: center;
+}
 #tabs > div {
   position: absolute;
-  width: calc(100% - var(--panel-padding) * 2);
-  transform: rotateY(90deg);
+  width: 100%;
+  transform: rotateX(180deg) translateZ(0);
   -moz-backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transform-style: flat;
 }
 #tabs > div.selected {
-  transform: none;
+  transform: translateZ(0);
 }
 #tabnav > div {
   padding-bottom: .5em;
@@ -354,12 +359,16 @@ const ACCOUNT_TEMPLATE =
   </div>
 
   <div class='tab' id='wallet-delegation'>
-    <habitat-delegation-view></habitat-delegation-view>
+    <div class='flex center'>
+      <habitat-delegation-view></habitat-delegation-view>
+    </div>
     <space></space>
   </div>
 
   <div class='tab' id='wallet-rewards'>
-    <habitat-rewards></habitat-rewards>
+    <div class='flex center'>
+      <habitat-rewards></habitat-rewards>
+    </div>
     <space></space>
   </div>
 </div>

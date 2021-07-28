@@ -23,12 +23,15 @@ const TEMPLATE =
   grid-template-columns: repeat(3, 1fr);
   gap: .5em;
 }
+#top > .box {
+  margin: .5em 1em;
+}
 </style>
 <div>
   <space></space>
-  <div class='flex row evenly'>
+  <div id='top' class='flex row evenly'>
 
-    <div class='center box' style='grid-row:1/1;grid-column:2/2;'>
+    <div class='center box'>
       <h6><emoji-hourglass></emoji-hourglass><span> Current Epoch</span></h6>
       <space></space>
       <div style='display:grid;grid-template-columns:1fr 1fr;gap:.5em;'>
@@ -43,7 +46,7 @@ const TEMPLATE =
       </div>
     </div>
 
-    <div class='center box' style='grid-row:1/1;grid-column:2/2;'>
+    <div class='center box'>
       <h6><emoji-full-moon></emoji-full-moon><span> Claimable</span></h6>
       <space></space>
       <h1 id='claimable'> </h1>
@@ -51,7 +54,7 @@ const TEMPLATE =
       <button id='claim' class='noHover noShadow boxBtn'>Claim</button>
     </div>
 
-    <div class='center box' style='grid-row:1/1;grid-column:2/2;'>
+    <div class='center box'>
       <h6><emoji-last-quarter-moon></emoji-last-quarter-moon><span> Outstanding</span></h6>
       <space></space>
       <h1 id='outstanding'> </h1>
