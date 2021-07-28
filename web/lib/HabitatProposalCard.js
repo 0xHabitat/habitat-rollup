@@ -37,7 +37,7 @@ TEMPLATE.innerHTML = `
 #details {
   display: block;
   max-width: 100%;
-  max-height: 4em;
+  max-height: 5em;
   text-overflow: ellipsis;
   overflow: hidden;
   font-weight: lighter;
