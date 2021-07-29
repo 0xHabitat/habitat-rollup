@@ -618,6 +618,10 @@ export default class HabitatProposalCard extends HTMLElement {
     this.userVotedShares = newValue - this.cumulativeUserVotedShares;
     evt.target.value = newValue;
 
+    if (this.isSignalMode) {
+      self.userSignal = this.userVotedShares > 0 ? 100 : 0;
+    }
+
     if (this.userVotedShares > this.lastVotedShares) {
       this.shadowRoot.querySelector('#add').classList.add('bold');
     } else if (this.userVotedShares < this.lastVotedShares) {

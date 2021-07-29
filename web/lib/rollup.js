@@ -619,7 +619,7 @@ export async function fetchProposalStats ({ proposalId, communityId }) {
       if (signal > 50) {
         totalYes++;
         totalYesShares = totalYesShares.add(shares);
-      } else if (signal !== 0) {
+      } else {
         totalNo++;
         totalNoShares = totalNoShares.add(shares);
       }
