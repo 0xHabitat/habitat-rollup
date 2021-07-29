@@ -667,6 +667,8 @@ export default class HabitatProposalCard extends HTMLElement {
 
     if (
       !oldData ||
+      this.lastVotedShares !== userShares ||
+      this.oldUserSignal !== userSignal ||
       oldData.userShares !== this.data.userShares ||
       oldData.userSignal !== this.data.userSignal ||
       oldData.delegatedUserShares !== this.data.delegatedUserShares ||

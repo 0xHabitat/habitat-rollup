@@ -59,6 +59,9 @@ button {
   border-bottom-color: var(--color-bg-invert) !important;
   transition: border .1s ease-in;
 }
+#proposals {
+  display: grid;
+}
 #proposals > * {
   width: 100%;
   max-width: 120ch;
@@ -366,14 +369,18 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
     }
 
     for (const tab of this.shadowRoot.querySelectorAll('#tabs')) {
+      const tmp = [];
       const cards = tab.querySelectorAll('habitat-proposal-card');
       let tShares = 0;
       for (const card of cards) {
-        tShares += card.cumulativeUserShares + card.cumulativeShares;
+        const v = card.cumulativeUserShares + card.cumulativeShares;
+        tShares += v;
+        tmp.push({ v, card });
       }
       for (const card of cards) {
         card.setAttribute('ref-signal', tShares);
       }
+      tmp.sort((a, b) => b.v - a.v).forEach((e, i) => e.card.style.gridRow = i);
     }
 
     // dispatch (to sidebar)
