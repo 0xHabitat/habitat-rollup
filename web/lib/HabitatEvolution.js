@@ -61,10 +61,10 @@ button {
 }
 #proposals {
   display: grid;
+  grid-template-columns: minmax(100%, 1fr);
 }
 #proposals > * {
-  width: 100%;
-  max-width: 120ch;
+  max-width: 100%;
   margin: 1em auto;
 }
 habitat-transaction-cart {
@@ -95,7 +95,7 @@ button, .button {
 }
 </style>
 <div style='padding:0 var(--panel-padding);'>
-  <div style='margin: 0 auto;max-width:60em;'>
+  <div style='margin: 0 auto;width:60em;max-width:100%;'>
     <section>
       <div class='left'>
         <space></space>

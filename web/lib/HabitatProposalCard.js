@@ -205,6 +205,7 @@ TEMPLATE.innerHTML = `
 }
 #subProposals {
   display: grid;
+  grid-template-columns: minmax(100%, 1fr);
   gap: 1em;
   padding: 1em 0 0 3em;
 }
