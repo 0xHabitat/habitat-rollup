@@ -172,6 +172,7 @@ Help Habitat grow and express your preferences. This area is about signaling you
           </div>
         </div>
         <space></space>
+        <section id='draft' class='flex col center'></section>
         <section id='proposals' class='center'></section>
       </div>
 
@@ -189,6 +190,7 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
           </div>
         </div>
         <space></space>
+        <section id='draft' class='flex col center'></section>
         <section id='proposals' class='flex col center'></section>
       </div>
     </div>
@@ -210,7 +212,7 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
         e.setAttribute('signal-vault', this.signalVault);
         e.setAttribute('action-vault', this.actionVault);
         e.setAttribute('proposal-type', this.vaults[this.activeTab.querySelector('#proposals').getAttribute('vault')]);
-        this.activeTab.querySelector('#proposals').prepend(e);
+        this.activeTab.querySelector('#draft').prepend(e);
       }, false);
     }
 
