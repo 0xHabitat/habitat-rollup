@@ -29,7 +29,7 @@ TEMPLATE.innerHTML = `
 <style>
 #title {
   display: block;
-  max-height: 2em;
+  max-height: 3em;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 1em;
@@ -37,10 +37,11 @@ TEMPLATE.innerHTML = `
 #details {
   display: block;
   max-width: 100%;
-  max-height: 5em;
+  max-height: 4em;
   text-overflow: ellipsis;
   overflow: hidden;
   font-weight: lighter;
+  font-size: .9em;
 }
 #details * {
   color: var(--color-grey) !important;
@@ -48,6 +49,7 @@ TEMPLATE.innerHTML = `
   overflow: hidden;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+  font-size: .9em;
 }
 #body {
   width: 30em;

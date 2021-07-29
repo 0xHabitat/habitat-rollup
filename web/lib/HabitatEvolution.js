@@ -380,7 +380,9 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
       for (const card of cards) {
         card.setAttribute('ref-signal', tShares);
       }
-      tmp.sort((a, b) => b.v - a.v).forEach((e, i) => e.card.style.gridRow = i);
+      if (batch.length === 0) {
+        tmp.sort((a, b) => b.v - a.v).forEach((e, i) => e.card.style.gridRow = i + 1);
+      }
     }
 
     // dispatch (to sidebar)
