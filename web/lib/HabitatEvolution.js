@@ -368,7 +368,7 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
       batch.push(...(await node.buildTransactions(delegatedFor)));
     }
 
-    for (const tab of this.shadowRoot.querySelectorAll('#tabs')) {
+    for (const tab of this.shadowRoot.querySelectorAll('.tab')) {
       const tmp = [];
       const cards = tab.querySelectorAll('habitat-proposal-card');
       let tShares = 0;
