@@ -172,7 +172,7 @@ Help Habitat grow and express your preferences. This area is about signaling you
           </div>
         </div>
         <space></space>
-        <section id='proposals' class='flex col center'></section>
+        <section id='proposals' class='center'></section>
       </div>
 
       <div id='tab-governance' class='tab'>

@@ -32,7 +32,7 @@ TEMPLATE.innerHTML = `
   max-height: 3em;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 1em;
+  font-size: 1.2em;
 }
 #details {
   display: block;
@@ -42,6 +42,7 @@ TEMPLATE.innerHTML = `
   overflow: hidden;
   font-weight: lighter;
   font-size: .9em;
+  color: var(--color-grey) !important;
 }
 #details * {
   color: var(--color-grey) !important;
@@ -203,11 +204,12 @@ TEMPLATE.innerHTML = `
   margin: 0;
 }
 #subProposals {
-  padding-left: 2em;
+  display: grid;
+  gap: 1em;
+  padding: 1em 0 0 3em;
 }
 #subProposals > * {
   display: block;
-  margin: 2em 1em;
 }
 a#expand {
   text-decoration: underline;
@@ -259,13 +261,15 @@ button, .button, button *, .button * {
       <div class='lessmore'>
         <p id='title'> </p>
       </div>
+      <!--
       <space></space>
       <p id='details'> </p>
       <space></space>
+      -->
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
     </div>
     <a id='id' class='s lbl' style='align-self:start;'> </a>
-    <div class='flex col mtb'>
+    <div class='flex col'>
       <div id='changeSignal' class='flex row flavor-signal'>
         <button id='sub' class='shareBtn left'><span style='vertical-align:text-top;'>-</span></button>
         <input id='inputShares' placeholder='0'>
@@ -653,7 +657,7 @@ export default class HabitatProposalCard extends HTMLElement {
 
       const html = data.metadata.details || 'no description';
       // XXX: safe embedding
-      this.shadowRoot.querySelector('#details').innerHTML = html;
+      //this.shadowRoot.querySelector('#details').innerHTML = html;
       this.shadowRoot.querySelector('.expandable #body').innerHTML = html;
 
       renderLabels(data.metadata.labels || [], this.shadowRoot.querySelector('#labels'));
