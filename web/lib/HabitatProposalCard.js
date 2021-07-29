@@ -415,7 +415,7 @@ export default class HabitatProposalCard extends HTMLElement {
         if (isSignalContainer) {
           const n =  Number(node.value) + v;
           node.value = n;
-          self.userSignal = n > 0 ? 100 : 0;
+          self.userSignal = (n - self.cumulativeUserShares) > 0 ? 100 : 0;
         } else {
           self.userSignal = v === 1 ? 100 : 1;
         }
