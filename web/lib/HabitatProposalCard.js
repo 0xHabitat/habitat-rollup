@@ -212,12 +212,14 @@ TEMPLATE.innerHTML = `
   line-height: 1.5;
   margin: 0;
 }
+#drafts,
 #subProposals {
   display: grid;
   grid-template-columns: minmax(100%, 1fr);
   gap: 1em;
   padding: 1em 0 0 3em;
 }
+#drafts > *,
 #subProposals > * {
   display: block;
 }
@@ -414,6 +416,7 @@ button, .button, button *, .button * {
 <div class='flex col'>
   <button id='boxleg' style='display:none;'>+ subtopic</button>
 </div>
+<div id='drafts'></div>
 <div id='subProposals'></div>
 `;
 
@@ -516,7 +519,7 @@ export default class HabitatProposalCard extends HTMLElement {
         e.setAttribute('proposal-type', this.getAttribute(ATTR_FLAVOR) === 'signal' ? 'Signal' : 'Action');
         e.setAttribute(ATTR_SIGNAL_VAULT, this.getAttribute(ATTR_SIGNAL_VAULT));
         e.setAttribute(ATTR_ACTION_VAULT, this.getAttribute(ATTR_ACTION_VAULT));
-        this.subSignals.prepend(e);
+        this.drafts.append(e);
       }
     );
 
@@ -604,6 +607,10 @@ export default class HabitatProposalCard extends HTMLElement {
 
   get subSignals () {
     return this.shadowRoot.querySelector('#subProposals');
+  }
+
+  get drafts () {
+    return this.shadowRoot.querySelector('#drafts');
   }
 
   calculateSignal () {
