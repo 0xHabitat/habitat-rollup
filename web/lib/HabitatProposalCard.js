@@ -334,8 +334,8 @@ button, .button, button *, .button * {
             <p class='lbl s signal'>Participants</p>
             <p id='totalVotes' class='text-center smaller bold signal'></p>
 
-            <p class='lbl s'>Total Votes</p>
-            <p id='totalShares' class='text-center smaller bold'></p>
+            <p class='lbl s signal'>Total Votes</p>
+            <p id='totalShares' class='text-center smaller bold signal'></p>
 
             <p class='lbl s'>Shares - Yes</p>
             <p id='sharesYes' class='smaller center bold text-center'> </p>
@@ -600,6 +600,16 @@ export default class HabitatProposalCard extends HTMLElement {
     return ret;
   }
 
+  get totalShares () {
+    let ret = this.userVotedShares + this.totalSharesExcludingUser;
+
+    for (const node of this.childProposals) {
+      ret += node.totalShares;
+    }
+
+    return ret;
+  }
+
   addSubTopic (e) {
     if (this.subSignals.querySelector(`[hash="${e.getAttribute('hash')}"]`)) {
       console.warn('already added');
@@ -780,14 +790,21 @@ export default class HabitatProposalCard extends HTMLElement {
     this.shadowRoot.querySelector('#quorum').textContent = quorumText;
   }
 
+  get changePending () {
+    if (this.data && this.data.token) {
+      return this.lastVotedShares !== this.userVotedShares || this.userSignal !== this.oldUserSignal;
+    }
+    return false;
+  }
+
   async buildTransactions (delegatedFor) {
     const txs = [];
 
-    if (this.data && this.data.token) {
-      if (this.lastVotedShares !== this.userVotedShares || this.userSignal !== this.oldUserSignal) {
-        const signalStrength = this.userVotedShares === 0 ? 0 : this.userSignal;
-        const title = this.shadowRoot.querySelector('#title').textContent.substring(0, 10) + '...';
-        txs.push({
+    if (this.changePending) {
+      const signalStrength = this.userVotedShares === 0 ? 0 : this.userSignal;
+      const title = this.shadowRoot.querySelector('#title').textContent.substring(0, 10) + '...';
+      txs.push(
+        {
           primaryType: 'VoteOnProposal',
           message: {
             proposalId: this.data.proposalId,
@@ -796,8 +813,8 @@ export default class HabitatProposalCard extends HTMLElement {
             delegatedFor: delegatedFor,
           },
           info: `${delegatedFor === ethers.constants.AddressZero ? 'Vote' : 'Delegated Vote'} on ${title}`,
-        });
-      }
+        }
+      );
     }
 
     for (const node of this.childProposals) {
@@ -834,14 +851,31 @@ export default class HabitatProposalCard extends HTMLElement {
       }
       this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
       this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
-      return;
-    }
-
-    if (flavor === 'signal') {
+    } else if (flavor === 'signal') {
       const e = this.shadowRoot.querySelector('#infobox .b').children;
       for (const node of e) {
         node.style.display = node.classList.contains('signal') ? 'block' : 'none';
       }
+    }
+
+    // sort subProposals
+    const tmp = [];
+    const cards = this.subSignals.children;
+    let skip = false;
+    let tShares = 0;
+    for (const card of cards) {
+      if (card.changePending) {
+        skip = true;
+        break;
+      }
+
+      const v = card.totalShares;
+      tShares += v;
+      tmp.push({ v, card });
+    }
+
+    if (!skip) {
+      tmp.sort((a, b) => b.v - a.v).forEach((e, i) => e.card.style.gridRow = i + 1);
     }
   }
 

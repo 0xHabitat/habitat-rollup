@@ -63,6 +63,7 @@ button {
   display: grid;
   grid-template-columns: minmax(100%, 1fr);
 }
+#draft > *,
 #proposals > * {
   max-width: 100%;
   margin: 1em auto;
@@ -375,7 +376,7 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
       const cards = tab.querySelectorAll('habitat-proposal-card');
       let tShares = 0;
       for (const card of cards) {
-        const v = card.cumulativeUserShares + card.cumulativeShares;
+        const v = card.totalShares;
         tShares += v;
         tmp.push({ v, card });
       }
