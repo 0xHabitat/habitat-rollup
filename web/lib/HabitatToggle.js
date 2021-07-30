@@ -111,10 +111,11 @@ const ATTR_LEFT = 'left';
 const ATTR_RIGHT = 'right';
 const ATTR_TOOLTIP_LEFT = 'tooltip-left';
 const ATTR_TOOLTIP_RIGHT = 'tooltip-right';
+const ATTR_SWITCH = 'on';
 
 class HabitatToggle extends HTMLElement {
   static get observedAttributes() {
-    return [ATTR_LEFT, ATTR_RIGHT, ATTR_TOOLTIP_LEFT, ATTR_TOOLTIP_RIGHT];
+    return [ATTR_LEFT, ATTR_RIGHT, ATTR_TOOLTIP_LEFT, ATTR_TOOLTIP_RIGHT, ATTR_SWITCH];
   }
 
   constructor() {
@@ -130,6 +131,14 @@ class HabitatToggle extends HTMLElement {
   }
 
   attributeChangedCallback (name, oldValue, newValue) {
+    if (name === ATTR_SWITCH) {
+      const e = this.shadowRoot.querySelector('#inner');
+      if (newValue === '1') {
+        e.classList.add('on');
+      } else {
+        e.classList.remove('on');
+      }
+    }
     this.render();
   }
 

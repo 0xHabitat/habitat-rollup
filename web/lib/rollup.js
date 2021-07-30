@@ -919,7 +919,7 @@ export async function simulateProcessProposal ({ proposalId, internalActions, ex
     console.warn(e);
   }
 
-  return { votingStatus, secondsTillClose, quorumPercent };
+  return { votingStatus, secondsTillClose, quorumPercent, statusText: VOTING_STATUS_TEXT[votingStatus] || '?' };
 }
 
 export async function deployModule ({ bytecode }) {

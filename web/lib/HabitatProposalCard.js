@@ -263,8 +263,24 @@ button, .button, button *, .button * {
   font-weight: lighter;
   color: var(--color-grey);
 }
+
+#infotags {
+  display: none;
+  position: relative;
+  top: -1.2em;
+  margin-bottom: -.9em;
+}
+#infotags > * {
+  margin: 0 .5em;
+  padding: .5em 1em;
+  border-radius: 1em;
+  font-size: .7em;
+  color: var(--color-bg);
+  background-color: var(--color-bg-invert);
+}
 </style>
 <div class='box' style='padding:.5em 2em;'>
+  <div id='infotags'></div>
   <!---
   <div class='flex row expand'>
     <span>&#x25bc;</span>
@@ -401,6 +417,51 @@ button, .button, button *, .button * {
 <div id='subProposals'></div>
 `;
 
+class CustomButtonHandler {
+  constructor (target, callback) {
+    this.callback = callback;
+    this.released = true;
+    this.defaultVelo = 1000;
+    this.velocity = this.defaultVelo;
+    this.timestamp = 0;
+
+    target.addEventListener('mouseup', this, false);
+    target.addEventListener('mousedown', this, false);
+  }
+
+  handleEvent (evt) {
+    return this[evt.type]();
+  }
+
+  mousedown () {
+    this.released = false;
+    this.velocity = this.defaultVelo;
+    this.update();
+  }
+
+  mouseup () {
+    this.released = true;
+    this.velocity = this.defaultVelo;
+    this.update();
+  }
+
+  update (now = 0) {
+    if (this.released) {
+      return;
+    }
+    window.requestAnimationFrame(this.update.bind(this));
+
+    this.velocity = Math.max(1, this.velocity - this.velocity / 1000);
+
+    const delta = now - this.timestamp;
+    if (delta > 60) {
+      this.timestamp = now;
+      const v = ~~(this.defaultVelo - this.velocity) || 1;
+      this.callback(v);
+    }
+  }
+}
+
 const ATTR_HASH = 'hash';
 const ATTR_DELEGATE_MODE = 'delegate-mode';
 const ATTR_REF_SIGNAL = 'ref-signal';
@@ -443,8 +504,8 @@ export default class HabitatProposalCard extends HTMLElement {
         }
         node.dispatchEvent(new Event('change'));
       }
-      wrapListener(node.parentElement.querySelector('.right'), (evt) => change(this, 1));
-      wrapListener(node.parentElement.querySelector('.left'), (evt) => change(this, -1));
+      new CustomButtonHandler(node.parentElement.querySelector('.right'), (v) => change(this, 1 * v));
+      new CustomButtonHandler(node.parentElement.querySelector('.left'), (v) => change(this, -1 * v));
     }
 
     wrapListener(
@@ -756,10 +817,12 @@ export default class HabitatProposalCard extends HTMLElement {
 
     const { startDate } = this.data;
     let statusText = '-';
+    let openSince = '-';
     let tillClose = '-';
     let endText = 'closed';
     let quorumText = '100%';
     if (this.data.proposalStatus > VotingStatus.OPEN) {
+      openSince = this.data.proposalStatusText;
       statusText = this.data.proposalStatusText;
       this.shadowRoot.querySelector('#processProposal').disabled = true;
 
@@ -774,7 +837,8 @@ export default class HabitatProposalCard extends HTMLElement {
         }
       );
       const votingDisabled = simResult.votingStatus > VotingStatus.OPEN;
-      statusText = votingDisabled ? 'Proposal Concluded' : secondsToString(~~(Date.now() / 1000) - startDate);
+      openSince = votingDisabled ? 'Proposal Concluded' : secondsToString(~~(Date.now() / 1000) - startDate);
+      statusText = simResult.statusText;
       tillClose = simResult.secondsTillClose === -1 ? '∞' : secondsToString(simResult.secondsTillClose);
       endText = simResult.secondsTillClose === -1 ? '-' : formatDate((startDate + simResult.secondsTillClose) * 1000);
       quorumText = `${simResult.quorumPercent}%`;
@@ -783,10 +847,30 @@ export default class HabitatProposalCard extends HTMLElement {
       this.shadowRoot.querySelector('#execProposal').disabled = true;
     }
 
+    if (this.isSignalMode) {
+      this.infoTags.style.display = 'none';
+    } else {
+      const container = this.infoTags;
+      container.innerHTML = '';
+
+      let e = document.createElement('span');
+      e.textContent = statusText;
+      container.append(e);
+
+      if (tillClose !== '-') {
+        e = document.createElement('span');
+        e.textContent = `${tillClose} left`;
+        container.append(e);
+      }
+
+      container.style.display = 'flex';
+    }
+
+    // infobox
     this.shadowRoot.querySelector('#startDate').textContent = formatDate(startDate * 1000);
     this.shadowRoot.querySelector('#endDate').textContent = endText;
     this.shadowRoot.querySelector('#tillClose').textContent = tillClose;
-    this.shadowRoot.querySelector('#time').textContent = statusText;
+    this.shadowRoot.querySelector('#time').textContent = openSince;
     this.shadowRoot.querySelector('#quorum').textContent = quorumText;
   }
 
@@ -887,6 +971,10 @@ export default class HabitatProposalCard extends HTMLElement {
     for (const node of this.shadowRoot.querySelectorAll('.expandable')) {
       node.classList.toggle('expanded');
     }
+  }
+
+  get infoTags () {
+    return this.shadowRoot.querySelector('#infotags');
   }
 }
 customElements.define('habitat-proposal-card', HabitatProposalCard);

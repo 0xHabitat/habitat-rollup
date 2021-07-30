@@ -134,8 +134,6 @@ export default class HabitatProposeCard extends HTMLElement {
     this.shadowRoot.querySelector('habitat-proposal-action-box').addEventListener(
       'action', this.shadowRoot.querySelector('habitat-proposal-action-list'), false
     );
-
-    this.setAttribute(ATTR_PROPOSAL_TYPE, 'Signal');
   }
 
   connectedCallback () {
@@ -161,12 +159,13 @@ export default class HabitatProposeCard extends HTMLElement {
 
   setMode (str) {
     const actionMode = str.toLowerCase() === 'action';
+    const toggle = this.shadowRoot.querySelector('habitat-toggle');
     if (actionMode) {
       this.classList.add('actionMode');
-      this.shadowRoot.querySelector('habitat-toggle').classList.add('on');
+      toggle.setAttribute('on', '1');
     } else {
       this.classList.remove('actionMode');
-      this.shadowRoot.querySelector('habitat-toggle').classList.remove('on');
+      toggle.setAttribute('on', '0');
     }
     this.shadowRoot.querySelector('habitat-proposal-action-box').setAttribute(
       'vault',
