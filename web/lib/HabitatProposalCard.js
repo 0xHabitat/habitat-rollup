@@ -121,13 +121,19 @@ TEMPLATE.innerHTML = `
   user-select: none;
   -webkit-user-select: none;
 }
-.indicator {
+#indicatorWrapper {
   display: block;
   width: calc(100% - 11em);
-  height: 2em;
   position: relative;
-  top: 2em;
+  top: 1.5em;
   margin-top: -1em;
+  min-height: 1em;
+  min-width: 9em;
+}
+.indicator {
+  display: block;
+  width: 100%;
+  height: 2em;
   border: none;
   border-radius: 2em;
   background-color: #f0f0f0;
@@ -250,8 +256,12 @@ button, .button, button *, .button * {
 .lessmore:hover::after {
   transform: translateX(0);
 }
+.light {
+  font-weight: lighter;
+  color: var(--color-grey);
+}
 </style>
-<div class='box'>
+<div class='box' style='padding:.5em 2em;'>
   <!---
   <div class='flex row expand'>
     <span>&#x25bc;</span>
@@ -285,8 +295,14 @@ button, .button, button *, .button * {
     </div>
   </div>
 
-  <div id='signalIndicator' class='indicator flavor-signal'><div id='inner'></div></div>
-  <div id='binaryIndicator' class='indicator flavor-binary'><div id='inner'>YES</div><div id='innerRight'>NO</div></div>
+  <div id='indicatorWrapper'>
+    <div class='flex row between' style='padding: 0 .9em;'>
+      <span id='sharesLeft' class='s light'> </span>
+      <span id='sharesRight' class='s light'> </span>
+    </div>
+    <div id='signalIndicator' class='indicator flavor-signal'><div id='inner'></div></div>
+    <div id='binaryIndicator' class='indicator flavor-binary'><div id='inner'>YES</div><div id='innerRight'>NO</div></div>
+  </div>
 
   <div class='expandable'>
     <space></space>
@@ -793,6 +809,9 @@ export default class HabitatProposalCard extends HTMLElement {
   }
 
   renderFlavor (flavor) {
+    this.shadowRoot.querySelector('#sharesLeft').textContent =
+      `${renderAmount(this.data.totalYesShares, 0, 1)} ${this.data.token.symbol}`;
+
     if (flavor === 'binary') {
       for (const node of this.shadowRoot.querySelector('#changeBinary').children) {
         node.classList.remove('bold');
@@ -819,6 +838,8 @@ export default class HabitatProposalCard extends HTMLElement {
       }
       this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
       this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
+      this.shadowRoot.querySelector('#sharesRight').textContent =
+        `${renderAmount(this.data.totalNoShares), 0, 1} ${this.data.token.symbol} (NO)`;
 
       return;
     }

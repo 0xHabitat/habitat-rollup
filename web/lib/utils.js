@@ -495,11 +495,16 @@ export function checkScroll (selectorOrElement, callback) {
   _check();
 }
 
+let _getTokenListPromise;
 export async function getTokenList () {
   if (!document._tokenlist) {
-    const src = '/lib/tokenlist.json';
-    const { tokens } = await (await fetch(src)).json();
+    if (!_getTokenListPromise) {
+      const src = '/lib/tokenlist.json';
+      _getTokenListPromise = fetch(src).then((r) => r.json());
+    }
+    const { tokens } = await _getTokenListPromise;
     document._tokenlist = tokens;
+    _getTokenListPromise = undefined;
   }
 
   return document._tokenlist;
