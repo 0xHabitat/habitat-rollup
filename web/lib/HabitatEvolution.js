@@ -59,20 +59,20 @@ button {
   border-bottom-color: var(--color-bg-invert) !important;
   transition: border .1s ease-in;
 }
-#proposals {
+.proposals {
   display: grid;
   grid-template-columns: minmax(100%, 1fr);
 }
 #draft > *,
-#proposals > * {
-  max-width: 100%;
+.proposals > * {
+  width: 100%;
   margin: 1em auto;
 }
 habitat-transaction-cart {
   display: block;
-  position: fixed;
-  right: 1em;
-  top: 50vh;
+  position: sticky;
+  top: 1em;
+  float: right;
   z-index: 99;
 }
 :root, :host {
@@ -93,6 +93,11 @@ button, .button {
 .highlightDelegated, .highlightDelegated * {
   background-color: var(--color-button);
   color: var(--color-bg-button);
+}
+#recentSignal,
+#topSignal {
+  display: none;
+  padding-bottom: 1em;
 }
 </style>
 <div style='padding:0 var(--panel-padding);'>
@@ -159,6 +164,7 @@ button, .button {
       <space></space>
     </section>
 
+    <habitat-transaction-cart></habitat-transaction-cart>
     <div id='tabs'>
       <div id='tab-signal' class='tab'>
         <div class='flex'>
@@ -167,14 +173,16 @@ Help Habitat grow and express your preferences. This area is about signaling you
           </p>
         </div>
         <div class='flex row between'>
-          <p class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
+          <span></span>
           <div>
             <button id='submitTopic' class='s'>+ Submit Topic</button>
           </div>
         </div>
-        <space></space>
         <section id='draft' class='flex col center'></section>
-        <section id='proposals' class='center'></section>
+        <section id='proposals' class='center proposals'>
+          <p id='recentSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
+          <p id='topSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Top Signals</span></span></p>
+        </section>
       </div>
 
       <div id='tab-governance' class='tab'>
@@ -185,18 +193,19 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
           </p>
         </div>
         <div class='flex row between'>
-          <p class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
+          <span></span>
           <div>
             <button id='submitTopic' class='s'>+ Submit Proposal</button>
           </div>
         </div>
-        <space></space>
         <section id='draft' class='flex col center'></section>
-        <section id='proposals' class='flex col center'></section>
+        <section id='proposals' class='flex col center proposals'>
+          <p id='recentSignal' class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
+          <p id='topSignal' class='l light'><span><emoji-bank></emoji-bank><span> Top Proposals</span></span></p>
+        </section>
       </div>
     </div>
   </div>
-  <habitat-transaction-cart></habitat-transaction-cart>
 </div>
 `;
 
@@ -372,19 +381,48 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
     }
 
     for (const tab of this.shadowRoot.querySelectorAll('.tab')) {
-      const tmp = [];
+      const topSignals = [];
       const cards = tab.querySelectorAll('habitat-proposal-card');
       let tShares = 0;
       for (const card of cards) {
         const v = card.totalShares;
         tShares += v;
-        tmp.push({ v, card });
+        topSignals.push({ v, card });
       }
       for (const card of cards) {
         card.setAttribute('ref-signal', tShares);
       }
       if (batch.length === 0) {
-        tmp.sort((a, b) => b.v - a.v).forEach((e, i) => e.card.style.gridRow = i + 1);
+        const topSignal = tab.querySelector('#topSignal');
+        const recentSignal = tab.querySelector('#recentSignal');
+        const now = ~~(Date.now() / 1000);
+        // 24 hrs (seconds)
+        const threshold = 86400;
+
+        topSignals.sort((a, b) => b.v - a.v);
+        topSignal.style.display = 'none';
+        recentSignal.style.display = 'none';
+
+        let uTop = true;
+        let uRecent = true;
+        let pos = 0;
+        for (const e of topSignals) {
+          if (now - e.card.data.startDate > threshold) {
+            if (uTop) {
+              uTop = false;
+              topSignal.style.gridRow = ++pos;
+              topSignal.style.display = 'block';
+            }
+          } else {
+            if (uRecent) {
+              uRecent = false;
+              recentSignal.style.gridRow = ++pos;
+              recentSignal.style.display = 'block';
+            }
+          }
+
+          e.card.style.gridRow = ++pos;
+        }
       }
     }
 

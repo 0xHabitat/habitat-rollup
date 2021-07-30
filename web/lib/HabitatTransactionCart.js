@@ -14,6 +14,8 @@ TEMPLATE.innerHTML = `
   overflow: hidden;
   background-color: var(--color-bg);
   border: 1px solid var(--color-bg-invert);
+  position: absolute;
+  right: 0;
 }
 
 #outer.expanded {
@@ -44,10 +46,11 @@ TEMPLATE.innerHTML = `
 
 #count {
   position: relative;
-  top: -.1em;
+  top: -.2em;
+  left: .1em;
   width: 1.5em;
   height: 1.5em;
-  text-align: center;
+  text-align: left;
   font-weight: bold;
   color: orange;
 }
