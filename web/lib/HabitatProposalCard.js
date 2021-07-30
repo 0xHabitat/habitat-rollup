@@ -29,6 +29,7 @@ TEMPLATE.innerHTML = `
 <style>
 #title {
   display: block;
+  max-width: 25em;
   max-height: 3em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -148,7 +149,9 @@ TEMPLATE.innerHTML = `
   width: 100%;
   box-sizing: border-box;
   transition: all .07s linear;
-  background: linear-gradient(90deg, rgba(15, 117, 85, 0.7) 0%, rgba(206, 227, 78, 0.7) 50%, rgba(255, 59, 59, 0.7) 100%);
+  background: url('/lib/assets/signalbar.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
   background-clip: content-box;
   padding-right: 100%;
   line-height: 2;
@@ -296,10 +299,6 @@ button, .button, button *, .button * {
   </div>
 
   <div id='indicatorWrapper'>
-    <div class='flex row between' style='padding: 0 .9em;'>
-      <span id='sharesLeft' class='s light'> </span>
-      <span id='sharesRight' class='s light'> </span>
-    </div>
     <div id='signalIndicator' class='indicator flavor-signal'><div id='inner'></div></div>
     <div id='binaryIndicator' class='indicator flavor-binary'><div id='inner'>YES</div><div id='innerRight'>NO</div></div>
   </div>
@@ -326,16 +325,16 @@ button, .button, button *, .button * {
           </div>
 
           <div class='b'>
-            <p class='lbl s'>proposer</p>
-            <a target='_blank' id='proposer' class='smaller center bold text-center'> </a>
+            <p class='lbl s signal'>Proposer</p>
+            <a target='_blank' id='proposer' class='smaller center bold text-center signal'> </a>
 
-            <p class='lbl s'>Link</p>
-            <a target='_blank' id='externalLink' class='smaller center bold text-center'>-</a>
+            <p class='lbl s signal'>Link</p>
+            <a target='_blank' id='externalLink' class='smaller center bold text-center signal'>-</a>
 
-            <p class='lbl s'>total votes</p>
-            <p id='totalVotes' class='text-center smaller bold'></p>
+            <p class='lbl s signal'>Participants</p>
+            <p id='totalVotes' class='text-center smaller bold signal'></p>
 
-            <p class='lbl s'>total shares</p>
+            <p class='lbl s'>Total Votes</p>
             <p id='totalShares' class='text-center smaller bold'></p>
 
             <p class='lbl s'>Shares - Yes</p>
@@ -347,7 +346,7 @@ button, .button, button *, .button * {
             <p class='lbl s'>Average Signal</p>
             <p id='avgSignal' class='text-center smaller bold'></p>
 
-            <p class='lbl s'>quorum threshold</p>
+            <p class='lbl s'>Quorum Threshold</p>
             <p id='quorum' class='smaller center bold text-center'> </p>
 
             <p class='lbl s'>Participation</p>
@@ -355,24 +354,24 @@ button, .button, button *, .button * {
 
             <space></space>
             <space></space>
-            <p class='lbl s'>your vote</p>
-            <p id='userShares' class='text-center smaller bold'></p>
+            <p class='lbl s signal'>Your Vote</p>
+            <p id='userShares' class='text-center smaller bold signal'></p>
 
-            <p class='lbl s'>your signal</p>
+            <p class='lbl s'>Your Signal</p>
             <p id='userSignal' class='text-center smaller bold'></p>
             <space></space>
             <space></space>
 
-            <p class='lbl s'>start date</p>
-            <p id='startDate' class='smaller center bold text-center'> </p>
+            <p class='lbl s signal'>Start Date</p>
+            <p id='startDate' class='smaller center bold text-center signal'> </p>
 
-            <p class='lbl s'>end date</p>
+            <p class='lbl s'>End Date</p>
             <p id='endDate' class='smaller center bold text-center'> </p>
 
-            <p class='lbl s'>open since</p>
-            <p id='time' class='smaller center bold text-center'> </p>
+            <p class='lbl s signal'>Open Since</p>
+            <p id='time' class='smaller center bold text-center signal'> </p>
 
-            <p class='lbl s'>closes in</p>
+            <p class='lbl s'>Closes In</p>
             <p id='tillClose' class='smaller center bold text-center'> </p>
 
           </div>
@@ -640,7 +639,7 @@ export default class HabitatProposalCard extends HTMLElement {
     evt.target.value = newValue;
 
     if (this.isSignalMode) {
-      self.userSignal = this.userVotedShares > 0 ? 100 : 0;
+      this.userSignal = this.userVotedShares > 0 ? 100 : 0;
     }
 
     if (this.userVotedShares > this.lastVotedShares) {
@@ -809,9 +808,6 @@ export default class HabitatProposalCard extends HTMLElement {
   }
 
   renderFlavor (flavor) {
-    this.shadowRoot.querySelector('#sharesLeft').textContent =
-      `${renderAmount(this.data.totalYesShares, 0, 1)} ${this.data.token.symbol}`;
-
     if (flavor === 'binary') {
       for (const node of this.shadowRoot.querySelector('#changeBinary').children) {
         node.classList.remove('bold');
@@ -838,10 +834,14 @@ export default class HabitatProposalCard extends HTMLElement {
       }
       this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
       this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
-      this.shadowRoot.querySelector('#sharesRight').textContent =
-        `${renderAmount(this.data.totalNoShares), 0, 1} ${this.data.token.symbol} (NO)`;
-
       return;
+    }
+
+    if (flavor === 'signal') {
+      const e = this.shadowRoot.querySelector('#infobox .b').children;
+      for (const node of e) {
+        node.style.display = node.classList.contains('signal') ? 'block' : 'none';
+      }
     }
   }
 
