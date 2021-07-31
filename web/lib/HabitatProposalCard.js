@@ -516,9 +516,9 @@ export default class HabitatProposalCard extends HTMLElement {
       () => {
         const e = new HabitatProposeCard();
         e.setAttribute('topic', this.getAttribute(ATTR_HASH));
-        e.setAttribute('proposal-type', this.getAttribute(ATTR_FLAVOR) === 'signal' ? 'Signal' : 'Action');
         e.setAttribute(ATTR_SIGNAL_VAULT, this.getAttribute(ATTR_SIGNAL_VAULT));
         e.setAttribute(ATTR_ACTION_VAULT, this.getAttribute(ATTR_ACTION_VAULT));
+        e.setAttribute('proposal-type', this.getAttribute(ATTR_FLAVOR) === 'signal' ? 'Signal' : 'Action');
         this.drafts.append(e);
       }
     );
