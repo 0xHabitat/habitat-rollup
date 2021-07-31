@@ -503,7 +503,7 @@ export default class HabitatProposalCard extends HTMLElement {
           node.value = n;
           self.userSignal = (n - self.cumulativeUserShares) > 0 ? 100 : 0;
         } else {
-          self.userSignal = v === 1 ? 100 : 1;
+          self.userSignal = v > 0 ? 100 : 1;
         }
         node.dispatchEvent(new Event('change'));
       }
