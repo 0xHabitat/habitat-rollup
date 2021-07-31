@@ -399,7 +399,16 @@ Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To subm
         // 24 hrs (seconds)
         const threshold = 86400;
 
-        topSignals.sort((a, b) => b.v - a.v);
+        topSignals.sort(
+          function (a, b) {
+            const aT = a.card.data.startDate;
+            const bT = b.card.data.startDate;
+            if (now - aT < threshold || now - bT < threshold) {
+              return bT > aT ? 1 : -1;
+            }
+            return b.v - a.v;
+          }
+        );
         topSignal.style.display = 'none';
         recentSignal.style.display = 'none';
 
