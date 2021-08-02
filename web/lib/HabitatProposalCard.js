@@ -318,6 +318,10 @@ button, .button, button *, .button * {
   </div>
 
   <div id='indicatorWrapper'>
+    <div class='flex row between' style='padding: 0 1em;'>
+    <p id='for' class='s light'> </p>
+    <p id='against' class='s light'> </p>
+    </div>
     <div id='signalIndicator' class='indicator flavor-signal'><div id='inner'></div></div>
     <div id='binaryIndicator' class='indicator flavor-binary'><div id='inner'>YES</div><div id='innerRight'>NO</div></div>
   </div>
@@ -356,20 +360,19 @@ button, .button, button *, .button * {
             <p class='lbl s signal'>Total Votes</p>
             <p id='totalShares' class='text-center smaller bold signal'></p>
 
-            <p class='lbl s'>Shares - Yes</p>
+            <p class='lbl s'>Yes</p>
             <p id='sharesYes' class='smaller center bold text-center'> </p>
 
-            <p class='lbl s'>Shares - No</p>
+            <p class='lbl s'>No</p>
             <p id='sharesNo' class='smaller center bold text-center'> </p>
 
-            <p class='lbl s'>Average Signal</p>
-            <p id='avgSignal' class='text-center smaller bold'></p>
-
-            <p class='lbl s'>Quorum Threshold</p>
+            <p class='lbl s'>Quorum</p>
             <p id='quorum' class='smaller center bold text-center'> </p>
 
+            <!---
             <p class='lbl s'>Participation</p>
             <p id='participationRate' class='smaller center bold text-center'> </p>
+            --->
 
             <space></space>
             <space></space>
@@ -487,6 +490,8 @@ export default class HabitatProposalCard extends HTMLElement {
     this.cumulativeUserVotedShares = 0;
     // binary voting
     this.userSignal = 0;
+    // default
+    //this.maxBalance = 100;
 
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
@@ -715,7 +720,8 @@ export default class HabitatProposalCard extends HTMLElement {
 
     const newValue = Math.max(this.cumulativeUserVotedShares, Number(evt.target.value));
     this.userVotedShares = newValue - this.cumulativeUserVotedShares;
-    evt.target.value = newValue;
+    //this.userVotedShares = Math.min(this.maxBalance, newValue - this.cumulativeUserVotedShares);
+    evt.target.value = this.userVotedShares + this.cumulativeUserVotedShares;
 
     if (this.isSignalMode) {
       this.userSignal = this.userVotedShares > 0 ? 100 : 0;
@@ -786,14 +792,14 @@ export default class HabitatProposalCard extends HTMLElement {
     }
     this.totalSharesExcludingUser = totalShares - this.userVotedShares;
 
-    this.shadowRoot.querySelector('#totalVotes').textContent = this.data.totalVotes;
+    this.shadowRoot.querySelector('#totalVotes').textContent =
+      `${this.data.totalVotes} / ${this.data.participationRate.toFixed(2)}%`;
     this.shadowRoot.querySelector('#totalShares').textContent = `${this.data.totalShares} ${this.data.token.symbol}`;
     this.shadowRoot.querySelector('#sharesYes').textContent = `${this.data.totalYesShares} ${this.data.token.symbol}`;
-    this.shadowRoot.querySelector('#avgSignal').textContent = `${this.data.signalStrength.toFixed(2)}%`;
     this.shadowRoot.querySelector('#sharesNo').textContent = `${this.data.totalNoShares} ${this.data.token.symbol}`;
     this.shadowRoot.querySelector('#userShares').textContent = `${userShares} ${this.data.token.symbol}`;
     this.shadowRoot.querySelector('#userSignal').textContent = `${userSignal}/100`;
-    this.shadowRoot.querySelector('#participationRate').textContent = `${this.data.participationRate.toFixed(2)}%`;
+    //this.shadowRoot.querySelector('#participationRate').textContent = `${this.data.participationRate.toFixed(2)}%`;
     if (this.data.metadata.src) {
       try {
         const e = this.shadowRoot.querySelector('#externalLink');
@@ -950,6 +956,8 @@ export default class HabitatProposalCard extends HTMLElement {
         left = `${100 - Math.min(100, accept)}% `;
         right = `${100 - Math.min(100, reject)}%`;
       }
+      this.shadowRoot.querySelector('#for').textContent = renderAmount(accept, 0, 1) + '%';
+      this.shadowRoot.querySelector('#against').textContent = renderAmount(reject, 0, 1) + '%';
       this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
       this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
     } else if (flavor === 'signal') {

@@ -68,13 +68,6 @@ button {
   width: 100%;
   margin: 1em auto;
 }
-habitat-transaction-cart {
-  display: block;
-  position: sticky;
-  top: 1em;
-  float: right;
-  z-index: 99;
-}
 :root, :host {
   --color-bg-button: var(--color-bg);
   --color-button: var(--color-bg-invert);
@@ -98,6 +91,16 @@ button, .button {
 #topSignal {
   display: none;
   padding-bottom: 1em;
+}
+#sticky {
+  position: sticky;
+  top: .5em;
+  max-width: max-content;
+  padding: .5em 1em;
+  border-radius: 2em;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-bg-invert);
+  z-index: 9;
 }
 </style>
 <div style='padding:0 var(--panel-padding);'>
@@ -150,25 +153,25 @@ button, .button {
         </div>
         <space></space>
       </div>
-
-      <space></space>
-      <div class='flex row center evenly'>
-        <div class='flex row' style='align-items:flex-end;'>
-          <habitat-toggle
-            id='delegateModeToggle'
-            left='Delegation Mode'
-            right='Delegation Mode'
-          ></habitat-toggle>
-        </div>
-      </div>
-      <space></space>
     </section>
 
-    <habitat-transaction-cart></habitat-transaction-cart>
+       <div id='sticky' class='flex row center evenly'>
+        <div class='flex row'>
+          <habitat-toggle
+            id='delegateModeToggle'
+            left='Personal Mode'
+            tooltip-left='Your personal voting power'
+            right='Delegation Mode'
+            tooltip-right='Voting power delegated to you'
+          ></habitat-toggle>
+          <habitat-transaction-cart></habitat-transaction-cart>
+        </div>
+      </div>
+
     <div id='tabs'>
       <div id='tab-signal' class='tab'>
         <div class='flex'>
-          <p class='s light center'>
+          <p class='light center'>
 Help Habitat grow and express your preferences. This area is about signaling your priority by adding HBT votes on single topics and their subtopics. To submit a new topic you need to hold at least 0.001% of the TVL of HBT.
           </p>
         </div>
@@ -187,9 +190,8 @@ Help Habitat grow and express your preferences. This area is about signaling you
 
       <div id='tab-governance' class='tab'>
         <div class='flex'>
-          <p class='s light center'>
-Vote on important rollup governance decisions with HBT tokens.
-Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a proposal you need to own 0.1% of HBT on the rollup (TVL).
+          <p class='light center'>
+Vote on important rollup governance decisions with HBT tokens. Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a proposal you need to own 0.1% of HBT on the rollup (TVL).
           </p>
         </div>
         <div class='flex row between'>

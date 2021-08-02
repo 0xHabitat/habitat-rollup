@@ -6,16 +6,9 @@ const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
 #outer {
-  height: 1.5em;
-  width: 1.5em;
   padding: .25em;
-  border-radius: 50%;
   cursor: pointer;
   overflow: hidden;
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-bg-invert);
-  position: absolute;
-  right: 0;
 }
 
 #outer.expanded {
@@ -23,7 +16,6 @@ TEMPLATE.innerHTML = `
   width: auto;
   min-height: 4em;
   padding: .5em 1em;
-  border-radius: 1em;
 }
 
 #txGrid {
@@ -47,12 +39,11 @@ TEMPLATE.innerHTML = `
 #count {
   position: relative;
   top: -.2em;
-  left: .1em;
   width: 1.5em;
   height: 1.5em;
-  text-align: left;
+  text-align: center;
   font-weight: bold;
-  color: orange;
+  color: #F28F74;
 }
 
 #close {
@@ -60,7 +51,8 @@ TEMPLATE.innerHTML = `
 }
 </style>
 <div id='outer' class='flex row'>
-  <p id='count'>0</p>
+  <span id='bal'></span>
+  <span id='count'></span>
   <div id='txBundle' class='flex col s'>
     <p class='bold m'><span>Pending Transactions</span></p>
     <space></space>
@@ -105,7 +97,8 @@ class HabitatTransactionCart extends HTMLElement {
       const container = this.shadowRoot.querySelector('#txBundle');
       const grid = this.shadowRoot.querySelector('#txGrid');
       grid.innerHTML = '';
-      this.shadowRoot.querySelector('#count').textContent = evt.data.value.length;
+      //this.shadowRoot.querySelector('#bal').textContent = `14.k HBT left`;
+      this.shadowRoot.querySelector('#count').textContent = `${evt.data.value.length}`;
 
       for (const tx of evt.data.value) {
         const e = document.createElement('p');

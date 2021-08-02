@@ -53,7 +53,7 @@ pin {
 }
 
 #tooltip {
-  display: inline-block;
+  display: block;
   font-size: .7em;
   width: 1em;
   height: 1em;
@@ -61,6 +61,7 @@ pin {
   cursor: pointer;
   align-self: start;
   background-color: var(--color-bg-invert);
+  visibility: hidden;
 }
 
 #tooltip > span {
@@ -148,7 +149,7 @@ class HabitatToggle extends HTMLElement {
     this.shadowRoot.querySelector('#mode').textContent = text;
 
     const tooltipText = this.getAttribute(right ? ATTR_TOOLTIP_RIGHT : ATTR_TOOLTIP_LEFT);
-    this.shadowRoot.querySelector('#tooltip').style.visibility = tooltipText ? 'visible' : 'hidden';
+    this.shadowRoot.querySelector('#tooltip').style.visibility = tooltipText ? 'initial' : 'hidden';
     this.shadowRoot.querySelector('#content').innerHTML = tooltipText;
   }
 }
