@@ -925,15 +925,24 @@ export default class HabitatProposalCard extends HTMLElement {
         this.shadowRoot.querySelector(this.userSignal > 50 ? '#yes' : '#no').classList.add('bold');
       }
 
-      let { totalYes, totalNo } = this.data;
-      if (this.userSignal > 50) {
-        totalYes++;
-      } else if (this.userSignal !== 0) {
-        totalNo++;
+      let y = Number(this.data.totalYesShares);
+      let n = Number(this.data.totalNoShares);
+
+      if (this.userSignal !== this.oldUserSignal) {
+        if (this.oldUserSignal > 50) {
+          y -= this.lastVotedShares;
+        } else if (this.oldUserSignal !== 0) {
+          n -= this.lastVotedShares;
+        }
       }
-      const totalVotes = totalYes + totalNo;
-      const accept = totalVotes > 0 ? (totalYes * 100) / totalVotes : 0;
-      const reject = totalVotes > 0 ? (totalNo * 100) / totalVotes : 0;
+      if (this.userSignal > 50) {
+        y += this.userVotedShares;
+      } else if (this.userSignal !== 0) {
+        n += this.userVotedShares;
+      }
+      const totalShares = this.totalSharesExcludingUser + this.userVotedShares;
+      const accept = totalShares > 0 ? (y * 100) / totalShares : 0;
+      const reject = totalShares > 0 ? (n * 100) / totalShares : 0;
 
       let left = 'calc(100% - 2em)';
       let right = left;
