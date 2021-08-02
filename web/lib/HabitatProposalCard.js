@@ -934,19 +934,17 @@ export default class HabitatProposalCard extends HTMLElement {
       let y = Number(this.data.totalYesShares);
       let n = Number(this.data.totalNoShares);
 
-      if (this.userSignal !== this.oldUserSignal) {
-        if (this.oldUserSignal > 50) {
-          y -= this.lastVotedShares;
-        } else if (this.oldUserSignal !== 0) {
-          n -= this.lastVotedShares;
-        }
+      if (this.oldUserSignal > 50) {
+        y -= this.lastVotedShares;
+      } else if (this.oldUserSignal !== 0) {
+        n -= this.lastVotedShares;
       }
       if (this.userSignal > 50) {
         y += this.userVotedShares;
       } else if (this.userSignal !== 0) {
         n += this.userVotedShares;
       }
-      const totalShares = this.totalSharesExcludingUser + this.userVotedShares;
+      const totalShares = y + n;
       const accept = totalShares > 0 ? (y * 100) / totalShares : 0;
       const reject = totalShares > 0 ? (n * 100) / totalShares : 0;
 
