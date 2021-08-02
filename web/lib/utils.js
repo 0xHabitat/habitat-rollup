@@ -792,3 +792,57 @@ const dateTimeFormat = new Intl.DateTimeFormat([], { dateStyle: 'short', timeSty
 export function formatDate (v) {
   return dateTimeFormat.format(v);
 }
+
+export function sanitize (html) {
+  const ALLOWED_ELEMENTS = [
+    HTMLElement,
+    HTMLAnchorElement,
+    HTMLBRElement,
+    HTMLDListElement,
+    HTMLDetailsElement,
+    HTMLDivElement,
+    HTMLHRElement,
+    HTMLHeadingElement,
+    HTMLImageElement,
+    HTMLLIElement,
+    HTMLLabelElement,
+    HTMLParagraphElement,
+    HTMLPictureElement,
+    HTMLPreElement,
+    HTMLQuoteElement,
+    HTMLSourceElement,
+    HTMLSpanElement,
+    HTMLTableCaptionElement,
+    HTMLTableCellElement,
+    HTMLTableColElement,
+    HTMLTableElement,
+    HTMLTableRowElement,
+    HTMLTableSectionElement,
+    HTMLTimeElement,
+    HTMLUListElement,
+  ];
+  const ALLOWED_ATTRIBUTES = ['src', 'media', 'sizes', 'srcset', 'type', 'href'];
+
+  const e = document.createElement('template');
+  e.innerHTML = html;
+
+  for (const node of e.content.querySelectorAll('*')) {
+    if (ALLOWED_ELEMENTS.indexOf(node.constructor) === -1) {
+      console.log('not allowed', node.toString());
+      node.remove();
+      continue;
+    }
+    const attrs = node.getAttributeNames();
+    for (const attr of attrs) {
+      if (ALLOWED_ATTRIBUTES.indexOf(attr) === -1) {
+        node.removeAttribute(attr);
+        continue;
+      }
+      if (attr === 'href') {
+        node.setAttribute('target', '_blank');
+      }
+    }
+  }
+
+  return e.content;
+}

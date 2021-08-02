@@ -188,7 +188,6 @@ export default class HabitatProposeCard extends HTMLElement {
     // cache
     this._githubIssue = issue;
     this.shadowRoot.querySelector('#title').value = issue.title;
-    // xxx: consider using an iframe for embedding
     this.shadowRoot.querySelector('#body').value = issue.body_text;
 
     for (const node of inputs) {

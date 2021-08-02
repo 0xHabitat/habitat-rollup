@@ -7,6 +7,7 @@ import {
   getSigner,
   formatDate,
   getEtherscanLink,
+  sanitize,
 } from './utils.js';
 import {
   getProviders,
@@ -750,9 +751,9 @@ export default class HabitatProposalCard extends HTMLElement {
         data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
 
       const html = data.metadata.details || 'no description';
-      // XXX: safe embedding
-      //this.shadowRoot.querySelector('#details').innerHTML = html;
-      this.shadowRoot.querySelector('.expandable #body').innerHTML = html;
+      const article = document.createElement('article');
+      article.attachShadow({ mode: 'open' }).append(sanitize(html));
+      this.shadowRoot.querySelector('.expandable #body').replaceChildren(article);
 
       renderLabels(data.metadata.labels || [], this.shadowRoot.querySelector('#labels'));
     }

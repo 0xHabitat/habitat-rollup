@@ -7,6 +7,7 @@
   walletIsConnected,
   getTokenV2,
   ethers,
+  sanitize,
 } from '/lib/utils.js';
 import {
   getProviders,
@@ -200,8 +201,9 @@ habitat-slider {
       if (metadata.src) {
         try {
           const issue = await fetchIssue(metadata.src);
-          // xxx: consider using an iframe for embedding
-          bodyElement.innerHTML = issue.body_html;
+          const article = document.createElement('article');
+          article.attachShadow({ mode: 'open' }).append(sanitize(issue.body_html));
+          bodyElement.replaceChildren(article);
           // update title
           titleElement.textContent = issue.title;
 
