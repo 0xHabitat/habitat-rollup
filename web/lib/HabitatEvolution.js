@@ -203,7 +203,7 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
         <section id='draft' class='flex col center'></section>
         <section id='proposals' class='flex col center proposals'>
           <p id='recentSignal' class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
-          <p id='topSignal' class='l light'><span><emoji-bank></emoji-bank><span> Top Proposals</span></span></p>
+          <p id='topSignal' class='l light'><span><emoji-bank></emoji-bank><span> Proposals</span></span></p>
         </section>
       </div>
     </div>
@@ -408,6 +408,13 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
             if (now - aT < threshold || now - bT < threshold) {
               return bT > aT ? 1 : -1;
             }
+
+            const aStatus = a.card.data.proposalStatus;
+            const bStatus = b.card.data.proposalStatus;
+            if (aStatus > 1 || bStatus > 1) {
+              return bStatus > aStatus ? -1 : 1;
+            }
+
             return b.v - a.v;
           }
         );
