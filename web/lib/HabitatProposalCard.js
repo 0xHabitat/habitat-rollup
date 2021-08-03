@@ -150,9 +150,9 @@ TEMPLATE.innerHTML = `
   width: 100%;
   box-sizing: border-box;
   transition: all .07s linear;
-  background: url('/lib/assets/signalbar.svg');
+  background: linear-gradient(90deg, #579D83 0 4%, #6FAA82 4% 16%, #89B981 16% 23%, #99C281 23% 30%, #ADCE80 30% 40%, #CCE080 40% 45%, #D5E37E 45% 53%, #D6D87D 53% 61%, #E1C87B 61% 80%, #E8AF78 67% 80%, #F28F74 80% 93%, #F87972 93% 100%);
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: 100% 100%;
   background-clip: content-box;
   padding-right: 100%;
   line-height: 2;
