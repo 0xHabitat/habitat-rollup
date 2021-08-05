@@ -14,6 +14,7 @@ import {
   decodeMetadata,
   getReceipt,
   fetchModuleInformation,
+  getTotalDelegatedAmountForToken,
 } from '/lib/rollup.js';
 import HabitatPanel from '/lib/HabitatPanel.js';
 import './HabitatToggle.js';
@@ -101,6 +102,9 @@ button, .button {
   background-color: var(--color-bg);
   border: 1px solid var(--color-bg-invert);
   z-index: 9;
+}
+#tabs * {
+  outline: none;
 }
 </style>
 <div style='padding:0 var(--panel-padding);'>
@@ -310,7 +314,8 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
       let delegatedBalance = usedUserBalance;
 
       if (account) {
-        const totalUserBalance = await habitat.callStatic.getBalance(token.address, account);
+        const delegated = await getTotalDelegatedAmountForToken(token.address, account);
+        const totalUserBalance = (await habitat.callStatic.getBalance(token.address, account)).sub(delegated);
         const voted = await habitat.callStatic.getActiveVotingStake(token.address, account);
         userBalance = renderAmount(totalUserBalance, token.decimals);
         usedUserBalance = renderAmount(voted, token.decimals);
@@ -339,6 +344,7 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
     {
       const refSignal = ethers.utils.formatUnits(tvl, token.decimals);
       const tabs = this.shadowRoot.querySelector('#tabs');
+      const delegateMode = tabs.classList.contains('delegateMode');
       const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'ProposalCreated', [this.signalVault, this.actionVault]);
       for (const log of logs) {
         const vault = log.args[0];
@@ -353,6 +359,7 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
         e.setAttribute('hash', log.transactionHash);
         e.setAttribute('signal-vault', this.signalVault);
         e.setAttribute('action-vault', this.actionVault);
+        e.setAttribute('delegate-mode', delegateMode || '');
         e.subtopicSupport = !topic;
         e.addEventListener('signalChange', (evt) => {
           this.submitChanges();
@@ -424,6 +431,7 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
         let uTop = true;
         let uRecent = true;
         let pos = 0;
+        let tabIndex = 0;
         for (const e of topSignals) {
           if (now - e.card.data.startDate > threshold) {
             if (uTop) {
@@ -440,6 +448,7 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
           }
 
           e.card.style.gridRow = ++pos;
+          e.card.tabIndex = ++tabIndex;
         }
       }
     }

@@ -23,11 +23,16 @@ import {
 } from './rollup.js';
 import { COMMON_STYLESHEET } from './component.js';
 import HabitatProposeCard from './HabitatProposeCard.js';
+import BalanceTracker from './BalanceTracker.js';
 import './HabitatProposalActionList.js';
+import './HabitatSentimentSlider.js';
 
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
+:host {
+  outline: none;
+}
 #title {
   display: block;
   max-width: 25em;
@@ -105,16 +110,18 @@ TEMPLATE.innerHTML = `
   cursor: pointer;
 }
 .expandable {
-  height: 0;
+  max-height: 0;
+  transition: max-height .2s ease-out;
   overflow: hidden;
-  transform: rotateY(90deg);
   -moz-backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 .expanded {
-  height: auto;
-  transform: none;
+  max-height: 100em;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: overlay;
+  transition: max-height .3s ease-in;
 }
 .indicator,
 .indicator #inner,
@@ -281,6 +288,12 @@ button, .button, button *, .button * {
   color: var(--color-bg);
   background-color: var(--color-bg-invert);
 }
+input[type=number],
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+}
 </style>
 <div class='box' style='padding:.5em 2em;'>
   <div id='infotags'></div>
@@ -294,25 +307,32 @@ button, .button, button *, .button * {
       <div class='lessmore'>
         <p id='title'> </p>
       </div>
-      <!--
-      <space></space>
-      <p id='details'> </p>
-      <space></space>
-      -->
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
     </div>
+
     <a id='id' class='s lbl' style='align-self:start;'> </a>
-    <div class='flex col'>
-      <div id='changeSignal' class='flex row flavor-signal'>
-        <button id='sub' class='shareBtn left'><span style='vertical-align:text-top;'>-</span></button>
-        <input id='inputShares' placeholder='0'>
-        <button id='add' class='shareBtn right'><span style='vertical-align:text-top;'>+</span></button>
+
+    <div id='controls' class='flex col' style='padding-top:.2em;'>
+      <div id='changeSignal' class='flex col flavor-signal'>
+        <div class='flex row'>
+          <button id='sub' class='shareBtn left'><span style='vertical-align:text-top;'>-</span></button>
+          <input id='inputShares' type='number' placeholder='0'>
+          <button id='add' class='shareBtn right'><span style='vertical-align:text-top;'>+</span></button>
+        </div>
+        <div class='flex col' style='width: 100%; padding-top:.2em;'>
+          <habitat-sentiment-slider></habitat-sentiment-slider>
+        </div>
       </div>
 
-      <div id='changeBinary' class='flex row flavor-binary'>
-        <button id='no' class='shareBtn left'><span style='vertical-align:text-top;'>No</span></button>
-        <input id='inputShares' placeholder='0'>
-        <button id='yes' class='shareBtn right'><span style='vertical-align:text-top;'>Yes</span></button>
+      <div id='changeBinary' class='flex col flavor-binary'>
+        <div class='flex row'>
+          <button id='no' class='shareBtn left'><span style='vertical-align:text-top;'>No</span></button>
+          <input id='inputShares' type='number' placeholder='0'>
+          <button id='yes' class='shareBtn right'><span style='vertical-align:text-top;'>Yes</span></button>
+        </div>
+        <div class='flex col' style='width: 100%; padding-top:.2em;'>
+          <habitat-sentiment-slider></habitat-sentiment-slider>
+        </div>
       </div>
     </div>
   </div>
@@ -368,11 +388,6 @@ button, .button, button *, .button * {
 
             <p class='lbl s'>Quorum</p>
             <p id='quorum' class='smaller center bold text-center'> </p>
-
-            <!---
-            <p class='lbl s'>Participation</p>
-            <p id='participationRate' class='smaller center bold text-center'> </p>
-            --->
 
             <space></space>
             <space></space>
@@ -490,8 +505,6 @@ export default class HabitatProposalCard extends HTMLElement {
     this.cumulativeUserVotedShares = 0;
     // binary voting
     this.userSignal = 0;
-    // default
-    //this.maxBalance = 100;
 
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
@@ -501,8 +514,13 @@ export default class HabitatProposalCard extends HTMLElement {
     wrapListener(this.shadowRoot.querySelector('a#expand'), this.toggleExpand.bind(this));
 
     for (const node of this.shadowRoot.querySelectorAll('#inputShares')) {
-      wrapListener(node, this.onSignalChange.bind(this), 'change');
-      const isSignalContainer = node.parentElement.classList.contains('flavor-signal');
+      node.addEventListener('change', this.onSignalChange.bind(this), false);
+      node.addEventListener('click', (evt) => {
+        evt.preventDefault();
+        evt.target.focus();
+        evt.target.select();
+      }, false);
+      const isSignalContainer = node.parentElement.parentElement.classList.contains('flavor-signal');
       function change (self, v) {
         if (isSignalContainer) {
           const n =  Number(node.value) + v;
@@ -515,6 +533,15 @@ export default class HabitatProposalCard extends HTMLElement {
       }
       new CustomButtonHandler(node.parentElement.querySelector('.right'), (v) => change(this, 1 * v));
       new CustomButtonHandler(node.parentElement.querySelector('.left'), (v) => change(this, -1 * v));
+    }
+    for (const node of this.shadowRoot.querySelectorAll('habitat-sentiment-slider')) {
+      node.addEventListener('change', async (evt) => {
+        const { target } = evt;
+        const { total } = await BalanceTracker.stat(this.data.token, this.isDelegationMode);
+        this.maxBalance = total;
+        this.inputShares.value = ~~(this.maxBalance * target.value);
+        this.inputShares.dispatchEvent(new Event('change'));
+      }, false);
     }
 
     wrapListener(
@@ -597,6 +624,10 @@ export default class HabitatProposalCard extends HTMLElement {
     }
   }
 
+  get controls () {
+    return this.shadowRoot.querySelector(this.isSignalMode ? '#changeSignal' : '#changeBinary');
+  }
+
   get inputShares () {
     return this.shadowRoot.querySelector(this.isSignalMode ? '#changeSignal #inputShares' : '#changeBinary #inputShares');
   }
@@ -647,6 +678,7 @@ export default class HabitatProposalCard extends HTMLElement {
       node.calculateSignal();
     }
 
+    this.updateSlider();
     this.renderFlavor(this.getAttribute(ATTR_FLAVOR));
   }
 
@@ -713,24 +745,41 @@ export default class HabitatProposalCard extends HTMLElement {
     return this.getAttribute(ATTR_FLAVOR) === 'signal';
   }
 
-  onSignalChange (evt) {
-    for (const node of this.shadowRoot.querySelector('#changeSignal').children) {
-      node.classList.remove('bold');
+  get isDelegationMode () {
+    return !!this.getAttribute(ATTR_DELEGATE_MODE);
+  }
+
+  updateSlider () {
+    const e = this.controls.querySelector('habitat-sentiment-slider');
+    e.setAttribute('value', this.maxBalance > 0 ? this.userVotedShares / this.maxBalance : 0);
+  }
+
+  async onSignalChange (evt) {
+    if (!this.data) {
+      return;
     }
 
-    const newValue = Math.max(this.cumulativeUserVotedShares, Number(evt.target.value));
-    this.userVotedShares = newValue - this.cumulativeUserVotedShares;
-    //this.userVotedShares = Math.min(this.maxBalance, newValue - this.cumulativeUserVotedShares);
-    evt.target.value = this.userVotedShares + this.cumulativeUserVotedShares;
+    const target = evt.target;
+    const newValue = Math.max(this.cumulativeUserVotedShares, Number(target.value));
+    const old = this.userVotedShares - this.lastVotedShares;
+    const { total, available } = await BalanceTracker.stat(this.data.token, this.isDelegationMode);
+
+    if (Math.max(this.cumulativeUserVotedShares, Number(target.value)) !== newValue) {
+      console.log('late');
+      return;
+    }
+
+    this.maxBalance = total;
+    this.availableBalance = ~~(available + this.userVotedShares);
+    this.userVotedShares = Math.max(0, Math.min(this.availableBalance, newValue - this.cumulativeUserVotedShares));
+
+    const diff = (this.userVotedShares - this.lastVotedShares) - old;
+    BalanceTracker.record(this.data.token, this.data.proposalId, this.userVotedShares, this.isDelegationMode);
+
+    target.value = this.userVotedShares + this.cumulativeUserVotedShares;
 
     if (this.isSignalMode) {
       this.userSignal = this.userVotedShares > 0 ? 100 : 0;
-    }
-
-    if (this.userVotedShares > this.lastVotedShares) {
-      this.shadowRoot.querySelector('#add').classList.add('bold');
-    } else if (this.userVotedShares < this.lastVotedShares) {
-      this.shadowRoot.querySelector('#sub').classList.add('bold');
     }
 
     this.calculateSignal();
@@ -771,10 +820,17 @@ export default class HabitatProposalCard extends HTMLElement {
   async render (data) {
     const oldData = this.data;
     this.data = data;
-    const isDelegationMode = !!this.getAttribute(ATTR_DELEGATE_MODE);
-    const userShares = Number(isDelegationMode ? this.data.delegatedUserShares : this.data.userShares);
-    const userSignal = Number(isDelegationMode ? this.data.delegatedUserSignal : this.data.userSignal);
+
     const totalShares = this.data.totalShares;
+    const isDelegationMode = !!this.getAttribute(ATTR_DELEGATE_MODE);
+    let userShares = Number(isDelegationMode ? this.data.delegatedUserShares : this.data.userShares);
+    let userSignal = Number(isDelegationMode ? this.data.delegatedUserSignal : this.data.userSignal);
+
+    if (this.data.proposalStatus > VotingStatus.OPEN) {
+      // TODO: should give an option to free staked balance
+      userShares = 0;
+      userSignal = 0;
+    }
 
     if (
       !oldData ||
@@ -799,7 +855,6 @@ export default class HabitatProposalCard extends HTMLElement {
     this.shadowRoot.querySelector('#sharesNo').textContent = `${this.data.totalNoShares} ${this.data.token.symbol}`;
     this.shadowRoot.querySelector('#userShares').textContent = `${userShares} ${this.data.token.symbol}`;
     this.shadowRoot.querySelector('#userSignal').textContent = `${userSignal}/100`;
-    //this.shadowRoot.querySelector('#participationRate').textContent = `${this.data.participationRate.toFixed(2)}%`;
     if (this.data.metadata.src) {
       try {
         const e = this.shadowRoot.querySelector('#externalLink');
@@ -838,8 +893,11 @@ export default class HabitatProposalCard extends HTMLElement {
     if (this.data.proposalStatus > VotingStatus.OPEN) {
       openSince = this.data.proposalStatusText;
       statusText = this.data.proposalStatusText;
-      this.shadowRoot.querySelector('#processProposal').disabled = true;
 
+      for (const e of this.shadowRoot.querySelectorAll('#controls button, #controls input')) {
+        e.disabled = true;
+      }
+      this.shadowRoot.querySelector('#processProposal').disabled = true;
       this.shadowRoot.querySelector('#execProposal').disabled =
         this.data.proposalStats !== VotingStatus.PASSED || this.data.tx.message.externalActions === '0x';
     } else {
@@ -890,7 +948,7 @@ export default class HabitatProposalCard extends HTMLElement {
 
   get changePending () {
     if (this.data && this.data.token) {
-      return this.lastVotedShares !== this.userVotedShares || this.userSignal !== this.oldUserSignal;
+      return this.lastVotedShares !== this.userVotedShares || (this.userVotedShares > 0 && this.userSignal !== this.oldUserSignal);
     }
     return false;
   }
@@ -924,7 +982,7 @@ export default class HabitatProposalCard extends HTMLElement {
 
   renderFlavor (flavor) {
     if (flavor === 'binary') {
-      for (const node of this.shadowRoot.querySelector('#changeBinary').children) {
+      for (const node of this.controls.querySelectorAll('button')) {
         node.classList.remove('bold');
       }
       if (this.userSignal !== 0) {
@@ -959,6 +1017,15 @@ export default class HabitatProposalCard extends HTMLElement {
       this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
       this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
     } else if (flavor === 'signal') {
+      for (const node of this.controls.querySelectorAll('button')) {
+        node.classList.remove('bold');
+      }
+      if (this.userVotedShares > this.lastVotedShares) {
+        this.shadowRoot.querySelector('#add').classList.add('bold');
+      } else if (this.userVotedShares < this.lastVotedShares) {
+        this.shadowRoot.querySelector('#sub').classList.add('bold');
+      }
+
       const e = this.shadowRoot.querySelector('#infobox .b').children;
       for (const node of e) {
         node.style.display = node.classList.contains('signal') ? 'block' : 'none';
@@ -982,7 +1049,12 @@ export default class HabitatProposalCard extends HTMLElement {
     }
 
     if (!skip) {
-      tmp.sort((a, b) => b.v - a.v).forEach((e, i) => e.card.style.gridRow = i + 1);
+      tmp.sort((a, b) => b.v - a.v).forEach(
+        function (e, i) {
+          e.card.style.gridRow = i + 1;
+          e.card.tabIndex = i + 1;
+        }
+      );
     }
   }
 

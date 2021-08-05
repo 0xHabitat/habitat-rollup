@@ -663,7 +663,7 @@ export async function getTokenV2 (val) {
     tokenInfo.interface = ERC_INTERFACE;
   } else {
     tokenInfo.interface = ERC_INTERFACE;
-    tokenInfo.contract = await getErc20(tokenInfo.address);
+    tokenInfo.contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, getProvider());
   }
 
   if (!tokenInfo.logoURI) {
