@@ -818,6 +818,11 @@ export default class HabitatProposalCard extends HTMLElement {
   }
 
   async render (data) {
+    if (!data) {
+      console.warn('data');
+      return;
+    }
+
     const oldData = this.data;
     this.data = data;
 
