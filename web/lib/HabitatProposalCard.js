@@ -443,9 +443,9 @@ class CustomButtonHandler {
   constructor (target, callback) {
     this.callback = callback;
     this.released = true;
-    this.defaultVelo = 1000;
-    this.velocity = this.defaultVelo;
+    this.velocity = 0;
     this.timestamp = 0;
+    this.iter = 0;
 
     target.addEventListener('mouseup', this, false);
     target.addEventListener('mousedown', this, false);
@@ -457,28 +457,33 @@ class CustomButtonHandler {
 
   mousedown () {
     this.released = false;
-    this.velocity = this.defaultVelo;
+    this.velocity = 0;
+    this.timestamp = 0;
+    this.iter = 0;
     this.update();
   }
 
   mouseup () {
     this.released = true;
-    this.velocity = this.defaultVelo;
     this.update();
   }
 
   update (now = 0) {
-    if (this.released) {
-      return;
+    if (!this.released) {
+      window.requestAnimationFrame(this.update.bind(this));
     }
-    window.requestAnimationFrame(this.update.bind(this));
 
-    this.velocity = Math.max(1, this.velocity - this.velocity / 1000);
+    let threshold = 600;
+    if (this.iter > 62) {
+      this.velocity += .2;
+      threshold = 60;
+    } else {
+      this.iter++;
+    }
 
-    const delta = now - this.timestamp;
-    if (delta > 60) {
+    if (now - this.timestamp > threshold) {
       this.timestamp = now;
-      const v = ~~(this.defaultVelo - this.velocity) || 1;
+      const v = ~~this.velocity || 1;
       this.callback(v);
     }
   }
