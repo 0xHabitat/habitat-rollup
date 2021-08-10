@@ -138,6 +138,12 @@ section#left {
   overflow: hidden;
 }
 
+habitat-sidebar {
+  display: block;
+  margin: 0 auto;
+  max-width: 19ch;
+}
+
 select {
   padding: 1em;
   border-radius: 2em;

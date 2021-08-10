@@ -591,7 +591,7 @@ export default class HabitatProposalCard extends HTMLElement {
   }
 
   connectedCallback () {
-    onChainUpdate(this.chainUpdateCallback.bind(this));
+    this.chainUpdateCallback();
   }
 
   async chainUpdateCallback () {
@@ -825,6 +825,9 @@ export default class HabitatProposalCard extends HTMLElement {
   }
 
   async render (data) {
+    if (!this.isConnected) {
+      return;
+    }
     if (!data) {
       console.warn('data');
       return;

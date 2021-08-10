@@ -13,6 +13,7 @@ import {
   getGasTank,
   onChainUpdate,
   signBatch,
+  scavengeProposals,
 } from './rollup.js';
 
 import './HabitatColorToggle.js';
@@ -106,6 +107,10 @@ const NAV_TEMPLATE =
 #txGrid > * {
   font-weight: lighter;
 }
+#scavengeProposals {
+  display: none;
+  margin: .5em 0;
+}
 </style>
 <div class='sidebar'>
   <div id='top'>
@@ -128,6 +133,15 @@ const NAV_TEMPLATE =
       <p class='m'>🚩 Pending Transactions:</p>
       <div id='txGrid'></div>
       <button id='txSign' class='m black'>Sign</button>
+    </div>
+
+    <div class='flex col'>
+      <button id='scavengeProposals' class='s'>
+        <span>Scavenge Votes </span>
+        <span>(</span>
+        <span id='count'></span>
+        <span>)</span>
+      </button>
     </div>
 
     <div class='flex col evenly'>
@@ -252,6 +266,10 @@ class HabitatSidebar extends HTMLElement {
     wrapListener(this.querySelector('a#withdraw'), () => {
       this.updateDOM('Withdraw');
     });
+    wrapListener(this.querySelector('#scavengeProposals'), async () => {
+      const txs = await scavengeProposals();
+      window.postMessage({ type: 'hbt-tx-bundle', value: txs }, window.location.origin);
+    });
   }
 
   updateDOM(action) {
@@ -301,6 +319,18 @@ class HabitatSidebar extends HTMLElement {
       const e = this.querySelector('#gasTankBalance');
       e.setAttribute('owner', account);
       e.setAttribute('amount', value);
+    }
+
+    // misc
+    {
+      const txs = await scavengeProposals();
+      const e = this.querySelector('#scavengeProposals');
+      if (txs.length) {
+        e.style.display = 'flex';
+        e.querySelector('#count').textContent = txs.length;
+      } else {
+        e.style.display = 'none';
+      }
     }
   }
 }

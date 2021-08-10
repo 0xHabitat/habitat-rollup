@@ -1013,39 +1013,56 @@ export async function getGasTank (account) {
 }
 
 export async function getStakedProposals () {
-  const txs = [];
   const { habitat } = await getProviders();
   const signer = await getSigner();
   const account = await signer.getAddress();
-  const logs = await doQueryWithOptions({ toBlock: 1 }, 'VotedOnProposal', account);
-  const tmp = {};
 
-  for (const log of logs) {
-    const { proposalId, shares } = log.args;
-    if (tmp[proposalId]) {
-      continue;
-    }
-    tmp[proposalId] = true;
+  async function fetch (delegated = false) {
+    const txs = [];
+    const logs = await doQueryWithOptions({ toBlock: 1 }, delegated ? 'DelegateeVotedOnProposal' : 'VotedOnProposal', account);
+    const tmp = {};
 
-    if (shares.eq(0)) {
-      continue;
-    }
-
-    txs.push(
-      {
-        info: `Remove Vote from ${renderAddress(proposalId)}`,
-        primaryType: 'VoteOnProposal',
-        message: {
-          proposalId,
-          shares: 0,
-          signalStrength: 0,
-          delegatedFor: ethers.constants.AddressZero
-        }
+    for (const log of logs) {
+      const { proposalId, shares } = log.args;
+      if (tmp[proposalId]) {
+        continue;
       }
-    );
+      tmp[proposalId] = true;
+
+      if (shares.eq(0)) {
+        continue;
+      }
+
+      txs.push(
+        {
+          info: `Remove ${delegated ? 'Delegated' : ''} Vote from ${renderAddress(proposalId)}`,
+          primaryType: 'VoteOnProposal',
+          message: {
+            proposalId,
+            shares: 0,
+            signalStrength: 0,
+            delegatedFor: delegated ? account : ethers.constants.AddressZero
+          }
+        }
+      );
+    }
+    return txs;
   }
 
-  return txs;
+  return (await fetch()).concat(await fetch(true));
+}
+
+export async function scavengeProposals () {
+  const { habitat } = await getProviders();
+  const txs = await getStakedProposals();
+  const stat = [];
+  for (const obj of txs) {
+    const proposalId = obj.message.proposalId;
+    const v = Number(await habitat.callStatic.getProposalStatus(proposalId));
+    stat.push(v > VotingStatus.OPEN);
+  }
+
+  return txs.filter((e, i) => stat[i]);
 }
 
 export function onChainUpdate (callback) {
