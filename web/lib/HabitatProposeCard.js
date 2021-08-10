@@ -39,6 +39,10 @@ button, .button, button *, .button * {
   display: none;
 }
 
+:host {
+  transform: translateZ(0);
+}
+
 input, textarea {
   color: var(--color-text);
   border-radius: 1em;

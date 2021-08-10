@@ -181,20 +181,23 @@ const ACCOUNT_TEMPLATE =
   grid-template-columns: repeat(3, auto);
 }
 #tabs {
-  perspective: 1000px;
-  perspective-origin: center;
+  perspective: none;
+  transform: translateZ(0);
 }
 #tabs > div {
-  position: absolute;
   width: 100%;
-  transform: rotateX(180deg) translateZ(0);
+  height: 0;
   -moz-backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transform-style: flat;
+  transform: rotateY(-90deg) translateZ(0);
+  transition: transform .2s ease-out;
 }
 #tabs > div.selected {
-  transform: translateZ(0);
+  height: auto;
+  transform: none;
+  transition: transform .3s ease-in;
 }
 #tabnav > div {
   padding-bottom: .5em;
@@ -275,7 +278,7 @@ const ACCOUNT_TEMPLATE =
   gap: 1em;
   grid-auto-rows: auto;
 }
-@media (max-width: 1200px) {
+@media (max-width: 1100px) {
   #wallet-overview-inner {
     display: flex;
     flex-direction: column;
@@ -321,7 +324,7 @@ const ACCOUNT_TEMPLATE =
       <space></space>
 
       <div id='wallet-overview-inner'>
-        <div class='box' style='grid-row:1/4;grid-column:1/3;padding:0;max-width:max-content;'>
+        <div class='box' style='grid-row:1/2;grid-column:1/3;padding:0;max-width:max-content;'>
           <habitat-transfer-box id='transfer-box'></habitat-transfer-box>
         </div>
 
@@ -335,18 +338,19 @@ const ACCOUNT_TEMPLATE =
           <div id='erc20'></div>
         </div>
 
-        <div class='left box' style='grid-row:4/8;grid-column:4/8;'>
-          <h6><span><emoji-dizzy></emoji-dizzy><span> Activities</span></span></h6>
-          <space></space>
-          <div id='history'></div>
-        </div>
-
-        <div class='box left' style='grid-row:4;grid-column:1/4;'>
+        <div class='box left' style='grid-row:2/4;grid-column:1/3;'>
           <h6><span><emoji-airplane></emoji-airplane><span> Withdrawals</span></span></h6>
           <space></space>
           <div id='exits'></div>
           <space></space>
         </div>
+
+        <div class='left box' style='grid-row:4/8;grid-column:1/8;'>
+          <h6><span><emoji-dizzy></emoji-dizzy><span> Activities</span></span></h6>
+          <space></space>
+          <div id='history'></div>
+        </div>
+
       </div>
     </div>
     <space></space>
@@ -372,142 +376,6 @@ const ACCOUNT_TEMPLATE =
   </div>
 </div>
 `;
-
-async function updateErc20 (root) {
-  const { habitat, bridge } = await getProviders();
-  const signer = await getSigner();
-  const account = await signer.getAddress();
-  const { tokens, transfers } = await queryTransfers(account);
-
-  {
-    // testnet
-    if (habitat.provider._network && habitat.provider._network !== 1) {
-      if (tokens.indexOf(HBT) === -1) {
-        tokens.push(HBT);
-      }
-    }
-  }
-
-  if (!tokens.length) {
-    return;
-  }
-
-  {
-    // render balances
-    const child = document.createElement('div');
-    child.innerHTML = ACCOUNT_ERC20_PRE_TEMPLATE + ACCOUNT_ERC20_TEMPLATE.repeat(tokens.length);
-    const children = child.children;
-    let childPtr = 5;
-    for (let i = 0, len = tokens.length; i < len; i++) {
-      const tokenAddr = tokens[i];
-      const token = await getTokenV2(tokenAddr);
-      const totalBalance = await habitat.callStatic.getBalance(tokenAddr, account);
-      const stakedBalance = await habitat.callStatic.getActiveVotingStake(tokenAddr, account);
-      const delegatedBalance = await getTotalDelegatedAmountForToken(tokenAddr, account);
-      const availableBalance = totalBalance.sub(stakedBalance).sub(delegatedBalance);
-      children[childPtr++].setAttribute('token', tokenAddr);
-
-      children[childPtr++].textContent = renderAmount(totalBalance, token.decimals);
-      children[childPtr++].textContent = renderAmount(availableBalance, token.decimals);
-      children[childPtr++].textContent = renderAmount(stakedBalance, token.decimals);
-      children[childPtr++].textContent = renderAmount(delegatedBalance, token.decimals);
-    }
-    const container = root.querySelector('#erc20');
-    if (container) {
-      container.replaceChildren(child);
-    }
-  }
-
-  if (transfers.length) {
-    // transfer history
-    const child = document.createElement('div');
-    child.innerHTML = '<p></p><p>Amount</p><p>Transaction Type</p>' + ACCOUNT_TRANSFER_TEMPLATE.repeat(transfers.length);
-    const children = child.children;
-    let childPtr = 3;
-    for (let i = 0, len = transfers.length; i < len; i++) {
-      const { token, from, to, value, transactionHash } = transfers[(len - 1) - i];
-      const isDeposit = from === ethers.constants.AddressZero;
-      const isIncoming = to === account;
-      const isWithdraw = to === ethers.constants.AddressZero;
-      const isTopUp = to.toLowerCase() === DEFAULT_ROLLUP_OPERATOR_ADDRESS;
-      const erc = await getTokenV2(token);
-      const amount = renderAmount(value, erc.decimals);
-      let type = '';
-
-      if (isDeposit) {
-        type = 'Deposit';
-      } else if (isWithdraw) {
-        type = 'Withdraw';
-      } else if (isIncoming) {
-        type = Number(from) < 0xffffffff ? 'Operator Reward' : 'Incoming';
-      } else if (isTopUp) {
-        type = 'Gas Top-up';
-      } else {
-        type = Number(to) < 0xffffffff ? 'Top-up Fee' : 'Outgoing';
-      }
-
-      // token
-      children[childPtr++].setAttribute('token', token);
-      // amount
-      children[childPtr++].textContent = amount;
-
-      // type
-      children[childPtr].href = getBlockExplorerLink(transactionHash);
-      children[childPtr++].textContent = type;
-
-      // from
-      //children[childPtr++].textContent = await getUsername(from);
-      // to
-      //children[childPtr++].textContent = await getUsername(to);
-      // block explorer link
-      //children[childPtr].textContent = renderAddress(transactionHash);
-      //children[childPtr++].href = getBlockExplorerLink(transactionHash);
-    }
-    const container = root.querySelector('#history');
-    if (container) {
-      container.replaceChildren(child);
-    }
-  }
-
-  {
-    // exits
-    const child = document.createElement('div');
-    child.innerHTML = ACCOUNT_EXITS_PRE_TEMPLATE;
-    for (let i = 0, len = tokens.length; i < len; i++) {
-      const tokenAddr = tokens[i];
-      const token = await getTokenV2(tokenAddr);
-      const { pendingAmounts, availableAmount } = await getExitStatusV2(tokenAddr, account);
-
-      if (availableAmount.gt(0)) {
-        const amount = ethers.utils.formatUnits(availableAmount, token.decimals);
-        const template = ACCOUNT_EXITS_TEMPLATE.content.cloneNode(true);
-        const childs = template.children;
-
-        childs[0].setAttribute('token', tokenAddr);
-        childs[1].textContent = renderAmount(availableAmount, token.decimals);
-        childs[2].textContent = 'Ready to Exit';
-        childs[2].classList.add('interactive');
-        wrapListener(childs[2], (evt) => root.querySelector('habitat-transfer-box').doExit(tokenAddr, amount));
-        child.append(template);
-      }
-
-      for (const e of pendingAmounts) {
-        const template = ACCOUNT_EXITS_TEMPLATE.content.cloneNode(true);
-        const childs = template.children;
-
-        childs[0].setAttribute('token', tokenAddr);
-        childs[1].textContent = renderAmount(e.value, token.decimals);
-        childs[2].textContent = `Ready in ~${secondsToString(e.finalityEstimate)}`;
-
-        child.append(template);
-      }
-    }
-    const container = root.querySelector('#exits');
-    if (container) {
-      container.replaceChildren(child);
-    }
-  }
-}
 
 class HabitatAccount extends HabitatPanel {
   static TEMPLATE = ACCOUNT_TEMPLATE;
@@ -568,46 +436,191 @@ class HabitatAccount extends HabitatPanel {
       return;
     }
 
-    const { habitat } = await getProviders();
+    await Promise.all(
+      [
+        this.updateUser(),
+        this.updateGasTank(),
+        this.updateRewards(),
+        this.updateActivity(),
+      ]
+    );
+  }
+
+  async updateUser () {
     const signer = await getSigner();
     const account = await signer.getAddress();
     const user = await getUsername(account, true);
     this.shadowRoot.querySelector('#greeting').textContent = user;
-
-    const token = await getTokenV2(HBT);
-    {
-      const { value, ratePerTx, remainingEstimate } = await getGasTank(account);
-      this.shadowRoot.querySelector('#gasTankRemaining').textContent = remainingEstimate.toString();
-      this.shadowRoot.querySelector('#ratePerTx').textContent = `${renderAmount(ratePerTx, token.decimals)} ${token.symbol}`;
-      this.shadowRoot.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} ${token.symbol}`;
-    }
-
-    // rewards
-    {
-      const {
-        claimable,
-        sinceEpoch,
-        secondsUntilNextEpoch,
-        currentStake,
-        estimatedYieldEpoch,
-        currentPoolShare,
-        poolShareDivider,
-      } = await calculateRewards(token);
-
-      this.shadowRoot.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token.decimals)} HBT`;
-      this.shadowRoot.querySelector('#nextYield').textContent = secondsToString(secondsUntilNextEpoch);
-      const claimBtn = this.shadowRoot.querySelector('#claim');
-      wrapListener(claimBtn, () => sendTransaction('ClaimStakingReward', { sinceEpoch, token: token.address }));
-      claimBtn.disabled = !claimable;
-
-      this.shadowRoot.querySelector('#stake').textContent = `${renderAmount(currentStake, token.decimals)} ${token.symbol}`;
-      this.shadowRoot.querySelector('#yieldShare').textContent =
-        `${((Number(currentPoolShare) / Number(poolShareDivider)) * 100).toFixed(4)}%`;
-      this.shadowRoot.querySelector('#yield').textContent = `${renderAmount(estimatedYieldEpoch, token.decimals)} ${token.symbol}`;
-    }
-
-    await updateErc20(this.shadowRoot);
   }
 
+  async updateGasTank () {
+    const signer = await getSigner();
+    const account = await signer.getAddress();
+    const token = await getTokenV2(HBT);
+    const { value, ratePerTx, remainingEstimate } = await getGasTank(account);
+    this.shadowRoot.querySelector('#gasTankRemaining').textContent = remainingEstimate.toString();
+    this.shadowRoot.querySelector('#ratePerTx').textContent = `${renderAmount(ratePerTx, token.decimals)} ${token.symbol}`;
+    this.shadowRoot.querySelector('#gasTankBalance').textContent = `${renderAmount(value, token.decimals)} ${token.symbol}`;
+  }
+
+  async updateRewards () {
+    const token = await getTokenV2(HBT);
+    const {
+      claimable,
+      sinceEpoch,
+      secondsUntilNextEpoch,
+      currentStake,
+      estimatedYieldEpoch,
+      currentPoolShare,
+      poolShareDivider,
+    } = await calculateRewards(token);
+
+    this.shadowRoot.querySelector('#rewardYield').textContent = `${renderAmount(claimable, token.decimals)} HBT`;
+    this.shadowRoot.querySelector('#nextYield').textContent = secondsToString(secondsUntilNextEpoch);
+    const claimBtn = this.shadowRoot.querySelector('#claim');
+    wrapListener(claimBtn, () => sendTransaction('ClaimStakingReward', { sinceEpoch, token: token.address }));
+    claimBtn.disabled = !claimable;
+
+    this.shadowRoot.querySelector('#stake').textContent = `${renderAmount(currentStake, token.decimals)} ${token.symbol}`;
+    this.shadowRoot.querySelector('#yieldShare').textContent =
+      `${((Number(currentPoolShare) / Number(poolShareDivider)) * 100).toFixed(4)}%`;
+    this.shadowRoot.querySelector('#yield').textContent = `${renderAmount(estimatedYieldEpoch, token.decimals)} ${token.symbol}`;
+  }
+
+  async updateActivity () {
+    const { habitat, bridge } = await getProviders();
+    const signer = await getSigner();
+    const account = await signer.getAddress();
+    const { tokens, transfers } = await queryTransfers(account);
+
+    {
+      // testnet
+      if (habitat.provider._network && habitat.provider._network !== 1) {
+        if (tokens.indexOf(HBT) === -1) {
+          tokens.push(HBT);
+        }
+      }
+    }
+
+    if (!tokens.length) {
+      return;
+    }
+
+    {
+      // render balances
+      const child = document.createElement('div');
+      child.innerHTML = ACCOUNT_ERC20_PRE_TEMPLATE + ACCOUNT_ERC20_TEMPLATE.repeat(tokens.length);
+      const children = child.children;
+      let childPtr = 5;
+      for (let i = 0, len = tokens.length; i < len; i++) {
+        const tokenAddr = tokens[i];
+        const token = await getTokenV2(tokenAddr);
+        const totalBalance = await habitat.callStatic.getBalance(tokenAddr, account);
+        const stakedBalance = await habitat.callStatic.getActiveVotingStake(tokenAddr, account);
+        const delegatedBalance = await getTotalDelegatedAmountForToken(tokenAddr, account);
+        const availableBalance = totalBalance.sub(stakedBalance).sub(delegatedBalance);
+        children[childPtr++].setAttribute('token', tokenAddr);
+
+        children[childPtr++].textContent = renderAmount(totalBalance, token.decimals);
+        children[childPtr++].textContent = renderAmount(availableBalance, token.decimals);
+        children[childPtr++].textContent = renderAmount(stakedBalance, token.decimals);
+        children[childPtr++].textContent = renderAmount(delegatedBalance, token.decimals);
+      }
+      const container = this.shadowRoot.querySelector('#erc20');
+      if (container) {
+        container.replaceChildren(child);
+      }
+    }
+
+    if (transfers.length) {
+      // transfer history
+      const child = document.createElement('div');
+      child.innerHTML = '<p></p><p>Amount</p><p>Transaction Type</p>' + ACCOUNT_TRANSFER_TEMPLATE.repeat(transfers.length);
+      const children = child.children;
+      let childPtr = 3;
+      for (let i = 0, len = transfers.length; i < len; i++) {
+        const { token, from, to, value, transactionHash } = transfers[(len - 1) - i];
+        const isDeposit = from === ethers.constants.AddressZero;
+        const isIncoming = to === account;
+        const isWithdraw = to === ethers.constants.AddressZero;
+        const isTopUp = to.toLowerCase() === DEFAULT_ROLLUP_OPERATOR_ADDRESS;
+        const erc = await getTokenV2(token);
+        const amount = renderAmount(value, erc.decimals);
+        let type = '';
+
+        if (isDeposit) {
+          type = 'Deposit';
+        } else if (isWithdraw) {
+          type = 'Withdraw';
+        } else if (isIncoming) {
+          type = Number(from) < 0xffffffff ? 'Operator Reward' : 'Incoming';
+        } else if (isTopUp) {
+          type = 'Gas Top-up';
+        } else {
+          type = Number(to) < 0xffffffff ? 'Top-up Fee' : 'Outgoing';
+        }
+
+        // token
+        children[childPtr++].setAttribute('token', token);
+        // amount
+        children[childPtr++].textContent = amount;
+
+        // type
+        children[childPtr].href = getBlockExplorerLink(transactionHash);
+        children[childPtr++].textContent = type;
+
+        // from
+        //children[childPtr++].textContent = await getUsername(from);
+        // to
+        //children[childPtr++].textContent = await getUsername(to);
+        // block explorer link
+        //children[childPtr].textContent = renderAddress(transactionHash);
+        //children[childPtr++].href = getBlockExplorerLink(transactionHash);
+      }
+      const container = this.shadowRoot.querySelector('#history');
+      if (container) {
+        container.replaceChildren(child);
+      }
+    }
+
+    {
+      // exits
+      const child = document.createElement('div');
+      child.innerHTML = ACCOUNT_EXITS_PRE_TEMPLATE;
+      for (let i = 0, len = tokens.length; i < len; i++) {
+        const tokenAddr = tokens[i];
+        const token = await getTokenV2(tokenAddr);
+        const { pendingAmounts, availableAmount } = await getExitStatusV2(tokenAddr, account);
+
+        if (availableAmount.gt(0)) {
+          const amount = ethers.utils.formatUnits(availableAmount, token.decimals);
+          const template = ACCOUNT_EXITS_TEMPLATE.content.cloneNode(true);
+          const childs = template.children;
+
+          childs[0].setAttribute('token', tokenAddr);
+          childs[1].textContent = renderAmount(availableAmount, token.decimals);
+          childs[2].textContent = 'Ready to Exit';
+          childs[2].classList.add('interactive');
+          wrapListener(childs[2], (evt) => this.shadowRoot.querySelector('habitat-transfer-box').doExit(tokenAddr, amount));
+          child.append(template);
+        }
+
+        for (const e of pendingAmounts) {
+          const template = ACCOUNT_EXITS_TEMPLATE.content.cloneNode(true);
+          const childs = template.children;
+
+          childs[0].setAttribute('token', tokenAddr);
+          childs[1].textContent = renderAmount(e.value, token.decimals);
+          childs[2].textContent = `Ready in ~${secondsToString(e.finalityEstimate)}`;
+
+          child.append(template);
+        }
+      }
+      const container = this.shadowRoot.querySelector('#exits');
+      if (container) {
+        container.replaceChildren(child);
+      }
+    }
+  }
 }
 customElements.define('habitat-account', HabitatAccount);

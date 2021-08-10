@@ -32,6 +32,8 @@ TEMPLATE.innerHTML = `
 <style>
 :host {
   outline: none;
+  /* rendering bugs */
+  transform: translateZ(0);
 }
 #title {
   display: block;

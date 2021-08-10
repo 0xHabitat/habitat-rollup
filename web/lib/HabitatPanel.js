@@ -28,10 +28,13 @@ const TEMPLATE =
   left: 0;
   border-left: 1px solid black;
   background: transparent;
+  transition: none;
 }
 :host(.contentHidden) #content {
   content-visibility: hidden;
   visibility: hidden;
+  /* fixes rendering issues on some browsers */
+  opacity: 0;
 }
 </style>
 <div id='titlebar'>

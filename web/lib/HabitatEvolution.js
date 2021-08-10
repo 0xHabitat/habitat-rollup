@@ -25,6 +25,60 @@ import { setupTabs } from './tabs.js';
 
 const { HBT, EVOLUTION_SIGNAL_VAULT, EVOLUTION_ACTION_VAULT, EVOLUTION_COMMUNITY_ID } = getConfig();
 
+const TAB_NAV_SIGNAL_TEMPLATE = document.createElement('template');
+TAB_NAV_SIGNAL_TEMPLATE.innerHTML = `
+<div>
+  <p class='l'><span><emoji-sat-antenna></emoji-sat-antenna><span> </span><span id='title'></span></span></p>
+</div>
+`;
+
+const TAB_NAV_GOV_TEMPLATE = document.createElement('template');
+TAB_NAV_GOV_TEMPLATE.innerHTML = `
+<div>
+  <p class='l'><span><emoji-bank></emoji-bank><span> </span><span id='title'></span></span></p>
+</div>
+`;
+
+const SIGNAL_TEMPLATE = document.createElement('template');
+SIGNAL_TEMPLATE.innerHTML = `
+<div class='tab'>
+  <div class='flex'>
+    <p id='description' class='light center'></p>
+  </div>
+  <div class='flex row between'>
+    <span></span>
+    <div>
+      <button id='submitTopic' class='s'>+ Submit Topic</button>
+    </div>
+  </div>
+  <section id='draft' class='flex col center'></section>
+  <section id='proposals' class='center proposals'>
+    <p id='recentSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
+    <p id='topSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Top Signals</span></span></p>
+  </section>
+</div>
+`;
+
+const ACTION_TEMPLATE = document.createElement('template');
+ACTION_TEMPLATE.innerHTML = `
+<div class='tab'>
+  <div class='flex'>
+    <p id='description' class='light center'></p>
+  </div>
+  <div class='flex row between'>
+    <span></span>
+    <div>
+      <button id='submitTopic' class='s'>+ Submit Proposal</button>
+    </div>
+  </div>
+  <section id='draft' class='flex col center'></section>
+  <section id='proposals' class='flex col center proposals'>
+    <p id='recentSignal' class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
+    <p id='topSignal' class='l light'><span><emoji-bank></emoji-bank><span> Proposals</span></span></p>
+  </section>
+</div>
+`;
+
 class HabitatEvolution extends HabitatPanel {
   static TEMPLATE =
 `
@@ -35,18 +89,24 @@ button {
 .light {
   font-weight: 300;
 }
+#tabs {
+  perspective: none;
+  transform: translateZ(0);
+}
 #tabs > div {
+  width: 100%;
   height: 0;
-  opacity: 0;
-  transform: rotateY(90deg);
   -moz-backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transform-style: flat;
+  transform: rotateY(-90deg) translateZ(0);
+  transition: transform .2s ease-out;
 }
 #tabs > div.selected {
   height: auto;
-  opacity: 1;
   transform: none;
+  transition: transform .3s ease-in;
 }
 #tabnav > div {
   padding-bottom: .5em;
@@ -106,6 +166,9 @@ button, .button {
 #tabs * {
   outline: none;
 }
+#description {
+  padding: 1em 0;
+}
 </style>
 <div style='padding:0 var(--panel-padding);'>
   <div style='margin: 0 auto;width:60em;max-width:100%;'>
@@ -147,14 +210,7 @@ button, .button {
 
       <space></space>
       <div class='flex col center'>
-        <div id='tabnav' class='flex row evenly'>
-          <div id='tab-signal'>
-            <p class='l'><span><emoji-sat-antenna></emoji-sat-antenna><span> Community Signals</span></span></p>
-          </div>
-          <div id='tab-governance'>
-            <p class='l'><span><emoji-bank></emoji-bank><span> Rollup Governance</span></span></p>
-          </div>
-        </div>
+        <div id='tabnav' class='flex row evenly'></div>
         <space></space>
       </div>
     </section>
@@ -172,65 +228,14 @@ button, .button {
         </div>
       </div>
 
-    <div id='tabs'>
-      <div id='tab-signal' class='tab'>
-        <div class='flex'>
-          <p class='light center'>
-Help Habitat grow and express your preferences. This area is about signaling your priority by adding HBT votes on single topics and their subtopics. To submit a new topic you need to hold at least 0.001% of the TVL of HBT.
-          </p>
-        </div>
-        <div class='flex row between'>
-          <span></span>
-          <div>
-            <button id='submitTopic' class='s'>+ Submit Topic</button>
-          </div>
-        </div>
-        <section id='draft' class='flex col center'></section>
-        <section id='proposals' class='center proposals'>
-          <p id='recentSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
-          <p id='topSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Top Signals</span></span></p>
-        </section>
-      </div>
+    <div id='tabs'></div>
 
-      <div id='tab-governance' class='tab'>
-        <div class='flex'>
-          <p class='light center'>
-Vote on important rollup governance decisions with HBT tokens. Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a proposal you need to own 0.1% of HBT on the rollup (TVL).
-          </p>
-        </div>
-        <div class='flex row between'>
-          <span></span>
-          <div>
-            <button id='submitTopic' class='s'>+ Submit Proposal</button>
-          </div>
-        </div>
-        <section id='draft' class='flex col center'></section>
-        <section id='proposals' class='flex col center proposals'>
-          <p id='recentSignal' class='l light'><span><emoji-bank></emoji-bank><span> Recent Proposals</span></span></p>
-          <p id='topSignal' class='l light'><span><emoji-bank></emoji-bank><span> Proposals</span></span></p>
-        </section>
-      </div>
-    </div>
   </div>
 </div>
 `;
 
   constructor() {
     super();
-
-    setupTabs(this.shadowRoot, (node) => {
-      this.activeTab = node;
-    });
-
-    for (const node of this.shadowRoot.querySelectorAll('#submitTopic')) {
-      node.addEventListener('click', () => {
-        const e = new HabitatProposeCard();
-        e.setAttribute('signal-vault', this.signalVault);
-        e.setAttribute('action-vault', this.actionVault);
-        e.setAttribute('proposal-type', this.vaults[this.activeTab.querySelector('#proposals').getAttribute('vault')]);
-        this.activeTab.querySelector('#draft').prepend(e);
-      }, false);
-    }
 
     this.shadowRoot.querySelector('#delegateModeToggle').addEventListener('toggle', this.onToggle.bind(this), false);
   }
@@ -240,10 +245,7 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
   }
 
   get currentVault () {
-    if (this.activeTab.id === 'tab-signal') {
-      return this.signalVault;
-    }
-    return this.actionVault;
+    return this.activeTab.id;
   }
 
   get tabs () {
@@ -270,27 +272,67 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
       this.communityId = communityId;
       this.vaults = {};
 
-      for (const log of await doQueryWithOptions({ toBlock: 1 }, 'VaultCreated', communityId)) {
+      for (const log of await doQueryWithOptions({ toBlock: 1, includeTx: true }, 'VaultCreated', communityId)) {
+        const vaultMeta = decodeMetadata(log.transaction.message.metadata);
         const info = await fetchModuleInformation(log.args.condition);
         const flavor = info.flavor || 'binary';
-        this.vaults[log.args.vaultAddress] = flavor;
+        this.vaults[log.args.vaultAddress] = {
+          type: flavor === 'binary' ? 'Action' : 'Signal',
+          title: vaultMeta.title || '???',
+        };
       }
-
-      // TODO
-      const vaults = Object.keys(this.vaults);
-      this.actionVault = vaults[0];
-      this.signalVault = vaults[1];
     } else {
       this.vaults = {
-        [EVOLUTION_SIGNAL_VAULT]: 'Signal',
-        [EVOLUTION_ACTION_VAULT]: 'Action',
+        [EVOLUTION_SIGNAL_VAULT]: {
+          type: 'Signal',
+          title: 'Community Signals',
+          description: 'Help Habitat grow and express your preferences. This area is about signaling your priority by adding HBT votes on single topics and their subtopics. To submit a new topic you need to hold at least 0.001% of the TVL of HBT.',
+        },
+        [EVOLUTION_ACTION_VAULT]: {
+          type: 'Action',
+          title: 'Rollup Governance',
+          description: 'Vote on important rollup governance decisions with HBT tokens. Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a proposal you need to own 0.1% of HBT on the rollup (TVL).',
+        }
       };
       this.actionVault = EVOLUTION_ACTION_VAULT;
       this.signalVault = EVOLUTION_SIGNAL_VAULT;
     }
 
-    this.shadowRoot.querySelector('#tab-governance #proposals').setAttribute('vault', this.actionVault);
-    this.shadowRoot.querySelector('#tab-signal #proposals').setAttribute('vault', this.signalVault);
+    const tabNav = this.shadowRoot.querySelector('#tabnav');
+    const tabs = this.shadowRoot.querySelector('#tabs');
+    for (const addr in this.vaults) {
+      const info = this.vaults[addr];
+      let head;
+      let tail;
+      if (info.type === 'Signal') {
+        head = TAB_NAV_SIGNAL_TEMPLATE.content.cloneNode(true);
+        tail = SIGNAL_TEMPLATE.content.cloneNode(true);
+      } else {
+        head = TAB_NAV_GOV_TEMPLATE.content.cloneNode(true);
+        tail = ACTION_TEMPLATE.content.cloneNode(true);
+      }
+      head.querySelector('#title').textContent = info.title;
+      head.children[0].id = addr;
+      tabNav.append(head);
+
+      tail.querySelector('#proposals').setAttribute('vault', addr);
+      tail.children[0].id = addr;
+      tail.querySelector('#description').textContent = info.description;
+
+      const draft = tail.querySelector('#draft');
+      tail.querySelector('#submitTopic').addEventListener('click', () => {
+        const card = new HabitatProposeCard();
+        card.setAttribute('signal-vault', addr);
+        card.setAttribute('action-vault', addr);
+        card.setAttribute('proposal-type', info.type);
+        draft.prepend(card);
+      }, false);
+      tabs.append(tail);
+    }
+
+    setupTabs(this.shadowRoot, (node) => {
+      this.activeTab = node;
+    });
 
     return this.chainUpdateCallback();
   }
@@ -331,7 +373,10 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
 
     // members, votes
     {
-      const totalReserve = await habitat.callStatic.getBalance(token.address, this.actionVault);
+      let totalReserve = BigInt(0);
+      for (const vaultAddr in this.vaults) {
+        totalReserve += BigInt(await habitat.callStatic.getBalance(token.address, vaultAddr));
+      }
       this.shadowRoot.querySelector('#totalReserve').textContent = `${renderAmount(totalReserve, token.decimals, 1)} ${token.symbol}`;
 
       const memberCount = await habitat.callStatic.getTotalMemberCount(EVOLUTION_COMMUNITY_ID);
@@ -345,7 +390,8 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
       const refSignal = ethers.utils.formatUnits(tvl, token.decimals);
       const tabs = this.shadowRoot.querySelector('#tabs');
       const delegateMode = tabs.classList.contains('delegateMode');
-      const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'ProposalCreated', [this.signalVault, this.actionVault]);
+      const vaults = Object.keys(this.vaults);
+      const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'ProposalCreated', vaults);
       for (const log of logs) {
         const vault = log.args[0];
         const proposals = tabs.querySelector(`[vault="${vault}"]`);
@@ -357,15 +403,16 @@ Vote on important rollup governance decisions with HBT tokens. Info: 7 day votin
         const topic = metadata.topic;
         const e = document.createElement('habitat-proposal-card');
         e.setAttribute('hash', log.transactionHash);
-        e.setAttribute('signal-vault', this.signalVault);
-        e.setAttribute('action-vault', this.actionVault);
+        // defining signalVault, actionVault is optional
+        e.setAttribute('signal-vault', this.signalVault || vault);
+        e.setAttribute('action-vault', this.actionVault || vault);
         e.setAttribute('delegate-mode', delegateMode || '');
         e.subtopicSupport = !topic;
         e.addEventListener('signalChange', (evt) => {
           this.submitChanges();
         }, false);
 
-        const group = proposals.querySelector(`[hash="${topic}"]`);
+        const group = tabs.querySelector(`[hash="${topic}"]`);
         if (group) {
           group.addSubTopic(e);
         } else {
