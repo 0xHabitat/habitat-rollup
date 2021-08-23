@@ -510,9 +510,6 @@ button, .button {
         const { tokens } = await queryTransfers(vaultAddress);
 
         const child = document.createElement('div');
-        child.className = 'align-right grid-col';
-        child.style.gridTemplateColumns = 'repeat(2, auto)';
-        child.style.maxWidth = 'fit-content';
         child.innerHTML = '<habitat-token-amount></habitat-token-amount>'.repeat(tokens.length);
         const children = child.children;
         let childPtr = 0;
