@@ -1,4 +1,4 @@
-FROM flyio/flyctl:v0.0.177 as flyio
+FROM flyio/flyctl:v0.0.233 as flyio
 FROM node:14-alpine
 COPY --from=flyio /flyctl /
 RUN apk add git bind-tools
