@@ -9,16 +9,16 @@ ARG DOMAIN
 ARG FLY_TOKEN
 ARG WEB_PATH
 ENV DOMAIN=${DOMAIN}
-ENV FLY_TOKEN=${FLY_TOKEN}
+ENV FLY_ACCESS_TOKEN=${FLY_TOKEN}
 env WEB_PATH=${WEB_PATH}
 RUN \
   NEW_CID=`pin=1 ipfs-publish ${WEB_PATH} | grep 'root cid' | sed 's/root cid: //g'`; \
   echo new=$NEW_CID || exit 1; \
   APEX=`echo ${DOMAIN} | awk -F'.' '{print $(NF-1)"."$(NF)}'`; \
-  /flyctl -t ${FLY_TOKEN} dns-records export $APEX > .tmp_zone; \
+  /flyctl dns-records export $APEX > .tmp_zone; \
   OLD_CID=`dig +short TXT _dnslink.${DOMAIN} | sed -e 's/dnslink=\/ipfs\///g' -e 's/"//g'`; \
   echo old=$OLD_CID; \
   cat .tmp_zone; \
   sed -i'' -e "s/$OLD_CID/$NEW_CID/g" .tmp_zone; \
   cat .tmp_zone; \
-  /flyctl -t ${FLY_TOKEN} dns-records import $APEX .tmp_zone;
+  /flyctl dns-records import $APEX .tmp_zone;
