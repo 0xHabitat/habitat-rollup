@@ -300,3 +300,8 @@ button, .button {
 .mtb {
   margin: 1em 0;
 }
+
+a.secondary {
+  text-decoration: underline;
+  color: var(--color-text);
+}

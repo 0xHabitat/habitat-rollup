@@ -6,6 +6,8 @@ import {
   getSigner,
   walletIsConnected,
   renderAmount,
+  renderAddress,
+  getEtherscanLink,
 } from '/lib/utils.js';
 import {
   doQueryWithOptions,
@@ -15,15 +17,49 @@ import {
   getReceipt,
   fetchModuleInformation,
   getTotalDelegatedAmountForToken,
+  queryTransfers,
+  lookupExecProxyForVault,
+  getExecutionProxyContract,
+  getMetadataForTopic,
 } from '/lib/rollup.js';
 import HabitatPanel from '/lib/HabitatPanel.js';
 import './HabitatToggle.js';
 import './HabitatProposalCard.js';
 import './HabitatTransactionCart.js';
+import './HabitatVotingModulePreview.js';
 import HabitatProposeCard from './HabitatProposeCard.js';
 import { setupTabs } from './tabs.js';
 
 const { HBT, EVOLUTION_SIGNAL_VAULT, EVOLUTION_ACTION_VAULT, EVOLUTION_COMMUNITY_ID } = getConfig();
+
+const TAB_INFORMATION_TEMPLATE = `
+<div class='flex col center'>
+  <div id='treasuryInfo' class='flex row evenly' style='width:100%;align-items:flex-start;'>
+    <div class='flex col align-left'>
+      <p><span><emoji-cash></emoji-cash></span><span> Balances</span></p>
+      <space></space>
+      <div id='balances' class='flex col'></div>
+    </div>
+
+    <div class='flex col align-left'>
+      <p><span><emoji-ballot-box></emoji-ballot-box></span><span> Voting Module</span></p>
+      <space></space>
+      <habitat-voting-module-preview></habitat-voting-module-preview>
+    </div>
+
+    <div class='flex col align-left'>
+      <p>Treasury Address</p>
+      <a class='s secondary' target='_blank' id='treasuryAddress'> </a>
+
+      <space></space>
+
+      <p class=''>Execution Proxy Address</p>
+      <a href='' target='_blank' id='createExecProxy' class='s secondary'> </a>
+
+    </div>
+  </div>
+</div>
+`;
 
 const TAB_NAV_SIGNAL_TEMPLATE = document.createElement('template');
 TAB_NAV_SIGNAL_TEMPLATE.innerHTML = `
@@ -42,6 +78,7 @@ TAB_NAV_GOV_TEMPLATE.innerHTML = `
 const SIGNAL_TEMPLATE = document.createElement('template');
 SIGNAL_TEMPLATE.innerHTML = `
 <div class='tab'>
+  ${TAB_INFORMATION_TEMPLATE}
   <div class='flex'>
     <p id='description' class='light center'></p>
   </div>
@@ -62,6 +99,7 @@ SIGNAL_TEMPLATE.innerHTML = `
 const ACTION_TEMPLATE = document.createElement('template');
 ACTION_TEMPLATE.innerHTML = `
 <div class='tab'>
+  ${TAB_INFORMATION_TEMPLATE}
   <div class='flex'>
     <p id='description' class='light center'></p>
   </div>
@@ -169,13 +207,19 @@ button, .button {
 #description {
   padding: 1em 0;
 }
+:host(:not([controls])) .showControls {
+  display: none;
+}
+#treasuryInfo > div {
+  margin: 1rem auto;
+}
 </style>
 <div style='padding:0 var(--panel-padding);'>
   <div style='margin: 0 auto;width:60em;max-width:100%;'>
     <section>
       <div class='left'>
         <space></space>
-        <p class='l'><span><emoji-herb></emoji-herb><span> Evolution of Habitat</span></span></p>
+        <p class='l'><span><emoji-herb></emoji-herb><span> </span><span id='communityTitle'> </span></span></p>
         <space></space>
       </div>
 
@@ -208,25 +252,44 @@ button, .button {
         </div>
       </div>
 
-      <space></space>
+      <div class='flex col' style='width:100%'>
+
+        <div class='flex row between' style='width:100%;'>
+          <div>
+            <p class='light l'><span><emoji-money-bag></emoji-money-bag></span><span> Treasuries</span></p>
+          </div>
+          <span> </span>
+        </div>
+
+        <div class='flex row between showControls' style='width:100%;'>
+          <span> </span>
+          <div>
+            <button id='createTreasury' class='s'>Create Treasury</button>
+          </div>
+        </div>
+
+      </div>
+
       <div class='flex col center'>
         <div id='tabnav' class='flex row evenly'></div>
         <space></space>
       </div>
     </section>
 
-       <div id='sticky' class='flex row center evenly'>
-        <div class='flex row'>
-          <habitat-toggle
-            id='delegateModeToggle'
-            left='Personal Mode'
-            tooltip-left='Your personal voting power'
-            right='Delegation Mode'
-            tooltip-right='Voting power delegated to you'
-          ></habitat-toggle>
-          <habitat-transaction-cart></habitat-transaction-cart>
-        </div>
+    <space></space>
+
+    <div id='sticky' class='flex row center evenly'>
+      <div class='flex row'>
+        <habitat-toggle
+          id='delegateModeToggle'
+          left='Personal Mode'
+          tooltip-left='Your personal voting power'
+          right='Delegation Mode'
+          tooltip-right='Voting power delegated to you'
+        ></habitat-toggle>
+        <habitat-transaction-cart></habitat-transaction-cart>
       </div>
+    </div>
 
     <div id='tabs'></div>
 
@@ -242,6 +305,11 @@ button, .button {
 
   get title () {
     return 'Evolution';
+  }
+
+  setTitle (str) {
+    super.setTitle(str);
+    this.shadowRoot.querySelector('#communityTitle').textContent = str;
   }
 
   get currentVault () {
@@ -267,10 +335,17 @@ button, .button {
     const [, txHash] = this.getAttribute('args').split(',');
     if (txHash) {
       const receipt = await getReceipt(txHash);
-      const { communityId } = receipt.events[0].args;
+      const { communityId, metadata } = receipt.events[0].args;
+
+      getMetadataForTopic(communityId).then(
+        (metadata) => {
+          this.setTitle(metadata.title || '?');
+        }
+      );
 
       this.communityId = communityId;
       this.vaults = {};
+      this.setAttribute('controls', '');
 
       for (const log of await doQueryWithOptions({ toBlock: 1, includeTx: true }, 'VaultCreated', communityId)) {
         const vaultMeta = decodeMetadata(log.transaction.message.metadata);
@@ -282,6 +357,8 @@ button, .button {
         };
       }
     } else {
+      this.removeAttribute('controls');
+      this.setTitle('Evolution of Habitat');
       this.vaults = {
         [EVOLUTION_SIGNAL_VAULT]: {
           type: 'Signal',
@@ -302,6 +379,7 @@ button, .button {
     const tabs = this.shadowRoot.querySelector('#tabs');
     for (const addr in this.vaults) {
       const info = this.vaults[addr];
+      const tabId = addr.substring(1);
       let head;
       let tail;
       if (info.type === 'Signal') {
@@ -312,11 +390,11 @@ button, .button {
         tail = ACTION_TEMPLATE.content.cloneNode(true);
       }
       head.querySelector('#title').textContent = info.title;
-      head.children[0].id = addr;
+      head.children[0].id = tabId;
       tabNav.append(head);
 
       tail.querySelector('#proposals').setAttribute('vault', addr);
-      tail.children[0].id = addr;
+      tail.children[0].id = tabId;
       tail.querySelector('#description').textContent = info.description;
 
       const draft = tail.querySelector('#draft');
@@ -418,6 +496,76 @@ button, .button {
         } else {
           e.setAttribute('ref-signal', refSignal);
           proposals.prepend(e);
+        }
+      }
+    }
+
+    {
+      // display of balances, voting module, treasury information
+      const { habitat } = await getProviders();
+      const vaults = Object.keys(this.vaults);
+      for (const vaultAddress of vaults) {
+        const root = this.shadowRoot.querySelector(`.tab#${vaultAddress.substring(1)}`);
+        const container = root.querySelector('#balances');
+        const { tokens } = await queryTransfers(vaultAddress);
+
+        const child = document.createElement('div');
+        child.className = 'align-right grid-col';
+        child.style.gridTemplateColumns = 'repeat(2, auto)';
+        child.style.maxWidth = 'fit-content';
+        child.innerHTML = '<habitat-token-amount></habitat-token-amount>'.repeat(tokens.length);
+        const children = child.children;
+        let childPtr = 0;
+        for (let i = 0, len = tokens.length; i < len; i++) {
+          const tokenAddr = tokens[i];
+          const balance = await habitat.callStatic.getBalance(tokenAddr, vaultAddress);
+          children[childPtr].setAttribute('token', tokenAddr);
+          children[childPtr].setAttribute('owner', vaultAddress);
+          children[childPtr++].setAttribute('amount', balance);
+        }
+
+        const sep = document.createElement('div');
+        if (!tokens.length) {
+          sep.innerHTML = '<p class="s">This Treasury owns no Tokens</p><sep></sep>';
+        }
+        container.replaceChildren(sep, child);
+
+        {
+          // misc.
+          root.querySelector('habitat-voting-module-preview').setAttribute('vault', vaultAddress);
+
+          const e = root.querySelector('#treasuryAddress');
+          e.textContent = vaultAddress;
+          e.href = getEtherscanLink(vaultAddress);
+        }
+
+        {
+          const execProxyElement = root.querySelector('#createExecProxy');
+          const execProxy = await lookupExecProxyForVault(vaultAddress);
+          if (!execProxy) {
+            execProxyElement.textContent = 'Create Proxy';
+            const abortController = new AbortController();
+            execProxyElement.addEventListener('click', async (evt) => {
+              evt.preventDefault();
+
+              const signer = await getSigner();
+              const factoryContract = await getExecutionProxyContract();
+
+              const { habitat } = await getProviders();
+              const tx = await factoryContract.connect(signer).createProxy(habitat.address, vaultAddress);
+              window.open(getEtherscanLink(tx.hash), '_blank');
+              abortController.abort();
+              await tx.wait();
+
+              const execProxy = await lookupExecProxyForVault(vaultAddress);
+              execProxyElement.href = getEtherscanLink(execProxy);
+              execProxyElement.textContent = renderAddress(execProxy);
+
+            }, { signal: abortController.signal });
+          } else {
+            execProxyElement.href = getEtherscanLink(execProxy);
+            execProxyElement.textContent = execProxy;
+          }
         }
       }
     }

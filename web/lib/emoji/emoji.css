@@ -408,3 +408,33 @@ emoji-glowing-star {
   background-size: cover;
   background-image: url('./glowing-star.png');
 }
+emoji-money-bag {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./money-bag.png');
+}
+emoji-evergreen-tree {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./evergreen-tree.png');
+}
+emoji-ballot-box {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./ballot-box.png');
+}
