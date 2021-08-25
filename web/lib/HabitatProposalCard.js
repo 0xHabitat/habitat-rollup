@@ -153,7 +153,6 @@ TEMPLATE.innerHTML = `
 .indicator #inner,
 .indicator #innerRight {
   position: relative;
-  border-radius: 2em;
   border: none;
   height: 2em;
   width: 100%;
