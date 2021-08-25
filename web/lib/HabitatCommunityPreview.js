@@ -40,7 +40,7 @@ export default class HabitatCommunityPreview extends HTMLElement {
   async update (evt) {
     const { communityId, governanceToken } = evt.args;
     const metadata = await getMetadataForTopic(communityId);
-    const link = `#habitat-evolution,${evt.transactionHash}`;
+    const link = `#habitat-community,${evt.transactionHash}`;
 
     let ele = this.shadowRoot.querySelector('a#title');
     ele.textContent = (metadata ? metadata.title : '') || '???';
