@@ -701,7 +701,7 @@ export async function getCommunityInformation (communityId) {
 export async function getTreasuryInformation (vaultAddress) {
   const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
   const evt = logs[logs.length - 1];
-  const metadata = getMetadataForTopic(vaultAddress);
+  const metadata = await getMetadataForTopic(vaultAddress);
 
   return metadata;
 }
@@ -1063,6 +1063,24 @@ export async function scavengeProposals () {
   }
 
   return txs.filter((e, i) => stat[i]);
+}
+
+export async function getIssueLinkForVault (vaultAddr) {
+  const DEFAULT = 'https://github.com/0xHabitat/improvements-and-bugs/issues/new/choose';
+  if (!vaultAddr) {
+    return DEFAULT;
+  }
+
+  const metadata = await getMetadataForTopic(vaultAddr);
+  if (metadata.link) {
+    const TAIL = '/issues/new/choose';
+    if (metadata.link.startsWith('https://github.com/') && !metadata.link.endsWith(TAIL)) {
+      return metadata.link + TAIL;
+    }
+    return metadata.link;
+  }
+
+  return DEFAULT;
 }
 
 export function onChainUpdate (callback) {

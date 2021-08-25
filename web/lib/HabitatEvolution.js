@@ -27,6 +27,7 @@ import './HabitatToggle.js';
 import './HabitatProposalCard.js';
 import './HabitatTransactionCart.js';
 import './HabitatVotingModulePreview.js';
+import HabitatTreasuryCreator from './HabitatTreasuryCreator.js';
 import HabitatProposeCard from './HabitatProposeCard.js';
 import { setupTabs } from './tabs.js';
 
@@ -213,86 +214,125 @@ button, .button {
 #treasuryInfo > div {
   margin: 1rem auto;
 }
+#wrapper {
+  background-color: var(--color-bg-75);
+}
+#header {
+  position: relative;
+  top: -6ch;
+  width: 100%;
+  margin-bottom: -6ch;
+  align-items: end;
+}
+#banner {
+  width: 40ch;
+  max-width: 100%;
+  border-radius: 2em;
+}
+#communityDetails {
+  max-width: 34ch;
+  padding-top: 6ch;
+  padding-bottom: 1ch;
+  color: var(--color-grey);
+  font-weight: lighter;
+}
 </style>
 <div style='padding:0 var(--panel-padding);'>
   <div style='margin: 0 auto;width:60em;max-width:100%;'>
     <section>
+      <space></space>
+      <space></space>
+
       <div class='left'>
         <space></space>
         <p class='l'><span><emoji-herb></emoji-herb><span> </span><span id='communityTitle'> </span></span></p>
         <space></space>
       </div>
 
-      <div class='flex row center evenly'>
-        <div class='box flex col center mtb'>
-          <p class='s'>RESERVE</p>
-          <p id='totalReserve' class='xl light'> </p>
+      <div class='box'>
+        <div id='header' class='flex row between'>
+          <p id='communityDetails'> </p>
+          <img id='banner'>
         </div>
-
-        <div class='box flex col center mtb'>
-          <p class='s'>MEMBERS</p>
-          <p id='memberCount' class='xl light'> </p>
-        </div>
-
-        <div class='box flex col center mtb'>
-          <p class='s'>Total Value Locked</p>
-          <p id='tvl' class='xl light'> </p>
-        </div>
-
-        <div class='flex col left mtb'>
-          <div class='box flex col center'>
-            <p class='s'>PERSONAL VOTES</p>
-            <p id='personalVotes' class='bold s'> </p>
+        <div class='flex row center evenly'>
+          <div class='box flex col center mtb'>
+            <p class='s'>RESERVE</p>
+            <p id='totalReserve' class='xl light'> </p>
           </div>
+
+          <div class='box flex col center mtb'>
+            <p class='s'>MEMBERS</p>
+            <p id='memberCount' class='xl light'> </p>
+          </div>
+
+          <div class='box flex col center mtb'>
+            <p class='s'>Total Value Locked</p>
+            <p id='tvl' class='xl light'> </p>
+          </div>
+
+          <div class='flex col left mtb'>
+            <div class='box flex col center'>
+              <p class='s'>PERSONAL VOTES</p>
+              <p id='personalVotes' class='bold s'> </p>
+            </div>
+            <space></space>
+            <div class='box flex col center highlightDelegated'>
+              <p class='s'>DELEGATED VOTES</p>
+              <p id='delegatedVotes' class='bold s'> </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <space></space>
+      <space></space>
+
+      <div id='wrapper' class='box'>
+        <div class='flex col' style='width:100%'>
+
+          <div class='flex row between' style='width:100%;'>
+            <div>
+              <p class='light l'><span><emoji-money-bag></emoji-money-bag></span><span> Treasuries</span></p>
+            </div>
+            <span> </span>
+          </div>
+
+          <div class='flex row between showControls' style='width:100%;'>
+            <span> </span>
+            <div>
+              <button id='createTreasury' class='s'>Create Treasury</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div id='treasuryArea' style='padding: 1rem 0;'></div>
+
+        <div class='flex col center'>
+          <div id='tabnav' class='flex row evenly'></div>
           <space></space>
-          <div class='box flex col center highlightDelegated'>
-            <p class='s'>DELEGATED VOTES</p>
-            <p id='delegatedVotes' class='bold s'> </p>
-          </div>
-        </div>
-      </div>
-
-      <div class='flex col' style='width:100%'>
-
-        <div class='flex row between' style='width:100%;'>
-          <div>
-            <p class='light l'><span><emoji-money-bag></emoji-money-bag></span><span> Treasuries</span></p>
-          </div>
-          <span> </span>
         </div>
 
-        <div class='flex row between showControls' style='width:100%;'>
-          <span> </span>
-          <div>
-            <button id='createTreasury' class='s'>Create Treasury</button>
-          </div>
-        </div>
-
-      </div>
-
-      <div class='flex col center'>
-        <div id='tabnav' class='flex row evenly'></div>
         <space></space>
+
+        <div id='sticky' class='flex row center evenly'>
+          <div class='flex row'>
+            <habitat-toggle
+              id='delegateModeToggle'
+              left='Personal Mode'
+              tooltip-left='Your personal voting power'
+              right='Delegation Mode'
+              tooltip-right='Voting power delegated to you'
+            ></habitat-toggle>
+            <habitat-transaction-cart></habitat-transaction-cart>
+          </div>
+        </div>
+
+        <div id='tabs'></div>
+
       </div>
+      <space></space>
     </section>
-
-    <space></space>
-
-    <div id='sticky' class='flex row center evenly'>
-      <div class='flex row'>
-        <habitat-toggle
-          id='delegateModeToggle'
-          left='Personal Mode'
-          tooltip-left='Your personal voting power'
-          right='Delegation Mode'
-          tooltip-right='Voting power delegated to you'
-        ></habitat-toggle>
-        <habitat-transaction-cart></habitat-transaction-cart>
-      </div>
-    </div>
-
-    <div id='tabs'></div>
-
   </div>
 </div>
 `;
@@ -301,10 +341,19 @@ button, .button {
     super();
 
     this.shadowRoot.querySelector('#delegateModeToggle').addEventListener('toggle', this.onToggle.bind(this), false);
+    this.shadowRoot.querySelector('#createTreasury').addEventListener(
+      'click',
+      () => {
+        const e = new HabitatTreasuryCreator();
+        e.setAttribute('communityId', this.communityId);
+        this.shadowRoot.querySelector('#treasuryArea').append(e);
+      },
+      false
+    );
   }
 
   get title () {
-    return 'Evolution';
+    return super.title || 'Evolution';
   }
 
   setTitle (str) {
@@ -339,7 +388,15 @@ button, .button {
 
       getMetadataForTopic(communityId).then(
         (metadata) => {
+          console.log(metadata);
           this.setTitle(metadata.title || '?');
+
+          if (metadata.bannerCid) {
+            this.shadowRoot.querySelector('img#banner').src = `https://${metadata.bannerCid}.ipfs.infura-ipfs.io/`;
+          }
+          if (metadata.details) {
+            this.shadowRoot.querySelector('#communityDetails').textContent = metadata.details;
+          }
         }
       );
 
@@ -354,21 +411,23 @@ button, .button {
         this.vaults[log.args.vaultAddress] = {
           type: flavor === 'binary' ? 'Action' : 'Signal',
           title: vaultMeta.title || '???',
+          details: vaultMeta.details || '',
         };
       }
     } else {
+      this.communityId = EVOLUTION_COMMUNITY_ID;
       this.removeAttribute('controls');
       this.setTitle('Evolution of Habitat');
       this.vaults = {
         [EVOLUTION_SIGNAL_VAULT]: {
           type: 'Signal',
           title: 'Community Signals',
-          description: 'Help Habitat grow and express your preferences. This area is about signaling your priority by adding HBT votes on single topics and their subtopics. To submit a new topic you need to hold at least 0.001% of the TVL of HBT.',
+          details: 'Help Habitat grow and express your preferences. This area is about signaling your priority by adding HBT votes on single topics and their subtopics. To submit a new topic you need to hold at least 0.001% of the TVL of HBT.',
         },
         [EVOLUTION_ACTION_VAULT]: {
           type: 'Action',
           title: 'Rollup Governance',
-          description: 'Vote on important rollup governance decisions with HBT tokens. Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a proposal you need to own 0.1% of HBT on the rollup (TVL).',
+          details: 'Vote on important rollup governance decisions with HBT tokens. Info: 7 day voting period with a 10% quorum of TVL (HBT) needed to pass. To submit a proposal you need to own 0.1% of HBT on the rollup (TVL).',
         }
       };
       this.actionVault = EVOLUTION_ACTION_VAULT;
@@ -395,7 +454,7 @@ button, .button {
 
       tail.querySelector('#proposals').setAttribute('vault', addr);
       tail.children[0].id = tabId;
-      tail.querySelector('#description').textContent = info.description;
+      tail.querySelector('#description').textContent = info.details;
 
       const draft = tail.querySelector('#draft');
       tail.querySelector('#submitTopic').addEventListener('click', () => {
@@ -417,7 +476,7 @@ button, .button {
 
   async chainUpdateCallback () {
     const { habitat } = await getProviders();
-    const token = await getTokenV2(HBT);
+    const token = await getTokenV2(await habitat.callStatic.tokenOfCommunity(this.communityId));
     const tvl = await habitat.callStatic.getTotalValueLocked(token.address);
 
     // balances
@@ -457,7 +516,7 @@ button, .button {
       }
       this.shadowRoot.querySelector('#totalReserve').textContent = `${renderAmount(totalReserve, token.decimals, 1)} ${token.symbol}`;
 
-      const memberCount = await habitat.callStatic.getTotalMemberCount(EVOLUTION_COMMUNITY_ID);
+      const memberCount = await habitat.callStatic.getTotalMemberCount(this.communityId);
       this.shadowRoot.querySelector('#memberCount').textContent = renderAmount(memberCount);
 
       this.shadowRoot.querySelector('#tvl').textContent = `${renderAmount(tvl, token.decimals, 1)} ${token.symbol}`;

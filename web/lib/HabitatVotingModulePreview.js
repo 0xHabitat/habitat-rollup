@@ -48,7 +48,7 @@ a#expand {
   text-decoration: underline;
 }
 </style>
-<div class='box' style='padding:.5em 2em;'>
+<div class='box left' style='padding:.5em 2em;height:100%;'>
   <p id='name'> </p>
   <a id='viewContract' target='_blank' class='s'>View Contract</a>
   <space></space>
@@ -122,6 +122,8 @@ export default class HabitatVotingModulePreview extends HTMLElement {
       const res = await fetchInfo(vaultAddress);
       metadata = res.metadata;
       condition = res.evt.args.condition;
+    } else {
+      metadata = await fetchModuleInformation(condition);
     }
 
     this.shadowRoot.querySelector('#name').textContent = (metadata ? metadata.name : '') || '???';

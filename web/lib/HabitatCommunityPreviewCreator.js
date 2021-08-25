@@ -2,15 +2,17 @@ import {
   setupTokenlistV2,
   wrapListener,
   getTokenV2,
+  parseInput,
 } from './utils.js';
 import {
   encodeMetadata,
   sendTransaction
 } from './rollup.js';
 import { ipfsPush } from './ipfs.js';
+import { COMMON_STYLESHEET } from './component.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
 .communityBox {
   border-radius: 2em;
@@ -29,8 +31,9 @@ const TEMPLATE =
 </style>
 <div class='communityBox'>
   <space></space>
-  <div class='flex col'>
+  <div id='input' class='flex col'>
     <input id='title' placeholder='Name of Community'>
+    <input id='details' placeholder='Short Description about the Community'>
     <input id='token' placeholder='Governance Token' list='tokenlistv2'>
   </div>
   <space></space>
@@ -51,30 +54,27 @@ const TEMPLATE =
 export default class HabitatCommunityPreviewCreator extends HTMLElement {
   constructor() {
     super();
-  }
 
-  connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
 
-      this._ctx = this.querySelector('canvas').getContext('2d');
-      this._fileInput = this.querySelector('#file');
-      this.querySelector('#file').addEventListener('change', this._loadFile.bind(this), false);
-      this._ctx.canvas.addEventListener('click', () => this._fileInput.click(), false);
-      const w = 1200;
-      const h = 600;
-      this._ctx.canvas.width = w;
-      this._ctx.canvas.height = h;
+    this._ctx = this.shadowRoot.querySelector('canvas').getContext('2d');
+    this._fileInput = this.shadowRoot.querySelector('#file');
+    this.shadowRoot.querySelector('#file').addEventListener('change', this._loadFile.bind(this), false);
+    this._ctx.canvas.addEventListener('click', () => this._fileInput.click(), false);
+    const w = 1200;
+    const h = 600;
+    this._ctx.canvas.width = w;
+    this._ctx.canvas.height = h;
 
-      wrapListener(this.querySelector('#create'), this.create.bind(this));
+    wrapListener(this.shadowRoot.querySelector('#create'), this.create.bind(this));
 
-      this._ctx.font = '128px Everett';
-      this._ctx.fillStyle = 'rgba(255,255,255,.5)';
-      this._ctx.fillRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.width);
-      this._ctx.fillStyle = 'rgba(0,0,0,.5)';
-      this._ctx.fillText('+', (w / 2) - 54, (h / 2) + 54);
-      setupTokenlistV2(this);
-    }
+    this._ctx.font = '128px Everett';
+    this._ctx.fillStyle = 'rgba(255,255,255,.5)';
+    this._ctx.fillRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.width);
+    this._ctx.fillStyle = 'rgba(0,0,0,.5)';
+    this._ctx.fillText('+', (w / 2) - 54, (h / 2) + 54);
+    setupTokenlistV2(this.shadowRoot);
   }
 
   _loadFile (evt) {
@@ -104,13 +104,17 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
   }
 
   async create () {
-    const token = await getTokenV2(this.querySelector('#token').value);
-    const title = this.querySelector('#title').value;
+    const obj = parseInput(this.shadowRoot.querySelector('#input'));
+    if (obj.error) {
+      return;
+    }
+    const token = await getTokenV2(obj.config.token);
     const meta = {
-      title
+      title: obj.config.title,
+      details: obj.config.details,
     };
+
     const bannerBlob = await this.bannerToBlob();
-    globalThis.foo = bannerBlob;
     if (bannerBlob) {
       const type = bannerBlob.type.replace('image/', '.');
       const fileName = 'banner' + type;

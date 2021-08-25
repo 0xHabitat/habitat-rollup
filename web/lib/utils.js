@@ -846,3 +846,21 @@ export function sanitize (html) {
 
   return e.content;
 }
+
+export function parseInput (ele) {
+  const elements = ele.querySelectorAll('input');
+  const config = {};
+
+  let error = false;
+  for (const ele of elements) {
+    ele.classList.remove('error');
+    if (!ele.value) {
+      window.requestAnimationFrame(() => ele.classList.add('error'));
+      error = true;
+      continue;
+    }
+    config[ele.id] = ele.value;
+  }
+
+  return { config, error };
+}

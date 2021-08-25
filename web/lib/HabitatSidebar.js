@@ -220,7 +220,7 @@ class HabitatSidebar extends HTMLElement {
       if (ele) {
         ele.classList.remove('target');
       }
-      const target = this.querySelector(`a[href="${window.location.hash.split(',')[0]}"`);
+      const target = this.querySelector(`a[href="${window.location.hash}"`);
       if (target) {
         target.classList.add('target');
       }

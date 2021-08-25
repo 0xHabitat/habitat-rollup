@@ -15,6 +15,7 @@ import {
   renderLabels,
   encodeMetadata,
   resolveName,
+  getIssueLinkForVault,
 } from './rollup.js';
 import { COMMON_STYLESHEET } from './component.js';
 import './HabitatToggle.js';
@@ -69,7 +70,7 @@ a {
         <input id='url' placeholder='GitHub issue link (optional)'>
         <span style='vertical-align:top;'>ℹ</span>
         <span>If don't have a GitHub link, </span>
-        <a target='_blank' href='https://github.com/0xHabitat/improvements-and-bugs/issues/new/choose'>create</a>
+        <a id='issueLink' target='_blank' href=''>create</a>
         <span> an issue first.</span>
       </label>
     </div>
@@ -161,7 +162,7 @@ export default class HabitatProposeCard extends HTMLElement {
     this.setAttribute(ATTR_PROPOSAL_TYPE, (actionMode ? 'Action' : 'Signal'));
   }
 
-  setMode (str) {
+  async setMode (str) {
     const actionMode = str.toLowerCase() === 'action';
     const toggle = this.shadowRoot.querySelector('habitat-toggle');
     if (actionMode) {
@@ -171,10 +172,12 @@ export default class HabitatProposeCard extends HTMLElement {
       this.classList.remove('actionMode');
       toggle.setAttribute('on', '0');
     }
+    const vault = this.getAttribute(actionMode ? ATTR_ACTION_VAULT : ATTR_SIGNAL_VAULT);
     this.shadowRoot.querySelector('habitat-proposal-action-box').setAttribute(
       'vault',
-      this.getAttribute(actionMode ? ATTR_ACTION_VAULT : ATTR_SIGNAL_VAULT)
+      vault
     );
+    this.shadowRoot.querySelector('#issueLink').href = await getIssueLinkForVault(vault);
   }
 
   async renderIssue (evt) {

@@ -4,9 +4,10 @@ import {
 import {
   getMetadataForTopic
 } from './rollup.js';
+import { COMMON_STYLESHEET } from './component.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
 .communityBox {
   border-radius: 2em;
@@ -31,30 +32,23 @@ const TEMPLATE =
 export default class HabitatCommunityPreview extends HTMLElement {
   constructor() {
     super();
-  }
 
-  connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-    }
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
   }
 
   async update (evt) {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-    }
-
     const { communityId, governanceToken } = evt.args;
     const metadata = await getMetadataForTopic(communityId);
-    const link = `#habitat-community,${evt.transactionHash}`;
+    const link = `#habitat-evolution,${evt.transactionHash}`;
 
-    let ele = this.querySelector('a#title');
+    let ele = this.shadowRoot.querySelector('a#title');
     ele.textContent = (metadata ? metadata.title : '') || '???';
     ele.href = link;
-    this.querySelector('a#banner').href = link;
+    this.shadowRoot.querySelector('a#banner').href = link;
 
     if (metadata.bannerCid) {
-      this.querySelector('img').src = `https://${metadata.bannerCid}.ipfs.infura-ipfs.io/`;
+      this.shadowRoot.querySelector('img').src = `https://${metadata.bannerCid}.ipfs.infura-ipfs.io/`;
     }
   }
 }
