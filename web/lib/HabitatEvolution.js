@@ -8,10 +8,6 @@ export default class HabitatEvolution extends HabitatCommunity {
     super();
   }
 
-  get title () {
-    return 'Evolution';
-  }
-
   async render () {
     this.communityId = EVOLUTION_COMMUNITY_ID;
     this.removeAttribute('controls');
