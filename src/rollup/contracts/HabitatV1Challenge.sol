@@ -776,6 +776,69 @@ case 10 {
   inSize := sub(endOfSlot, 252)
 }
 // end of ModifyRollupStorage
+
+// start of CreateVirtualERC20
+// typeHash: 0xef542559fe2e2d8a361b133065e1c9d849cebebc2bbbf0c1dbc05f2c2293668e
+// function: onCreateVirtualERC20(address,uint256,address,bytes)
+case 11 {
+  let headSize := 128
+  let typeLen := 0
+  let txPtr := 320
+  let endOfSlot := add(txPtr, 128)
+
+  txPtr := 352
+  // typeHash of CreateVirtualERC20
+  mstore(0, 0xef542559fe2e2d8a361b133065e1c9d849cebebc2bbbf0c1dbc05f2c2293668e)
+  // uint256 CreateVirtualERC20.nonce
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(32, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // address CreateVirtualERC20.factoryAddress
+  typeLen := byte(0, calldataload(offset))
+  offset := add(offset, 1)
+  calldatacopy(add(txPtr, sub(32, typeLen)), offset, typeLen)
+  mstore(64, mload(txPtr))
+  offset := add(offset, typeLen)
+  txPtr := add(txPtr, 32)
+
+  // bytes CreateVirtualERC20.args
+  typeLen := shr(240, calldataload(offset))
+  offset := add(offset, 2)
+  mstore(txPtr, headSize)
+  headSize := add(headSize, add( 32, mul( 32, div( add(typeLen, 31), 32 ) ) ))
+  txPtr := add(txPtr, 32)
+  mstore(endOfSlot, typeLen)
+  endOfSlot := add(endOfSlot, 32)
+  calldatacopy(endOfSlot, offset, typeLen)
+  mstore(96, keccak256(endOfSlot, typeLen))
+  endOfSlot := add(endOfSlot, mul( 32, div( add(typeLen, 31), 32 ) ))
+  offset := add(offset, typeLen)
+
+  // typeHash
+  let structHash := keccak256(0, 128)
+  // prefix
+  mstore(0, 0x1901000000000000000000000000000000000000000000000000000000000000)
+  // DOMAIN struct hash
+  mstore(2, 0x912f8ef55fd9ffcdd4f9ea4d504976c90bd78c1f95a3ca09ddc4c95af6622f46)
+  // transactionStructHash
+  mstore(34, structHash)
+  mstore(0, keccak256(0, 66))
+  mstore(32, v)
+  mstore(64, r)
+  mstore(96, s)
+  success := staticcall(gas(), 1, 0, 128, 128, 32)
+  // functionSig
+  mstore(288, 0xe9d3d7fb)
+  mstore(320, mload(128))
+
+  inOffset := 316
+  inSize := sub(endOfSlot, 316)
+}
+// end of CreateVirtualERC20
 default { }
 }
 

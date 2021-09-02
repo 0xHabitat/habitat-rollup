@@ -68,6 +68,11 @@ export default {
       { name: 'nonce', 'type': 'uint256' },
       { name: 'data', 'type': 'bytes' },
     ],
+    CreateVirtualERC20: [
+      { name: 'nonce', 'type': 'uint256' },
+      { name: 'factoryAddress', 'type': 'address' },
+      { name: 'args', 'type': 'bytes' },
+    ],
   },
   domain: {
     name: 'Habitat V1',
@@ -84,5 +89,6 @@ export default {
     'DelegateAmount',
     'ClaimStakingReward',
     'ModifyRollupStorage',
+    'CreateVirtualERC20',
   ],
 }

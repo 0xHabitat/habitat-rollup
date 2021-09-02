@@ -1,40 +1,11 @@
 import ethers from 'ethers';
 
 import TYPED_DATA from '../habitatV1.js';
-import { encodeExternalProposalActions, encodeInternalProposalActions } from './utils.js';
-
-async function createTransaction (primaryType, _message, signer, habitat) {
-  const message = {};
-  for (const k in _message) {
-    let v = _message[k];
-    if (typeof v === 'bigint') {
-      v = v.toString();
-    }
-    message[k] = v;
-  }
-
-  if (message.nonce === undefined && TYPED_DATA.types[primaryType][0].name === 'nonce') {
-    message.nonce = (await habitat.callStatic.txNonces(signer.address)).toHexString();
-  }
-
-  const tx = {
-    primaryType,
-    message,
-  };
-  const sig = await signer._signTypedData(
-    TYPED_DATA.domain,
-    { [primaryType]: TYPED_DATA.types[primaryType] },
-    tx.message,
-  );
-  const { v, r, s } = ethers.utils.splitSignature(sig);
-
-  Object.assign(tx, { r, s, v });
-
-  const txHash = await habitat.provider.send('eth_sendRawTransaction', [tx]);
-  const receipt = await habitat.provider.send('eth_getTransactionReceipt', [txHash]);
-
-  return { txHash, receipt };
-}
+import {
+  encodeExternalProposalActions,
+  encodeInternalProposalActions,
+  createTransaction,
+} from './utils.js';
 
 describe('HabitatV1', async function () {
   const {

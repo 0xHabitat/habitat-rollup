@@ -5,6 +5,7 @@ import './HabitatV1Challenge.sol';
 import './HabitatBase.sol';
 import './HabitatAccount.sol';
 import './HabitatWallet.sol';
+import './HabitatVERC20.sol';
 import './HabitatCommunity.sol';
 import './HabitatVault.sol';
 import './HabitatVoting.sol';
@@ -17,6 +18,7 @@ contract HabitatV1 is
   HabitatBase,
   HabitatAccount,
   HabitatWallet,
+  HabitatVERC20,
   HabitatCommunity,
   HabitatVault,
   HabitatVoting,
