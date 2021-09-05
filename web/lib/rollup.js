@@ -11,15 +11,41 @@ import {
   renderAddress,
   getCache,
   setCache,
+  _addToTokenCache,
   RPC_CORS_HEADER_FIX
 } from './utils.js';
-import { L2_RPC_URL } from './config.js';
+import { L2_RPC_URL, ROOT_CHAIN_ID } from './config.js';
 import { ROLLUP_ERROR_MESSAGES } from './messages.js';
 
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 import { deflateRaw, inflateRaw } from '/lib/extern/pako.esm.js';
 
-const { EVOLUTION_ENDPOINT, EXECUTION_PROXY_ADDRESS } = getConfig();
+const { EVOLUTION_ENDPOINT, EXECUTION_PROXY_ADDRESS, VERC_FACTORY_ADDRESS } = getConfig();
+
+export const VERC_FACTORY_ABI = [
+  'event Approval(address indexed owner, address indexed spender, uint256 value)',
+  'event Erc20Created(address indexed proxy)',
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
+  'function DOMAIN_SEPARATOR() view returns (bytes32)',
+  'function allowance(address account, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function approveAndCall(address to, uint256 amount, bytes data) returns (bytes)',
+  'function balanceOf(address account) view returns (uint256)',
+  'function createProxy(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply, bytes32 _domainSeparator) returns (address addr)',
+  'function decimals() view returns (uint8)',
+  'function getMetadata() pure returns (string _name, string _symbol, uint8 _decimals, uint256 _totalSupply, bytes32 _domainSeparator)',
+  'function init(address _initialOwner)',
+  'function name() view returns (string)',
+  'function nonces(address account) view returns (uint256)',
+  'function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)',
+  'function recoverLostTokens(address token)',
+  'function redeemPermitAndCall(address to, bytes permitData, bytes data) returns (bytes)',
+  'function symbol() view returns (string)',
+  'function totalSupply() view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+  'function transferAndCall(address to, uint256 amount, bytes data) returns (bytes)',
+  'function transferFrom(address from, address to, uint256 amount) returns (bool)'
+];
 
 export async function fetchJson (url, payload) {
   const ret = await fetch(url, { method: payload ? 'POST' : 'GET', body: JSON.stringify(payload) });
@@ -1083,6 +1109,41 @@ export async function getIssueLinkForVault (vaultAddr) {
   return DEFAULT;
 }
 
+export async function updateVERC () {
+  const logs = await doQueryWithOptions({ toBlock: 1, includeTx: true }, 'VirtualERC20Created');
+  for (const log of logs) {
+    const msg = log.transaction.message;
+    const address = log.args[1].toLowerCase();
+
+    if (msg.factoryAddress !== VERC_FACTORY_ADDRESS) {
+      console.warn('VERC skip', msg);
+      continue;
+    }
+
+    try {
+      const [name, symbol, decimals, totalSupply, domainSeparator] = ethers.utils.defaultAbiCoder.decode(
+        ['string', 'string', 'uint8', 'uint256', 'bytes32'],
+        msg.args
+      );
+      // TODO add support
+      const logoURI = '/lib/assets/icons/unknown.svg';
+      _addToTokenCache({
+        address,
+        name,
+        symbol,
+        decimals,
+        totalSupply,
+        domainSeparator,
+        logoURI,
+        chainId: ROOT_CHAIN_ID,
+      });
+    } catch (e) {
+      console.error(e);
+      continue;
+    }
+  }
+}
+
 export function onChainUpdate (callback) {
   function onMessage (evt) {
     if (evt.source !== window) {
@@ -1134,6 +1195,7 @@ function _genKey (...args) {
       prevBlockN = blockN;
       prevTxs = nTxs;
       prevAccountAddr = accountAddr;
+      await updateVERC();
       setTimeout(() => {
         _logCache = Object.create(null);
         window.postMessage('chainUpdate', window.location.origin);

@@ -301,7 +301,10 @@ button, .button {
   margin: 1em 0;
 }
 
+a {
+  color: var(--color-text);
+}
+
 a.secondary {
   text-decoration: underline;
-  color: var(--color-text);
 }

@@ -17190,6 +17190,14 @@
       "logoURI": "https://cloudflare-ipfs.com/ipfs/bafkreih4meaca3w4ayr622do5qcby7u7stqqe7mba2vdfqs4ckwxobazfi",
       "name": "LeapToken",
       "symbol": "LEAP"
+    },
+    {
+      "address": "0xa023cca9de8486d867e8b2f7bfd133a96455f850",
+      "chainId": 1,
+      "decimals": 18,
+      "logoURI": "https://cloudflare-ipfs.com/ipfs/bafkreihghsudac5i7em6bmygdv4spwadez5h4h253afgqd4rsbgrhv6l3m",
+      "name": "SushiSwap LP Token HBT-ETH",
+      "symbol": "SLP-HBT-ETH"
     }
   ],
   "version": {

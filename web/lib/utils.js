@@ -539,16 +539,31 @@ export async function setupTokenlist () {
   document.body.appendChild(datalist);
 }
 
-export async function setupTokenlistV2 (root) {
-  if (root) {
-    const datalist = document.body.querySelector('datalist#tokenlist');
-    if (datalist) {
-      root.append(datalist.cloneNode(true));
+export async function setupTokenlistV2 (root, force = false) {
+  const QUERY = 'datalist#tokenlistv2';
+  {
+    const e = document.body.querySelector(QUERY);
+    if (e) {
+      if (force) {
+        console.log('tokenlistv2 force update');
+        e.remove();
+      } else {
+        if (root) {
+          root.append(e.cloneNode(true));
+          const refs = document._tokenListConsumers || [];
+          refs.push(new WeakRef(root));
+          document._tokenListConsumers = refs;
+        }
+        return;
+      }
     }
   }
 
-  const tokens = await getTokenList();
   const datalist = document.createElement('datalist');
+  datalist.id = 'tokenlistv2';
+  document.body.append(datalist);
+
+  const tokens = await getTokenList();
 
   for (const token of tokens) {
     if (token.chainId !== ROOT_CHAIN_ID) {
@@ -567,12 +582,30 @@ export async function setupTokenlistV2 (root) {
     datalist.append(opt);
   }
 
-  datalist.id = 'tokenlistv2';
+  const refs = document._tokenListConsumers || [];
 
-  document.body.append(datalist);
   if (root) {
     root.append(datalist.cloneNode(true));
+    const ref = new WeakRef(root);
+    refs.push(ref);
   }
+
+  const newList = [];
+  for (const weakRef of refs) {
+    const e = weakRef.deref();
+    if (!e) {
+      continue;
+    }
+
+    newList.push(weakRef);
+    const oldList = e.querySelector(QUERY);
+    if (oldList) {
+      oldList.remove();
+    }
+    console.log('updated', e);
+    e.append(datalist.cloneNode(true));
+  }
+  document._tokenListConsumers = newList;
 }
 
 export async function getToken (val) {
@@ -672,6 +705,37 @@ export async function getTokenV2 (val) {
 
   cache[tokenTag] = tokenInfo;
   return tokenInfo;
+}
+
+export async function _addToTokenCache (tokenInfo) {
+  const cache = document._tokensV2 || Object.create(null);
+  document._tokensV2 = cache;
+
+  const address = tokenInfo.address.toLowerCase();
+  const name = tokenInfo.name.toLowerCase();
+  const symbol = tokenInfo.symbol.toLowerCase();
+  const tokenList = await getTokenList();
+
+  // check if we would overwrite entries from the tokenlist
+  for (const token of tokenList) {
+    if (
+      token.name.toLowerCase() === name ||
+      token.symbol.toLowerCase() === symbol ||
+      token.address.toLowerCase() === address) {
+        console.warn('trying to overwrite', tokenInfo);
+        return;
+    }
+  }
+  // add to cache
+  cache[name] = tokenInfo;
+  cache[symbol] = tokenInfo;
+  cache[address] = tokenInfo;
+
+  if (!tokenList.find((e) => e.address.toLowerCase() === tokenInfo.address.toLowerCase())) {
+    console.log('add token to list', tokenInfo);
+    tokenList.push(tokenInfo);
+    await setupTokenlistV2(null, true);
+  }
 }
 
 export async function _getTokenCached (address) {

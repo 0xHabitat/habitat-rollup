@@ -149,6 +149,7 @@ const NAV_TEMPLATE =
         <a class='button' href='#habitat-communities'>Communities</a>
         <a class='button' href='#habitat-evolution'>Evolution</a>
         <a class='button' target='_blank' href='/explorer/'>Block Explorer</a>
+        <a class='button' href='#habitat-tools'>Tools</a>
       </div>
       <space></space>
     </div>
