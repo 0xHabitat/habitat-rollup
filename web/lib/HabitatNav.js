@@ -30,8 +30,8 @@ const NAV_TEMPLATE =
 <div class='wrapperNav'>
   <div class='flex row center around' style='padding-right:3rem;'>
     <div class='flex col left' style='align-items:flex-start;'>
-      <object type='image/svg+xml' style='height:64px;min-width:130px;' data='/lib/assets/logoAnimated.svg'></object>
-      <button id='add747' style='margin:0;' class='secondary purple smaller noHover'>Add HBT to MetaMask</button>
+      <object type='image/svg+xml' style='height:2rem;' data='/lib/assets/v2-logo-full.svg'></object>
+      <button id='add747' style='margin:.3rem 0;' class='secondary purple smaller noHover'>Add HBT to MetaMask</button>
     </div>
     <div class='flex row evenly'>
       <habitat-color-toggle style='margin:0 1em;'></habitat-color-toggle>

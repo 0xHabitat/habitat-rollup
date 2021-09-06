@@ -79,7 +79,7 @@ body {
   left: 0;
   position: absolute;
   color: var(--color-black);
-  font-weight: 400;
+  font-weight: 300;
   font-size: 2vh;
   overflow: hidden;
   text-align: center;
@@ -197,7 +197,7 @@ button, .button {
   min-width: 6em;
   max-width: max-content;
   margin: 1rem 1rem 0 0;
-  padding: .7em 1em;
+  padding: .5rem;
   line-height: 1;
   text-align: center !important;
   color: var(--color-text);

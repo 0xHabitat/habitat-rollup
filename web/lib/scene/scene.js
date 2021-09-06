@@ -72,21 +72,19 @@ function renderScene () {
 
 const TEMPLATE =
 `
-  <div class='para'>
+<div class='para'>
   <div class='l1'></div>
   <div class='l2'></div>
   <div class='l3'></div>
   <div class='l4' style='width:100%;'>
-  <a href='/'><object type='image/svg+xml' style='position:absolute;top:4rem;width:20rem;left:6rem;' data='/lib/assets/logoAnimated.svg'></object></a>
-  <h1><br></h1>
-  <div class='left padh' style='left:6rem;bottom:20vh;position:absolute;font-size:2vh;max-width:70vw;'>
-  <h1 class='whitetext'>Grow and collaborate on Ethereum</h1>
-  <h3 class='whitetext'>Scaling communities with Rollup technology.</h3>
+    <a href='/'><object type='image/svg+xml' style='position:absolute;top:6rem;width:20rem;left:6rem;' data='/lib/assets/v2-logo-full.svg'></object></a>
+    <h1><br></h1>
+    <div class='left padh' style='left:6rem;bottom:20vh;position:absolute;font-size:2vh;max-width:70vw;'>
+      <h1 class='whitetext'>Grow and collaborate on Ethereum</h1>
+      <h3 class='whitetext'>Scaling communities with Rollup technology.</h3>
+    </div>
   </div>
-  <h1><br></h1>
-  </div>
-  </div>
-  `;
+`;
 
 class HabitatScene extends HTMLElement {
   constructor() {

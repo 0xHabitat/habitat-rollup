@@ -48,6 +48,7 @@ const NAV_TEMPLATE =
 }
 #balances {
   width: 100%;
+  padding: .5rem .7rem;
 }
 .bl {
   text-align: center;
@@ -66,7 +67,7 @@ const NAV_TEMPLATE =
 }
 
 .balance-title {
-  padding-left: 1em;
+  padding: .4rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -83,10 +84,9 @@ const NAV_TEMPLATE =
   justify-content: space-between;
   width: 100%;
   font-size: 0.7em;
-  padding-bottom: 0.7em;
 }
 
-.settings > span {
+.settings span {
   align-self: center;
 }
 
@@ -155,41 +155,35 @@ const NAV_TEMPLATE =
     </div>
   </div>
 
-  <div id='balances' class='flex col evenly' style='padding:.5em;'>
-    <space></space>
+  <div id='balances' class='flex col evenly'>
     <div class='no-max-width' style='display:grid;width:calc(100% - 1em);'>
       <div>
         <div class='balance-title'>
           <span class='icon-eth'>Mainnet</span>
           <span><a href='' id="withdraw" class="action-link">Withdraw</a></span>
         </div>
-        <space></space>
         <p class='bl flex center'><habitat-token-amount id='mainnetBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
       </div>
-      <space></space>
       <space></space>
       <div>
         <div class='balance-title'>
           <span><emoji-camping></emoji-camping><span> Rollup</span></span>
           <span><a href='' id="deposit" class="action-link">Deposit</a></span>
         </div>
-        <space></space>
         <p class='bl flex center'><habitat-token-amount id='rollupBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
       </div>
-      <space></space>
       <space></space>
       <div class='left'>
         <div class='balance-title'>
           <span><emoji-fuelpump></emoji-fuelpump><span> Gas</span></span>
           <span><a href='' id='topup' class="action-link">Top up</a></span>
         </div>
-        <space></space>
         <p class='bl flex center'><habitat-token-amount id='gasTankBalance' class='flex' token='${HBT}'></habitat-token-amount></p>
       </div>
     </div>
     <space></space>
     <div class='settings'>
-      <span><a href='#habitat-account'> ⚙ User Settings</a></span>
+      <span><a href='#habitat-account'><span style='line-height:.8;font-size:1.5em;'>⚙</span><span> User Settings</span></a></span>
       <span><habitat-color-toggle class='color-toggle'></habitat-color-toggle></span>
     </div>
   </div>

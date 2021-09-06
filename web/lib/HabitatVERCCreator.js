@@ -98,7 +98,7 @@ export default class HabitatVERCCreator extends HTMLElement {
     const receipt = await sendTransaction('CreateVirtualERC20', args);
     console.log(receipt.events);
     const address = receipt.events[0].args[1];
-    this.shadowRoot.querySelector('#feedback').textContent = `Token successfulfy created:\n${address}`;
+    this.shadowRoot.querySelector('#feedback').textContent = `Token successfully created:\n${address}`;
     this.shadowRoot.querySelector('#create').textContent = 'Close';
   }
 }
