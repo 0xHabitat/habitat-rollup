@@ -120,8 +120,8 @@ habitat-voting-module-preview {
 
     <space></space>
     <div id='subButtons' class='flex row smaller align-left'>
-      <button>Suggest Module</button>
-      <button>Submit Module</button>
+      <a class='button' target='_blank' href='https://github.com/0xHabitat/improvements-and-bugs/issues/new/choose'>Suggest Module</a>
+      <a class='button' href='#habitat-tools'>Submit Module</a>
     </div>
   </div>
 

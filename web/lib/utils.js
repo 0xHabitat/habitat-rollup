@@ -912,7 +912,7 @@ export function sanitize (html) {
 }
 
 export function parseInput (ele) {
-  const elements = ele.querySelectorAll('input');
+  const elements = ele.querySelectorAll('input,textarea');
   const config = {};
 
   let error = false;

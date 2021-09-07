@@ -4,6 +4,7 @@ import { COMMON_STYLESHEET } from './component.js';
 import HabitatPanel from './HabitatPanel.js';
 import './HabitatVERCCreator.js';
 import './HabitatVERCList.js';
+import './HabitatRegisterModule.js';
 
 export default class HabitatTools extends HabitatPanel {
   static TEMPLATE = `
@@ -21,6 +22,11 @@ export default class HabitatTools extends HabitatPanel {
           title='List all V(irtual) ERC-20'
           details='Explore all tokens minted on Habitat'
           component='habitat-verc-list'
+          ></habitat-preview-tool>
+      <habitat-preview-tool
+          title='Register a Voting Module'
+          details='Verify & register a module with the Rollup'
+          component='habitat-register-module'
           ></habitat-preview-tool>
     </div>
   </div>
