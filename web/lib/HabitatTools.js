@@ -14,17 +14,17 @@ export default class HabitatTools extends HabitatPanel {
     <space></space>
     <div class='flex row center evenly' style='gap:1rem;align-items:start;'>
       <habitat-preview-tool
-          title='Create Your Own V(irtual) ERC-20'
+          title='V(irtual) ERC-20 Minting'
           details='Mint your own tokens and start your DAO'
           component='habitat-verc-creator'
           ></habitat-preview-tool>
       <habitat-preview-tool
-          title='List all V(irtual) ERC-20'
+          title='V(irtual) ERC-20 Overview'
           details='Explore all tokens minted on Habitat'
           component='habitat-verc-list'
           ></habitat-preview-tool>
       <habitat-preview-tool
-          title='Register a Voting Module'
+          title='Voting Module Registration'
           details='Verify & register a module with the Rollup'
           component='habitat-register-module'
           ></habitat-preview-tool>
