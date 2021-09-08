@@ -5,7 +5,7 @@
   margin: 0 auto;
   height: 120vh;
   overflow: hidden;
-  transform: translateZ(0);
+  transform: translateZ(1px);
   perspective: 1000px;
   animation: none;
   transition: none;

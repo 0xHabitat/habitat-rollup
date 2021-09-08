@@ -438,3 +438,33 @@ emoji-ballot-box {
   background-size: cover;
   background-image: url('./ballot-box.png');
 }
+emoji-sunflower {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./sunflower.png');
+}
+emoji-artist-palette {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./artist-palette.png');
+}
+emoji-thinking-face {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  line-height: 1;
+  vertical-align: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./thinking-face.png');
+}
