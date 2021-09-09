@@ -68,7 +68,8 @@ export async function getGasAccount (account) {
 
   try {
     const txs = await fetchJson(L2_RPC_URL, 'eth_getLogs', [filter]);
-    let value = 0n;
+    // grants additional 10 HBT
+    let value = 100000000000n;
     let consumed = 0n;
     let ratePerTx = 0n;
     let rateIndex = 0;
