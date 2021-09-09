@@ -38,6 +38,7 @@ import './HabitatStakes.js';
 import './HabitatRewards.js';
 import './HabitatDelegationView.js';
 import './HabitatTokenElement.js';
+import './HabitatLiquidityRewards.js';
 
 const { HBT, DEFAULT_ROLLUP_OPERATOR_ADDRESS } = getConfig();
 let walletContainer;
@@ -304,7 +305,10 @@ const ACCOUNT_TEMPLATE =
       <p class='l'>Delegation</p>
     </div>
     <div id='wallet-rewards'>
-      <p class='l'>Rewards</p>
+      <p class='l'>Rollup Rewards</p>
+    </div>
+    <div id='wallet-liquidity-rewards'>
+      <p class='l'>Liquidity Rewards</p>
     </div>
   </div>
 
@@ -371,6 +375,13 @@ const ACCOUNT_TEMPLATE =
   <div class='tab' id='wallet-rewards'>
     <div class='flex center'>
       <habitat-rewards></habitat-rewards>
+    </div>
+    <space></space>
+  </div>
+
+  <div class='tab' id='wallet-liquidity-rewards'>
+    <div class='flex center'>
+      <habitat-liquidity-rewards></habitat-liquidity-rewards>
     </div>
     <space></space>
   </div>
