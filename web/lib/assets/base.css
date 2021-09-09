@@ -57,15 +57,6 @@ div#colorSchemeToggle.light > div {
   border-radius: var(--border-radius-frame);
 }
 
-.navLogo {
-  display: inline-block;
-  min-width: 240px;
-  min-height: 111px;
-  background-image: url('logoAnimated.svg');
-  background-repeat: no-repeat;
-  background-size: contain;
-}
-
 html,
 body {
   display: flex;
