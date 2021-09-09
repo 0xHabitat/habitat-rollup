@@ -1,11 +1,15 @@
-@import '../fonts/WorkSans.css';
-@import '../fonts/RobotoMono.css';
+@import '../fonts/Everett.css';
 @import 'color.css';
 @import 'wallet.css';
 @import 'menu.css';
 @import 'animations.css';
 @import 'components.css';
 @import '../emoji/emoji.css';
+
+:root {
+  --font-family-default: 'Everett';
+  --font-family-mono: 'Everett';
+}
 
 * {
   vertical-align: bottom;

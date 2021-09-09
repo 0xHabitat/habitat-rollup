@@ -1,13 +1,7 @@
-@import '/lib/fonts/Everett.css';
 @import '/lib/assets/base.css';
 
 * {
   box-sizing: border-box;
-}
-
-:root {
-  --font-family-default: 'Everett';
-  --font-family-mono: 'Everett';
 }
 
 body {
