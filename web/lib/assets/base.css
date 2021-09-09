@@ -197,7 +197,7 @@ button, .button {
   min-width: 6em;
   max-width: max-content;
   margin: 1rem 1rem 0 0;
-  padding: .5rem;
+  padding: .5em;
   line-height: 1;
   text-align: center !important;
   color: var(--color-text);
