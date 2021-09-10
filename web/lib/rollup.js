@@ -1192,10 +1192,17 @@ function _genKey (...args) {
 
     if (blockN !== prevBlockN || nTxs !== prevTxs || accountAddr !== prevAccountAddr) {
       console.log('chainUpdate');
+      const skip = prevBlockN === 0 && !accountAddr;
       prevBlockN = blockN;
       prevTxs = nTxs;
       prevAccountAddr = accountAddr;
       await updateVERC();
+
+      if (skip) {
+        console.log('skipping first update');
+        return;
+      }
+
       setTimeout(() => {
         _logCache = Object.create(null);
         window.postMessage('chainUpdate', window.location.origin);

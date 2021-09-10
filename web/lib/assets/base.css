@@ -1,6 +1,5 @@
 @import '../fonts/Everett.css';
 @import 'color.css';
-@import 'wallet.css';
 @import 'menu.css';
 @import 'animations.css';
 @import 'components.css';
@@ -728,8 +727,8 @@ button, .button {
   display: none;
 }
 
-[x-loaded] button, .button {
-  display: revert;
+button, .button {
+  display: var(--x-loaded, none);
 }
 
 .alert {

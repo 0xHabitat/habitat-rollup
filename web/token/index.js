@@ -14,6 +14,9 @@ import {
   getConfig,
   ethers,
 } from '/lib/utils.js';
+
+import '/lib/HabitatSlider.js';
+
 const {
   TOKEN_TURNER,
   HBT,

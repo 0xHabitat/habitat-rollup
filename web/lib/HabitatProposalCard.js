@@ -496,6 +496,7 @@ const ATTR_REF_SIGNAL = 'ref-signal';
 const ATTR_FLAVOR = 'flavor';
 const ATTR_SIGNAL_VAULT = 'signal-vault';
 const ATTR_ACTION_VAULT = 'action-vault';
+const ATTR_EXPAND = 'expand';
 
 export default class HabitatProposalCard extends HTMLElement {
   static get observedAttributes() {
@@ -587,6 +588,10 @@ export default class HabitatProposalCard extends HTMLElement {
         window.open(getEtherscanLink(tx.hash), '_blank');
       }
     );
+
+    if (this.hasAttribute(ATTR_EXPAND)) {
+      this.toggleExpand();
+    }
   }
 
   connectedCallback () {
@@ -801,6 +806,10 @@ export default class HabitatProposalCard extends HTMLElement {
 
   async update () {
     const txHash = this.getAttribute(ATTR_HASH);
+    if (!txHash) {
+      return;
+    }
+
     let data = await getProposalInformation(txHash);
 
     {
@@ -808,7 +817,9 @@ export default class HabitatProposalCard extends HTMLElement {
       const titleElement = this.shadowRoot.querySelector('#title');
       titleElement.textContent = data.title;
       this.shadowRoot.querySelector('.expandable #title').textContent = data.title;
-      this.shadowRoot.querySelector('#id').textContent = 'ID#' +
+      const linkElement = this.shadowRoot.querySelector('#id');
+      linkElement.href = data.link;
+      linkElement.textContent = 'ID#' +
         data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
 
       const html = data.metadata.details || 'no description';
