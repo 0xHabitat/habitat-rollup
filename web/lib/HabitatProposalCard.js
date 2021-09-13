@@ -27,6 +27,15 @@ import BalanceTracker from './BalanceTracker.js';
 import './HabitatProposalActionList.js';
 import './HabitatSentimentSlider.js';
 
+const ISSUE_BODY_CSS = document.createElement('template');
+ISSUE_BODY_CSS.innerHTML = `
+<style>
+* {
+  max-width: 100%;
+}
+</style>
+`;
+
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
@@ -824,7 +833,7 @@ export default class HabitatProposalCard extends HTMLElement {
 
       const html = data.metadata.details || 'no description';
       const article = document.createElement('article');
-      article.attachShadow({ mode: 'open' }).append(sanitize(html));
+      article.attachShadow({ mode: 'open' }).append(ISSUE_BODY_CSS.content.cloneNode(true), sanitize(html));
       this.shadowRoot.querySelector('.expandable #body').replaceChildren(article);
 
       renderLabels(data.metadata.labels || [], this.shadowRoot.querySelector('#labels'));
