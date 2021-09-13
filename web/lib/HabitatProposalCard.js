@@ -820,6 +820,9 @@ export default class HabitatProposalCard extends HTMLElement {
     }
 
     let data = await getProposalInformation(txHash);
+    if (!data) {
+      throw new Error('no such tx:' + txHash);
+    }
 
     {
       // title / link elements

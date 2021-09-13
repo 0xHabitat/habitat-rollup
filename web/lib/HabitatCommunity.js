@@ -26,6 +26,7 @@ import './HabitatToggle.js';
 import './HabitatProposalCard.js';
 import './HabitatTransactionCart.js';
 import './HabitatVotingModulePreview.js';
+import './HabitatFlipCard.js';
 import HabitatTreasuryCreator from './HabitatTreasuryCreator.js';
 import HabitatProposeCard from './HabitatProposeCard.js';
 import { setupTabs } from './tabs.js';
@@ -257,15 +258,25 @@ button, .button {
             <p id='totalReserve' class='xl light'> </p>
           </div>
 
-          <div class='box flex col center mtb'>
-            <p class='s'>MEMBERS</p>
-            <p id='memberCount' class='xl light'> </p>
-          </div>
+          <habitat-flip-card>
+            <div slot='front' class='flex col center'>
+              <p class='s'>MEMBERS</p>
+              <p id='memberCount' class='xl light'> </p>
+            </div>
+            <div slot='back'>
+              <p style='color:var(--color-text-invert);'>Only people who interacted with this community e.g. voting or proposing are considered members.</p>
+            </div>
+          </habitat-flip-card>
 
-          <div class='box flex col center mtb'>
-            <p class='s'>Total Value Locked</p>
-            <p id='tvl' class='xl light'> </p>
-          </div>
+          <habitat-flip-card>
+            <div slot='front' class='flex col center'>
+              <p class='s'>Total Value Locked</p>
+              <p id='tvl' class='xl light'> </p>
+            </div>
+            <div slot='back'>
+              <p style='color:var(--color-text-invert);'>Total Value Locked (TVL) = All community governance tokens on the Rollup. Except tokens locked in treasuries. Important for quorum calculations.</p>
+            </div>
+          </habitat-flip-card>
 
           <div class='flex col left mtb'>
             <div class='box flex col center'>
@@ -434,8 +445,8 @@ button, .button {
       const draft = tail.querySelector('#draft');
       tail.querySelector('#submitTopic').addEventListener('click', () => {
         const card = new HabitatProposeCard();
-        card.setAttribute('signal-vault', addr);
-        card.setAttribute('action-vault', addr);
+        card.setAttribute('signal-vault', this.signalVault || addr);
+        card.setAttribute('action-vault', this.actionVault || addr);
         card.setAttribute('proposal-type', info.type);
         draft.prepend(card);
       }, false);
@@ -497,7 +508,7 @@ button, .button {
       this.shadowRoot.querySelector('#tvl').textContent = `${renderAmount(tvl, token.decimals, 1)} ${token.symbol}`;
     }
 
-    // tabs
+    // proposals
     {
       const refSignal = ethers.utils.formatUnits(tvl, token.decimals);
       const tabs = this.shadowRoot.querySelector('#tabs');
@@ -506,7 +517,7 @@ button, .button {
       const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'ProposalCreated', vaults);
       for (const log of logs) {
         const vault = log.args[0];
-        const proposals = tabs.querySelector(`[vault="${vault}"]`);
+        const proposals = tabs.querySelector(`#proposals[vault="${vault}"]`);
         if (proposals.querySelector(`[hash="${log.transactionHash}"]`)) {
           continue;
         }

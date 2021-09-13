@@ -131,6 +131,9 @@ habitat-voting-module-preview {
     <button id='create'>Create</button>
   </div>
 </div>
+ <div class='flex col'>
+  <button id='boxleg'>&#10006; CLOSE</button>
+</div>
 `;
 
 export default class HabitatTreasuryCreator extends HTMLElement {
@@ -140,6 +143,7 @@ export default class HabitatTreasuryCreator extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
     wrapListener(this.shadowRoot.querySelector('#create'), this.create.bind(this));
+    wrapListener(this.shadowRoot.querySelector('#boxleg'), () => this.remove());
 
     this._init();
   }

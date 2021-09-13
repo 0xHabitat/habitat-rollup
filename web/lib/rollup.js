@@ -889,6 +889,31 @@ export async function queryTransfers (account) {
   return { tokens, transfers: transfers.reverse() };
 }
 
+export async function getTokensForAccount (account) {
+  const ZERO = BigInt(0);
+  const { habitat } = await getProviders();
+  const options = { toBlock: 1 };
+  // to or from
+  const logs = await doQueryWithOptions(options, 'TokenTransfer', null, [null, account], [null, account]);
+  const tokens = [];
+  const tmp = {};
+
+  for (const log of logs) {
+    const { token } = log.args;
+    if (tmp[token]) {
+      continue;
+    }
+    tmp[token] = true;
+
+    const balance = BigInt(await habitat.callStatic.getBalance(token, account));
+    if (balance > ZERO) {
+      tokens.push({ address: token, balance });
+    }
+  }
+
+  return tokens;
+}
+
 export async function fetchModuleInformation (condition) {
   const logs = await doQueryWithOptions({ maxResults: 1, fromBlock: 1 }, 'ModuleRegistered', condition);
 
@@ -1203,10 +1228,8 @@ function _genKey (...args) {
         return;
       }
 
-      setTimeout(() => {
-        _logCache = Object.create(null);
-        window.postMessage('chainUpdate', window.location.origin);
-      }, 300);
+      _logCache = Object.create(null);
+      window.postMessage('chainUpdate', window.location.origin);
     }
   }
   document._fakeUpdate = () => prevBlockN = 1;

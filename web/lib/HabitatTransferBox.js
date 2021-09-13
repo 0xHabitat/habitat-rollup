@@ -12,7 +12,9 @@ import {
   getProviders,
   resolveName,
   getErc20Exit,
-  sendTransaction
+  sendTransaction,
+  getTokensForAccount,
+  onChainUpdate,
 } from './rollup.js';
 import HabitatCircle from '/lib/HabitatCircle.js';
 import bananaFever from './banana.js';
@@ -211,6 +213,7 @@ habitat-transfer-box .dropdown::after {
   <option value='${TYPE_WITHDRAW}'>${WITHDRAW_WARNING}</option>
   <option value='${TYPE_EXIT}'>${EXIT_NOTE}</option>
 </datalist>
+<datalist id='tokenboxlist'></datalist>
 <div class='flex col'>
   <div style='padding:0 1em;width:100%;'>
     <label>
@@ -305,6 +308,8 @@ export default class HabitatTransferBox extends HTMLElement {
           evt.target.value = '';
         }, false);
       }
+
+      this.update();
     }
 
     window.addEventListener('message', this);
@@ -389,6 +394,12 @@ export default class HabitatTransferBox extends HTMLElement {
       this._to.removeAttribute('list');
     }
 
+    if ((type === TYPE_TRANSFER && this._from.value === L2_STR) || type === TYPE_WITHDRAW) {
+      this._token.setAttribute('list', 'tokenboxlist');
+    } else {
+      this._token.setAttribute('list', 'tokenlistv2');
+    }
+
     let available = '0';
     if (this._token.value && type !== TYPE_EXIT) {
       const signer = await getSigner();
@@ -465,6 +476,26 @@ export default class HabitatTransferBox extends HTMLElement {
     this.onSelect();
     this.scrollIntoView();
   }
-}
 
+  async update () {
+    if (!this.isConnected) {
+      return;
+    }
+
+    onChainUpdate(this.update.bind(this));
+
+    const signer = await getSigner();
+    const account = await signer.getAddress();
+    const tokens = await getTokensForAccount(account);
+    const list = this.querySelector('#tokenboxlist');
+    list.replaceChildren();
+
+    for (const obj of tokens) {
+      const token = await getTokenV2(obj.address);
+      const opt = document.createElement('option');
+      opt.value = `${token.symbol} (${token.name})`;
+      list.append(opt);
+    }
+  }
+}
 customElements.define('habitat-transfer-box', HabitatTransferBox);

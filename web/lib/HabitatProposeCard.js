@@ -67,11 +67,11 @@ a {
   <div class='flex row between'>
     <div>
       <label>
-        <input id='url' placeholder='GitHub issue link (optional)'>
+        <input id='url' placeholder='Discussion link (optional)'>
         <span style='vertical-align:top;'>ℹ</span>
-        <span>If don't have a GitHub link, </span>
-        <a id='issueLink' target='_blank' href=''>create</a>
-        <span> an issue first.</span>
+        <span>You can also </span>
+        <a id='issueLink' target='_blank' style='text-decoration:underline;' href=''>create a GitHub issue</a>
+        <span> and embed it here.</span>
       </label>
     </div>
     <div>
@@ -178,6 +178,8 @@ export default class HabitatProposeCard extends HTMLElement {
       vault
     );
     this.shadowRoot.querySelector('#issueLink').href = await getIssueLinkForVault(vault);
+
+    toggle.style.display = this.getAttribute(ATTR_ACTION_VAULT) === this.getAttribute(ATTR_SIGNAL_VAULT) ? 'none' : 'block';
   }
 
   async renderIssue (evt) {
@@ -191,6 +193,10 @@ export default class HabitatProposeCard extends HTMLElement {
     }
 
     const issue = await fetchIssue(url);
+
+    if (!issue.labels) {
+      return;
+    }
 
     // cache
     this._githubIssue = issue;

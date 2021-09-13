@@ -117,7 +117,7 @@ const NAV_TEMPLATE =
     <div class='flex col center around'>
       <div class='flex col'>
         <object type='image/svg+xml' style='height:2em;' data='/lib/assets/v2-logo-full.svg'></object>
-        <a href='/' style=position:relative;top:-2em;height:2em;width:100%;margin-bottom:-2em;></a>
+        <a href='/app' style=position:relative;top:-2em;height:2em;width:100%;margin-bottom:-2em;></a>
       </div>
       <space></space>
       <div id='walletbox' class='flex col'>

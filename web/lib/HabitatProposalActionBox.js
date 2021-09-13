@@ -4,11 +4,11 @@ import {
   getConfig,
   ethers,
   getSigner,
-  setupTokenlistV2,
 } from './utils.js';
 import {
   getProviders,
   resolveName,
+  getTokensForAccount,
 } from './rollup.js';
 import { COMMON_STYLESHEET } from './component.js';
 
@@ -64,6 +64,7 @@ input[list] {
   <option value='${TYPE_TRANSFER}'>
   <option value='${TYPE_MAINNET_EXECUTION}'>
 </datalist>
+<datalist id='tokens'></datalist>
 <div class='flex col'>
   <div style='padding:0 1em;width:100%;'>
     <label>
@@ -78,7 +79,7 @@ input[list] {
       <label>
         <br>
         <div class='dropdown'>
-          <input id='token' autocomplete='off' list='tokenlistv2' placeholder='Token'>
+          <input id='token' autocomplete='off' list='tokens' placeholder='Token'>
         </div>
       </label>
       <label>
@@ -92,9 +93,8 @@ input[list] {
     <object type='image/svg+xml' style='height:2em;' data='/lib/assets/arrow-group.svg'></object>
 
     <label>
-      <div class='dropdown'>
-        <input id='to' autocomplete='off' list='networklist' placeholder='To'>
-      </div>
+      <br>
+      <input id='to' autocomplete='off' placeholder='To' style='min-width:32em;'>
     </label>
   </div>
 
@@ -118,7 +118,7 @@ const ATTR_VAULT = 'vault';
 
 export default class HabitatProposalActionBox extends HTMLElement {
   static get observedAttributes() {
-    return [];
+    return [ATTR_VAULT];
   }
 
   constructor() {
@@ -126,8 +126,6 @@ export default class HabitatProposalActionBox extends HTMLElement {
 
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
-
-    setupTokenlistV2(this.shadowRoot);
 
     this._to = this.shadowRoot.querySelector('#to');
     this._signButton = this.shadowRoot.querySelector('#sign');
@@ -172,7 +170,18 @@ export default class HabitatProposalActionBox extends HTMLElement {
   adoptedCallback () {
   }
 
-  attributeChangedCallback (name, oldValue, newValue) {
+  async attributeChangedCallback (name, oldValue, newValue) {
+    if (name === ATTR_VAULT) {
+      const tokens = await getTokensForAccount(newValue);
+      const list = this.shadowRoot.querySelector('#tokens');
+      list.replaceChildren();
+      for (const obj of tokens) {
+        const token = await getTokenV2(obj.address);
+        const opt = document.createElement('option');
+        opt.value = `${token.symbol} (${token.name})`;
+        list.append(opt);
+      }
+    }
   }
 
   async onSelect (evt) {
