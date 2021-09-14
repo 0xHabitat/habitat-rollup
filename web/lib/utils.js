@@ -688,8 +688,6 @@ export async function getTokenV2 (val) {
 
   if (isETH || tokenInfo.address === ethers.constants.AddressZero) {
     tokenInfo = Object.assign({}, tokenInfo);
-    tokenInfo.symbol = 'ETH';
-    tokenInfo.name = 'ETH';
     tokenInfo.isETH = true;
     const defaultProvider = getProvider();
     tokenInfo.contract = { balanceOf: (a) => defaultProvider.getBalance(a) };

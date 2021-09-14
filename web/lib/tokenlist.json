@@ -4880,14 +4880,6 @@
       "symbol": "ETGF"
     },
     {
-      "address": "0x0000000000000000000000000000000000000000",
-      "chainId": 1,
-      "decimals": 18,
-      "logoURI": "https://cloudflare-ipfs.com/ipfs/bafkreiezx4qqftatuun3ejxzgg4nb6smlm6ktxcbpelh5cox5y7wo7b73m",
-      "name": "Ethereum",
-      "symbol": "ETH"
-    },
-    {
       "address": "0xaa6e8127831c9de45ae56bb1b0d4d4da6e5665bd",
       "chainId": 1,
       "decimals": 18,
