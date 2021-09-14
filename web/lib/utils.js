@@ -675,7 +675,7 @@ export async function getTokenV2 (val) {
 
   if (!tokenInfo) {
     const defaultProvider = getProvider();
-    const tokenAddress = (ethers.utils.isAddress(tokenTag) ? tokenTag : await defaultProvider.resolveName(tokenTag)).toLowerCase();
+    const tokenAddress = isETH ? getConfig().WETH : (ethers.utils.isAddress(tokenTag) ? tokenTag : await defaultProvider.resolveName(tokenTag)).toLowerCase();
     const contract = await _getTokenCached(tokenAddress);
 
     tokenInfo = {
