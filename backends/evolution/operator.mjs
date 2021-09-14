@@ -75,6 +75,10 @@ export async function getGasAccount (account) {
     let rateIndex = 0;
 
     for (const tx of txs) {
+      const blockNum = Number(tx.blockNumber);
+      [ratePerTx, rateIndex] = getGasRate(blockNum, rateIndex);
+      consumed += ratePerTx;
+
       if (tx.primaryType === 'TributeForOperator') {
         if (tx.message.operator !== OPERATOR_ADDRESS) {
           continue;
@@ -85,10 +89,6 @@ export async function getGasAccount (account) {
 
         value += BigInt(tx.message.amount);
       }
-
-      const blockNum = Number(tx.blockNumber);
-      [ratePerTx, rateIndex] = getGasRate(blockNum, rateIndex);
-      consumed += ratePerTx;
     }
 
     value -= consumed;
