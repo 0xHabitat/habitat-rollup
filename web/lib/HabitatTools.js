@@ -5,6 +5,7 @@ import HabitatPanel from './HabitatPanel.js';
 import './HabitatVERCCreator.js';
 import './HabitatVERCList.js';
 import './HabitatRegisterModule.js';
+import './HabitatLpList.js';
 
 export default class HabitatTools extends HabitatPanel {
   static TEMPLATE = `
@@ -27,6 +28,11 @@ export default class HabitatTools extends HabitatPanel {
           title='Voting Module Registration'
           details='Verify & register a module with the Rollup'
           component='habitat-register-module'
+          ></habitat-preview-tool>
+      <habitat-preview-tool
+          title='Liquidity Rewards'
+          details='Calculates and displays the currently active LP rewards for each Epoch.'
+          component='habitat-lp-list'
           ></habitat-preview-tool>
     </div>
   </div>

@@ -3,7 +3,8 @@ import {
   getTokenV2,
   renderAmount,
   secondsToString,
-  getConfig
+  getConfig,
+  getSigner,
 } from './utils.js';
 import {
   getProviders,
@@ -79,13 +80,15 @@ export default class HabitatLiquidityRewards extends HTMLElement {
     const { habitat } = await getProviders();
     const token = await getTokenV2(HBT_LIQUIDITY_TOKEN);
     const rewardToken = await getTokenV2(HBT);
+    const signer = await getSigner();
+    const account = await signer.getAddress();
     const {
       currentEpoch,
       currentStake,
       currentPoolShare,
       poolShareDivider,
       rewards,
-    } = await calculateLiquidityRewards(token);
+    } = await calculateLiquidityRewards(token, account);
 
     this.shadowRoot.querySelector('#currentEpoch').textContent = currentEpoch.toString();
     this.shadowRoot.querySelector('#currentStake').textContent = `${renderAmount(currentStake, token.decimals, 10)} ${token.symbol}`;

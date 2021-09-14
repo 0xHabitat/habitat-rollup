@@ -119,7 +119,7 @@ export async function calculateRewards (token) {
   };
 }
 
-export async function calculateLiquidityRewards (token) {
+export async function calculateLiquidityRewards (token, account) {
   function updateValue (oldValue, newValue) {
     const BIG_ZERO = BigInt(0);
     const BIG_MAX = BigInt.asUintN(256, '-1');
@@ -140,11 +140,9 @@ export async function calculateLiquidityRewards (token) {
 
   const START_EPOCH = 12;
   const END_EPOCH = 27;
-  const PRECISION = BigInt(10000);
+  const PRECISION = BigInt(10n ** 18n);
   const EMISSION_PER_EPOCH = BigInt(156250000000000) * PRECISION;
 
-  const signer = await getSigner();
-  const account = await signer.getAddress();
   const { habitat } = await getProviders();
   const currentEpoch = Number(await habitat.callStatic.getCurrentEpoch());
   const secondsPerEpoch = Number(await habitat.callStatic.SECONDS_PER_EPOCH());
