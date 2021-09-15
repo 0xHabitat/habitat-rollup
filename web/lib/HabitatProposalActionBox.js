@@ -111,6 +111,13 @@ input[list] {
 
   <button id='sign' class='bigger'>Good Feeling</button>
   <space></space>
+  <div class='flex col align-left'>
+    <p class='s'>Other actions</p>
+    <input style='display:none;' id='file' type='file' accept='text/csv'>
+    <div class='flex row s'>
+      <button id='csv'>Add Token Transfers from CSV</button>
+    </div>
+  </div>
 </div>
 `;
 
@@ -139,6 +146,53 @@ export default class HabitatProposalActionBox extends HTMLElement {
     wrapListener(this._maxAmount, () => {
       this.shadowRoot.querySelector('#amount').value = this._maxAmount.textContent;
     });
+
+    {
+      function parseTransfers (str) {
+        // very dumb csv parsing (incomplete)
+        const SEP = ',';
+        const ret = [];
+        const lines = str.split('\n');
+
+        // skip field definitions
+        lines.shift();
+
+        while (lines.length) {
+          const fields = lines.shift().split(SEP);
+          if (fields.length !== 3) {
+            if (fields.length === 1) {
+              // empty line?
+              continue;
+            }
+            throw new Error('unexpected length of fields. Expected: [token address, receiver, amountOrId]');
+          }
+
+          const [token, to, amount] = fields;
+          if (!ethers.utils.isAddress(token)) {
+            throw new Error(`invalid token address ${token}`);
+          }
+          if (!ethers.utils.isAddress(to)) {
+            throw new Error(`invalid receiver ${to}`);
+          }
+
+          ret.push({ token, to, amount });
+        }
+        return ret;
+      }
+
+      const fileInput = this.shadowRoot.querySelector('#file');
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        const str = await file.text();
+        const transfers = parseTransfers(str);
+
+        for (const { to, token, amount } of transfers) {
+          const type = TYPE_TRANSFER;
+          this.dispatchEvent(new CustomEvent('action', { detail: { type, to, token, amount } }));
+        }
+      }, false);
+      this.shadowRoot.querySelector('#csv').addEventListener('click', () => fileInput.click(), false);
+    }
 
     for (const element of this.shadowRoot.querySelectorAll('input[list]')) {
       element.addEventListener('input', (evt) => {
