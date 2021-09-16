@@ -8,7 +8,6 @@ const TEMPLATE =
   display: flex;
   background:black;
   color:white;
-  padding:.3em;
   font-weight: normal;
 }
 #titlebar > a {
@@ -19,13 +18,9 @@ const TEMPLATE =
 }
 #content {
   overflow: hidden;
-  overflow-y: scroll;
+  overflow-y: overlay;
   box-sizing: border-box;
-  position: absolute;
-  top: 2em;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  height: calc(100% - 2em);
   border-left: 1px solid black;
   background: transparent;
   transition: none;

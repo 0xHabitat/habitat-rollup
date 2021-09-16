@@ -42,3 +42,134 @@ habitat-circle.signal {
   color: var(--color-grey);
   font-weight: lighter;
 }
+
+habitat-color-toggle {
+  position: sticky;
+  transform: translateZ(1000px);
+  top: 16px;
+  right: 24px;
+  float: right;
+}
+
+div#colorSchemeToggle {
+  font-size: 1.5em;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-user-select: none;
+}
+
+div#colorSchemeToggle > div > div {
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+div#colorSchemeToggle.light > div {
+  margin-top: -1em;
+}
+
+.flow {
+  margin: 1em;
+  max-width: min(80ch, 100%);
+}
+
+.flow > button {
+  display: inline-grid;
+}
+
+.flow p > span {
+  font-family: var(--font-family-mono);
+}
+
+.flow > input {
+  width: 100%;
+}
+
+button.expanded,
+.button.expanded {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+habitat-slider,
+habitat-slider #inner,
+habitat-slider pin {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+habitat-slider {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--color-purple);
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(99, 91, 255, 0.5) 6.42%, rgba(59, 222, 255, 0.5) 53.21%, rgba(28, 219, 158, 0.5) 98.54%);
+}
+
+habitat-slider #inner {
+  position: relative;
+  border-radius: 6px;
+  border: 1px solid var(--color-bg);
+  height: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all .07s linear;
+  background: var(--color-bg);
+  background-clip: content-box;
+}
+
+habitat-slider pin {
+  display: block;
+  position: relative;
+  left: 0;
+  width: .9rem;
+  height: .9rem;
+  max-width: .9rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  margin-left: -.45rem;
+  border-radius: 100%;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
+  background-color: var(--color-white);
+  cursor: pointer;
+}
+
+habitat-slider button:hover,
+habitat-slider button:focus,
+habitat-slider button:active {
+  transition: none;
+  box-shadow:none;
+}
+
+.overlay {
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  background: var(--color-bg);
+  animation: opacity .3s ease-in;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.overlay.alert {
+  background: #404040aa;
+}
+
+.overlay > .listitem {
+  background-color: var(--color-white);
+}
+
+.alert {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+

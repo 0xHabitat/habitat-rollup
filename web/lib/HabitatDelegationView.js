@@ -22,6 +22,15 @@ import './HabitatTokenAmount.js';
 
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
+<style>
+#grid {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 8px;
+  width: 100%;
+  place-content: center space-evenly;
+}
+</style>
 <template id='col'>
 <a target='_blank'></a>
 <habitat-token-amount></habitat-token-amount>
@@ -55,7 +64,7 @@ TEMPLATE.innerHTML = `
 <space></space>
 <div>
   <space></space>
-  <div class='auto-col-grid align-right' style='grid-template-columns:repeat(4,auto);'></div>
+  <div id='grid' class='align-right'></div>
   <space></space>
 </div>`;
 
@@ -76,7 +85,7 @@ export default class HabitatDelegationView extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
 
-    this._container = this.shadowRoot.querySelector('.auto-col-grid');
+    this._container = this.shadowRoot.querySelector('#grid');
 
     wrapListener(
       this.shadowRoot.querySelector('button#delegatee'),

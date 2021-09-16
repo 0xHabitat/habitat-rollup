@@ -6,7 +6,7 @@
   padding: .7em 1rem;
   display: inline-block;
   border: 1px solid;
-  border-color: var(--color-border-box);
+  border-color: var(--color-bg-invert);
 }
 
 #fundingProgress {
@@ -35,7 +35,7 @@
   max-width: 42ch;
   background-color: var(--color-bg);
   border-radius: 6px;
-  border: 1px solid var(--color-border-box);
+  border: 1px solid var(--color-bg-invert);
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
@@ -59,9 +59,9 @@
   min-width: auto;
 }
 
-/*
-.swapbox:hover {
-  transform: rotateX(6deg) rotateY(7deg);
-  box-shadow: -10px 10px 10px rgba(0, 0, 0, 0.1);
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr) repeat(1, 1fr);
+  grid-gap: 1rem;
+  padding: 0 .3rem;
 }
-*/

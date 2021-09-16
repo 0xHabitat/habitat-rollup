@@ -1,8 +1,4 @@
 :root {
-  --color-brand1: #c6f6f7;
-  --color-brand2: #d9f7f6;
-  --color-brand3: #eaf8f9;
-  --color-brand4: #fbfafb;
   --color-black: #202020;
   --color-white: #ffffff;
   --color-grey: #606060;
@@ -19,18 +15,11 @@
   --color-link: #5B3F99;
   --border-radius-frame: 0px;
   --color-frame: none;
-  --color-border-box: var(--color-black);
   --color-bg-item: rgba(255, 255, 255, .3);
   --color-bg-75: rgba(255, 255, 255, .75);
-
-  --gradient-coldhot: linear-gradient(240deg, #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 89.92%);
 }
 
 [data-theme="dark"] {
-  --color-brand1: #504060;
-  --color-brand2: #604050;
-  --color-brand3: #404050;
-  --color-brand4: #604050;
   --color-text: #ffffff;
   --color-text-invert: #202020;
   --color-bg: #202020;
@@ -38,7 +27,6 @@
   --border-radius-frame: 6px;
   --color-frame: #ffffff50;
   --color-link: #af8aff;
-  --color-border-box: var(--color-white);
   --color-bg-item: rgba(0, 0, 0, .3);
   --color-bg-75: rgba(0, 0, 0, .25);
 }

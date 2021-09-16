@@ -12,20 +12,21 @@ function onNavigate (evt) {
 
   const len = content.children.length;
   const maxCollapsed = ele.isConnected ? len - 1 : len;
+  const PAD = 1.9;
   let pos = 0;
   for (let i = 0; i < len; i++) {
     const child = content.children[i];
     if (child === ele) {
       continue;
     }
-    child.style.top = `${2 + (2 * pos)}em`;
+    child.style.top = `${PAD + (PAD * pos)}em`;
     child.style.transform = `translateX(${1 * maxCollapsed - pos}em)`;
     child.classList.add('contentHidden');
     child.style.zIndex = pos;
     pos++;
   }
   ele.style.zIndex = pos;
-  ele.style.top = `${2 + (2 * pos)}em`;
+  ele.style.top = `${PAD + (PAD * pos)}em`;
   ele.style.transform = 'none';
   ele.classList.remove('contentHidden');
   ele.style.animation = '';
