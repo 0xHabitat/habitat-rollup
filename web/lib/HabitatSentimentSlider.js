@@ -14,7 +14,7 @@ TEMPLATE.innerHTML = `
 #inner {
   position: relative;
   border-radius: 6px;
-  height: 1rem;
+  height: 1em;
   width: 100%;
   box-sizing: border-box;
   transition: all .07s linear;

@@ -601,17 +601,11 @@ export default class HabitatProposalCard extends HTMLElement {
     if (this.hasAttribute(ATTR_EXPAND)) {
       this.toggleExpand();
     }
+
+    onChainUpdate(this.onChainUpdateCallback.bind(this));
   }
 
   connectedCallback () {
-    this.chainUpdateCallback();
-  }
-
-  async chainUpdateCallback () {
-    if (this.isConnected) {
-      onChainUpdate(this.chainUpdateCallback.bind(this));
-      await this.update();
-    }
   }
 
   disconnectedCallback () {
@@ -806,11 +800,9 @@ export default class HabitatProposalCard extends HTMLElement {
     this.dispatchEvent(new Event('signalChange'));
   }
 
-  onChainUpdateCallback () {
-    if (this.isConnected) {
-      onChainUpdate(this.onChainUpdateCallback.bind(this));
-      return this.update();
-    }
+  async onChainUpdateCallback () {
+    onChainUpdate(this.onChainUpdateCallback.bind(this));
+    await this.update('chainupdatecallback');
   }
 
   async update () {
@@ -843,106 +835,52 @@ export default class HabitatProposalCard extends HTMLElement {
     }
 
     data = Object.assign(data, await fetchProposalStats(data));
-    this.render(data);
-  }
-
-  async render (data) {
-    if (!this.isConnected) {
-      return;
-    }
-    if (!data) {
-      console.warn('data');
-      return;
-    }
-
-    const oldData = this.data;
-    this.data = data;
-
-    const totalShares = this.data.totalShares;
-    const isDelegationMode = !!this.getAttribute(ATTR_DELEGATE_MODE);
-    let userShares = Number(isDelegationMode ? this.data.delegatedUserShares : this.data.userShares);
-    let userSignal = Number(isDelegationMode ? this.data.delegatedUserSignal : this.data.userSignal);
-
-    if (this.data.proposalStatus > VotingStatus.OPEN) {
-      // TODO: should give an option to free staked balance
-      userShares = 0;
-      userSignal = 0;
-    }
-
-    if (
-      !oldData ||
-      this.lastVotedShares !== userShares ||
-      this.oldUserSignal !== userSignal ||
-      oldData.userShares !== this.data.userShares ||
-      oldData.userSignal !== this.data.userSignal ||
-      oldData.delegatedUserShares !== this.data.delegatedUserShares ||
-      oldData.delegatedUserSignal !== this.data.delegatedUserSignal
-    ) {
-      this.lastVotedShares = userShares;
-      this.userVotedShares = userShares;
-      this.userSignal = userSignal;
-      this.oldUserSignal = userSignal;
-    }
-    this.totalSharesExcludingUser = totalShares - this.userVotedShares;
 
     this.shadowRoot.querySelector('#totalVotes').textContent =
-      `${this.data.totalVotes} / ${this.data.participationRate.toFixed(2)}%`;
-    this.shadowRoot.querySelector('#totalShares').textContent = `${this.data.totalShares} ${this.data.token.symbol}`;
-    this.shadowRoot.querySelector('#sharesYes').textContent = `${this.data.totalYesShares} ${this.data.token.symbol}`;
-    this.shadowRoot.querySelector('#sharesNo').textContent = `${this.data.totalNoShares} ${this.data.token.symbol}`;
-    this.shadowRoot.querySelector('#userShares').textContent = `${userShares} ${this.data.token.symbol}`;
-    this.shadowRoot.querySelector('#userSignal').textContent = `${userSignal}/100`;
-    if (this.data.metadata.src) {
+      `${data.totalVotes} / ${data.participationRate.toFixed(2)}%`;
+    this.shadowRoot.querySelector('#totalShares').textContent = `${data.totalShares} ${data.token.symbol}`;
+    this.shadowRoot.querySelector('#sharesYes').textContent = `${data.totalYesShares} ${data.token.symbol}`;
+    this.shadowRoot.querySelector('#sharesNo').textContent = `${data.totalNoShares} ${data.token.symbol}`;
+
+    if (data.metadata.src) {
       try {
         const e = this.shadowRoot.querySelector('#externalLink');
-        e.textContent = (new URL(this.data.metadata.src)).hostname;
-        e.href = this.data.metadata.src;
+        e.textContent = (new URL(data.metadata.src)).hostname;
+        e.href = data.metadata.src;
       } catch (e) {}
     }
     {
       const proposer = this.shadowRoot.querySelector('#proposer');
-      proposer.textContent = renderAddress(this.data.tx.from);
-      proposer.href = getEtherscanLink(this.data.tx.from);
+      proposer.textContent = renderAddress(data.tx.from);
+      proposer.href = getEtherscanLink(data.tx.from);
     }
-    if (this.data.tx.message.internalActions !== '0x' || this.data.tx.message.externalActions !== '0x') {
+    if (data.tx.message.internalActions !== '0x' || data.tx.message.externalActions !== '0x') {
       this.shadowRoot.querySelector('#actionContainer').style.display = 'flex';
-      this.shadowRoot.querySelector('habitat-proposal-action-list').decode(this.data.tx.message);
+      this.shadowRoot.querySelector('habitat-proposal-action-list').decode(data.tx.message);
     }
 
-    // sub the vote
-    if (userSignal > 50) {
-      this.data.totalYes--;
-    } else if (userSignal !== 0) {
-      this.data.totalNo--;
-    }
-
-    const { flavor } = await getModuleInformation(this.data.vaultAddress);
-    this.setAttribute(ATTR_FLAVOR, flavor || 'binary');
-    // will trigger recalculation
-    this.shares = this.userVotedShares + this.cumulativeUserVotedShares;
-
-    const { startDate } = this.data;
+    const { startDate } = data;
     let statusText = '-';
     let openSince = '-';
     let tillClose = '-';
     let endText = 'closed';
     let quorumText = '100%';
-    if (this.data.proposalStatus > VotingStatus.OPEN) {
-      openSince = this.data.proposalStatusText;
-      statusText = this.data.proposalStatusText;
+    if (data.proposalStatus > VotingStatus.OPEN) {
+      openSince = data.proposalStatusText;
+      statusText = data.proposalStatusText;
 
       for (const e of this.shadowRoot.querySelectorAll('#controls button, #controls input')) {
         e.disabled = true;
       }
       this.shadowRoot.querySelector('#processProposal').disabled = true;
       this.shadowRoot.querySelector('#execProposal').disabled =
-        this.data.proposalStats !== VotingStatus.PASSED || this.data.tx.message.externalActions === '0x';
+        data.proposalStats !== VotingStatus.PASSED || data.tx.message.externalActions === '0x';
     } else {
       const simResult = await simulateProcessProposal(
         {
-          proposalId: this.data.proposalId,
-          internalActions: this.data.tx.message.internalActions,
-          externalActions: this.data.tx.message.externalActions,
+          proposalId: data.proposalId,
+          internalActions: data.tx.message.internalActions,
+          externalActions: data.tx.message.externalActions,
         }
       );
       const votingDisabled = simResult.votingStatus > VotingStatus.OPEN;
@@ -986,6 +924,53 @@ export default class HabitatProposalCard extends HTMLElement {
     this.shadowRoot.querySelector('#tillClose').textContent = tillClose;
     this.shadowRoot.querySelector('#time').textContent = openSince;
     this.shadowRoot.querySelector('#quorum').textContent = quorumText;
+
+    const { flavor } = await getModuleInformation(data.vaultAddress);
+    this.render(data);
+    this.setAttribute(ATTR_FLAVOR, flavor || 'binary');
+  }
+
+  render (data) {
+    if (!data) {
+      console.warn('data');
+      return;
+    }
+
+    const oldData = this.data;
+    this.data = data;
+
+    const totalShares = this.data.totalShares;
+    const isDelegationMode = !!this.getAttribute(ATTR_DELEGATE_MODE);
+    let userShares = Number(isDelegationMode ? this.data.delegatedUserShares : this.data.userShares);
+    let userSignal = Number(isDelegationMode ? this.data.delegatedUserSignal : this.data.userSignal);
+
+    if (this.data.proposalStatus > VotingStatus.OPEN) {
+      // TODO: should give an option to free staked balance
+      userShares = 0;
+      userSignal = 0;
+    }
+
+    if (
+      !oldData ||
+      this.lastVotedShares !== userShares ||
+      this.oldUserSignal !== userSignal ||
+      oldData.userShares !== this.data.userShares ||
+      oldData.userSignal !== this.data.userSignal ||
+      oldData.delegatedUserShares !== this.data.delegatedUserShares ||
+      oldData.delegatedUserSignal !== this.data.delegatedUserSignal
+    ) {
+      this.lastVotedShares = userShares;
+      this.userVotedShares = userShares;
+      this.userSignal = userSignal;
+      this.oldUserSignal = userSignal;
+    }
+    this.totalSharesExcludingUser = totalShares - this.userVotedShares;
+
+    this.shadowRoot.querySelector('#userSignal').textContent = `${userSignal}/100`;
+    this.shadowRoot.querySelector('#userShares').textContent = `${userShares} ${data.token.symbol}`;
+
+    // will trigger recalculation
+    this.shares = this.userVotedShares + this.cumulativeUserVotedShares;
   }
 
   get changePending () {
