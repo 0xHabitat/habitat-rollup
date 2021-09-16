@@ -310,15 +310,8 @@ button:hover,
 button:active,
 .button:hover,
 .button:active {
-  transform: translateY(-6px);
+  transform: scale(1.1);
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
-  outline: none;
-}
-
-.nohover:hover,
-.nohover:active {
-  transform: none;
-  box-shadow: inherit;
   outline: none;
 }
 
@@ -735,13 +728,6 @@ button, .button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
-
-.noHover:hover,
-.noHover:focus,
-.noHover:active {
-  transform: none;
-  box-shadow: inherit;
 }
 
 @media (max-width: 1100px) {

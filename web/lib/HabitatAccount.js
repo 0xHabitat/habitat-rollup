@@ -250,7 +250,7 @@ const ACCOUNT_TEMPLATE =
     <div class='flex col center'>
 
       <div style='place-self:flex-end;' class='flex'>
-        <button id='add747' class='smaller noHover'>Add HBT to <img style='display:inline;height:1em' src='/lib/assets/icons/metamask-fox.svg'></button>
+        <button id='add747' class='smaller'>Add HBT to <img style='display:inline;height:1em' src='/lib/assets/icons/metamask-fox.svg'></button>
       </div>
       <space></space>
 

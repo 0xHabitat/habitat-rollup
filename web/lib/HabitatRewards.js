@@ -51,7 +51,7 @@ const TEMPLATE =
       <space></space>
       <h1 id='claimable'> </h1>
       <space></space>
-      <button id='claim' class='noHover noShadow boxBtn'>Claim</button>
+      <button id='claim' class='noShadow boxBtn'>Claim</button>
     </div>
 
     <div class='center box'>

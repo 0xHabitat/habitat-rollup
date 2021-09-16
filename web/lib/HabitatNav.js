@@ -25,7 +25,7 @@ TEMPLATE.innerHTML = `
         <object type='image/svg+xml' style='height:2rem;' data='/lib/assets/v2-logo-full.svg'></object>
         <a href='/' style=position:relative;top:-2em;height:2em;width:100%;margin-bottom:-2em;></a>
       </div>
-      <button id='add747' style='margin:.3rem 0;font-size:.6em;' class='secondary purple noHover'>Add HBT to MetaMask</button>
+      <button id='add747' style='margin:.3rem 0;font-size:.6em;' class='secondary purple'>Add HBT to MetaMask</button>
     </div>
     <div class='flex row evenly'>
       <habitat-color-toggle style='margin:0 1em;'></habitat-color-toggle>
