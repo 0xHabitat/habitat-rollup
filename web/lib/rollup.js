@@ -68,6 +68,9 @@ export async function getProviders () {
 
   document._rollupProviders = { rootProvider, childProvider, habitat, bridge };
 
+  // update virtual token list
+  await updateVERC();
+
   return document._rollupProviders;
 }
 
