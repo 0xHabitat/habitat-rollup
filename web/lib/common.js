@@ -1,17 +1,10 @@
 (function() {
-  {
-    document.documentElement.setAttribute('x-ready', '0');
-    const css = document.createElement('style');
-    css.innerHTML = '[x-ready="0"] .para > * {background-image: none !important;}';
-    document.head.appendChild(css);
-  }
-
   function fallback (hasWebP) {
     if (!hasWebP) {
       console.log('webp fallback');
-      document.documentElement.setAttribute('webp-fallback', '1');
+      document.documentElement.setAttribute('webp-fallback', '');
     }
-    document.documentElement.setAttribute('x-ready', '1');
+    document.documentElement.setAttribute('x-ready', '');
   }
 
   const img = new Image();

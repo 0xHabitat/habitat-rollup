@@ -1,4 +1,4 @@
-import { checkScroll, wrapListener, getEtherscanLink, getTokenName } from '/lib/utils.js';
+import { checkScroll, wrapListener, getEtherscanLink } from '/lib/utils.js';
 import { getProviders, pullEvents, onChainUpdate } from '/lib/rollup.js';
 import HabitatPanel from '/lib/HabitatPanel.js';
 import '/lib/HabitatCommunityPreview.js';

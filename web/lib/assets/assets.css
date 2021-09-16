@@ -9,7 +9,7 @@
   background-image: url('day.png');
   background-image: -webkit-image-set(url('day.webp') 1x);
 }
-[webp-fallback="1"] .uniscene {
+[webp-fallback] .uniscene {
   background-image: url('day.png');
 }
 
@@ -17,26 +17,6 @@
   background-image: url('night.png');
   background-image: -webkit-image-set(url('night.webp') 1x);
 }
-[data-theme="dark"][webp-fallback="1"] .uniscene {
+[data-theme="dark"][webp-fallback] .uniscene {
   background-image: url('night.png');
 }
-
-/*
-@media (prefers-color-scheme: dark) {
-  .uniscene {
-    background-image: url('night.png');
-    background-image: -webkit-image-set(url('night.webp') 1x);
-  }
-  [webp-fallback="1"] .uniscene {
-    background-image: url('night.png');
-  }
-
-  [data-theme="light"] .uniscene {
-    background-image: url('day.png');
-    background-image: -webkit-image-set(url('day.webp') 1x);
-  }
-  [data-theme="light"][webp-fallback="1"] .uniscene {
-    background-image: url('day.png');
-  }
-}
-*/

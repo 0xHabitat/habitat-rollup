@@ -286,33 +286,6 @@ export function decodeInternalProposalActions (hexString) {
   return res;
 }
 
-export function formatString (val, expandable) {
-  const str = val === undefined ? 'undefined' : val.toString();
-  const child = document.createElement('p');
-  child.textContent = str;
-
-  if (expandable) {
-    child.className = 'collapsed';
-    child.addEventListener(
-      'click',
-      function (evt) {
-        if (evt.target !== child) {
-          return;
-        }
-
-        if (this.className.indexOf('collapsed') !== -1) {
-          this.className = this.className.replace('collapsed', 'expanded');
-        } else {
-          this.className = this.className.replace('expanded', 'collapsed');
-        }
-      },
-      false
-    );
-  }
-
-  return child;
-}
-
 export function encodeMetadata (obj) {
   const options = {
     //Z_BEST_COMPRESSION
@@ -332,58 +305,6 @@ export function decodeMetadata (str) {
   }
 }
 
-export function formatObject (obj, href) {
-  const child = document.createElement('div');
-
-  for (const key in obj) {
-    const value = obj[key];
-    const heading = document.createElement('kv');
-
-    heading.className = 'sub';
-    heading.id = key;
-    heading.appendChild(formatString(key, false));
-
-    const v = formatString(typeof value === 'string' ? value : JSON.stringify(value, null, 2), false);
-
-    heading.appendChild(v);
-    child.appendChild(heading);
-  }
-
-  if (href) {
-    const wrapper = document.createElement('div');
-    const link = document.createElement('a');
-    link.className = 'button';
-    link.href = href;
-    link.textContent = '👉 View';
-    wrapper.appendChild(link);
-    child.appendChild(wrapper);
-  }
-
-  return child;
-}
-
-export function computeVotePercentages (proposal, totalShares) {
-  // TODO: use bignumber/bigint
-  const y = Number(proposal.yesVotes);
-  const n = Number(proposal.noVotes);
-  const total = y + n;
-  const nTotalShares = Number(totalShares);
-  let yay = 0;
-  let nay = 0;
-  let participationRate = 0;
-
-  if (total > 0) {
-    yay = y / total;
-    nay = n / total;
-  }
-
-  if (nTotalShares > 0) {
-    participationRate = total / nTotalShares;
-  }
-
-  return { yay, nay, participationRate };
-}
-
 export async function* pullEvents (habitat, filter, blocks = 100) {
   if (filter.toBlock === 0) {
     return;
@@ -401,14 +322,6 @@ export async function* pullEvents (habitat, filter, blocks = 100) {
     yield Object.assign(evt, { transactionHash: log.transactionHash });
   }
   filter.toBlock = filter.fromBlock - 1;
-}
-
-export function humanProposalTime (startDate) {
-  const now = ~~(Date.now() / 1000);
-  if (startDate >= now) {
-    return `starts in ${secondsToString(startDate - now)}`;
-  }
-  return `open since ${secondsToString(now - startDate)}`;
 }
 
 export async function doQueryWithOptions (options, name, ...args) {
@@ -506,49 +419,6 @@ export async function resolveUsername (str) {
   if (logs.length) {
     const evt = logs[logs.length - 1];
     return evt.args.account;
-  }
-}
-
-export async function setupModulelist (root) {
-  if (root) {
-    const datalist = document.body.querySelector('datalist#modulelist');
-    if (datalist) {
-      root.append(datalist.cloneNode(true));
-      return;
-    }
-  }
-
-  const FLAVOR_TYPES = ['binary', 'signal'];
-  const modules = [];
-
-  for (const log of await doQueryWithOptions({ toBlock: 1 }, 'ModuleRegistered')) {
-    try {
-      const { contractAddress, metadata } = log.args;
-      const meta = decodeMetadata(metadata);
-
-      if (!meta.version || FLAVOR_TYPES.indexOf(meta.flavor) === -1) {
-        console.warn('invalid module metadata', meta, tx);
-        continue;
-      }
-      modules.push({ name: meta.name || '<unknown>', address: contractAddress });
-    } catch (e) {
-      console.warn(e);
-      // skip
-      continue;
-    }
-  }
-
-  const datalist = document.createElement('datalist');
-  for (const module of modules) {
-    const opt = document.createElement('option');
-    opt.value = `${module.name} @ ${module.address}`;
-    datalist.appendChild(opt);
-  }
-
-  datalist.id = 'modulelist';
-  document.body.append(datalist);
-  if (root) {
-    root.append(datalist.cloneNode(true));
   }
 }
 
@@ -724,14 +594,6 @@ export async function getCommunityInformation (communityId) {
   return Object.assign(metadata, { communityId: evt.args.communityId, governanceToken: evt.args.governanceToken });
 }
 
-export async function getTreasuryInformation (vaultAddress) {
-  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
-  const evt = logs[logs.length - 1];
-  const metadata = await getMetadataForTopic(vaultAddress);
-
-  return metadata;
-}
-
 export async function getModuleInformation (vaultAddress) {
   const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
   const evt = logs[logs.length - 1];
@@ -740,18 +602,6 @@ export async function getModuleInformation (vaultAddress) {
   metadata.flavor = metadata.flavor || 'binary';
 
   return metadata;
-}
-
-export async function getTransactionMetadata (txHash) {
-  const { habitat } = await getProviders();
-  const tx = await habitat.provider.send('eth_getTransactionByHash', [txHash]);
-  try {
-    return decodeMetadata(tx.message.metadata);
-  } catch (e) {
-    console.warn(e);
-  }
-
-  return {};
 }
 
 export async function getProposalInformation (txHash) {
@@ -813,24 +663,6 @@ const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
 export async function getErc20Exit (tokenAddr, accountAddr) {
   const { bridge } = await getProviders();
   return bridge.getERC20Exit(tokenAddr, accountAddr, { from: ADDRESS_ONE });
-}
-
-export async function getExitStatus (tokenAddr, accountAddr) {
-  // query transfer to zero from finalizedBlock + 1 - latest
-  const { habitat, bridge } = await getProviders();
-  const pending = Number(await bridge.finalizedHeight()) + 1;
-  const filter = habitat.filters.TokenTransfer(tokenAddr, accountAddr, ethers.constants.AddressZero);
-  filter.fromBlock = pending;
-
-  let pendingAmount = ethers.BigNumber.from(0);
-  const logs = await habitat.provider.send('eth_getLogs', [filter]);
-  for (const log of logs) {
-    const evt = habitat.interface.parseLog(log);
-    pendingAmount = pendingAmount.add(evt.args.value);
-  }
-
-  const availableAmount = await getErc20Exit(tokenAddr, accountAddr);
-  return { pendingAmount, availableAmount };
 }
 
 export async function getExitStatusV2 (tokenAddr, accountAddr) {
@@ -924,26 +756,6 @@ export async function fetchModuleInformation (condition) {
   return decodeMetadata(logs[0].args.metadata);
 }
 
-export async function fetchVaultInformation (txHash) {
-  const receipt = await getReceipt(txHash);
-  const { communityId, condition, vaultAddress } = receipt.events[0].args;
-  const metadata = decodeMetadata(receipt.events[1].args.metadata);
-
-  metadata.title = metadata.title || '???';
-
-  return { communityId, condition, vaultAddress, metadata };
-}
-
-export async function getTransactionHashForVaultAddress (vaultAddress) {
-  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'VaultCreated', null, null, vaultAddress);
-  return logs[0].transactionHash;
-}
-
-export async function getTransactionHashForCommunityId (communityId) {
-  const logs = await doQueryWithOptions({ toBlock: 1, maxResults: 1 }, 'CommunityCreated', null, communityId);
-  return logs[0].transactionHash;
-}
-
 export async function simulateProcessProposal ({ proposalId, internalActions, externalActions }) {
   let votingStatus = VotingStatus.UNKNOWN;
   // infinity
@@ -971,16 +783,6 @@ export async function simulateProcessProposal ({ proposalId, internalActions, ex
   }
 
   return { votingStatus, secondsTillClose, quorumPercent, statusText: VOTING_STATUS_TEXT[votingStatus] || '?' };
-}
-
-export async function deployModule ({ bytecode }) {
-  const signer = await getSigner();
-  const _factory = new ethers.ContractFactory([], bytecode, signer);
-  const contract = await _factory.deploy();
-
-  await contract.deployTransaction.wait();
-
-  return contract;
 }
 
 // xxx: validation

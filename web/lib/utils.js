@@ -49,9 +49,6 @@ export function getNetwork () {
   return ROOT_CHAIN_ID;
 }
 
-export function setNetwork (id) {
-}
-
 export const RPC_CORS_HEADER_FIX = { 'content-type': 'text/plain' };
 
 export function getProvider (chainId) {
@@ -755,26 +752,8 @@ export async function _getTokenCached (address) {
   return erc20;
 }
 
-export async function getTokenName (address) {
-  return (await _getTokenCached(address))._name || '???';
-}
-
-export async function getTokenSymbol (address) {
-  return (await _getTokenCached(address))._symbol || '???';
-}
-
 export function getConfig () {
   return CONFIGS[ROOT_CHAIN_ID];
-}
-
-export function getAttributes (ele) {
-  const ret = {};
-
-  for (const name of ele.getAttributeNames()) {
-    ret[name] = ele.getAttribute(name);
-  }
-
-  return ret;
 }
 
 const _globalCache = Object.create(null);
@@ -784,54 +763,6 @@ export function getCache (key) {
 
 export function setCache (key, val) {
   _globalCache[key] = val;
-}
-
-export function stringDance (ele, str, _childs, idx, _skip) {
-  if (_skip) {
-    window.requestAnimationFrame(
-      function ()  {
-        stringDance(ele, str, _childs, idx, !_skip);
-      }
-    );
-    return;
-  }
-
-  const len = str.length;
-
-  if (!_childs) {
-    ele.textContent = '';
-    for (let i = 0; i < len; i++) {
-      let c = document.createElement('span');
-      let val = str[i];
-      let x = '#';
-      if (val === '.' || val === ' ' || val === '\n') {
-        x = val;
-      }
-      c.textContent = x;
-      ele.appendChild(c);
-    }
-    _childs = ele.children;
-    idx = 0;
-  }
-
-  if (_childs.length !== len) {
-    console.log('stringDance skip');
-    return;
-  }
-
-  if (idx < len) {
-    _childs[idx].textContent = str[idx];
-    idx++;
-  }
-
-  const done = idx === len;
-  if (!done) {
-      window.requestAnimationFrame(
-      function ()  {
-        stringDance(ele, str, _childs, idx, !_skip);
-      }
-    );
-  }
 }
 
 export function encodeMultiCall (ary) {

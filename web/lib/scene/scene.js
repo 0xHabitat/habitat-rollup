@@ -77,10 +77,6 @@ const TEMPLATE =
   <div class='l2'></div>
   <div class='l3'></div>
   <div class='l4' style='width:100%;'>
-    <!---
-    <a href='/'><object type='image/svg+xml' style='position:absolute;top:6rem;width:20rem;left:6rem;' data='/lib/assets/v2-logo-full.svg'></object></a>
-    <h1><br></h1>
-    --->
     <div class='left padh' style='left:6rem;bottom:3vh;position:absolute;font-size:2vh;max-width:70vw;'>
       <h1 class='whitetext'>Scaling DAO & Coordination Solutions</h1>
       <h3 class='whitetext'>Easily participate, collaborate and experiment on a Optimistic Rollup</h3>

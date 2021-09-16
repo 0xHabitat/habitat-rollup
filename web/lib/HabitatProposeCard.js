@@ -10,7 +10,6 @@ import {
   getProviders,
   encodeExternalProposalActions,
   encodeInternalProposalActions,
-  fetchVaultInformation,
   fetchIssue,
   renderLabels,
   encodeMetadata,

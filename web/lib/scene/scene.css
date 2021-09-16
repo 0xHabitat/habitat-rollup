@@ -40,7 +40,7 @@
   background-image: url('day/1.png');
   background-image: -webkit-image-set(url('day/1.webp') 1x);
 }
-[webp-fallback="1"] .l1 {
+[webp-fallback] .l1 {
   background-image: url('day/1.png');
 }
 
@@ -49,7 +49,7 @@
   background-image: url('day/2.png');
   background-image: -webkit-image-set(url('day/2.webp') 1x);
 }
-[webp-fallback="1"] .l2 {
+[webp-fallback] .l2 {
   background-image: url('day/2.png');
 }
 
@@ -58,7 +58,7 @@
   background-image: url('day/3.png');
   background-image: -webkit-image-set(url('day/3.webp') 1x);
 }
-[webp-fallback="1"] .l3 {
+[webp-fallback] .l3 {
   background-image: url('day/3.png');
 }
 
@@ -70,72 +70,24 @@
   background-image: url('night/1.png');
   background-image: -webkit-image-set(url('night/1.webp') 1x);
 }
-[data-theme="dark"][webp-fallback="1"] .l1 {
+[data-theme="dark"][webp-fallback] .l1 {
   background-image: url('night/1.png');
 }
 [data-theme="dark"] .l2 {
   background-image: url('night/2.png');
   background-image: -webkit-image-set(url('night/2.webp') 1x);
 }
-[data-theme="dark"][webp-fallback="1"] .l2 {
+[data-theme="dark"][webp-fallback] .l2 {
   background-image: url('night/2.png');
 }
 [data-theme="dark"] .l3 {
   background-image: url('night/3.png');
   background-image: -webkit-image-set(url('night/3.webp') 1x);
 }
-[data-theme="dark"][webp-fallback="1"] .l3 {
+[data-theme="dark"][webp-fallback] .l3 {
   background-image: url('night/3.png');
 }
 
-/*
-@media (prefers-color-scheme: dark) {
-  .l1 {
-    background-image: url('night/1.png');
-    background-image: -webkit-image-set(url('night/1.webp') 1x);
-  }
-  [webp-fallback="1"] .l1 {
-    background-image: url('night/1.png');
-  }
-
-  .l2 {
-    background-image: url('night/2.png');
-    background-image: -webkit-image-set(url('night/2.webp') 1x);
-  }
-  [webp-fallback="1"] .l2 {
-    background-image: url('night/2.png');
-  }
-
-  .l3 {
-    background-image: url('night/3.png');
-    background-image: -webkit-image-set(url('night/3.webp') 1x);
-  }
-  [webp-fallback="1"] .l3 {
-    background-image: url('night/3.png');
-  }
-
-  [data-theme="light"] .l1 {
-    background-image: url('day/1.png');
-    background-image: -webkit-image-set(url('day/1.webp') 1x);
-  }
-  [data-theme="light"][webp-fallback="1"] .l1 {
-    background-image: url('day/1.png');
-  }
-
-  [data-theme="light"] .l2 {
-    background-image: url('day/2.png');
-    background-image: -webkit-image-set(url('day/2.webp') 1x);
-  }
-  [data-theme="light"][webp-fallback="1"] .l2 {
-    background-image: url('day/2.png');
-  }
-
-  [data-theme="light"] .l3 {
-    background-image: url('day/3.png');
-    background-image: -webkit-image-set(url('day/3.webp') 1x);
-  }
-  [data-theme="light"][webp-fallback="1"] .l3 {
-    background-image: url('day/3.png');
-  }
+html:not([x-ready]) .para > * {
+  background-image: none !important;
 }
-*/

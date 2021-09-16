@@ -946,7 +946,12 @@ export default class HabitatProposalCard extends HTMLElement {
         }
       );
       const votingDisabled = simResult.votingStatus > VotingStatus.OPEN;
-      openSince = votingDisabled ? 'Proposal Concluded' : secondsToString(~~(Date.now() / 1000) - startDate);
+      if (votingDisabled) {
+        openSince = 'Proposal Concluded';
+      } else {
+        const now = ~~(Date.now() / 1000);
+        openSince = now >= startDate ? secondsToString(now - startDate) : `starts in ${secondsToString(startDate - now)}`;
+      }
       statusText = simResult.statusText;
       tillClose = simResult.secondsTillClose === -1 ? '∞' : secondsToString(simResult.secondsTillClose);
       endText = simResult.secondsTillClose === -1 ? '-' : formatDate((startDate + simResult.secondsTillClose) * 1000);

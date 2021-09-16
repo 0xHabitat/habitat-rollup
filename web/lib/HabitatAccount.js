@@ -5,10 +5,8 @@ import {
   renderAmount,
   walletIsConnected,
   getEtherscanTokenLink,
-  getTokenName,
   getNetwork,
   getConfig,
-  getAttributes,
   getTokenV2,
   secondsToString,
   ethers
