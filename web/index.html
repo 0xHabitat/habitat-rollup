@@ -25,7 +25,7 @@
         <space></space>
         <div class='flex row around'>
           <div>
-            <a href='/'><object style='width:20rem;' type='image/svg+xml' data='/lib/assets/v2-logo-full.svg'></object></a>
+            <a href='/' class='mask-contain mask-logo' style='display:block;width:20rem;height:3rem;background-color:var(--color-bg-invert);'></a>
           </div>
           <div class='flex row'>
             <a href='/app/' class='button bold yellow' style='margin:0 1rem;'>ENTER APP</a>
@@ -48,10 +48,9 @@
               <a class='button black' target='_blank' href='https://github.com/0xHabitat'>Github</a>
               <a class='button yellow' target='_blank' href='https://0xhabitat.substack.com/welcome'>Blog</a>
             </div>
+            <space></space>
           </section>
-          <div style='overflow:hidden;'>
-            <object class='box' style='width:105%;margin-top:-1px;' data='/lib/assets/waveBottom.svg'></object>
-          </div>
+          <div style='width:105%;height:10vh;margin-top:-1px;background-color:var(--color-bg);' class='mask-100 mask-wave-bottom'></div>
 
           <h1><br></h1>
           <section>
@@ -76,14 +75,11 @@ The HBT token was introduced to coordinate and crowdfund these efforts.
             </div>
           </section>
 
-          <div style='overflow:hidden;margin:-6vw 0;'>
-            <object class='box' style='width:105%;margin-top:-1px;' data='/lib/assets/sep.svg'></object>
-            <div class='' style='margin-top:-22%;margin-bottom:22%;'>
-              <div class='flex center'>
-                <a href='https://ethereum.org/' target='_blank' style='margin:0;line-height:0;'>
-                  <img style='height:90px;' src='/lib/assets/builtonethereum.png'>
-                </a>
-              </div>
+          <div style='background-color:var(--color-bg);width:100%;margin:-3vw 0;padding:15vw 0;' class='flex mask-100 mask-sep'>
+            <div class='flex center'>
+              <a href='https://ethereum.org/' target='_blank' style='margin:0;line-height:0;'>
+                <img style='height:7vw;' src='/lib/assets/builtonethereum.png'>
+              </a>
             </div>
           </div>
 
@@ -128,19 +124,12 @@ Together with you and the communities on Habitat, we build an open-source, all-i
             </div>
             <h1><br></h1>
           </section>
-          <div style='overflow:hidden;'>
-            <object class='box' style='width:105%;margin-top:-1px;' data='/lib/assets/waveBottom.svg'></object>
-          </div>
+          <div style='width:105%;height:10vh;margin-top:-1px;background-color:var(--color-bg);' class='mask-100 mask-wave-bottom'></div>
 
           <div class='flex col center fit'>
             <img class='lighten' style='padding: 1rem; width: 98%;' src='/lib/assets/roadmap.svg'>
           </div>
 
-          <!---
-          <div style='overflow:hidden;'>
-            <object class='box' style='width:105%;margin-bottom:-1px;' data='/lib/assets/waveTop.svg'></object>
-          </div>
-          --->
           <h1><br></h1>
           <section style='background:var(--color-bg);'>
             <div id='tech' class='flex row center fit evenly'>

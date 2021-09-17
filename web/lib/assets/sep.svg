@@ -1,21 +1,7 @@
 <svg width="1440" height="510" viewBox="0 0 1440 510" fill="none" xmlns="http://www.w3.org/2000/svg">
 <style>
-:root {
-  --color-fill:#ffffff;
-}
-@media (prefers-color-scheme: dark) {
-:root {
-  --color-fill:#202020;
-}
-[data-theme="light"] {
---color-fill:#ffffff;
-}
-}
-[data-theme="dark"] {
---color-fill:#202020;
-}
 path {
-fill: var(--color-fill);
+fill: black;
 }
 </style>
 <g style="mix-blend-mode:hard-light">

@@ -468,3 +468,45 @@ space {
     min-width: 100%;
   }
 }
+
+.mask-contain {
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-position: center;
+  -webkit-mask-position: center;
+}
+
+.mask-100 {
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: 100%;
+  -webkit-mask-size: 100%;
+}
+
+.mask-logo {
+  mask-image: url("/lib/assets/v2-logo-full.svg");
+  -webkit-mask-image: url("/lib/assets/v2-logo-full.svg");
+}
+
+.mask-wave-bottom {
+  mask-image: url("/lib/assets/waveBottom.svg");
+  -webkit-mask-image: url("/lib/assets/waveBottom.svg");
+}
+
+.mask-wave-top {
+  mask-image: url("/lib/assets/waveTop.svg");
+  -webkit-mask-image: url("/lib/assets/waveTop.svg");
+}
+
+.mask-sep {
+  mask-image: url("/lib/assets/sep.svg");
+  -webkit-mask-image: url("/lib/assets/sep.svg");
+}
+
+.mask-arrow-group {
+  mask-image: url("/lib/assets/arrow-group.svg");
+  -webkit-mask-image: url("/lib/assets/arrow-group.svg");
+  background: linear-gradient(180deg, #b0b0b0 37%, var(--color-bg-invert) 60%);
+}

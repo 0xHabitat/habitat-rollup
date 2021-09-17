@@ -245,7 +245,7 @@ habitat-transfer-box .dropdown::after {
       </label>
     </div>
 
-    <object type='image/svg+xml' style='height:2em;' data='/lib/assets/arrow-group.svg'></object>
+    <div style='width:1.3em;height:2em;margin:0 auto;' class='mask-100 mask-arrow-group'></div>
 
     <label>
       <div class='dropdown'>

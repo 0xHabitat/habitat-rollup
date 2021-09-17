@@ -22,8 +22,7 @@ TEMPLATE.innerHTML = `
   <div class='flex row center around' style='padding-right:3rem;'>
     <div class='flex col left' style='align-items:flex-start;'>
       <div class='flex col'>
-        <object type='image/svg+xml' style='height:2rem;' data='/lib/assets/v2-logo-full.svg'></object>
-        <a href='/' style=position:relative;top:-2em;height:2em;width:100%;margin-bottom:-2em;></a>
+        <a href='/' class='mask-contain mask-logo' style='display:block;width:10em;height:2em;background-color:var(--color-bg-invert);'></a>
       </div>
       <button id='add747' style='margin:.3rem 0;font-size:.6em;' class='secondary purple'>Add HBT to MetaMask</button>
     </div>
