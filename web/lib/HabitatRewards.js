@@ -1,3 +1,4 @@
+import { COMMON_STYLESHEET } from './component.js';
 import {
   walletIsConnected,
   getSigner,
@@ -15,8 +16,8 @@ import { calculateRewards } from './rewards.js';
 
 const EPOCH_PRE_TEMPLATE = '<p>Epoch #</p><p>Reward</p><p>Epoch ends in</p>';
 const EPOCH_TEMPLATE = '<p></p><p></p><p></p>';
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
 #epochs {
   display: grid;
@@ -71,16 +72,15 @@ const TEMPLATE =
 export default class HabitatRewards extends HTMLElement {
   constructor() {
     super();
+
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+
+    wrapListener(this.shadowRoot.querySelector('#claim'), this.claim.bind(this));
   }
 
   connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-      this._container = document.querySelector('#stakes');
-      wrapListener(this.querySelector('#claim'), this.claim.bind(this));
-
-      this.update();
-    }
+    this.update();
   }
 
   async claim () {
@@ -107,19 +107,19 @@ export default class HabitatRewards extends HTMLElement {
     } = await calculateRewards(token);
 
     {
-      this.querySelector('#currentEpoch').textContent = currentEpoch.toString();
-      this.querySelector('#currentPoolBalance').textContent = `${renderAmount(currentPoolBalance, token.decimals)} ${token.symbol}`;
+      this.shadowRoot.querySelector('#currentEpoch').textContent = currentEpoch.toString();
+      this.shadowRoot.querySelector('#currentPoolBalance').textContent = `${renderAmount(currentPoolBalance, token.decimals)} ${token.symbol}`;
     }
 
-    this.querySelector('#claim').disabled = !claimable;
-    this.querySelector('#claimable').textContent = `${renderAmount(claimable, token.decimals)} ${token.symbol}`;
-    this.querySelector('#outstanding').textContent = `${renderAmount(outstanding, token.decimals)} ${token.symbol}`;
+    this.shadowRoot.querySelector('#claim').disabled = !claimable;
+    this.shadowRoot.querySelector('#claimable').textContent = `${renderAmount(claimable, token.decimals)} ${token.symbol}`;
+    this.shadowRoot.querySelector('#outstanding').textContent = `${renderAmount(outstanding, token.decimals)} ${token.symbol}`;
     this._claimArgs = {
       token: token.address,
       sinceEpoch: sinceEpoch
     };
 
-    const grid = this.querySelector('#epochs');
+    const grid = this.shadowRoot.querySelector('#epochs');
     grid.innerHTML = EPOCH_PRE_TEMPLATE + EPOCH_TEMPLATE.repeat(rewards.length);
     let childPtr = 3;
     const children = grid.children;
@@ -130,5 +130,4 @@ export default class HabitatRewards extends HTMLElement {
     }
   }
 }
-
 customElements.define('habitat-rewards', HabitatRewards);

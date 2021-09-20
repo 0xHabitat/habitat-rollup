@@ -29,4 +29,9 @@
   --color-link: #af8aff;
   --color-bg-item: rgba(0, 0, 0, .3);
   --color-bg-75: rgba(0, 0, 0, .25);
+  --habitat-background-brightness: .5;
+}
+
+habitat-circle {
+  --circle-gradient: #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 57%;
 }

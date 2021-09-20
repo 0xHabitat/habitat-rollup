@@ -1,6 +1,5 @@
-
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
 @keyframes loop {
   0% {
@@ -19,8 +18,7 @@ const TEMPLATE =
     transform-origin: 0% 100%;
   }
 }
-
-canvas#bg {
+canvas {
   display: block;
   position: absolute;
   top: 0;
@@ -32,13 +30,10 @@ canvas#bg {
   transform: scale(3) translateZ(0);
   animation: loop 30s ease-in-out alternate infinite;
   will-change: transform;
-}
-
-[data-theme="dark"] canvas#bg {
-  filter: brightness(.5);
+  filter: brightness(var(--habitat-background-brightness, 1));
 }
 </style>
-<canvas width='8' height='8' id='bg'></canvas>
+<canvas width='8' height='8'></canvas>
 `;
 
 const MAX_LIGHTNESS = 10;
@@ -71,22 +66,19 @@ function drawPixel ({ x, y, min, max, lightness, ctx }) {
 class HabitatBackground extends HTMLElement {
   constructor () {
     super();
-  }
 
-  connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
 
-      const canvas = this.querySelector('canvas');
-      const ctx = canvas.getContext('2d');
+    const canvas = this.shadowRoot.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
 
-      for (let x = 0; x < canvas.width; x++) {
-        for (let y = 0; y < canvas.height; y++) {
-          if (y % 2 === 0) {
-            drawPixel({ ctx, x, y, min: 180, max: 190, lightness: x % 2 ? 80 : 50 });
-          } else {
-            drawPixel({ ctx, x, y, min: 160, max: 190, lightness: x % 2 ? 50 : 80 });
-          }
+    for (let x = 0; x < canvas.width; x++) {
+      for (let y = 0; y < canvas.height; y++) {
+        if (y % 2 === 0) {
+          drawPixel({ ctx, x, y, min: 180, max: 190, lightness: x % 2 ? 80 : 50 });
+        } else {
+          drawPixel({ ctx, x, y, min: 160, max: 190, lightness: x % 2 ? 50 : 80 });
         }
       }
     }

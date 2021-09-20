@@ -1,29 +1,3 @@
-.circle {
-  width: 10em;
-  height: 10em;
-  border-radius: 100%;
-  padding: .1%;
-  box-shadow: inset 0px 0px 4px rgba(0, 0, 0, 0.5);
-  background: linear-gradient(180deg, rgba(27, 177, 134, 0.8) 0%, rgba(64, 208, 142, 0.8) 29.17%, rgba(34, 244, 177, 0.8) 63.02%, rgba(31, 219, 113, 0.8) 100%);
-  background-blend-mode: color-dodge;
-}
-
-.circle > .inner {
-  width: calc(100% - 1em);
-  height: calc(100% - 1em);
-  margin: .5em;
-  border-radius: 100%;
-  background-color: var(--color-bg);
-}
-
-habitat-circle {
-  --circle-gradient: rgba(27, 177, 134, 0.8) 0%, rgba(64, 208, 142, 0.8) 29.17%, rgba(34, 244, 177, 0.8) 63.02%, rgba(31, 219, 113, 0.8) 100%;
-}
-
-habitat-circle.signal {
-  --circle-gradient: #F73F02 -7.27%, rgba(200, 131, 255, 0.5) 40.98%, #C8FCFD 57%;
-}
-
 #labels > p {
   border: 1px solid;
   border-radius: 1em;
@@ -51,25 +25,6 @@ habitat-color-toggle {
   float: right;
 }
 
-div#colorSchemeToggle {
-  font-size: 1.5em;
-  width: 1em;
-  height: 1em;
-  overflow: hidden;
-  cursor: pointer;
-  -webkit-user-select: none;
-}
-
-div#colorSchemeToggle > div > div {
-  width: 1em;
-  height: 1em;
-  line-height: 1;
-}
-
-div#colorSchemeToggle.light > div {
-  margin-top: -1em;
-}
-
 .flow {
   margin: 1em;
   max-width: min(80ch, 100%);
@@ -91,58 +46,6 @@ button.expanded,
 .button.expanded {
   background-color: var(--color-bg);
   color: var(--color-text);
-}
-
-habitat-slider,
-habitat-slider #inner,
-habitat-slider pin {
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: pointer;
-}
-
-habitat-slider {
-  display: block;
-  width: 100%;
-  border: 1px solid var(--color-purple);
-  border-radius: 6px;
-  background: linear-gradient(90deg, rgba(99, 91, 255, 0.5) 6.42%, rgba(59, 222, 255, 0.5) 53.21%, rgba(28, 219, 158, 0.5) 98.54%);
-}
-
-habitat-slider #inner {
-  position: relative;
-  border-radius: 6px;
-  border: 1px solid var(--color-bg);
-  height: 1rem;
-  width: 100%;
-  box-sizing: border-box;
-  transition: all .07s linear;
-  background: var(--color-bg);
-  background-clip: content-box;
-}
-
-habitat-slider pin {
-  display: block;
-  position: relative;
-  left: 0;
-  width: .9rem;
-  height: .9rem;
-  max-width: .9rem;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  margin-left: -.45rem;
-  border-radius: 100%;
-  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
-  background-color: var(--color-white);
-  cursor: pointer;
-}
-
-habitat-slider button:hover,
-habitat-slider button:focus,
-habitat-slider button:active {
-  transition: none;
-  box-shadow:none;
 }
 
 .overlay {

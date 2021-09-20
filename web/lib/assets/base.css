@@ -1,6 +1,5 @@
 @import '../fonts/Everett.css';
 @import 'color.css';
-@import 'menu.css';
 @import 'animations.css';
 @import 'components.css';
 @import '../emoji/emoji.css';
@@ -28,7 +27,7 @@ body {
   position: absolute;
   color: var(--color-black);
   font-weight: 300;
-  font-size: 2vh;
+  font-size: 16px;
   overflow: hidden;
   text-align: center;
   background-color: var(--color-bg);
@@ -319,12 +318,6 @@ button:active,
 img.minmax {
   width: 40rem;
   max-width: 100%;
-}
-
-.whitetext {
-  color: var(--color-white);
-  text-shadow: 0 1px 6px black;
-  line-height: 1.2;
 }
 
 .grid-col {

@@ -3,19 +3,30 @@ import {
   getEtherscanTokenLink,
 } from './utils.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
-habitat-token-element img {
+* {
+  line-height: 1;
+  vertical-align: bottom;
+  white-space: nowrap;
+  word-break: keep-all;
+  color: var(--color-text);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+img {
   height: 1em;
   width: 1em;
   margin-right: .3em;
 }
 </style>
-<a target='_blank' class='flex row'>
-<img>
-<span></span>
-</a>
+<div>
+  <a target='_blank'>
+    <img>
+    <span></span>
+  </a>
+</div>
 `;
 const ATTR_TOKEN = 'token';
 
@@ -26,31 +37,20 @@ export default class HabitatTokenElement extends HTMLElement {
 
   constructor() {
     super();
-  }
 
-  connectedCallback () {
-  }
-
-  disconnectedCallback () {
-  }
-
-  adoptedCallback () {
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
   }
 
   attributeChangedCallback (name, oldValue, newValue) {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-    }
     return this.update();
   }
 
   async update () {
     const token = await getTokenV2(this.getAttribute(ATTR_TOKEN));
-    this.children[1].href = getEtherscanTokenLink(token.address);
-
-    const children = this.children[1].children;
-    children[0].src = token.logoURI;
-    children[1].textContent = token.symbol;
+    this.shadowRoot.querySelector('a').href = getEtherscanTokenLink(token.address);
+    this.shadowRoot.querySelector('img').src = token.logoURI;
+    this.shadowRoot.querySelector('span').textContent = token.symbol;
   }
 }
 customElements.define('habitat-token-element', HabitatTokenElement);

@@ -1,3 +1,4 @@
+import { COMMON_STYLESHEET } from './component.js';
 import {
   getSigner,
   wrapListener,
@@ -21,8 +22,8 @@ import './HabitatTokenAmount.js';
 
 const { HBT } = getConfig();
 
-const NAV_TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
 .sidebar {
   display: flex;
@@ -192,30 +193,30 @@ const NAV_TEMPLATE =
 class HabitatSidebar extends HTMLElement {
   constructor() {
     super();
-  }
 
-  connectedCallback () {
-    this.innerHTML = NAV_TEMPLATE;
-    this._walletContainer = this.querySelector('#walletbox');
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
 
-    wrapListener(this.querySelector('a#connect').parentElement, async () => {
+    this._walletContainer = this.shadowRoot.querySelector('#walletbox');
+
+    wrapListener(this.shadowRoot.querySelector('a#connect').parentElement, async () => {
       await getSigner();
       this.update();
       window.location.hash = '#habitat-account';
     });
-    wrapListener(this.querySelector('#txSign'), async () => {
+    wrapListener(this.shadowRoot.querySelector('#txSign'), async () => {
       await signBatch(this._txBundle);
 
-      const container = this.querySelector('#txBundle');
+      const container = this.shadowRoot.querySelector('#txBundle');
       container.style.display = 'none';
     });
 
     const onNavigate = () => {
-      const ele = this.querySelector('.target');
+      const ele = this.shadowRoot.querySelector('.target');
       if (ele) {
         ele.classList.remove('target');
       }
-      const target = this.querySelector(`a[href="${window.location.hash}"`);
+      const target = this.shadowRoot.querySelector(`a[href="${window.location.hash}"`);
       if (target) {
         target.classList.add('target');
       }
@@ -236,10 +237,10 @@ class HabitatSidebar extends HTMLElement {
     if (evt.data && evt.data.type === 'hbt-tx-bundle') {
       this._txBundle = evt.data.value;
 
-      const container = this.querySelector('#txBundle');
+      const container = this.shadowRoot.querySelector('#txBundle');
       container.style.display = evt.data.value.length ? 'flex' : 'none';
 
-      const grid = this.querySelector('#txGrid');
+      const grid = this.shadowRoot.querySelector('#txGrid');
       grid.innerHTML = '';
 
       for (const tx of evt.data.value) {
@@ -252,16 +253,16 @@ class HabitatSidebar extends HTMLElement {
   }
 
   wrapActions() {
-    wrapListener(this.querySelector('a#topup'), () => {
+    wrapListener(this.shadowRoot.querySelector('a#topup'), () => {
       this.updateDOM('Top Up Gas Tank');
     });
-    wrapListener(this.querySelector('a#deposit'), () => {
+    wrapListener(this.shadowRoot.querySelector('a#deposit'), () => {
       this.updateDOM('Deposit');
     });
-    wrapListener(this.querySelector('a#withdraw'), () => {
+    wrapListener(this.shadowRoot.querySelector('a#withdraw'), () => {
       this.updateDOM('Withdraw');
     });
-    wrapListener(this.querySelector('#scavengeProposals'), async () => {
+    wrapListener(this.shadowRoot.querySelector('#scavengeProposals'), async () => {
       const txs = await scavengeProposals();
       window.postMessage({ type: 'hbt-tx-bundle', value: txs }, window.location.origin);
     });
@@ -299,19 +300,19 @@ class HabitatSidebar extends HTMLElement {
     const { habitat } = await getProviders();
     {
       const value = await token.contract.balanceOf(account);
-      const e = this.querySelector('#mainnetBalance');
+      const e = this.shadowRoot.querySelector('#mainnetBalance');
       e.setAttribute('owner', account);
       e.setAttribute('amount', value);
     }
     {
       const value = await habitat.callStatic.getBalance(token.address, account);
-      const e = this.querySelector('#rollupBalance');
+      const e = this.shadowRoot.querySelector('#rollupBalance');
       e.setAttribute('owner', account);
       e.setAttribute('amount', value);
     }
     {
       const { value } = await getGasTank(account);
-      const e = this.querySelector('#gasTankBalance');
+      const e = this.shadowRoot.querySelector('#gasTankBalance');
       e.setAttribute('owner', account);
       e.setAttribute('amount', value);
     }
@@ -319,7 +320,7 @@ class HabitatSidebar extends HTMLElement {
     // misc
     {
       const txs = await scavengeProposals();
-      const e = this.querySelector('#scavengeProposals');
+      const e = this.shadowRoot.querySelector('#scavengeProposals');
       if (txs.length) {
         e.style.display = 'flex';
         e.querySelector('#count').textContent = txs.length;

@@ -199,12 +199,6 @@ select:focus {
   max-width: none;
 }
 
-body.with-burger-menu #menu {
-  top: auto;
-  right: 1em;
-  bottom: .5em;
-}
-
 .dropdown {
   display: flex;
   flex-direction: row;

@@ -1,3 +1,4 @@
+import { COMMON_STYLESHEET } from './component.js';
 import {
   wrapListener,
   getTokenV2,
@@ -166,20 +167,20 @@ async function topUpGas ({ token, amount }) {
   await sendTransaction('TributeForOperator', args);
 }
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
-habitat-transfer-box input {
+input {
   max-width: auto;
   min-width: auto;
   width: 100%;
   border-radius: 2em;
   background-color: var(--color-bg);
 }
-habitat-transfer-box input[list] {
+input[list] {
   cursor: pointer;
 }
-habitat-transfer-box .dropdown::after {
+.dropdown::after {
   left: -2rem;
 }
 
@@ -267,52 +268,51 @@ export default class HabitatTransferBox extends HTMLElement {
 
   constructor() {
     super();
+
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+
+    setupTokenlistV2(this.shadowRoot);
+
+    this._from = this.shadowRoot.querySelector('#from');
+    this._to = this.shadowRoot.querySelector('#to');
+    this._signButton = this.shadowRoot.querySelector('#sign');
+    this._action = this.shadowRoot.querySelector('#action');
+    this._token = this.shadowRoot.querySelector('#token');
+    this._maxAmount = this.shadowRoot.querySelector('#available');
+
+    wrapListener(this._action, this.onSelect.bind(this), 'change');
+    wrapListener(this._token, this.onSelect.bind(this), 'change');
+    wrapListener(this._from, this.onSelect.bind(this), 'change');
+    wrapListener(this._signButton, this.onSign.bind(this));
+    wrapListener(this._maxAmount, () => {
+      this.shadowRoot.querySelector('#amount').value = this._maxAmount.textContent;
+    });
+
+    for (const element of this.shadowRoot.querySelectorAll('input[list]')) {
+      element.addEventListener('input', (evt) => {
+        if (!evt.target.list) {
+          return;
+        }
+        for (const option of evt.target.list.options) {
+          if (option.value === evt.target.value) {
+            evt.target.blur();
+            break;
+          }
+        }
+      }, false);
+      element.addEventListener('pointerdown', (evt) => {
+        if (evt.target.readOnly || !evt.target.list) {
+          return;
+        }
+        evt.target.value = '';
+      }, false);
+    }
   }
 
   connectedCallback () {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-      setupTokenlistV2(this);
-
-      this._from = this.querySelector('#from');
-      this._to = this.querySelector('#to');
-      this._signButton = this.querySelector('#sign');
-      this._action = this.querySelector('#action');
-      this._token = this.querySelector('#token');
-      this._maxAmount = this.querySelector('#available');
-
-      wrapListener(this._action, this.onSelect.bind(this), 'change');
-      wrapListener(this._token, this.onSelect.bind(this), 'change');
-      wrapListener(this._from, this.onSelect.bind(this), 'change');
-      wrapListener(this._signButton, this.onSign.bind(this));
-      wrapListener(this._maxAmount, () => {
-        this.querySelector('#amount').value = this._maxAmount.textContent;
-      });
-
-      for (const element of this.querySelectorAll('input[list]')) {
-        element.addEventListener('input', (evt) => {
-          if (!evt.target.list) {
-            return;
-          }
-          for (const option of evt.target.list.options) {
-            if (option.value === evt.target.value) {
-              evt.target.blur();
-              break;
-            }
-          }
-        }, false);
-        element.addEventListener('pointerdown', (evt) => {
-          if (evt.target.readOnly || !evt.target.list) {
-            return;
-          }
-          evt.target.value = '';
-        }, false);
-      }
-
-      this.update();
-    }
-
     window.addEventListener('message', this);
+    this.update();
   }
 
   disconnectedCallback () {
@@ -328,8 +328,8 @@ export default class HabitatTransferBox extends HTMLElement {
   handleEvent (evt) {
     if (evt.data.type === 'hbt-transfer-box-action') {
       const newValue = evt.data.value;
-      const actionValue = this.querySelector('#action');
-      const tokenValue = this.querySelector('#token');
+      const actionValue = this.shadowRoot.querySelector('#action');
+      const tokenValue = this.shadowRoot.querySelector('#token');
       if (newValue && actionValue !== null) {
         actionValue.value = newValue;
         actionValue.dispatchEvent(new Event('change'));
@@ -426,8 +426,8 @@ export default class HabitatTransferBox extends HTMLElement {
     }
 
     const token = await getTokenV2(this._token.value);
-    const amount = this.querySelector('#amount').value;
-    const feedback = this.querySelector('#feedback');
+    const amount = this.shadowRoot.querySelector('#amount').value;
+    const feedback = this.shadowRoot.querySelector('#feedback');
 
     feedback.textContent = 'Pending...';
 
@@ -487,7 +487,7 @@ export default class HabitatTransferBox extends HTMLElement {
     const signer = await getSigner();
     const account = await signer.getAddress();
     const tokens = await getTokensForAccount(account);
-    const list = this.querySelector('#tokenboxlist');
+    const list = this.shadowRoot.querySelector('#tokenboxlist');
     list.replaceChildren();
 
     for (const obj of tokens) {

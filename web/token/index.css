@@ -65,3 +65,26 @@
   grid-gap: 1rem;
   padding: 0 .3rem;
 }
+
+.uniscene {
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.uniscene {
+  z-index: 3;
+  background-image: url('/lib/assets/day.png');
+  background-image: -webkit-image-set(url('/lib/assets/day.webp') 1x);
+}
+[webp-fallback] .uniscene {
+  background-image: url('/lib/assets/day.png');
+}
+
+[data-theme="dark"] .uniscene {
+  background-image: url('/lib/assets/night.png');
+  background-image: -webkit-image-set(url('/lib/assets/night.webp') 1x);
+}
+[data-theme="dark"][webp-fallback] .uniscene {
+  background-image: url('/lib/assets/night.png');
+}

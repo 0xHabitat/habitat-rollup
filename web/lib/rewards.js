@@ -94,16 +94,19 @@ export async function calculateRewards (token) {
       claimable += reward;
     }
 
-    rewards.push({ epoch, reward, timestamp });
+    rewards.push({ epoch, reward, timestamp, poolBalance: BigInt(historicPoolBalance) });
   }
 
   const PRECISION = 10000n;
-  const prevPoolBalance =
-    BigInt(await habitat.callStatic.getBalance(token.address, `0x${(currentEpoch - 1).toString(16).padStart(40, '0')}`));
   const currentStake = BigInt(await habitat.callStatic.getBalance(token.address, account));
   const currentTVL = BigInt(await habitat.callStatic.getTotalValueLocked(token.address));
   const currentPoolShare = currentTVL > 0n ? (currentStake * PRECISION) / currentTVL : 0n;
-  const estimatedYieldEpoch = (prevPoolBalance / PRECISION) * currentPoolShare;
+  let averagePoolBalance = 0n;
+  for (const o of rewards) {
+    averagePoolBalance += o.poolBalance;
+  }
+  averagePoolBalance /= BigInt(rewards.length);
+  const estimatedYieldEpoch = (averagePoolBalance / PRECISION) * currentPoolShare;
   return {
     claimable,
     outstanding,

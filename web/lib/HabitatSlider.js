@@ -1,15 +1,63 @@
-const TEMPLATE =
-`
-<div id='inner'><pin></pin></div>
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
+<style>
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  vertical-align: bottom;
+  box-sizing: border-box;
+}
+wrapper {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--color-purple);
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(99, 91, 255, 0.5) 6.42%, rgba(59, 222, 255, 0.5) 53.21%, rgba(28, 219, 158, 0.5) 98.54%);
+}
+inner {
+  display: block;
+  position: relative;
+  border-radius: 6px;
+  border: 1px solid var(--color-bg);
+  height: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all .07s linear;
+  background: var(--color-bg);
+  background-clip: content-box;
+}
+pin {
+  display: block;
+  position: relative;
+  left: 0;
+  width: .9rem;
+  height: .9rem;
+  max-width: .9rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  margin-left: -.45rem;
+  border-radius: 100%;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
+  background-color: var(--color-white);
+  cursor: pointer;
+}
+</style>
+<wrapper><inner><pin></pin></inner></wrapper>
 `;
 
 class HabitatSlider extends HTMLElement {
   constructor() {
     super();
 
-    this.innerHTML = TEMPLATE;
-    this.inner = this.children[0];
-    this.pin = this.children[0].children[0];
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
+
+    this.wrapper = this.shadowRoot.querySelector('wrapper');
+    this.inner = this.shadowRoot.querySelector('inner');
+    this.pin = this.shadowRoot.querySelector('pin');
+
     this.active = false;
     this.scheduled = false;
     this.min = 0;
@@ -21,10 +69,10 @@ class HabitatSlider extends HTMLElement {
     this._width = 0;
     this._x = 0;
 
-    this.addEventListener('mousedown', this, false);
-    this.addEventListener('mouseup', this, false);
-    this.addEventListener('mousemove', this, false);
-    this.addEventListener('mouseleave', this, false);
+    this.wrapper.addEventListener('mousedown', this, false);
+    this.wrapper.addEventListener('mouseup', this, false);
+    this.wrapper.addEventListener('mousemove', this, false);
+    this.wrapper.addEventListener('mouseleave', this, false);
   }
 
   handleEvent (evt) {
@@ -56,7 +104,7 @@ class HabitatSlider extends HTMLElement {
 
   mousedown (evt) {
     this.active = true;
-    this._width = this.offsetWidth;
+    this._width = this.wrapper.offsetWidth;
     if (evt.target === this.pin) {
       return;
     }
@@ -80,7 +128,7 @@ class HabitatSlider extends HTMLElement {
 
   scheduleUpdate () {
     if (this._width === 0) {
-      this._width = this.offsetWidth;
+      this._width = this.wrapper.offsetWidth;
       this._x = (this._width * (this.defaultValue / this.max));
       window.requestAnimationFrame(() => this.scheduleUpdate());
       return;
@@ -106,5 +154,4 @@ class HabitatSlider extends HTMLElement {
     this.dispatchEvent(new Event('change'));
   }
 }
-
 customElements.define('habitat-slider', HabitatSlider);

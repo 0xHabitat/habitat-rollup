@@ -4,19 +4,30 @@ import {
   getEtherscanTokenLink,
 } from './utils.js';
 
-const TEMPLATE =
-`
+const TEMPLATE = document.createElement('template');
+TEMPLATE.innerHTML = `
 <style>
-habitat-token-amount img {
+* {
+  line-height: 1;
+  vertical-align: bottom;
+  white-space: nowrap;
+  word-break: keep-all;
+  color: var(--color-text);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+img {
   height: 1em;
   width: 1em;
   margin-right: .3em;
 }
 </style>
-<a target='_blank' class='flex row'>
-<img>
-<span></span>
-</a>
+<div>
+  <a target='_blank'>
+    <img>
+    <span></span>
+  </a>
+</div>
 `;
 const ATTR_TOKEN = 'token';
 const ATTR_OWNER = 'owner';
@@ -29,21 +40,12 @@ export default class HabitatTokenAmount extends HTMLElement {
 
   constructor() {
     super();
-  }
 
-  connectedCallback () {
-  }
-
-  disconnectedCallback () {
-  }
-
-  adoptedCallback () {
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
   }
 
   attributeChangedCallback (name, oldValue, newValue) {
-    if (!this.children.length) {
-      this.innerHTML = TEMPLATE;
-    }
     return this.update();
   }
 
@@ -52,10 +54,9 @@ export default class HabitatTokenAmount extends HTMLElement {
     const owner = this.getAttribute(ATTR_OWNER);
     const value = this.getAttribute(ATTR_AMOUNT) || '0';
 
-    this.children[1].href = getEtherscanTokenLink(token.address, owner);
-    this.children[1].children[0].src = token.logoURI;
-    this.children[1].children[1].textContent = `${renderAmount(value, token.decimals)} ${token.symbol}`;
+    this.shadowRoot.querySelector('a').href = getEtherscanTokenLink(token.address, owner);
+    this.shadowRoot.querySelector('img').src = token.logoURI;
+    this.shadowRoot.querySelector('span').textContent = `${renderAmount(value, token.decimals)} ${token.symbol}`;
   }
 }
-
 customElements.define('habitat-token-amount', HabitatTokenAmount);
