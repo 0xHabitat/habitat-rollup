@@ -1,15 +1,18 @@
-import { COMMON_STYLESHEET } from './component.js';
-
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
+* {
+  color: var(--color-text);
+  line-height: 1;
+  vertical-align: bottom;
+  box-sizing: border-box;
+}
 #inner,
 pin {
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;
 }
-
 #inner {
   height: 1em;
   width: 2em;
@@ -20,7 +23,6 @@ pin {
   background-clip: content-box;
   transition: background .2s ease-in;
 }
-
 pin {
   display: block;
   position: relative;
@@ -39,19 +41,15 @@ pin {
   background-color: var(--color-bg);
   transition: margin .2s ease-in;
 }
-
 #inner.on {
   background-color: var(--color-bg-invert);
 }
-
 #inner.on > pin {
   margin-left: 1em;
 }
-
 #mode {
   margin: 0 .2em 0 .5em;
 }
-
 #tooltip {
   display: block;
   font-size: .7em;
@@ -63,48 +61,49 @@ pin {
   background-color: var(--color-bg-invert);
   visibility: hidden;
 }
-
 #tooltip > span {
+  display: block;
+  line-height: .9;
   color: var(--color-bg);
-  line-height: .7;
 }
-
 #tooltip > #content {
   display: none;
   position: absolute;
   background-color: var(--color-bg-invert);
   color: var(--color-bg);
-  transform: translateY(calc(-100% - 1em)) translateX(calc(-100% + 1.25em));
+  transform: translateY(calc(-100% - 2.25em)) translateX(calc(-100% + 1.25em));
 }
-
 #tooltip:hover > #content {
   display: block;
 }
-
 #content {
   padding: .5em 1em;
   border-radius: .5em;
   min-width: 20em;
 }
-
 #content::before {
   content: '';
   display: block;
   position: absolute;
   right: .5em;
-  bottom: -.25em;
+  bottom: -.2em;
   width: .5em;
   height: .5em;
   transform: rotateZ(45deg);
   background-color: var(--color-bg-invert);
 }
+#wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
 </style>
-<div class='flex row'>
+<div id='wrapper'>
   <div id='inner'>
     <pin></pin>
   </div>
-  <span id='mode' class='light'></span>
-  <div id='tooltip'><span>ℹ</span><p id='content'>asd</p></div>
+  <span id='mode'></span>
+  <div id='tooltip'><span>ℹ</span><p id='content'> </p></div>
 </div>
 `;
 
@@ -123,7 +122,7 @@ class HabitatToggle extends HTMLElement {
     super();
 
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
     this.shadowRoot.querySelector('#inner').addEventListener('click', () => {
       this.shadowRoot.querySelector('#inner').classList.toggle('on');
       this.render();

@@ -8,7 +8,6 @@ import {
   getProviders,
 } from './rollup.js';
 import { calculateLiquidityRewards } from './rewards.js';
-import { COMMON_STYLESHEET } from './component.js';
 
 const { HBT, HBT_LIQUIDITY_TOKEN } = getConfig();
 
@@ -34,6 +33,11 @@ async function queryEligibleAccounts () {
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
+* {
+  color: var(--color-text);
+  vertical-align: bottom;
+  line-height: 1;
+}
 #wrapper {
   border-radius: 2em;
   background-color: var(--color-bg);
@@ -66,7 +70,7 @@ export default class HabitatLpList extends HTMLElement {
     super();
 
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
 
     this.render();
   }

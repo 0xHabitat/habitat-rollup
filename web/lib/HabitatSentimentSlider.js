@@ -1,5 +1,3 @@
-import { COMMON_STYLESHEET } from './component.js';
-
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
@@ -24,13 +22,6 @@ TEMPLATE.innerHTML = `
   -webkit-user-select: none;
   cursor: pointer;
 }
-
-button:hover,
-button:focus,
-button:active {
-  transition: none;
-  box-shadow:none;
-}
 </style>
 <div id='inner'></div>
 `;
@@ -46,7 +37,7 @@ class HabitatSentimentSlider extends HTMLElement {
     super();
 
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
 
     this.inner = this.shadowRoot.querySelector('#inner');
     this.focused = false;

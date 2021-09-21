@@ -11,13 +11,19 @@ import {
   getProviders,
   VERC_FACTORY_ABI,
 } from './rollup.js';
-import { COMMON_STYLESHEET } from './component.js';
 
 const { VERC_FACTORY_ADDRESS } = getConfig();
 
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
+* {
+  color: var(--color-text);
+  line-height: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  vertical-align: bottom;
+}
 .wrapper {
   border-radius: 2em;
   background-color: var(--color-bg);
@@ -50,7 +56,7 @@ LIST_TEMPLATE.innerHTML = `
 <habitat-token-element></habitat-token-element>
 <span> </span>
 <span> </span>
-<a target='_blank' class='s'> </a>
+<a target='_blank' style='font-size:.75em;text-decoration:none;'> </a>
 <a target='_blank' href='' style='text-decoration:underline;'>Deploy Token on Ethereum</a>
 `;
 
@@ -59,7 +65,7 @@ export default class HabitatVERCList extends HTMLElement {
     super();
 
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.append(COMMON_STYLESHEET.cloneNode(true), TEMPLATE.content.cloneNode(true));
+    this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
 
     this.render();
   }
