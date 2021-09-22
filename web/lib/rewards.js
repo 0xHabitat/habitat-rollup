@@ -102,10 +102,12 @@ export async function calculateRewards (token) {
   const currentTVL = BigInt(await habitat.callStatic.getTotalValueLocked(token.address));
   const currentPoolShare = currentTVL > 0n ? (currentStake * PRECISION) / currentTVL : 0n;
   let averagePoolBalance = 0n;
-  for (const o of rewards) {
-    averagePoolBalance += o.poolBalance;
+  if (rewards.length) {
+    for (const o of rewards) {
+      averagePoolBalance += o.poolBalance;
+    }
+    averagePoolBalance /= BigInt(rewards.length);
   }
-  averagePoolBalance /= BigInt(rewards.length);
   const estimatedYieldEpoch = (averagePoolBalance / PRECISION) * currentPoolShare;
   return {
     claimable,
