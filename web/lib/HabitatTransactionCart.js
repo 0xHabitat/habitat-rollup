@@ -19,6 +19,7 @@ TEMPLATE.innerHTML = `
 #txGrid {
   display: grid;
   max-height: 6em;
+  overflow: scroll;
   overflow: overlay;
   -webkit-overflow-scrolling: touch;
   gap: .1rem;

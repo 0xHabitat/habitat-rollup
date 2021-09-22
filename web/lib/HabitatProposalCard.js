@@ -131,6 +131,7 @@ TEMPLATE.innerHTML = `
 .expanded {
   max-height: 100em;
   -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
   overflow-y: overlay;
   transition: max-height .3s ease-in;
 }

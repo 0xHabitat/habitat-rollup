@@ -18,6 +18,7 @@ const TEMPLATE =
 }
 #content {
   overflow: hidden;
+  overflow-y: scroll;
   overflow-y: overlay;
   box-sizing: border-box;
   height: calc(100% - 2em);
