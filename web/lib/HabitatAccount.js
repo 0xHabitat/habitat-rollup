@@ -85,7 +85,7 @@ const ACCOUNT_TRANSFER_TEMPLATE =
 `;
 
 const ACCOUNT_GAS_TANK_CARD_TEMPLATE = `
-<habitat-flip-card style='grid-row:1/1;grid-column:3/6;'>
+<habitat-flip-card style='grid-row:1/2;grid-column:3/6;'>
   <div slot='front'>
     <h6 class='spaced-title'><span><emoji-fuelpump></emoji-fuelpump><span> Gas Tank Balance</span></span></h6>
     <space></space>
@@ -108,7 +108,7 @@ const ACCOUNT_GAS_TANK_CARD_TEMPLATE = `
 </habitat-flip-card>`;
 
 const ACCOUNT_YIELD_CARD_TEMPLATE = `
-<habitat-flip-card style='grid-row:1/1;grid-column:6/8;'>
+<habitat-flip-card style='grid-row:1/4;grid-column:6/8;'>
   <div slot='front'>
     <h6 class='spaced-title'><span><emoji-cash></emoji-cash><span> Rollup Yield </span></span></h6>
     <space></space>
@@ -184,7 +184,7 @@ const ACCOUNT_TEMPLATE =
   transition: transform .3s ease-in;
 }
 #tabnav > div {
-  padding-bottom: .5em;
+  padding: .5em 0;
   border-bottom: 2px solid transparent;
 }
 #tabnav p {
@@ -255,7 +255,7 @@ const ACCOUNT_TEMPLATE =
       <space></space>
 
       <div id='wallet-overview-inner'>
-        <div class='box' style='grid-row:1/2;grid-column:1/3;padding:0;max-width:max-content;'>
+        <div class='box' style='grid-row:1/4;grid-column:1/3;padding:0;max-width:max-content;'>
           <habitat-transfer-box id='transfer-box'></habitat-transfer-box>
         </div>
 
@@ -263,20 +263,20 @@ const ACCOUNT_TEMPLATE =
 
         ${ACCOUNT_YIELD_CARD_TEMPLATE}
 
-        <div class='left box' style='grid-row:2/4;grid-column:3/8;'>
+        <div class='left box' style='grid-row:4/8;grid-column:1/8;'>
           <h6><span><emoji-camping></emoji-camping><span> Rollup Balances</span></span></h6>
           <space></space>
           <div id='erc20'></div>
         </div>
 
-        <div class='box left' style='grid-row:2/4;grid-column:1/3;'>
+        <div class='box left' style='grid-row:2/4;grid-column:3/6;'>
           <h6><span><emoji-airplane></emoji-airplane><span> Withdrawals</span></span></h6>
           <space></space>
           <div id='exits'></div>
           <space></space>
         </div>
 
-        <div class='left box' style='grid-row:4/8;grid-column:1/8;'>
+        <div class='left box' style='grid-row:8/12;grid-column:1/8;'>
           <h6><span><emoji-dizzy></emoji-dizzy><span> Activities</span></span></h6>
           <space></space>
           <div id='history'></div>

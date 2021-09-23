@@ -1,17 +1,12 @@
 @import '/lib/assets/base.css';
 @import '/lib/assets/icons.css';
 
-* {
-  box-sizing: border-box;
-}
-
 :root {
   --section-pos-left: 0;
   --section-panel-left: 23ch;
   --section-panel-right: 0;
   --section-width-panel: calc(99vw - var(--section-panel-left));
   --panel-padding: 2em;
-  --color-bg-yellow: #FFFEC8;
   --color-accent-grey: #f0f0f0;
   --color-box: #fafafa;
   --color-box-border: #404040;
@@ -20,7 +15,6 @@
 }
 
 [data-theme="dark"] {
-  --color-bg-yellow: #708090;
   --color-accent-grey: #606060;
   --color-box: #404040;
   --color-grey: #909090;
@@ -36,69 +30,6 @@
 
   #sidebar-btn {
     display: block;
-  }
-}
-
-body {
-  font-size: 16px;
-}
-
-a, p {
-  margin: 0;
-  font-size: 1em;
-}
-
-label {
-  font-size: .7em;
-}
-
-button, .button {
-  font-size: 1em;
-  border-radius: 1em;
-}
-
-.small {
-  font-size: .8em;
-}
-
-.smaller {
-  font-size: .7em;
-}
-
-.big {
-  font-size: 1.5em;
-}
-
-.bigger {
-  font-size: 1em;
-}
-
-
-@keyframes panel {
-  from {
-    transform: rotateX(90deg) scale(3);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) translateX(0) rotateX(0deg);
-    opacity: 1;
-  }
-}
-
-@keyframes panel {
-  from {
-    transform: translateX(100%) scale(3);
-  }
-  to {
-    transform: scale(1) translateX(0);
-  }
-}
-
-@keyframes panel {
-  from {
-    transform: rotateY(-90deg) translateZ(1000px);
-  }
-  to {
   }
 }
 
@@ -222,27 +153,6 @@ select:focus {
   opacity: 0;
 }
 
-button, .button {
-  display: revert;
-}
-
-.s {
-  font-size: .75em;
-}
-
-.m {
-  font-size: 1em;
-}
-
-.l {
-  font-size: 1.25em;
-}
-
-.xl {
-  font-size: 2em;
-  line-height: 1.5em;
-}
-
 .box {
   margin: 0;
   padding: 1em 2em;
@@ -290,10 +200,6 @@ button, .button {
 
 .mtb {
   margin: 1em 0;
-}
-
-a {
-  color: var(--color-text);
 }
 
 a.secondary {

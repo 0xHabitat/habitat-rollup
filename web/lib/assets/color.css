@@ -12,7 +12,6 @@
   --color-bg: #ffffff;
   --color-bg-invert: #202020;
   --color-error: #eb4d62;
-  --color-link: #5B3F99;
   --border-radius-frame: 0px;
   --color-frame: none;
   --color-bg-item: rgba(255, 255, 255, .3);
@@ -26,7 +25,6 @@
   --color-bg-invert: #ffffff;
   --border-radius-frame: 6px;
   --color-frame: #ffffff50;
-  --color-link: #af8aff;
   --color-bg-item: rgba(0, 0, 0, .3);
   --color-bg-75: rgba(0, 0, 0, .25);
   --habitat-background-brightness: .5;

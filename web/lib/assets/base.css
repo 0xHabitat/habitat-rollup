@@ -11,6 +11,7 @@
 
 * {
   vertical-align: bottom;
+  box-sizing: border-box;
 }
 
 html,
@@ -49,9 +50,9 @@ section, div {
 }
 
 a, p {
-  margin: 0 auto;
+  margin: 0;
   line-height: 1.25;
-  font-size: 1rem;
+  font-size: 1em;
   text-align: left;
   white-space: pre-wrap;
   word-break: break-word;
@@ -60,7 +61,7 @@ a, p {
 }
 
 a {
-  color: var(--color-link);
+  color: var(--color-text);
 }
 
 span, label, pre {
@@ -133,6 +134,7 @@ img {
 
 button, .button {
   display: var(--x-loaded, none);
+  font-size: 1em;
   place-content: center;
   min-width: 6em;
   max-width: max-content;
@@ -142,7 +144,7 @@ button, .button {
   text-align: center !important;
   color: var(--color-text);
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
-  border-radius: 1rem;
+  border-radius: 1em;
   vertical-align: bottom;
   white-space: pre-wrap;
   cursor: pointer;
@@ -194,10 +196,6 @@ button:disabled, .button:disabled {
 
 .row {
   flex-direction: row;
-}
-
-footer a {
-  color: var(--color-text);
 }
 
 #tech > div {
@@ -331,20 +329,37 @@ img.minmax {
   grid-template-columns: repeat(2, auto);
 }
 
-.small {
-  font-size: .8rem;
+.smaller {
+  font-size: .7em;
 }
 
-.smaller {
-  font-size: .7rem;
+.small {
+  font-size: .8em;
 }
 
 .big {
-  font-size: 1.5rem;
+  font-size: 1.5em;
 }
 
 .bigger {
-  font-size: 1rem;
+  font-size: 1em;
+}
+
+.s {
+  font-size: .75em;
+}
+
+.m {
+  font-size: 1em;
+}
+
+.l {
+  font-size: 1.25em;
+}
+
+.xl {
+  font-size: 2em;
+  line-height: 1.5em;
 }
 
 .item {
@@ -379,7 +394,7 @@ img.minmax {
 label {
   display: block;
   text-align: left;
-  font-size: .7rem;
+  font-size: .7em;
   margin: 1rem auto;
   font-weight: bold;
   line-height: 1.3;

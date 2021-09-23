@@ -70,7 +70,7 @@ export async function calculateRewards (token) {
 
     const poolAddr = '0x' + epoch.toString(16).padStart(40, '0');
     const historicPoolBalance = await habitat.callStatic.getHistoricTub(token.address, poolAddr, epoch);
-    if (historicPoolBalance.lt(1)) {
+    if (historicPoolBalance.lt(1) || historicPoolBalance.eq(ethers.constants.MaxUint256)) {
       continue;
     }
     const historicTvl = await habitat.callStatic.getHistoricTvl(token.address, epoch);
