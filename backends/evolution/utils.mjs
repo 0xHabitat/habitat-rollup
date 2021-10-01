@@ -4,12 +4,12 @@ import { ethers } from 'ethers';
 
 const FETCH_TIMEOUT_MS = 10000;
 
-export async function fetch (url, headers, payload) {
+export async function fetch (url, headers, payload, methodOverride) {
   return new Promise(
     function (resolve, reject) {
       const options = parse(url);
       options.headers = { 'user-agent': 'curl/7.64.1' };
-      options.method = payload ? 'POST' : 'GET';
+      options.method = methodOverride || (payload ? 'POST' : 'GET');
       if (headers) {
         Object.assign(options.headers, headers);
       }

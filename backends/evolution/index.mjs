@@ -3,6 +3,7 @@ import { deflateRawSync } from 'zlib';
 
 import { getStats, getSignals, submitVote, updateConfig } from './evolution.mjs';
 import { getGasTank, submitTransaction } from './operator.mjs';
+import { handleRequest as handleDiscordRequest } from './discord.mjs';
 import './pager.mjs';
 
 const DEFAULT_HEADERS = {
@@ -27,6 +28,7 @@ async function startServer ({ host, port }) {
       return;
     }
 
+    let body = '';
     let requestPayload;
     if (req.method === 'POST') {
       const len = parseInt(req.headers['content-length'] || MAX_REQUEST_LENGTH);
@@ -37,7 +39,6 @@ async function startServer ({ host, port }) {
         return;
       }
 
-      let body = '';
       req.on('data', function (buf) {
         body += buf.toString();
 
@@ -63,18 +64,20 @@ async function startServer ({ host, port }) {
     const path = req.url.split('/');
     const func = REQUEST_HANDLERS[path[1]];
     const deflate = (req.headers['accept-encoding'] || '').indexOf('deflate') !== -1;
-    resp.writeHead(200, deflate ? DEFAULT_HEADERS_DEFLATE : DEFAULT_HEADERS);
+    let status = 200;
+    let ret;
     try {
       if (!func) {
         throw new Error('teapot');
       }
-      const res = JSON.stringify(await func(path.slice(2), requestPayload));
-      resp.end(deflate ? deflateRawSync(res) : res);
+      ret = JSON.stringify(await func(path.slice(2), requestPayload, body, req.headers));
     } catch (e) {
       console.log(e);
-      const ret = `{"error":{"code":-32000,"message":"${e.message || ''}"}}`;
-      resp.end(deflate ? deflateRawSync(ret) : ret);
+      status = 400;
+      ret = `{"error":{"code":-32000,"message":"${e.message || ''}"}}`;
     }
+    resp.writeHead(status, deflate ? DEFAULT_HEADERS_DEFLATE : DEFAULT_HEADERS);
+    resp.end(deflate ? deflateRawSync(ret) : ret);
   }
 
   const server = new http.Server(onRequest);
@@ -91,4 +94,5 @@ REQUEST_HANDLERS['signals'] = getSignals;
 REQUEST_HANDLERS['submitVote'] = submitVote;
 REQUEST_HANDLERS['gasTank'] = getGasTank;
 REQUEST_HANDLERS['submitTransaction'] = submitTransaction;
+REQUEST_HANDLERS['discord'] = handleDiscordRequest;
 await startServer({ host: HOST, port: PORT });
