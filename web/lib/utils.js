@@ -568,7 +568,8 @@ export async function setupTokenlistV2 (root, force = false) {
     }
 
     const opt = document.createElement('option');
-    opt.value = `${token.symbol} (${token.name})`;
+    const shortAddr = getShortAddr(token.address);
+    opt.value = `${token.symbol} (${token.name}) ${shortAddr}`;
     datalist.append(opt);
   }
 
@@ -639,11 +640,22 @@ export async function getToken (val) {
   return erc20;
 }
 
+
+function tokenFilter (e, search) {
+  return e.chainId === ROOT_CHAIN_ID &&
+    (
+      e.address.toLowerCase() === search ||
+      e.symbol.toLowerCase() === search ||
+      e.name.toLowerCase() === search
+    );
+}
+
 export async function getTokenV2 (val) {
   const cache = document._tokensV2 || Object.create(null);
   document._tokensV2 = cache;
 
-  const tokenTag = val.split(' ').shift().toLowerCase();
+  const hints = val.toLowerCase();
+  const tokenTag = hints.split(' ').shift();
 
   if (cache[tokenTag]) {
     return cache[tokenTag];
@@ -653,20 +665,14 @@ export async function getTokenV2 (val) {
 
   const isETH = tokenTag === 'eth';
   const search = tokenTag;
-  const tokens = await getTokenList();
-  let tokenInfo;
-  for (const e of tokens) {
-    if (e.chainId !== ROOT_CHAIN_ID) {
-      continue;
-    }
+  const tokens = (await getTokenList()).filter((e) => tokenFilter(e, search));
+  let tokenInfo = tokens.length ? tokens[0] : undefined;
 
-    if (
-      e.address.toLowerCase() === search ||
-      e.symbol.toLowerCase() === search ||
-      e.name.toLowerCase() === search
-    ) {
-      tokenInfo = e;
-      break;
+  if (tokens.length > 1) {
+    // try to nail it down
+    tokenInfo = tokens.find(e => hints.endsWith(getShortAddr(e.address)));
+    if (!tokenInfo) {
+      throw new Error(`There are ${tokens.length} matching tokens. Please provide the address of the token`);
     }
   }
 
@@ -713,20 +719,15 @@ export async function _addToTokenCache (tokenInfo) {
 
   // check if we would overwrite entries from the tokenlist
   for (const token of tokenList) {
-    if (
-      token.name.toLowerCase() === name ||
-      token.symbol.toLowerCase() === symbol ||
-      token.address.toLowerCase() === address) {
+    if (token.address.toLowerCase() === address) {
         console.warn('trying to overwrite', tokenInfo);
         return;
     }
   }
-  // add to cache
-  cache[name] = tokenInfo;
-  cache[symbol] = tokenInfo;
+  // only add address to cache to avoid overwriting duplicate symbols
   cache[address] = tokenInfo;
 
-  if (!tokenList.find((e) => e.address.toLowerCase() === tokenInfo.address.toLowerCase())) {
+  if (!tokenList.find((e) => e.address.toLowerCase() === address)) {
     console.log('add token to list', tokenInfo);
     tokenList.push(tokenInfo);
     await setupTokenlistV2(null, true);
@@ -856,4 +857,8 @@ export function parseInput (ele) {
   }
 
   return { config, error };
+}
+
+export function getShortAddr (str) {
+  return str.substring(0, 4) + '...' + str.substring(40, 42);
 }

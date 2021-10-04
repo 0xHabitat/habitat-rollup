@@ -4,6 +4,7 @@ import {
   getConfig,
   ethers,
   getSigner,
+  getShortAddr,
 } from './utils.js';
 import {
   getProviders,
@@ -232,7 +233,8 @@ export default class HabitatProposalActionBox extends HTMLElement {
       for (const obj of tokens) {
         const token = await getTokenV2(obj.address);
         const opt = document.createElement('option');
-        opt.value = `${token.symbol} (${token.name})`;
+        const shortAddr = getShortAddr(token.address);
+        opt.value = `${token.symbol} (${token.name}) ${shortAddr}`;
         list.append(opt);
       }
     }

@@ -966,6 +966,7 @@ export async function updateVERC () {
         domainSeparator,
         logoURI,
         chainId: ROOT_CHAIN_ID,
+        insecure: true,
       });
     } catch (e) {
       console.error(e);

@@ -3,6 +3,7 @@ import {
   getTokenV2,
   getEtherscanTokenLink,
 } from './utils.js';
+import './HabitatVerified.js';
 
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
@@ -19,12 +20,14 @@ TEMPLATE.innerHTML = `
 img {
   height: 1em;
   width: 1em;
-  margin-right: .3em;
+}
+span {
+  margin-left: .3em;
 }
 </style>
 <div>
   <a target='_blank'>
-    <img>
+    <habitat-verified secure='Verified Token' insecure='Token not verified'><img slot='body'></habitat-verified>
     <span></span>
   </a>
 </div>
@@ -54,6 +57,7 @@ export default class HabitatTokenAmount extends HTMLElement {
     const owner = this.getAttribute(ATTR_OWNER);
     const value = this.getAttribute(ATTR_AMOUNT) || '0';
 
+    this.shadowRoot.querySelector('habitat-verified').toggleAttribute('verified', !token.insecure);
     this.shadowRoot.querySelector('a').href = getEtherscanTokenLink(token.address, owner);
     this.shadowRoot.querySelector('img').src = token.logoURI;
     this.shadowRoot.querySelector('span').textContent = `${renderAmount(value, token.decimals)} ${token.symbol}`;

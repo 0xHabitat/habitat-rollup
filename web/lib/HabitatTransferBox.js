@@ -7,6 +7,7 @@ import {
   getSigner,
   signPermit,
   setupTokenlistV2,
+  getShortAddr,
   encodeMultiCall
 } from './utils.js';
 import {
@@ -193,7 +194,7 @@ input[list] {
 #ab {
   display: grid;
   gap: 1em;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr .5fr;
   place-items: end;
 }
 
@@ -493,7 +494,8 @@ export default class HabitatTransferBox extends HTMLElement {
     for (const obj of tokens) {
       const token = await getTokenV2(obj.address);
       const opt = document.createElement('option');
-      opt.value = `${token.symbol} (${token.name})`;
+      const shortAddr = getShortAddr(token.address);
+      opt.value = `${token.symbol} (${token.name}) ${shortAddr}`;
       list.append(opt);
     }
   }
