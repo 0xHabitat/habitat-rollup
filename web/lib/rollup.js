@@ -940,7 +940,7 @@ export async function getIssueLinkForVault (vaultAddr) {
 }
 
 export async function updateVERC () {
-  const logs = await doQueryWithOptions({ toBlock: 1, includeTx: true }, 'VirtualERC20Created');
+  const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'VirtualERC20Created');
   for (const log of logs) {
     const msg = log.transaction.message;
     const address = log.args[1].toLowerCase();
