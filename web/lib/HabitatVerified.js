@@ -23,6 +23,9 @@ TEMPLATE.innerHTML = `
   color: white;
   content: 'ℹ';
 }
+.verified {
+  position: relative;
+}
 .verified > span {
   display: none;
   position: absolute;
@@ -34,20 +37,9 @@ TEMPLATE.innerHTML = `
 }
 .verified > span::before {
   content: '';
-  display: none;
-  position: absolute;
-  left: 1em;
-  bottom: -.2em;
-  width: .5em;
-  height: .5em;
-  transform: rotateZ(45deg);
-  background-color: var(--color-bg-invert);
-}
-.verified > span::before {
-  content: '';
   display: block;
   position: absolute;
-  right: .5em;
+  left: 1em;
   bottom: -.2em;
   width: .5em;
   height: .5em;
