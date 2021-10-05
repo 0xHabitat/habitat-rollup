@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: build & publish
-      run: scripts/workflow-publish.sh
+      run: scripts/workflow-web.sh
       env:
         WEB_PATH: web/
         FLY_TOKEN: ${{ secrets.FLY_TOKEN }}
