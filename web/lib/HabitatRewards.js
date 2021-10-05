@@ -33,7 +33,7 @@ TEMPLATE.innerHTML = `
   <div id='top' class='flex row evenly'>
 
     <div class='center box'>
-      <h6><emoji-hourglass></emoji-hourglass><span> Current Epoch</span></h6>
+      <h6><emoji-hourglass-not-done></emoji-hourglass-not-done><span> Current Epoch</span></h6>
       <space></space>
       <div style='display:grid;grid-template-columns:1fr 1fr;gap:.5em;'>
         <div>
@@ -56,7 +56,7 @@ TEMPLATE.innerHTML = `
     </div>
 
     <div class='center box'>
-      <h6><emoji-last-quarter-moon></emoji-last-quarter-moon><span> Outstanding</span></h6>
+      <h6><emoji-first-quarter-moon></emoji-first-quarter-moon><span> Outstanding</span></h6>
       <space></space>
       <h1 id='outstanding'> </h1>
     </div>

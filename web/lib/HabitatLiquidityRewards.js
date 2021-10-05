@@ -31,7 +31,7 @@ TEMPLATE.innerHTML = `
   <div id='top' class='flex row evenly'>
 
     <div class='center box'>
-      <h6><emoji-hourglass></emoji-hourglass><span> Current Epoch</span></h6>
+      <h6><emoji-hourglass-not-done></emoji-hourglass-not-done><span> Current Epoch</span></h6>
       <space></space>
       <div style='display:grid;grid-template-columns:1fr;gap:.5em;'>
         <div>

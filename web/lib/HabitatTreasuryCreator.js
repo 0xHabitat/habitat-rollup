@@ -104,7 +104,7 @@ habitat-voting-module-preview {
   </div>
 
   <space></space>
-  <p><span><emoji-ballot-box></emoji-ballot-box></span><span> Voting Module</span></p>
+  <p><span><emoji-ballot-box-with-ballot></emoji-ballot-box-with-ballot></span><span> Voting Module</span></p>
   <space></space>
 
   <div class='flex col box'>

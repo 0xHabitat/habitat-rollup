@@ -176,7 +176,7 @@ TEMPLATE.innerHTML = `
       <space></space>
       <div class='left'>
         <div class='balance-title'>
-          <span><emoji-fuelpump></emoji-fuelpump><span> Gas</span></span>
+          <span><emoji-fuel-pump></emoji-fuel-pump><span> Gas</span></span>
           <span><a href='' id='topup' class="action-link">Top up</a></span>
         </div>
         <p class='bl flex center'><habitat-token-amount id='gasTankBalance' class='flex' token='${HBT}'></habitat-token-amount></p>

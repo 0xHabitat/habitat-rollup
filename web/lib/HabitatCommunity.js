@@ -35,13 +35,13 @@ const TAB_INFORMATION_TEMPLATE = `
 <div class='flex col center'>
   <div id='treasuryInfo' class='flex row evenly' style='width:100%;align-items:flex-start;'>
     <div class='flex col align-left'>
-      <p><span><emoji-cash></emoji-cash></span><span> Balances</span></p>
+      <p><span><emoji-money-with-wings></emoji-money-with-wings></span><span> Balances</span></p>
       <space></space>
       <div id='balances' class='flex col'></div>
     </div>
 
     <div class='flex col align-left'>
-      <p><span><emoji-ballot-box></emoji-ballot-box></span><span> Voting Module</span></p>
+      <p><span><emoji-ballot-box-with-ballot></emoji-ballot-box-with-ballot></span><span> Voting Module</span></p>
       <space></space>
       <habitat-voting-module-preview style='max-width:26ch;'></habitat-voting-module-preview>
     </div>
@@ -63,7 +63,7 @@ const TAB_INFORMATION_TEMPLATE = `
 const TAB_NAV_SIGNAL_TEMPLATE = document.createElement('template');
 TAB_NAV_SIGNAL_TEMPLATE.innerHTML = `
 <div>
-  <p class='l'><span><emoji-sat-antenna></emoji-sat-antenna><span> </span><span id='title'></span></span></p>
+  <p class='l'><span><emoji-satellite-antenna></emoji-satellite-antenna><span> </span><span id='title'></span></span></p>
 </div>
 `;
 
@@ -89,8 +89,8 @@ SIGNAL_TEMPLATE.innerHTML = `
   </div>
   <section id='draft' class='flex col center'></section>
   <section id='proposals' class='center proposals'>
-    <p id='recentSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Recent Signals</span></span></p>
-    <p id='topSignal' class='l light'><span><emoji-sat-antenna></emoji-sat-antenna><span> Top Signals</span></span></p>
+    <p id='recentSignal' class='l light'><span><emoji-satellite-antenna></emoji-satellite-antenna><span> Recent Signals</span></span></p>
+    <p id='topSignal' class='l light'><span><emoji-satellite-antenna></emoji-satellite-antenna><span> Top Signals</span></span></p>
   </section>
 </div>
 `;

@@ -87,7 +87,7 @@ const ACCOUNT_TRANSFER_TEMPLATE =
 const ACCOUNT_GAS_TANK_CARD_TEMPLATE = `
 <habitat-flip-card style='grid-row:1/2;grid-column:3/6;'>
   <div slot='front'>
-    <h6 class='spaced-title'><span><emoji-fuelpump></emoji-fuelpump><span> Gas Tank Balance</span></span></h6>
+    <h6 class='spaced-title'><span><emoji-fuel-pump></emoji-fuel-pump><span> Gas Tank Balance</span></span></h6>
     <space></space>
     <div style='display:grid;grid-template-rows:1fr 1fr;'>
       <div>
@@ -110,7 +110,7 @@ const ACCOUNT_GAS_TANK_CARD_TEMPLATE = `
 const ACCOUNT_YIELD_CARD_TEMPLATE = `
 <habitat-flip-card style='grid-row:1/4;grid-column:6/8;'>
   <div slot='front'>
-    <h6 class='spaced-title'><span><emoji-cash></emoji-cash><span> Rollup Yield </span></span></h6>
+    <h6 class='spaced-title'><span><emoji-money-with-wings></emoji-money-with-wings><span> Rollup Yield </span></span></h6>
     <space></space>
     <div class='flex col'>
       <div class='flex col'>

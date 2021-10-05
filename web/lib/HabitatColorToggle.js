@@ -68,7 +68,7 @@ const TEMPLATE = `
 <div id='colorSchemeToggle'>
   <div>
     <div>
-      <emoji-sunny></emoji-sunny>
+      <emoji-sun></emoji-sun>
     </div>
     <div>
       <emoji-crescent-moon></emoji-crescent-moon>
