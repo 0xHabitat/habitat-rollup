@@ -16,11 +16,13 @@ EXPECTED_CID=$(ipfs --offline add --recursive --hash sha2-256 --cid-version 1 --
 # can't use ipfs because the connection with the ipfs cli to infura doesn't work
 FILES=$(find $path -type f -not -iname ".*")
 args=''
+set +x
 for file in $FILES; do
   filename=_/${file#"$path"}
   args="$args -F file=@$file;filename=$filename"
   echo $filename
 done
+set -x
 NEW_CID=$(curl $args 'https://ipfs.infura.io:5001/api/v0/add?pin=1&cid-version=1&hash=sha2-256' | tail -n 1 | cut -d '"' -f 8)
 
 if [ "$NEW_CID" != "$EXPECTED_CID" ]; then
