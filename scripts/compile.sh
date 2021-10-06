@@ -2,6 +2,7 @@
 
 set -xe
 
+cp src/rollup/habitatV1.js web/lib/typedData.js
 for x in src/*/scripts/codegen.js;do $x; done
 
 yarn develatus-apparatus-compile src/*/**/*.sol src/*/**/**/*.sol

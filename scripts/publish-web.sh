@@ -7,11 +7,10 @@ if [ -z $path ]; then
   echo 'path missing'
   exit 1
 fi
-path=$path/
 
 # init ipfs and calculate CID
 ipfs init
-EXPECTED_CID=$(ipfs --offline add --recursive --hash sha2-256 --cid-version 1 --only-hash -Q $path | tail -n 1)
+EXPECTED_CID=$(ipfs --offline add --recursive --hash sha2-256 --cid-version 1 --chunker=size-262144 --only-hash -Q $path | tail -n 1)
 
 # can't use ipfs because the connection with the ipfs cli to infura doesn't work
 FILES=$(find $path -type f -not -iname ".*")
@@ -20,10 +19,9 @@ set +x
 for file in $FILES; do
   filename=${file#"$path"}
   args="$args -F file=@$file;filename=_/$filename"
-  echo $filename
 done
 set -x
-NEW_CID=$(curl $args 'https://ipfs.infura.io:5001/api/v0/add?pin=1&cid-version=1&hash=sha2-256' | tail -n 1 | cut -d '"' -f 8)
+NEW_CID=$(curl $args 'https://ipfs.infura.io:5001/api/v0/add?pin=true&cid-version=1&hash=sha2-256&chunker=size-262144' | tail -n 1 | cut -d '"' -f 8)
 
 if [ "$NEW_CID" != "$EXPECTED_CID" ]; then
   exit 1
