@@ -18,8 +18,8 @@ FILES=$(find $path -type f -not -iname ".*")
 args=''
 set +x
 for file in $FILES; do
-  filename=_/${file#"$path"}
-  args="$args -F file=@$file;filename=$filename"
+  filename=${file#"$path"}
+  args="$args -F file=@$file;filename=_/$filename"
   echo $filename
 done
 set -x
