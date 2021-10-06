@@ -33,9 +33,9 @@ fi
 
 # update dns
 APEX=`echo ${DOMAIN} | awk -F'.' '{print $(NF-1)"."$(NF)}'`
-FLY_TOKEN=$FLY_TOKEN /flyctl dns-records export $APEX > .tmp_zone
+/flyctl dns-records export $APEX > .tmp_zone
 OLD_CID=`dig +short TXT _dnslink.${DOMAIN} | sed -e 's/dnslink=\/ipfs\///g' -e 's/"//g'`
 cat .tmp_zone
 sed -i'' -e "s/$OLD_CID/$NEW_CID/g" .tmp_zone
 cat .tmp_zone
-FLY_TOKEN=$FLY_TOKEN /flyctl dns-records import $APEX .tmp_zone
+/flyctl dns-records import $APEX .tmp_zone
