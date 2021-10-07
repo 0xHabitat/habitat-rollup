@@ -644,6 +644,10 @@ export async function resolveName (str) {
     } catch (e) {}
   }
 
+  if (!ret) {
+    throw new Error(`Unable to resolve "${str}"`);
+  }
+
   return ret;
 }
 
