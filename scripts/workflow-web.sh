@@ -9,4 +9,4 @@ COPY --from=flyio /flyctl /
 RUN apk add curl bind-tools go-ipfs
 EOF
 
-docker run --rm -w /app -v $(pwd):/app -e WEB_PATH=$WEB_PATH -e FLY_ACCESS_TOKEN=$FLY_ACCESS_TOKEN -e DOMAIN=$DOMAIN tmp sh scripts/publish-web.sh
+docker run --rm -w /app -v $(pwd):/app -e IPFS_API=$IPFS_API -e WEB_PATH=$WEB_PATH -e FLY_ACCESS_TOKEN=$FLY_ACCESS_TOKEN -e DOMAIN=$DOMAIN tmp sh scripts/publish-web.sh
