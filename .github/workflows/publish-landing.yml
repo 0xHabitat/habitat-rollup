@@ -14,5 +14,6 @@ jobs:
       run: scripts/workflow-web.sh
       env:
         WEB_PATH: web/
+        IPFS_API: ${{ secrets.IPFS_API }}
         FLY_ACCESS_TOKEN: ${{ secrets.FLY_ACCESS_TOKEN }}
         DOMAIN: ${{ secrets.DOMAIN }}

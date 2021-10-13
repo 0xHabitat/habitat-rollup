@@ -25,7 +25,7 @@ for file in $FILES; do
   args="$args -F file=@$file;filename=_/$filename"
 done
 set -x
-NEW_CID=$(curl $args 'https://ipfs.infura.io:5001/api/v0/add?pin=true&cid-version=1&hash=sha2-256&chunker=size-262144' | tail -n 1 | cut -d '"' -f 8)
+NEW_CID=$(curl $args $IPFS_API'/api/v0/add?pin=true&cid-version=1&hash=sha2-256&chunker=size-262144' | tail -n 1 | cut -d '"' -f 8)
 
 if [ "$NEW_CID" != "$EXPECTED_CID" ]; then
   exit 1
