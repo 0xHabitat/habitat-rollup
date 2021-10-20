@@ -112,6 +112,11 @@ TEMPLATE.innerHTML = `
   display: none;
   margin: .5em 0;
 }
+#connect {
+  margin: .3rem auto 0 auto;
+  padding: .3rem;
+  font-size: 1.2em;
+}
 </style>
 <div class='sidebar'>
   <div id='top'>
@@ -119,12 +124,8 @@ TEMPLATE.innerHTML = `
       <div class='flex col'>
         <a href='/app' class='mask-contain mask-logo' style='display:block;width:10em;height:2em;background-color:var(--color-bg-invert);'></a>
       </div>
-      <space></space>
       <div id='walletbox' class='flex col'>
-        <div class='dropdown'>
-          <a href='' id='connect' style='border:none;font-size:1.2em;'>Connect</a>
-        </div>
-        <space></space>
+        <a href='' id='connect' class='button black center'>Connect</a>
         <p id='status' class='smaller'></p>
       </div>
     </div>
@@ -199,7 +200,7 @@ class HabitatSidebar extends HTMLElement {
 
     this._walletContainer = this.shadowRoot.querySelector('#walletbox');
 
-    wrapListener(this.shadowRoot.querySelector('a#connect').parentElement, async () => {
+    wrapListener(this.shadowRoot.querySelector('#connect'), async () => {
       await getSigner();
       this.update();
       window.location.hash = '#habitat-account';
@@ -294,6 +295,7 @@ class HabitatSidebar extends HTMLElement {
     walletStatus.innerHTML = '<emoji-raising-hands></emoji-raising-hands><span> Connected</span>';
 
     center.textContent = await getUsername(account);
+    center.classList.remove('button', 'black');
     this._walletContainer.classList.add('connected');
 
     const token = await getTokenV2(HBT);
