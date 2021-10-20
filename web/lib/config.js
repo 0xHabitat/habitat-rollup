@@ -1,9 +1,9 @@
 const DEV_ENV_BASE = `http://${window.location.hostname}`;
 const WANT_TESTNET = window.location.href.indexOf('testnet') !== -1;
 export const DEV_ENV = WANT_TESTNET && window.location.hostname.indexOf('localhost') !== -1;
-export const ROOT_CHAIN_ID = WANT_TESTNET ? 4 : 1;
+export const ROOT_CHAIN_ID = 1;
+export const L1_RPC_URL = DEV_ENV ? `${DEV_ENV_BASE}:8222/` : `https://mainnet.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`
 export const L2_RPC_URL = DEV_ENV ? `${DEV_ENV_BASE}:8111/` : `https://mainnet-habitat-l2.fly.dev/`;
-export const DEV_ENV_L1_RPC = `${DEV_ENV_BASE}:8222/`;
 export const CONFIGS = {
   1: {
     HBT: '0x0aCe32f6E87Ac1457A5385f8eb0208F37263B415',

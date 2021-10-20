@@ -1,4 +1,4 @@
-import { ROOT_CHAIN_ID, DEV_ENV_L1_RPC, CONFIGS } from './config.js';
+import { ROOT_CHAIN_ID, L1_RPC_URL, CONFIGS } from './config.js';
 import { ethers } from '/lib/extern/ethers.esm.min.js';
 
 export { ethers };
@@ -58,8 +58,7 @@ export function getProvider (chainId) {
   let provider = document._utilsProviders[chainId];
 
   if (!provider || (provider._network && provider._network.chainId !== chainId)) {
-    const name = getNetworkName(chainId);
-    const url = name === 'unknown' ? DEV_ENV_L1_RPC : `https://${name}.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73`;
+    const url = L1_RPC_URL;
     provider = new ethers.providers.JsonRpcProvider({ url, headers: url.indexOf('infura') === -1 ? {} : RPC_CORS_HEADER_FIX }, 'any');
     // workaround that ethers.js requests eth_chainId for almost any call.
     const network = ethers.providers.getNetwork(chainId);
