@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@NutBerry/NutBerry@https://github.com/NutBerry/NutBerry/archive/refs/tags/v1.0.6.tar.gz":
-  version "1.0.6"
-  resolved "https://github.com/NutBerry/NutBerry/archive/refs/tags/v1.0.6.tar.gz#c47559ded2b1d95982fff7117c4afdb05021092f"
+"@NutBerry/NutBerry@https://github.com/NutBerry/NutBerry/archive/refs/tags/v1.0.8.tar.gz":
+  version "1.0.8"
+  resolved "https://github.com/NutBerry/NutBerry/archive/refs/tags/v1.0.8.tar.gz#872f79d066673170024c60e0fb7a3052e1cbd1b5"
   dependencies:
     noble-secp256k1 "=1.2.6"
 
