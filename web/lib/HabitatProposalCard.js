@@ -844,8 +844,9 @@ export default class HabitatProposalCard extends HTMLElement {
       linkElement.textContent = 'ID#' +
         data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
 
-        const emoji = document.createElement(data.metadata.emoji);
-        if (emoji) {
+        const emojiExists = data.metadata.emoji;
+        if (emojiExists) {
+          const emoji = document.createElement(emojiExists);
           const span = this.shadowRoot.querySelector('#emoji span');
           const old = span.querySelector('*');
           span.replaceChild(emoji, old);
