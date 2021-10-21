@@ -305,6 +305,20 @@ input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   -moz-appearance: textfield;
 }
+#emoji {
+  position: relative;
+  width: 3.8em;
+  height: 3.8em;
+  border-radius: 50%;
+  background-color: var(--color-bg);
+}
+#emoji span {
+  position: absolute;
+  transform:translate(-50%,  -50%);
+  top: 50%;
+  left: 50%;
+  font-size: 2em;
+}
 </style>
 <div class='box' style='padding:.5em 2em;'>
   <div id='infotags'></div>
@@ -313,15 +327,18 @@ input[type=number]::-webkit-inner-spin-button {
     <span>&#x25bc;</span>
   </div>
   -->
+
   <div class='flex row between'>
     <div class='flex col align-left' style='min-width:50%;max-width:40ch;'>
       <div class='lessmore'>
         <p id='title'> </p>
       </div>
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
+      <a id='id' class='s lbl' style='align-self:start;'> </a>
     </div>
-
-    <a id='id' class='s lbl' style='align-self:start;'> </a>
+    <div id='emoji'>
+      <span><emoji-seedling></emoji-seedling></span>
+    </div>
 
     <div id='controls' class='flex col' style='padding-top:.2em;'>
       <div id='changeSignal' class='flex col flavor-signal'>
@@ -826,6 +843,13 @@ export default class HabitatProposalCard extends HTMLElement {
       linkElement.href = data.link;
       linkElement.textContent = 'ID#' +
         data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
+
+        const emoji = document.createElement(data.metadata.emoji);
+        if (emoji) {
+          const span = this.shadowRoot.querySelector('#emoji span');
+          const old = span.querySelector('*');
+          span.replaceChild(emoji, old);
+        }
 
       const html = data.metadata.details || 'no description';
       const article = document.createElement('article');
