@@ -17,15 +17,11 @@ TEMPLATE.innerHTML = `
         cursor: pointer;
         vertical-align: middle;
         font-size: 28px;
-        transition: -webkit-transform 60ms ease-out;
         transition: transform 60ms ease-out;
-        transition: transform 60ms ease-out,-webkit-transform 60ms ease-out;
         transition-delay: 60ms;
     }
     #emoji-select span:hover {
         transition-delay: 0ms;
-        -webkit-transform: scale(1.4);
-        -ms-transform: scale(1.4);
         transform: scale(1.4);
     }
 
@@ -52,8 +48,8 @@ TEMPLATE.innerHTML = `
     }
 
     .emoji-container {
-        width: 330px;
-        height: 260px;
+        width: 20ch;
+        height: 20ch;
     }
 
     .emoji-selector {
@@ -1390,16 +1386,14 @@ class HabitatEmojiPicker extends HTMLElement {
         this.popover.classList.toggle('active');
     });
 
-    for(const elem of this.selector.querySelectorAll('*')) {
-        elem.addEventListener('click', () => {
-            const content = this.shadowRoot.querySelector('#picker-button')
-            const span = content.querySelector('span');
-            const emoji = span.querySelector('*');
-            const span_content = document.createElement(`${elem.tagName}`);
-            span.replaceChild(span_content, emoji);
-        }, true);
-    }
-    
+
+    this.selector.addEventListener('click', evt => {
+        if (evt.target.tagName.startsWith('EMOJI-')) {
+            const span = this.shadowRoot.querySelector('#picker-button span');
+            const emoji = document.createElement(`${evt.target.tagName}`);
+            span.replaceChildren(emoji);
+        }
+    }, true);  
    }
   
   //functions

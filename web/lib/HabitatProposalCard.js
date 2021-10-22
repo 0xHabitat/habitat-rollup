@@ -306,6 +306,7 @@ input[type=number]::-webkit-inner-spin-button {
   -moz-appearance: textfield;
 }
 #emoji {
+  visibility: hidden;
   position: relative;
   width: 3.8em;
   height: 3.8em;
@@ -318,6 +319,9 @@ input[type=number]::-webkit-inner-spin-button {
   top: 50%;
   left: 50%;
   font-size: 2em;
+}
+#emoji.active {
+  visibility: visible;
 }
 </style>
 <div class='box' style='padding:.5em 2em;'>
@@ -337,7 +341,7 @@ input[type=number]::-webkit-inner-spin-button {
       <a id='id' class='s lbl' style='align-self:start;'> </a>
     </div>
     <div id='emoji'>
-      <span><emoji-seedling></emoji-seedling></span>
+      <span><div></div></span>
     </div>
 
     <div id='controls' class='flex col' style='padding-top:.2em;'>
@@ -844,13 +848,16 @@ export default class HabitatProposalCard extends HTMLElement {
       linkElement.textContent = 'ID#' +
         data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
 
-        const emojiExists = data.metadata.emoji;
-        if (emojiExists) {
+      const emojiExists = data.metadata.emoji;
+
+      if (emojiExists) {
+        if (emojiExists.startsWith('EMOJI-')) {
           const emoji = document.createElement(emojiExists);
-          const span = this.shadowRoot.querySelector('#emoji span');
-          const old = span.querySelector('*');
-          span.replaceChild(emoji, old);
+          const ele = this.shadowRoot.querySelector('#emoji');
+          ele.classList.toggle('active');
+          ele.querySelector('span').replaceChildren(emoji);
         }
+      }
 
       const html = data.metadata.details || 'no description';
       const article = document.createElement('article');
