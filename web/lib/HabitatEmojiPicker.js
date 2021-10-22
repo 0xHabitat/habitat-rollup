@@ -1367,7 +1367,7 @@ TEMPLATE.innerHTML = `
 
 `;
 
-export default class HabitatEmojiPicker extends HTMLInputElement {
+export default class HabitatEmojiPicker extends HTMLElement {
 
    constructor() {
     super();
