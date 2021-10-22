@@ -1367,9 +1367,7 @@ TEMPLATE.innerHTML = `
 
 `;
 
-//consts
-
-class HabitatEmojiPicker extends HTMLElement {
+export default class HabitatEmojiPicker extends HTMLInputElement {
 
    constructor() {
     super();
@@ -1396,6 +1394,5 @@ class HabitatEmojiPicker extends HTMLElement {
     }, true);  
    }
   
-  //functions
 }
 customElements.define('habitat-emoji-picker', HabitatEmojiPicker);

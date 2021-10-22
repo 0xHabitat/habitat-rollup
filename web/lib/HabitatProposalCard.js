@@ -848,16 +848,14 @@ export default class HabitatProposalCard extends HTMLElement {
       linkElement.textContent = 'ID#' +
         data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
 
-      const emojiExists = data.metadata.emoji;
-
-      if (emojiExists) {
-        if (emojiExists.startsWith('EMOJI-')) {
-          const emoji = document.createElement(emojiExists);
-          const ele = this.shadowRoot.querySelector('#emoji');
-          ele.classList.toggle('active');
-          ele.querySelector('span').replaceChildren(emoji);
-        }
+      const emojiName = data.metadata.emoji || '';
+      const emojiWrapper = this.shadowRoot.querySelector('#emoji');
+      
+      if (emojiName.startsWith('EMOJI-')) {
+        const emoji = document.createElement(emojiName);
+        emojiWrapper.children[0].replaceChildren(emoji);
       }
+      emojiWrapper.classList.toggle('active', !!emojiName);
 
       const html = data.metadata.details || 'no description';
       const article = document.createElement('article');
