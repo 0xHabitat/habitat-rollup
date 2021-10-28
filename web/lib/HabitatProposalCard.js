@@ -146,7 +146,7 @@ TEMPLATE.innerHTML = `
   display: block;
   width: calc(100% - 11em);
   position: relative;
-  top: 1.5em;
+  top: 2.5em;
   margin-top: -1em;
   min-height: 1em;
   min-width: 9em;
@@ -244,6 +244,7 @@ TEMPLATE.innerHTML = `
 }
 a#expand {
   text-decoration: underline;
+  margin-top: 20px;
 }
 button, .button, button *, .button * {
   background-color: var(--color-bg-button);
@@ -305,8 +306,11 @@ input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   -moz-appearance: textfield;
 }
+.proposal-card {
+  border-color: var(--color-box-border-light);
+}
 </style>
-<div class='box' style='padding:.5em 2em;'>
+<div class='box proposal-card' style='padding:1.5em 2em;'>
   <div id='infotags'></div>
   <!---
   <div class='flex row expand'>
@@ -320,8 +324,6 @@ input[type=number]::-webkit-inner-spin-button {
       </div>
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
     </div>
-
-    <a id='id' class='s lbl' style='align-self:start;'> </a>
 
     <div id='controls' class='flex col' style='padding-top:.2em;'>
       <div id='changeSignal' class='flex col flavor-signal'>
@@ -444,7 +446,7 @@ input[type=number]::-webkit-inner-spin-button {
   </div>
 </div>
 <div class='flex col'>
-  <button id='boxleg' style='display:none;'>+ subtopic</button>
+  <button id='boxleg' style='display:none;border-color:var(--color-box-border-light)'>+ subtopic</button>
 </div>
 <div id='drafts'></div>
 <div id='subProposals'></div>
@@ -822,10 +824,6 @@ export default class HabitatProposalCard extends HTMLElement {
       const titleElement = this.shadowRoot.querySelector('#title');
       titleElement.textContent = data.title;
       this.shadowRoot.querySelector('.expandable #title').textContent = data.title;
-      const linkElement = this.shadowRoot.querySelector('#id');
-      linkElement.href = data.link;
-      linkElement.textContent = 'ID#' +
-        data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
 
       const html = data.metadata.details || 'no description';
       const article = document.createElement('article');
@@ -1045,6 +1043,9 @@ export default class HabitatProposalCard extends HTMLElement {
       this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
       this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
     } else if (flavor === 'signal') {
+      // For some reason the check for this on line 909 doesn't work
+      // TODO: check why the previous check doesn't work
+      this.infoTags.style.display = 'none';
       for (const node of this.controls.querySelectorAll('button')) {
         node.classList.remove('bold');
       }
