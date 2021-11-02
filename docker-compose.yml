@@ -2,7 +2,7 @@ version: '3'
 
 services:
   geth:
-    image: ethereum/client-go:v1.10.9
+    image: ethereum/client-go:v1.10.11
     tty: true
     volumes:
       - ./scripts:/scripts
@@ -15,7 +15,7 @@ services:
   web:
     volumes:
       - .:/app
-    image: node:14-alpine
+    image: node:lts-alpine
     ports:
       - 8080:8080
     environment:
@@ -31,7 +31,7 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/node_modules
-    image: node:14-alpine
+    image: node:lts-alpine
     working_dir: /app
     entrypoint: /bin/sh
     # not needed anymore (private repo)
@@ -58,7 +58,7 @@ services:
     volumes:
       - ./backends/evolution:/app
       - node_modules_evolution:/app/node_modules
-    image: node:14-alpine
+    image: node:lts-alpine
     working_dir: /app
     entrypoint: /bin/sh
     command: "-c 'yarn && node index.mjs'"
