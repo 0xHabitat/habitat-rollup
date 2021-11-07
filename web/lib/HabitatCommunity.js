@@ -529,7 +529,6 @@ button, .button {
         e.setAttribute('signal-vault', this.signalVault || vault);
         e.setAttribute('action-vault', this.actionVault || vault);
         e.setAttribute('delegate-mode', delegateMode || '');
-        e.subtopicSupport = !topic;
         e.addEventListener('signalChange', (evt) => {
           this.submitChanges();
         }, false);

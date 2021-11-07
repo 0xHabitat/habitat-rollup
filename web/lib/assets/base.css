@@ -216,6 +216,10 @@ button:disabled, .button:disabled {
   justify-content: space-between;
 }
 
+.end {
+  justify-content: flex-end;
+}
+
 img.box {
   display: block;
   position: relative;
