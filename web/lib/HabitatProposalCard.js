@@ -106,12 +106,15 @@ TEMPLATE.innerHTML = `
   min-width: 2em;
   max-width: none;
   height: 2em;
-  width: 8em;
+  width: 6em;
   border-radius: 2em;
   padding: .5em 2em;
   text-align: center;
   border: none;
   background-color: var(--color-bg);
+  border-color: var(--color-box-border-light);
+  border-style: double;
+  border-width: 1px;
 }
 .expand {
   place-content: flex-end;
@@ -157,7 +160,6 @@ TEMPLATE.innerHTML = `
   height: 2em;
   border: none;
   border-radius: 2em;
-  background-color: #f0f0f0;
   overflow: hidden;
 }
 .indicator #inner,
@@ -233,14 +235,29 @@ TEMPLATE.innerHTML = `
 }
 #drafts,
 #subProposals {
-  display: grid;
+  display: flex;
+  flex-direction: column-reverse;
   grid-template-columns: minmax(100%, 1fr);
   gap: 1em;
-  padding: 1em 0 0 3em;
 }
 #drafts > *,
 #subProposals > * {
   display: block;
+}
+#subProposals.expanded {
+  padding: 3em 1.5em 1em 5em;
+}
+#subProposals .header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+}
+#subProposals .header span {
+  font-weight: 400;
+}
+#subProposals .header button {
+  font-size: 0.75em;
 }
 a#expand {
   text-decoration: underline;
@@ -309,6 +326,10 @@ input[type=number]::-webkit-inner-spin-button {
 .proposal-card {
   border-color: var(--color-box-border-light);
 }
+.proposal-card-container {
+  background-color: var(--color-white);
+  border-radius: 2em;
+}
 #subtopicsToggle {
   font-size: 0.7em;
   padding-bottom: 2em;
@@ -318,6 +339,7 @@ input[type=number]::-webkit-inner-spin-button {
   transform: rotate(180deg);
 }
 </style>
+<div class="proposal-card-container">
 <div class='box proposal-card' style='padding:0.75em 2em 1.5em;'>
   <div id='infotags'></div>
   <div class='flex row end expand' id="subtopicsToggle" style="display: none;">
@@ -334,9 +356,7 @@ input[type=number]::-webkit-inner-spin-button {
     <div id='controls' class='flex col' style='padding-top:.2em;'>
       <div id='changeSignal' class='flex col flavor-signal'>
         <div class='flex row'>
-          <button id='sub' class='shareBtn left'><span style='vertical-align:text-top;'>-</span></button>
           <input id='inputShares' type='number' placeholder='0'>
-          <button id='add' class='shareBtn right'><span style='vertical-align:text-top;'>+</span></button>
         </div>
         <div class='flex col' style='width: 100%; padding-top:.2em;'>
           <habitat-sentiment-slider></habitat-sentiment-slider>
@@ -455,7 +475,14 @@ input[type=number]::-webkit-inner-spin-button {
   <button id='boxleg' style='display:none;border-color:var(--color-box-border-light)'>+ subtopic</button>
 </div>
 <div id='drafts'></div>
-<div id='subProposals' class="expandable"></div>
+<div id='subProposals' class="expandable">
+  <div class="header">
+    <span>Subtopics</span>
+    <div>
+    <button id="addSubtopic">+ Subtopic</button>
+  </div>
+</div>
+</div>
 `;
 
 class CustomButtonHandler {
@@ -557,8 +584,8 @@ export default class HabitatProposalCard extends HTMLElement {
         }
         node.dispatchEvent(new Event('change'));
       }
-      new CustomButtonHandler(node.parentElement.querySelector('.right'), (v) => change(this, 1 * v));
-      new CustomButtonHandler(node.parentElement.querySelector('.left'), (v) => change(this, -1 * v));
+      // new CustomButtonHandler(node.parentElement.querySelector('.right'), (v) => change(this, 1 * v));
+      // new CustomButtonHandler(node.parentElement.querySelector('.left'), (v) => change(this, -1 * v));
     }
     for (const node of this.shadowRoot.querySelectorAll('habitat-sentiment-slider')) {
       node.addEventListener('change', async (evt) => {
@@ -572,6 +599,18 @@ export default class HabitatProposalCard extends HTMLElement {
 
     wrapListener(
       this.shadowRoot.querySelector('#boxleg'),
+      () => {
+        const e = new HabitatProposeCard();
+        e.setAttribute('topic', this.getAttribute(ATTR_HASH));
+        e.setAttribute(ATTR_SIGNAL_VAULT, this.getAttribute(ATTR_SIGNAL_VAULT));
+        e.setAttribute(ATTR_ACTION_VAULT, this.getAttribute(ATTR_ACTION_VAULT));
+        e.setAttribute('proposal-type', this.getAttribute(ATTR_FLAVOR) === 'signal' ? 'Signal' : 'Action');
+        this.drafts.append(e);
+      }
+    );
+
+    wrapListener(
+      this.shadowRoot.querySelector('#addSubtopic'),
       () => {
         const e = new HabitatProposeCard();
         e.setAttribute('topic', this.getAttribute(ATTR_HASH));

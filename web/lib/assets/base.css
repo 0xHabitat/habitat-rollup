@@ -451,7 +451,7 @@ bold,
 }
 
 iframe {
-  outline; none;
+  outline: none;
   border: none;
 }
 
