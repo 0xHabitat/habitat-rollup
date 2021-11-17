@@ -118,8 +118,7 @@ ACTION_TEMPLATE.innerHTML = `
 `;
 
 export default class HabitatCommunity extends HabitatPanel {
-  static TEMPLATE =
-`
+	static TEMPLATE = `
 <style>
 button {
   margin: 0;
@@ -316,6 +315,19 @@ button, .button {
         </div>
 
         <space></space>
+         <div id='sticky' class='flex row center evenly'>
+          <div class='flex row'>
+            <habitat-toggle
+              id='delegateModeToggle'
+              left='Personal Mode'
+              tooltip-left='Your personal voting power'
+              right='Delegation Mode'
+              tooltip-right='Voting power delegated to you'
+            ></habitat-toggle>
+            <habitat-transaction-cart></habitat-transaction-cart>
+          </div>
+        </div>
+        
         <div id='sticky' class='flex row center evenly'>
             <div class='flex row'>
                 <habitat-voting-basket></habitat-voting-basket>
@@ -331,353 +343,376 @@ button, .button {
 </div>
 `;
 
-  constructor() {
-    super();
+	constructor() {
+		super();
 
-    this.shadowRoot.querySelector('#delegateModeToggle').addEventListener('toggle', this.onToggle.bind(this), false);
-    this.shadowRoot.querySelector('#createTreasury').addEventListener(
-      'click',
-      () => {
-        const e = new HabitatTreasuryCreator();
-        e.setAttribute('communityId', this.communityId);
-        this.shadowRoot.querySelector('#treasuryArea').append(e);
-      },
-      false
-    );
-  }
+		this.shadowRoot
+			.querySelector("#delegateModeToggle")
+			.addEventListener("toggle", this.onToggle.bind(this), false);
+		this.shadowRoot.querySelector("#createTreasury").addEventListener(
+			"click",
+			() => {
+				const e = new HabitatTreasuryCreator();
+				e.setAttribute("communityId", this.communityId);
+				this.shadowRoot.querySelector("#treasuryArea").append(e);
+			},
+			false
+		);
+	}
 
-  setTitle (str) {
-    super.setTitle(str);
-    this.shadowRoot.querySelector('#communityTitle').textContent = str;
-  }
+	setTitle(str) {
+		super.setTitle(str);
+		this.shadowRoot.querySelector("#communityTitle").textContent = str;
+	}
 
-  get currentVault () {
-    return this.activeTab.id;
-  }
+	get currentVault() {
+		return this.activeTab.id;
+	}
 
-  get tabs () {
-    return this.shadowRoot.querySelector('#tabs');
-  }
+	get tabs() {
+		return this.shadowRoot.querySelector("#tabs");
+	}
 
-  get delegationMode () {
-    return this.tabs.classList.contains('delegateMode');
-  }
+	get delegationMode() {
+		return this.tabs.classList.contains("delegateMode");
+	}
 
-  onToggle () {
-    const delegateMode = this.tabs.classList.toggle('delegateMode');
-    for (const node of this.shadowRoot.querySelectorAll('habitat-proposal-card')) {
-      node.setAttribute('delegate-mode', delegateMode || '');
-    }
-  }
+	onToggle() {
+		const delegateMode = this.tabs.classList.toggle("delegateMode");
+		for (const node of this.shadowRoot.querySelectorAll("habitat-proposal-card")) {
+			node.setAttribute("delegate-mode", delegateMode || "");
+		}
+	}
 
-  async render () {
-    const [, txHash] = this.getAttribute('args').split(',');
-    if (txHash) {
-      const receipt = await getReceipt(txHash);
-      const { communityId, metadata } = receipt.events[0].args;
+	async render() {
+		const [, txHash] = this.getAttribute("args").split(",");
+		if (txHash) {
+			const receipt = await getReceipt(txHash);
+			const { communityId, metadata } = receipt.events[0].args;
 
-      getMetadataForTopic(communityId).then(
-        (metadata) => {
-          console.log(metadata);
-          this.setTitle(metadata.title || '?');
+			getMetadataForTopic(communityId).then((metadata) => {
+				console.log(metadata);
+				this.setTitle(metadata.title || "?");
 
-          if (metadata.bannerCid) {
-            this.shadowRoot.querySelector('img#banner').src = `https://${metadata.bannerCid}.ipfs.infura-ipfs.io/`;
-          }
-          if (metadata.details) {
-            this.shadowRoot.querySelector('#communityDetails').textContent = metadata.details;
-          }
-        }
-      );
+				if (metadata.bannerCid) {
+					this.shadowRoot.querySelector(
+						"img#banner"
+					).src = `https://${metadata.bannerCid}.ipfs.infura-ipfs.io/`;
+				}
+				if (metadata.details) {
+					this.shadowRoot.querySelector("#communityDetails").textContent = metadata.details;
+				}
+			});
 
-      this.communityId = communityId;
-      this.vaults = {};
-      this.setAttribute('controls', '');
+			this.communityId = communityId;
+			this.vaults = {};
+			this.setAttribute("controls", "");
 
-      for (const log of await doQueryWithOptions({ toBlock: 1, includeTx: true }, 'VaultCreated', communityId)) {
-        const vaultMeta = decodeMetadata(log.transaction.message.metadata);
-        const info = await fetchModuleInformation(log.args.condition);
-        const flavor = info.flavor || 'binary';
-        this.vaults[log.args.vaultAddress] = {
-          type: flavor === 'binary' ? 'Action' : 'Signal',
-          title: vaultMeta.title || '???',
-          details: vaultMeta.details || '',
-        };
-      }
-    }
+			for (const log of await doQueryWithOptions({ toBlock: 1, includeTx: true }, "VaultCreated", communityId)) {
+				const vaultMeta = decodeMetadata(log.transaction.message.metadata);
+				const info = await fetchModuleInformation(log.args.condition);
+				const flavor = info.flavor || "binary";
+				this.vaults[log.args.vaultAddress] = {
+					type: flavor === "binary" ? "Action" : "Signal",
+					title: vaultMeta.title || "???",
+					details: vaultMeta.details || "",
+				};
+			}
+		}
 
-    const tabNav = this.shadowRoot.querySelector('#tabnav');
-    const tabs = this.shadowRoot.querySelector('#tabs');
-    for (const addr in this.vaults) {
-      const info = this.vaults[addr];
-      const tabId = addr.substring(1);
-      let head;
-      let tail;
-      if (info.type === 'Signal') {
-        head = TAB_NAV_SIGNAL_TEMPLATE.content.cloneNode(true);
-        tail = SIGNAL_TEMPLATE.content.cloneNode(true);
-      } else {
-        head = TAB_NAV_GOV_TEMPLATE.content.cloneNode(true);
-        tail = ACTION_TEMPLATE.content.cloneNode(true);
-      }
-      head.querySelector('#title').textContent = info.title;
-      head.children[0].id = tabId;
-      tabNav.append(head);
+		const tabNav = this.shadowRoot.querySelector("#tabnav");
+		const tabs = this.shadowRoot.querySelector("#tabs");
+		for (const addr in this.vaults) {
+			const info = this.vaults[addr];
+			const tabId = addr.substring(1);
+			let head;
+			let tail;
+			if (info.type === "Signal") {
+				head = TAB_NAV_SIGNAL_TEMPLATE.content.cloneNode(true);
+				tail = SIGNAL_TEMPLATE.content.cloneNode(true);
+			} else {
+				head = TAB_NAV_GOV_TEMPLATE.content.cloneNode(true);
+				tail = ACTION_TEMPLATE.content.cloneNode(true);
+			}
+			head.querySelector("#title").textContent = info.title;
+			head.children[0].id = tabId;
+			tabNav.append(head);
 
-      tail.querySelector('#proposals').setAttribute('vault', addr);
-      tail.children[0].id = tabId;
-      tail.querySelector('#description').textContent = info.details;
+			tail.querySelector("#proposals").setAttribute("vault", addr);
+			tail.children[0].id = tabId;
+			tail.querySelector("#description").textContent = info.details;
 
-      const draft = tail.querySelector('#draft');
-      tail.querySelector('#submitTopic').addEventListener('click', () => {
-        const card = new HabitatProposeCard();
-        card.setAttribute('signal-vault', this.signalVault || addr);
-        card.setAttribute('action-vault', this.actionVault || addr);
-        card.setAttribute('proposal-type', info.type);
-        draft.prepend(card);
-      }, false);
-      tabs.append(tail);
-    }
+			const draft = tail.querySelector("#draft");
+			tail.querySelector("#submitTopic").addEventListener(
+				"click",
+				() => {
+					const card = new HabitatProposeCard();
+					card.setAttribute("signal-vault", this.signalVault || addr);
+					card.setAttribute("action-vault", this.actionVault || addr);
+					card.setAttribute("proposal-type", info.type);
+					draft.prepend(card);
+				},
+				false
+			);
+			tabs.append(tail);
+		}
 
-    setupTabs(this.shadowRoot, (node) => {
-      this.activeTab = node;
-    });
+		setupTabs(this.shadowRoot, (node) => {
+			this.activeTab = node;
+		});
 
-    return this.chainUpdateCallback();
-  }
+		return this.chainUpdateCallback();
+	}
 
-  async chainUpdateCallback () {
-    const { habitat } = await getProviders();
-    const token = await getTokenV2(await habitat.callStatic.tokenOfCommunity(this.communityId));
-    const tvl = await habitat.callStatic.getTotalValueLocked(token.address);
+	async chainUpdateCallback() {
+		const { habitat } = await getProviders();
+		const token = await getTokenV2(await habitat.callStatic.tokenOfCommunity(this.communityId));
+		const tvl = await habitat.callStatic.getTotalValueLocked(token.address);
 
-    // balances
-    {
-      let account;
-      if (walletIsConnected()) {
-        const signer = await getSigner();
-        account = await signer.getAddress();
-      }
+		// balances
+		{
+			let account;
+			if (walletIsConnected()) {
+				const signer = await getSigner();
+				account = await signer.getAddress();
+			}
 
-      let usedUserBalance = '-';
-      let userBalance = usedUserBalance;
-      let usedDelegatedBalance = usedUserBalance;
-      let delegatedBalance = usedUserBalance;
+			let usedUserBalance = "-";
+			let userBalance = usedUserBalance;
+			let usedDelegatedBalance = usedUserBalance;
+			let delegatedBalance = usedUserBalance;
 
-      if (account) {
-        const delegated = await getTotalDelegatedAmountForToken(token.address, account);
-        const totalUserBalance = (await habitat.callStatic.getBalance(token.address, account)).sub(delegated);
-        const voted = await habitat.callStatic.getActiveVotingStake(token.address, account);
-        userBalance = renderAmount(totalUserBalance, token.decimals);
-        usedUserBalance = renderAmount(voted, token.decimals);
+			if (account) {
+				const delegated = await getTotalDelegatedAmountForToken(token.address, account);
+				const totalUserBalance = (await habitat.callStatic.getBalance(token.address, account)).sub(delegated);
+				const voted = await habitat.callStatic.getActiveVotingStake(token.address, account);
+				userBalance = renderAmount(totalUserBalance, token.decimals);
+				usedUserBalance = renderAmount(voted, token.decimals);
 
-        const { total, used } = await getDelegatedAmountsForToken(token.address, account);
-        delegatedBalance = renderAmount(total, token.decimals);
-        usedDelegatedBalance = renderAmount(used, token.decimals);
-      }
+				const { total, used } = await getDelegatedAmountsForToken(token.address, account);
+				delegatedBalance = renderAmount(total, token.decimals);
+				usedDelegatedBalance = renderAmount(used, token.decimals);
+			}
 
-      this.shadowRoot.querySelector('#personalVotes').textContent = `${usedUserBalance}/${userBalance} ${token.symbol}`;
-      this.shadowRoot.querySelector('#delegatedVotes').textContent = `${usedDelegatedBalance}/${delegatedBalance} ${token.symbol}`;
-    }
+			this.shadowRoot.querySelector(
+				"#personalVotes"
+			).textContent = `${usedUserBalance}/${userBalance} ${token.symbol}`;
+			this.shadowRoot.querySelector(
+				"#delegatedVotes"
+			).textContent = `${usedDelegatedBalance}/${delegatedBalance} ${token.symbol}`;
+		}
 
-    // members, votes
-    {
-      let totalReserve = BigInt(0);
-      for (const vaultAddr in this.vaults) {
-        totalReserve += BigInt(await habitat.callStatic.getBalance(token.address, vaultAddr));
-      }
-      this.shadowRoot.querySelector('#totalReserve').textContent = `${renderAmount(totalReserve, token.decimals, 1)} ${token.symbol}`;
+		// members, votes
+		{
+			let totalReserve = BigInt(0);
+			for (const vaultAddr in this.vaults) {
+				totalReserve += BigInt(await habitat.callStatic.getBalance(token.address, vaultAddr));
+			}
+			this.shadowRoot.querySelector("#totalReserve").textContent = `${renderAmount(
+				totalReserve,
+				token.decimals,
+				1
+			)} ${token.symbol}`;
 
-      const memberCount = await habitat.callStatic.getTotalMemberCount(this.communityId);
-      this.shadowRoot.querySelector('#memberCount').textContent = renderAmount(memberCount);
+			const memberCount = await habitat.callStatic.getTotalMemberCount(this.communityId);
+			this.shadowRoot.querySelector("#memberCount").textContent = renderAmount(memberCount);
 
-      this.shadowRoot.querySelector('#tvl').textContent = `${renderAmount(tvl, token.decimals, 1)} ${token.symbol}`;
-    }
+			this.shadowRoot.querySelector("#tvl").textContent = `${renderAmount(tvl, token.decimals, 1)} ${
+				token.symbol
+			}`;
+		}
 
-    // proposals
-    {
-      const refSignal = ethers.utils.formatUnits(tvl, token.decimals);
-      const tabs = this.shadowRoot.querySelector('#tabs');
-      const delegateMode = tabs.classList.contains('delegateMode');
-      const vaults = Object.keys(this.vaults);
-      const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, 'ProposalCreated', vaults);
-      for (const log of logs) {
-        const vault = log.args[0];
-        const proposals = tabs.querySelector(`#proposals[vault="${vault}"]`);
-        if (proposals.querySelector(`[hash="${log.transactionHash}"]`)) {
-          continue;
-        }
+		// proposals
+		{
+			const refSignal = ethers.utils.formatUnits(tvl, token.decimals);
+			const tabs = this.shadowRoot.querySelector("#tabs");
+			const delegateMode = tabs.classList.contains("delegateMode");
+			const vaults = Object.keys(this.vaults);
+			const logs = await doQueryWithOptions({ fromBlock: 1, includeTx: true }, "ProposalCreated", vaults);
+			for (const log of logs) {
+				const vault = log.args[0];
+				const proposals = tabs.querySelector(`#proposals[vault="${vault}"]`);
+				if (proposals.querySelector(`[hash="${log.transactionHash}"]`)) {
+					continue;
+				}
 
-        const metadata = decodeMetadata(log.transaction.message.metadata);
-        const topic = metadata.topic;
-        const e = document.createElement('habitat-proposal-card');
-        e.setAttribute('hash', log.transactionHash);
-        // defining signalVault, actionVault is optional
-        e.setAttribute('signal-vault', this.signalVault || vault);
-        e.setAttribute('action-vault', this.actionVault || vault);
-        e.setAttribute('delegate-mode', delegateMode || '');
-        e.subtopicSupport = !topic;
-        e.addEventListener('signalChange', (evt) => {
-          this.submitChanges();
-        }, false);
+				const metadata = decodeMetadata(log.transaction.message.metadata);
+				const topic = metadata.topic;
+				const e = document.createElement("habitat-proposal-card");
+				e.setAttribute("hash", log.transactionHash);
+				// defining signalVault, actionVault is optional
+				e.setAttribute("signal-vault", this.signalVault || vault);
+				e.setAttribute("action-vault", this.actionVault || vault);
+				e.setAttribute("delegate-mode", delegateMode || "");
+				e.subtopicSupport = !topic;
+				e.addEventListener(
+					"signalChange",
+					(evt) => {
+						this.submitChanges();
+					},
+					false
+				);
 
-        const group = tabs.querySelector(`[hash="${topic}"]`);
-        if (group) {
-          group.addSubTopic(e);
-        } else {
-          e.setAttribute('ref-signal', refSignal);
-          proposals.prepend(e);
-        }
-      }
-    }
+				const group = tabs.querySelector(`[hash="${topic}"]`);
+				if (group) {
+					group.addSubTopic(e);
+				} else {
+					e.setAttribute("ref-signal", refSignal);
+					proposals.prepend(e);
+				}
+			}
+		}
 
-    {
-      // display of balances, voting module, treasury information
-      const { habitat } = await getProviders();
-      const vaults = Object.keys(this.vaults);
-      for (const vaultAddress of vaults) {
-        const root = this.shadowRoot.querySelector(`.tab#${vaultAddress.substring(1)}`);
-        const container = root.querySelector('#balances');
-        const { tokens } = await queryTransfers(vaultAddress);
+		{
+			// display of balances, voting module, treasury information
+			const { habitat } = await getProviders();
+			const vaults = Object.keys(this.vaults);
+			for (const vaultAddress of vaults) {
+				const root = this.shadowRoot.querySelector(`.tab#${vaultAddress.substring(1)}`);
+				const container = root.querySelector("#balances");
+				const { tokens } = await queryTransfers(vaultAddress);
 
-        const child = document.createElement('div');
-        child.innerHTML = '<habitat-token-amount></habitat-token-amount>'.repeat(tokens.length);
-        const children = child.children;
-        let childPtr = 0;
-        for (let i = 0, len = tokens.length; i < len; i++) {
-          const tokenAddr = tokens[i];
-          const balance = await habitat.callStatic.getBalance(tokenAddr, vaultAddress);
-          children[childPtr].setAttribute('token', tokenAddr);
-          children[childPtr].setAttribute('owner', vaultAddress);
-          children[childPtr++].setAttribute('amount', balance);
-        }
+				const child = document.createElement("div");
+				child.innerHTML = "<habitat-token-amount></habitat-token-amount>".repeat(tokens.length);
+				const children = child.children;
+				let childPtr = 0;
+				for (let i = 0, len = tokens.length; i < len; i++) {
+					const tokenAddr = tokens[i];
+					const balance = await habitat.callStatic.getBalance(tokenAddr, vaultAddress);
+					children[childPtr].setAttribute("token", tokenAddr);
+					children[childPtr].setAttribute("owner", vaultAddress);
+					children[childPtr++].setAttribute("amount", balance);
+				}
 
-        const sep = document.createElement('div');
-        if (!tokens.length) {
-          sep.innerHTML = '<p class="s">This Treasury owns no Tokens</p><sep></sep>';
-        }
-        container.replaceChildren(sep, child);
+				const sep = document.createElement("div");
+				if (!tokens.length) {
+					sep.innerHTML = '<p class="s">This Treasury owns no Tokens</p><sep></sep>';
+				}
+				container.replaceChildren(sep, child);
 
-        {
-          // misc.
-          root.querySelector('habitat-voting-module-preview').setAttribute('vault', vaultAddress);
+				{
+					// misc.
+					root.querySelector("habitat-voting-module-preview").setAttribute("vault", vaultAddress);
 
-          const e = root.querySelector('#treasuryAddress');
-          e.textContent = vaultAddress;
-          e.href = getEtherscanLink(vaultAddress);
-        }
+					const e = root.querySelector("#treasuryAddress");
+					e.textContent = vaultAddress;
+					e.href = getEtherscanLink(vaultAddress);
+				}
 
-        {
-          const execProxyElement = root.querySelector('#createExecProxy');
-          const execProxy = await lookupExecProxyForVault(vaultAddress);
-          if (!execProxy) {
-            execProxyElement.textContent = 'Create Proxy';
-            const abortController = new AbortController();
-            execProxyElement.addEventListener('click', async (evt) => {
-              evt.preventDefault();
+				{
+					const execProxyElement = root.querySelector("#createExecProxy");
+					const execProxy = await lookupExecProxyForVault(vaultAddress);
+					if (!execProxy) {
+						execProxyElement.textContent = "Create Proxy";
+						const abortController = new AbortController();
+						execProxyElement.addEventListener(
+							"click",
+							async (evt) => {
+								evt.preventDefault();
 
-              const signer = await getSigner();
-              const factoryContract = await getExecutionProxyContract();
+								const signer = await getSigner();
+								const factoryContract = await getExecutionProxyContract();
 
-              const { habitat } = await getProviders();
-              const tx = await factoryContract.connect(signer).createProxy(habitat.address, vaultAddress);
-              window.open(getEtherscanLink(tx.hash), '_blank');
-              abortController.abort();
-              await tx.wait();
+								const { habitat } = await getProviders();
+								const tx = await factoryContract
+									.connect(signer)
+									.createProxy(habitat.address, vaultAddress);
+								window.open(getEtherscanLink(tx.hash), "_blank");
+								abortController.abort();
+								await tx.wait();
 
-              const execProxy = await lookupExecProxyForVault(vaultAddress);
-              execProxyElement.href = getEtherscanLink(execProxy);
-              execProxyElement.textContent = renderAddress(execProxy);
+								const execProxy = await lookupExecProxyForVault(vaultAddress);
+								execProxyElement.href = getEtherscanLink(execProxy);
+								execProxyElement.textContent = renderAddress(execProxy);
+							},
+							{ signal: abortController.signal }
+						);
+					} else {
+						execProxyElement.href = getEtherscanLink(execProxy);
+						execProxyElement.textContent = execProxy;
+					}
+				}
+			}
+		}
+	}
 
-            }, { signal: abortController.signal });
-          } else {
-            execProxyElement.href = getEtherscanLink(execProxy);
-            execProxyElement.textContent = execProxy;
-          }
-        }
-      }
-    }
-  }
+	async submitChanges() {
+		let delegatedFor = ethers.constants.AddressZero;
+		if (this.delegationMode) {
+			const signer = await getSigner();
+			delegatedFor = await signer.getAddress();
+		}
 
-  async submitChanges () {
-    let delegatedFor = ethers.constants.AddressZero;
-    if (this.delegationMode) {
-      const signer = await getSigner();
-      delegatedFor = await signer.getAddress();
-    }
+		const batch = [];
+		const cards = this.shadowRoot.querySelectorAll("habitat-proposal-card");
+		for (const node of cards) {
+			batch.push(...(await node.buildTransactions(delegatedFor)));
+		}
 
-    const batch = [];
-    const cards = this.shadowRoot.querySelectorAll('habitat-proposal-card');
-    for (const node of cards) {
-      batch.push(...(await node.buildTransactions(delegatedFor)));
-    }
+		for (const tab of this.shadowRoot.querySelectorAll(".tab")) {
+			const topSignals = [];
+			const cards = tab.querySelectorAll("habitat-proposal-card");
+			let tShares = 0;
+			for (const card of cards) {
+				const v = card.totalShares;
+				tShares += v;
+				topSignals.push({ v, card });
+			}
+			for (const card of cards) {
+				card.setAttribute("ref-signal", tShares);
+			}
+			if (batch.length === 0) {
+				const topSignal = tab.querySelector("#topSignal");
+				const recentSignal = tab.querySelector("#recentSignal");
+				const now = ~~(Date.now() / 1000);
+				// 24 hrs (seconds)
+				const threshold = 86400;
 
-    for (const tab of this.shadowRoot.querySelectorAll('.tab')) {
-      const topSignals = [];
-      const cards = tab.querySelectorAll('habitat-proposal-card');
-      let tShares = 0;
-      for (const card of cards) {
-        const v = card.totalShares;
-        tShares += v;
-        topSignals.push({ v, card });
-      }
-      for (const card of cards) {
-        card.setAttribute('ref-signal', tShares);
-      }
-      if (batch.length === 0) {
-        const topSignal = tab.querySelector('#topSignal');
-        const recentSignal = tab.querySelector('#recentSignal');
-        const now = ~~(Date.now() / 1000);
-        // 24 hrs (seconds)
-        const threshold = 86400;
+				topSignals.sort(function (a, b) {
+					const aT = a.card.data.startDate;
+					const bT = b.card.data.startDate;
+					if (now - aT < threshold || now - bT < threshold) {
+						return bT > aT ? 1 : -1;
+					}
 
-        topSignals.sort(
-          function (a, b) {
-            const aT = a.card.data.startDate;
-            const bT = b.card.data.startDate;
-            if (now - aT < threshold || now - bT < threshold) {
-              return bT > aT ? 1 : -1;
-            }
+					const aStatus = a.card.data.proposalStatus;
+					const bStatus = b.card.data.proposalStatus;
+					if (aStatus > 1 || bStatus > 1) {
+						return bStatus > aStatus ? -1 : 1;
+					}
 
-            const aStatus = a.card.data.proposalStatus;
-            const bStatus = b.card.data.proposalStatus;
-            if (aStatus > 1 || bStatus > 1) {
-              return bStatus > aStatus ? -1 : 1;
-            }
+					return b.v - a.v;
+				});
+				topSignal.style.display = "none";
+				recentSignal.style.display = "none";
 
-            return b.v - a.v;
-          }
-        );
-        topSignal.style.display = 'none';
-        recentSignal.style.display = 'none';
+				let uTop = true;
+				let uRecent = true;
+				let pos = 0;
+				let tabIndex = 0;
+				for (const e of topSignals) {
+					if (now - e.card.data.startDate > threshold) {
+						if (uTop) {
+							uTop = false;
+							topSignal.style.gridRow = ++pos;
+							topSignal.style.display = "block";
+						}
+					} else {
+						if (uRecent) {
+							uRecent = false;
+							recentSignal.style.gridRow = ++pos;
+							recentSignal.style.display = "block";
+						}
+					}
 
-        let uTop = true;
-        let uRecent = true;
-        let pos = 0;
-        let tabIndex = 0;
-        for (const e of topSignals) {
-          if (now - e.card.data.startDate > threshold) {
-            if (uTop) {
-              uTop = false;
-              topSignal.style.gridRow = ++pos;
-              topSignal.style.display = 'block';
-            }
-          } else {
-            if (uRecent) {
-              uRecent = false;
-              recentSignal.style.gridRow = ++pos;
-              recentSignal.style.display = 'block';
-            }
-          }
+					e.card.style.gridRow = ++pos;
+					e.card.tabIndex = ++tabIndex;
+				}
+			}
+		}
 
-          e.card.style.gridRow = ++pos;
-          e.card.tabIndex = ++tabIndex;
-        }
-      }
-    }
-
-    // dispatch (to sidebar)
-    window.postMessage({ type: 'hbt-tx-bundle', value: batch }, window.location.origin);
-  }
+		// dispatch (to sidebar)
+		window.postMessage({ type: "hbt-tx-bundle", value: batch }, window.location.origin);
+	}
 }
 customElements.define('habitat-community', HabitatCommunity);

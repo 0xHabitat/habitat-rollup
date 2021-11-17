@@ -203,19 +203,11 @@ pin {
             <div class="title">Your Transaction</div>
             <space></space>
             <div class="basket-list">
-                <div class="basket-list-item">
-                    <div class="name">Vote on Rollup Features</div>
-                    <div class="price">145 HBT</div>
-                </div>
-                <div class="basket-list-item">
-                    <div class="name">Vote on Liquidity</div>
-                    <div class="price">145 HBT</div>
-                </div>
             </div>
             <hr>
             <div class="basket-list-total">
                 <div class="name">Total</div>
-                <div class="price">345 HBT</div>
+                <div class="price">0 HBT</div>
             </div>
         </div>
      </div>
@@ -239,7 +231,7 @@ pin {
         </div>
         <div class="block">
             <div>Transactions</div>
-            <div>2(=345 HBT)</div>
+            <div id="transactionSummary"></div>
         </div>
         <div >
             <button class='yellow bigger bold' id="actionButton">confirm</button>
@@ -298,8 +290,10 @@ class HabitatVotingBasket extends HTMLElement {
 		}
         if (evt.data.type === "hbt-tx-bundle") {
             var transactions = [];
-            
-			for (const tx of evt.data.value) {
+            var sum = 0;
+            var count = evt.data.value.length;
+            for (const tx of evt.data.value) {
+                
 				// const e = document.createElement("p");
 				// e.textContent = `${tx.info}`;
 				// grid.append(e);
@@ -324,9 +318,49 @@ class HabitatVotingBasket extends HTMLElement {
 					key: proposalId,
 					value: records[key][proposalId],
 					name: getProposalInformationData.title,
-				});
+                });
+                sum = sum + records[key][proposalId];
                 console.log("transactions",transactions);
 
+                const basketList = this.shadowRoot.querySelector(".basket-list");
+                const pointer = basketList.querySelector(`[hash="${proposalId}"]`);
+                if (pointer) {
+                    console.log("eintrag existiert bereits --> update");
+                    pointer.querySelector(".price").innerHTML = records[key][proposalId] + " HBT";
+                } else {
+                    console.log("eintrag existiert nicht --> insert");
+                    const basketListItem = document.createElement("div");
+                    basketListItem.setAttribute("hash", proposalId);
+    
+                    basketListItem.className = "basket-list-item";
+                    const name = document.createElement("div");
+                    name.className = "name";
+                    name.innerHTML = "Vote on " + getProposalInformationData.title;
+                    const price = document.createElement("div");
+                    price.className = "price";
+                    price.innerHTML = records[key][proposalId] + " HBT";
+                    basketListItem.prepend(price);
+                    basketListItem.prepend(name);
+                    basketList.prepend(basketListItem);
+                    console.log("basketList", basketList);
+
+                   
+                }
+                console.log("records[key]", records[key]);
+                console.log("summe", sum);
+                console.log("count", count);
+
+                const basketListTotal = this.shadowRoot.querySelector(".basket-list-total .price");
+                console.log(basketListTotal);
+                basketListTotal.innerHTML = sum + " HBT";
+                // transactionSummary.innerHTML = count + "(=" + sum + " HBT)";
+                const token = fetchProposalStatsData.token;
+                console.log("token123",token);
+                const { total, available } = await BalanceTracker.stat(token, delegationMode);
+				const transactionSummary = this.shadowRoot.querySelector("#transactionSummary");
+                transactionSummary.innerHTML = `${renderAmount(total - available, 0, 1)} ${token.symbol}`;
+                this.shadowRoot.querySelector("#tokenBalance").textContent = `${available} ${token.symbol}`;
+                continue;
 				// const transactions = records.find((obj) => obj.)
 			}
 
@@ -343,10 +377,9 @@ class HabitatVotingBasket extends HTMLElement {
 		}
 
 		if (evt.data.type === "hbt-balance-tracker-update") {
-			const obj = evt.data.value;
-            console.log("evt",evt);
-			console.log("obj123", obj.records);
-			// const key = obj.tokenAddress + (obj.delegationMode ? "1" : "0");
+            const obj = evt.data.value;
+            
+            // const key = obj.tokenAddress + (obj.delegationMode ? "1" : "0");
 			// const transactions = obj.records[key];
 			// console.log("transactions", transactions);
             // var key1 = null;
@@ -453,7 +486,7 @@ class HabitatVotingBasket extends HTMLElement {
 		// const tooltipText = this.getAttribute(right ? ATTR_TOOLTIP_RIGHT : ATTR_TOOLTIP_LEFT);
 		// this.shadowRoot.querySelector("#tooltip").style.visibility = tooltipText ? "initial" : "hidden";
 		// this.shadowRoot.querySelector("#content").innerHTML = tooltipText;
-		return this.chainUpdateCallback();
+		// return this.chainUpdateCallback();
 	}
 }
 customElements.define("habitat-voting-basket", HabitatVotingBasket);
