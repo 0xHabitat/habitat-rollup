@@ -2,7 +2,7 @@
 name: Bounty Proposal
 about: Suggest a bounty and the size of work involved
 title: ''
-labels: bounty
+labels: bounty,
 assignees: ''
 
 ---
