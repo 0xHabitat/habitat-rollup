@@ -86,7 +86,7 @@ const ACCOUNT_TRANSFER_TEMPLATE =
 
 const ACCOUNT_GAS_TANK_CARD_TEMPLATE = `
 <habitat-flip-card style='grid-row:1/2;grid-column:3/6;'>
-  <div slot='front'>
+  <div slot='front' class='box'>
     <h6 class='spaced-title'><span><emoji-fuel-pump></emoji-fuel-pump><span> Gas Tank Balance</span></span></h6>
     <space></space>
     <div style='display:grid;grid-template-rows:1fr 1fr;'>
@@ -100,7 +100,9 @@ const ACCOUNT_GAS_TANK_CARD_TEMPLATE = `
       </div>
     </div>
   </div>
-  <div slot='back'>
+  <div slot='back' style='padding: 1rem 2rem;'>
+    <space></space>
+    <space></space>
     <p class='info-text'>To secure the network and all the user and community funds the Habitat rollup needs Gas to operate.</p>
     <p class='info-text'>Like a pre-paid phone the user tops up it's balance to interact with all features, modules and functionalities.</p>
     <p class='info-text'>A 1% top-up fee is taken and distributed among all HBT stakers/deposits.</p>
@@ -109,7 +111,7 @@ const ACCOUNT_GAS_TANK_CARD_TEMPLATE = `
 
 const ACCOUNT_YIELD_CARD_TEMPLATE = `
 <habitat-flip-card style='grid-row:1/4;grid-column:6/8;'>
-  <div slot='front'>
+  <div slot='front' class='box'>
     <h6 class='spaced-title'><span><emoji-money-with-wings></emoji-money-with-wings><span> Rollup Yield </span></span></h6>
     <space></space>
     <div class='flex col'>
@@ -137,7 +139,9 @@ const ACCOUNT_YIELD_CARD_TEMPLATE = `
       </div>
     </div>
   </div>
-  <div slot='back'>
+  <div slot='back' style='padding: 1rem 2rem;'>
+    <space></space>
+    <space></space>
     <p class='info-text'>The Habitat rollup is generating profits based on the activity and usage of the network. These profits are fairly distributed among all users and their individual amount of deposited HBT tokens on the rollup.</p>
     <p class='info-text'>The exact yield is depending on the fees earned during one epoch. An epoch is 7 days long. When you withdraw HBT before the epoch ends you won’t get any yield!</p>
   </div>

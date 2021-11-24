@@ -14,43 +14,89 @@ import { COMMON_STYLESHEET } from './component.js';
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
-.communityBox {
+:host {
+  width:100%;
+}
+button, .button, button *, .button * {
+  background-color: var(--color-bg-button);
+}
+#create-community-box {
   border-radius: 2em;
-  background-color: var(--color-accent-grey);
+  background-color: var(--color-box);
+  border: 1px solid var(--color-bg-invert);
+  width:100%;
+  margin:5em 0 0 0;
+  padding:3em;
+}
+canvas {
+  margin: .5em 0;
+  width: 100%;
+  min-width:20ch;
+  border: 1px solid var(--color-bg-invert);
+  border-radius: 2em;
   cursor: pointer;
 }
-.communityBox canvas {
-  width: 40ch;
-  max-width: 100%;
-  border-radius: 2em;
+canvas.editor {
+  cursor: all-scroll;
 }
-.communityBox input {
-  border: none;
-  border-bottom: 1px solid var(--color-bg-invert);
+#create-community-box input, textarea {
+  margin: .5em 0;
+  color: var(--color-text);
+  border-radius: 2em;
+  border: 1px solid var(--color-accent-grey);
+  background-color: var(--color-bg);
+  min-width:14ch;
+  width:100%;
+  font-weight: 300;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--color-grey);
+}
+habitat-verc-creator {
+  width:100%;
+  display:none;
+}
+habitat-verc-creator.active {
+  display:block;
 }
 </style>
-<div class='communityBox'>
-  <space></space>
-  <div id='input' class='flex col'>
-    <input id='title' placeholder='Name of Community'>
-    <input id='details' placeholder='Short Description about the Community'>
-    <input id='token' placeholder='Governance Token' list='tokenlistv2'>
+<div id='create-community-box'>
+  <div class='left' style='margin-bottom: 2em;'>
+    <p class='l'><span><emoji-seedling></emoji-seedling><span> Create a Community</span></span></p>
   </div>
-  <space></space>
-  <input style='display:none;' id='file' type='file' accept='image/*'>
-  <p></p>
-  <label style='padding:1em;'>
-    Tap on the area below to add a community banner.
-    <br>
-    Aspect ratio is 2:1. i.e 1200x600
-  </label>
-  <canvas></canvas>
-  <div>
-    <button id='create'>Create</button>
+
+  <div class='flex row between' style='align-items:flex-start;flex-wrap:wrap;gap:3em;'>
+    <div id='input' class='flex col center evenly' style='width:auto; flex:1 0 0;'>
+      <input style='width:100%;height:1em;justify-content:center;' id='title' placeholder='Name of Community'>
+      <textarea style='width:100%;resize:vertical;min-height:8ch;' id='details' placeholder='Info About Community'></textarea>
+
+      <div class='flex row between' style='width:100%;flex-wrap:nowrap;gap:1em;'>
+        <input style='height:1em;' id='token' placeholder='Governance Token' list='tokenlistv2'>
+        <a id='create-token' class='right s' style='cursor:pointer;white-space:nowrap;padding:.5em;text-decoration:underline;font-weight:500;'>Create Token</a>
+      </div>
+      <habitat-verc-creator></habitat-verc-creator>
+    </div>
+    <div class='flex col center' style='min-width:25ch; flex: 1 0 0;'>
+        <div style=''>
+          <input style='display:none;' id='file' type='file' accept='image/*'>
+          <canvas></canvas>
+          <label class='smaller' style='font-weight:300;margin-top:0;'>
+            Aspect ratio is 2:1. i.e 1200x600
+          </label>
+        </div>
+    </div>
   </div>
+
+  <div class='flex col align-right'>
+    <button id='create' style='place-self:flex-end;padding:.5em 2em;'>Create</button>
+  </div>
+</div>
+<div class='flex col'>
+  <button id='boxleg'>&#10006; CLOSE</button>
 </div>
 `;
 
+//issue: images being uploaded with added whitespace to fill height/width requirements?
 export default class HabitatCommunityPreviewCreator extends HTMLElement {
   constructor() {
     super();
@@ -68,6 +114,11 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
     this._ctx.canvas.height = h;
 
     wrapListener(this.shadowRoot.querySelector('#create'), this.create.bind(this));
+    wrapListener(this.shadowRoot.querySelector('#boxleg'), () => {
+      //flip "create [community]" button to active / inverted color
+      this.parentElement.parentElement.parentElement.querySelector('#create-community').classList.toggle('active');
+      this.remove();
+    });
 
     this._ctx.font = '128px Everett';
     this._ctx.fillStyle = 'rgba(255,255,255,.5)';
@@ -75,16 +126,31 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
     this._ctx.fillStyle = 'rgba(0,0,0,.5)';
     this._ctx.fillText('+', (w / 2) - 54, (h / 2) + 54);
     setupTokenlistV2(this.shadowRoot);
+
+    this.createToken = this.shadowRoot.querySelector('#create-token');
+    this.vERCCreator = this.shadowRoot.querySelector('habitat-verc-creator');
+
+    this.createToken.addEventListener('click', (evt) => {
+        evt.stopPropagation();
+        this.vERCCreator.classList.toggle('active');
+    });
+    let tokenCreated = this.shadowRoot.querySelector('#celebration');
+    if (tokenCreated) {
+      console.log('created: ' + tokenCreated.innerHTML)
+    }
   }
 
   _loadFile (evt) {
     const file = evt.target.files[0];
+    console.log('file: ' + file)
     const obj = URL.createObjectURL(file);
     const img = document.createElement('img');
 
     img.onload = () => {
       this._ctx.clearRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.height);
       this._ctx.drawImage(img, 0, 0);
+      this._ctx.canvas.classList.toggle('editor');
+      console.log('image loaded')
     };
     img.src = obj;
   }
