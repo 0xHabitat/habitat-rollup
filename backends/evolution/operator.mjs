@@ -23,6 +23,7 @@ const HISTORIC_GAS_PRICES = [
   },
 ];
 const { L2_RPC_URL, OPERATOR_ADDRESS, L2_RPC_API_KEY, OPERATOR_TOKEN } = process.env;
+const DEFAULT_GAS_TANK_VALUE = BigInt(process.env.DEFAULT_GAS_TANK_VALUE || '0');
 const QUIRK_MODE = !!process.env.QUIRK_MODE;
 const QUIRKS = {
   '0x3e66327b057fc6879e5cf86bc04a3b6c8ac7b3b4': 25000000000000n,
@@ -68,8 +69,7 @@ export async function getGasAccount (account) {
 
   try {
     const txs = await fetchJson(L2_RPC_URL, 'eth_getLogs', [filter]);
-    // grants additional 10 HBT
-    let value = 100000000000n;
+    let value = DEFAULT_GAS_TANK_VALUE;
     let consumed = 0n;
     let ratePerTx = 0n;
     let rateIndex = 0;
