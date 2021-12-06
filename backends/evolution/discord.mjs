@@ -30,7 +30,7 @@ const {
   DISCORD_TOKEN,
   DISCORD_STORAGE_CHANNEL_ID,
 } = process.env;
-const PUBKEY = Buffer.from(DISCORD_PUBLIC_KEY, 'hex');
+const PUBKEY = Buffer.from(DISCORD_PUBLIC_KEY || '', 'hex');
 const HEADERS = {
   'content-type': 'application/json',
   authorization: DISCORD_TOKEN
@@ -292,6 +292,10 @@ async function doWork () {
 }
 
 async function init () {
+  if (!DISCORD_TOKEN) {
+    return;
+  }
+
   botId = JSON.parse(await fetch(DISCORD_API + '/users/@me', HEADERS)).id;
   {
     // register commands
