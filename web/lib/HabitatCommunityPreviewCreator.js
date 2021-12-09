@@ -49,8 +49,32 @@ canvas.editor {
   width:100%;
   font-weight: 300;
 }
+#input {
+  width:100%; 
+  flex:1 0 0;
+}
+#title {
+  width:100%;
+  height:1em;
+  justify-content:center;
+}
+#details {
+  width:100%;
+  resize:vertical;
+  min-height:8ch;
+}
+#token {
+  height:1em;
+}
 input::placeholder, textarea::placeholder {
   color: var(--color-grey);
+}
+#create-token {
+  cursor:pointer;
+  white-space:nowrap;
+  padding:.5em;
+  text-decoration:underline;
+  font-weight:500;
 }
 habitat-verc-creator {
   width:100%;
@@ -59,6 +83,10 @@ habitat-verc-creator {
 habitat-verc-creator.active {
   display:block;
 }
+button#create {
+  place-self:flex-end;
+  padding:.5em 2em;
+}
 </style>
 <div id='create-community-box'>
   <div class='left' style='margin-bottom: 2em;'>
@@ -66,13 +94,12 @@ habitat-verc-creator.active {
   </div>
 
   <div class='flex row between' style='align-items:flex-start;flex-wrap:wrap;gap:3em;'>
-    <div id='input' class='flex col center evenly' style='width:auto; flex:1 0 0;'>
-      <input style='width:100%;height:1em;justify-content:center;' id='title' placeholder='Name of Community'>
-      <textarea style='width:100%;resize:vertical;min-height:8ch;' id='details' placeholder='Info About Community'></textarea>
-
+    <div id='input' class='flex col center evenly'>
+      <input id='title' placeholder='Name of Community'>
+      <textarea id='details' placeholder='Info About Community'></textarea>
       <div class='flex row between' style='width:100%;flex-wrap:nowrap;gap:1em;'>
-        <input style='height:1em;' id='token' placeholder='Governance Token' list='tokenlistv2'>
-        <a id='create-token' class='right s' style='cursor:pointer;white-space:nowrap;padding:.5em;text-decoration:underline;font-weight:500;'>Create Token</a>
+        <input id='token' placeholder='Governance Token' list='tokenlistv2'>
+        <a id='create-token' class='right s'>Create Token</a>
       </div>
       <habitat-verc-creator></habitat-verc-creator>
     </div>
@@ -88,7 +115,7 @@ habitat-verc-creator.active {
   </div>
 
   <div class='flex col align-right'>
-    <button id='create' style='place-self:flex-end;padding:.5em 2em;'>Create</button>
+    <button id='create'>Create</button>
   </div>
 </div>
 <div class='flex col'>
@@ -115,8 +142,13 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
 
     wrapListener(this.shadowRoot.querySelector('#create'), this.create.bind(this));
     wrapListener(this.shadowRoot.querySelector('#boxleg'), () => {
-      //flip "create [community]" button to active / inverted color
-      this.parentElement.parentElement.parentElement.querySelector('#create-community').classList.toggle('active');
+      //remove css active / inverted color from create-community button
+      const parentShadowRoot = this.parentElement.getRootNode();
+      const createCommunity = parentShadowRoot.querySelector('#create-community');
+      if (createCommunity) {
+        createCommunity.classList.toggle('active');
+      }
+
       this.remove();
     });
 
@@ -130,14 +162,16 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
     this.createToken = this.shadowRoot.querySelector('#create-token');
     this.vERCCreator = this.shadowRoot.querySelector('habitat-verc-creator');
 
-    this.createToken.addEventListener('click', (evt) => {
-        evt.stopPropagation();
-        this.vERCCreator.classList.toggle('active');
-    });
-    let tokenCreated = this.shadowRoot.querySelector('#celebration');
-    if (tokenCreated) {
-      console.log('created: ' + tokenCreated.innerHTML)
+    const vERCToggle = () => {
+      this.vERCCreator.classList.toggle('active');
     }
+    this.createToken.addEventListener('click', vERCToggle);
+
+    const celebration = this.vERCCreator.innerHTML
+    console.log(celebration)
+    // if (celebration) {
+    //   console.log('celebration')
+    // }
   }
 
   _loadFile (evt) {

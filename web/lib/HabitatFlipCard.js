@@ -96,10 +96,6 @@ class HabitatFlipCard extends HTMLElement {
 
         const flipped = wrapper.classList.toggle('flip');
         if (flipped) {
-          window.addEventListener('resize', () => {
-            wrapper.classList.remove('flip');
-          }); //flip back to front on window resize
-
           setTimeout(() => {
             wrapper.classList.remove('flip');
           }, 30000); // return to front side of card

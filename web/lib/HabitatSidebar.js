@@ -203,7 +203,7 @@ class HabitatSidebar extends HTMLElement {
     wrapListener(this.shadowRoot.querySelector('#connect'), async () => {
       await getSigner();
       this.update();
-      window.location.hash = '#habitat-account';
+      // window.location.hash = '#habitat-account';
     });
     wrapListener(this.shadowRoot.querySelector('#txSign'), async () => {
       await signBatch(this._txBundle);

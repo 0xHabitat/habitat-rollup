@@ -12,7 +12,7 @@ import { COMMON_STYLESHEET } from './component.js';
 
 const { VERC_FACTORY_ADDRESS } = getConfig();
 
-const CELEBRATION = `<div class='flex left m'>
+const CELEBRATION = `<div id='celebration' class='flex left m'>
 <p style='padding:1em;'>Success! 🎉 Your token has been created. The total supply was sent to your address.</p>
 </div>`;
 
@@ -108,7 +108,13 @@ export default class HabitatVERCCreator extends HTMLElement {
     const address = receipt.events[0].args[1];
     console.log(`Token(${address}) successfully created, the total supply was sent to your account.`);
 
-    this.shadowRoot.querySelector('.wrapper').parentElement.innerHTML = `${CELEBRATION}`;
+    //response celebration
+    const parentShadowRoot = this.parentElement.getRootNode();
+    const createToken = parentShadowRoot.querySelector('#create-token') || '';
+    if (createToken) {
+      createToken.replaceWith(createToken.cloneNode(true))
+      this.shadowRoot.querySelector('.wrapper').parentElement.innerHTML = `${CELEBRATION}`;
+    }
   }
 }
 customElements.define('habitat-verc-creator', HabitatVERCCreator);
