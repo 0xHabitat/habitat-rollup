@@ -191,7 +191,11 @@ button, .button {
   padding-bottom: 1em;
 }
 #sticky {
-
+  position: sticky;
+  top: .5em;
+  max-width: max-content;
+  padding: .5em 1em;
+  z-index: 9;
 }
 #tabs * {
   outline: none;
@@ -314,23 +318,10 @@ button, .button {
           <space></space>
         </div>
 
-        <space></space>
-         <div id='sticky' class='flex row center evenly'>
-          <div class='flex row'>
-            <habitat-toggle
-              id='delegateModeToggle'
-              left='Personal Mode'
-              tooltip-left='Your personal voting power'
-              right='Delegation Mode'
-              tooltip-right='Voting power delegated to you'
-            ></habitat-toggle>
-            <habitat-transaction-cart></habitat-transaction-cart>
-          </div>
-        </div>
         
         <div id='sticky' class='flex row center evenly'>
             <div class='flex row'>
-                <habitat-voting-basket></habitat-voting-basket>
+                <habitat-voting-basket id="delegateModeToggle"></habitat-voting-basket>
             </div>
         </div>
 
@@ -348,7 +339,7 @@ button, .button {
 
 		this.shadowRoot
 			.querySelector("#delegateModeToggle")
-			.addEventListener("toggle", this.onToggle.bind(this), false);
+			.addEventListener("habitatToggle", this.onToggle.bind(this), false);
 		this.shadowRoot.querySelector("#createTreasury").addEventListener(
 			"click",
 			() => {

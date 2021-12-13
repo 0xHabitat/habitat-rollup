@@ -1,35 +1,22 @@
 
 import {
 	getTokenV2,
-	wrapListener,
-	ethers,
-	getSigner,
-	walletIsConnected,
 	renderAmount,
-	renderAddress,
-	getEtherscanLink,
 	getConfig,
 } from "/lib/utils.js";
 
 import {
-	doQueryWithOptions,
-	getProviders,
-	getDelegatedAmountsForToken,
-	decodeMetadata,
-	getReceipt,
-    fetchModuleInformation,
     getProposalInformation,
-    getTotalDelegatedAmountForToken,
+    signBatch,
     queryTransactionHashForProposal,
     fetchProposalStats,
-	queryTransfers,
-	lookupExecProxyForVault,
-	getExecutionProxyContract,
-	getMetadataForTopic,
 } from "/lib/rollup.js";
 import BalanceTracker from "./BalanceTracker.js";
 
 const { HBT } = getConfig();
+var transactions = [];
+var delegationMode = false;
+
 const TEMPLATE = document.createElement("template");
 TEMPLATE.innerHTML = `
 <style>
@@ -46,20 +33,38 @@ pin {
   cursor: pointer;
 }
 #inner {
-    padding: 10px 25px;
+    padding: 16px 25px;
     display: flex;
 }
 
 #inner > .block{
     padding: 0 15px;
+    text-align: center;
 }
+
+#inner > .block .availableTokens {
+    display: flex;
+    justify-content: center;
+}
+
+#inner > .block .availableTokens img{
+    height: 16px;
+    width: 16px;
+    margin-right: 8px;
+}
+
+#inner > .block > div{
+    margin-bottom: 8px;
+}
+
+
 
 .voting-basket-detail {
     display: flex;
     flex-direction: column;
     border-radius: 20px 20px 0px 0px;
     margin: 0 75px;
-    background-color: lightblue;
+    background-color: var(--color-bg);
 }
 
 .voting-basket-detail > .inner {
@@ -108,11 +113,10 @@ pin {
 }
 .voting-basket{
     max-width: max-content;
-    padding: .5em 1em;
     border-radius: 30px 0px;
     z-index: 9;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-    background-color: lightblue;
+    background-color: var(--color-bg);
 
 
 }
@@ -178,22 +182,25 @@ pin {
     transition: max-height .3s ease-in;
     }
 
-.detail-expanded #actionButton {
-    cursor: pointer;
+.detail-expanded .actionButton {
     background-color: #1BB186;
-    padding: 10px;
-    border: 0;
-    border-radius: 20px;
-    font-weight: 700
 }
 
-#actionButton {
+.actionButton {
     cursor: pointer;
     background-color: #FFFDB0;
     padding: 10px;
     border: 0;
+    color: black;
     border-radius: 20px;
-    font-weight: 700
+    font-weight: bold;
+    height: 100%;
+    min-width: 100px;
+    font-size: 14px;
+}
+.actionButton.disabled {
+    background-color: #dddddd;
+    pointer-events: none;
 }
 
 </style>
@@ -207,224 +214,264 @@ pin {
             <hr>
             <div class="basket-list-total">
                 <div class="name">Total</div>
-                <div class="price">0 HBT</div>
+                <div class="price"></div>
             </div>
         </div>
      </div>
     <div class="voting-basket">
         <div id="inner">
             <div class="block">
-                <div>Personal Mode</div>
-            <div>
               <habitat-toggle
               id='delegateModeToggle'
               left='Personal Mode'
               tooltip-left='Your personal voting power'
               right='Delegation Mode'
               tooltip-right='Voting power delegated to you'
+              column-mode='true'
             ></habitat-toggle>
-            </div>
         </div>
         <div class="block">
             <div>Available Tokens</div>
-            <div id="tokenBalance"></div>
+            <div class="availableTokens">
+                <img slot="body">
+                <div id="tokenBalance"></div>
+            </div>
         </div>
         <div class="block">
             <div>Transactions</div>
-            <div id="transactionSummary"></div>
+            <div id="transactionSummary">
+            <span id="transactionsCount"></span>
+            <span id="transactionsTokenAmount"></span>
+            </div>
         </div>
         <div >
-            <button class='yellow bigger bold' id="actionButton">confirm</button>
+            <button class='actionButton bold disabled'>CONFIRM</button>
         </div>
     </div>
 </div>
 `;
 
-const ATTR_LEFT = "left";
-const ATTR_RIGHT = "right";
-const ATTR_TOOLTIP_LEFT = "tooltip-left";
-const ATTR_TOOLTIP_RIGHT = "tooltip-right";
-const ATTR_SWITCH = "on";
-const ATTR_HASH = "hash";
 
 
 class HabitatVotingBasket extends HTMLElement {
-	static transactions = [];
-	static get observedAttributes() {
-		return [ATTR_LEFT, ATTR_RIGHT, ATTR_TOOLTIP_LEFT, ATTR_TOOLTIP_RIGHT, ATTR_SWITCH];
-	}
-
 	constructor() {
 		super();
-
 		this.attachShadow({ mode: "open" });
 		this.shadowRoot.append(TEMPLATE.content.cloneNode(true));
-		this.shadowRoot.querySelector("#actionButton").addEventListener(
-			"click",
-			() => {
-				this.shadowRoot.querySelector("#wrapper").classList.toggle("detail-expanded");
-				const e = this.shadowRoot.querySelector("#actionButton");
-				if (this.shadowRoot.querySelector("#wrapper").classList.contains("detail-expanded")) {
-                    e.textContent = "SIGN(2)";
-                    
-					//TODO Function sent
-				} else {
-                    e.textContent = "CONFIRM";
-					//TODO Function confirm
-				}
 
-				// this.dispatchEvent(new Event("toggle"));
-				var b = this.shadowRoot.querySelector("#button");
-				var w = this.shadowRoot.querySelector("#wrapper");
-				var l = this.shadowRoot.querySelector("#list");
+		this.shadowRoot.querySelector("#delegateModeToggle").addEventListener(
+			"toggle",
+			() => {
+				this.toggleDelegationMode();
+				this.dispatchEvent(new Event("habitatToggle"));
 			},
 			false
 		);
-		// this.render();
+
+		this.shadowRoot.querySelector(".actionButton").addEventListener(
+			"click",
+			async () => {
+				if (this.shadowRoot.querySelector("#sign.actionButton")) {
+                    var result = await signBatch(this._txBundle);
+                    this.transactions = [];
+				} else {
+					this.setActionButtonSign();
+				}
+			},
+			false
+		);
+        
+
+		this.render();
 		window.addEventListener("message", this);
 	}
 
+	getTransactionCount() {
+		return transactions.length;
+	}
+
 	async handleEvent(evt) {
-		if (!evt.data) {
-			return;
-		}
         if (evt.data.type === "hbt-tx-bundle") {
-            var transactions = [];
-            var sum = 0;
-            var count = evt.data.value.length;
-            for (const tx of evt.data.value) {
-                
-				// const e = document.createElement("p");
-				// e.textContent = `${tx.info}`;
-				// grid.append(e);
-				console.log("tx", tx);
-				console.log("tx.info", tx.info);
-				const proposalId = tx.message.proposalId;
-				console.log("proposalid", proposalId);
+            this._txBundle = evt.data.value;
+            
+            var balanceTrackResult = {};
+            var token = null;
+			this.closeBasketDetail();
+			const records = BalanceTracker.records;
+			if (evt.data.value.length > 0) {
+				for (const tx of evt.data.value) {
+					const proposalId = tx.message.proposalId;
+					const txHash = await queryTransactionHashForProposal(proposalId);
+					let getProposalInformationData = await getProposalInformation(txHash);
+					const communityId = getProposalInformationData.communityId;
+                    const fetchProposalStatsData = await fetchProposalStats({ proposalId, communityId });
+                    token = fetchProposalStatsData.token;
+					const key = token.address + (delegationMode ? "1" : "0");
+				    balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
+
+					var transactionItem = transactions.find((obj) => {
+						return obj.key === proposalId;
+					});
+					const transaction = {
+						key: proposalId,
+						name: getProposalInformationData.title,
+						price: records[key][proposalId],
+					};
+					if (transactionItem) {
+						//create new Basketlist-Item
+						this.updateBasketListItem(transaction, transactionItem, token);
+					} else {
+						transactions.push(transaction);
+						this.createBasketListItem(transaction, token);
+					}
+
+					continue;
+				}
+			} else {
+				//hbt-tx-bundle event when the count is reduced to 0, but without proposal-ID.Search transactions array and update all prices
+				var recordG = null;
+				var transactionIndex = transactions.findIndex((transaction) => {
+					var record123 = Object.keys(records).find((record) => {
+						if (records[record][transaction.key] === 0) {
+							return record;
+						}
+					});
+					recordG = record123;
+					if (record123) {
+						return true;
+					}
+				});
+				const transaction = transactions[transactionIndex];
+				if (!transaction) {
+					return;
+				}
+
+				const proposalId = transaction.key;
 				const txHash = await queryTransactionHashForProposal(proposalId);
-				// console.log("txHashnew",txHash);
 				let getProposalInformationData = await getProposalInformation(txHash);
-				console.log("getProposalInformation", getProposalInformationData);
 				const communityId = getProposalInformationData.communityId;
-				console.log("communityId", communityId);
-
 				const fetchProposalStatsData = await fetchProposalStats({ proposalId, communityId });
-				console.log("fetchProposalStats", fetchProposalStatsData);
-				const delegationMode = false;
-				const key = fetchProposalStatsData.token.address + (delegationMode ? "1" : "0");
-				const records = BalanceTracker.records;
-                console.log("records", records[key]);
-                transactions.push({
-					key: proposalId,
-					value: records[key][proposalId],
-					name: getProposalInformationData.title,
-                });
-                sum = sum + records[key][proposalId];
-                console.log("transactions",transactions);
+				const token = fetchProposalStatsData.token;
+				// const key = token.address + (delegationMode ? "1" : "0");
+				balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
 
-                const basketList = this.shadowRoot.querySelector(".basket-list");
-                const pointer = basketList.querySelector(`[hash="${proposalId}"]`);
-                if (pointer) {
-                    console.log("eintrag existiert bereits --> update");
-                    pointer.querySelector(".price").innerHTML = records[key][proposalId] + " HBT";
-                } else {
-                    console.log("eintrag existiert nicht --> insert");
-                    const basketListItem = document.createElement("div");
-                    basketListItem.setAttribute("hash", proposalId);
-    
-                    basketListItem.className = "basket-list-item";
-                    const name = document.createElement("div");
-                    name.className = "name";
-                    name.innerHTML = "Vote on " + getProposalInformationData.title;
-                    const price = document.createElement("div");
-                    price.className = "price";
-                    price.innerHTML = records[key][proposalId] + " HBT";
-                    basketListItem.prepend(price);
-                    basketListItem.prepend(name);
-                    basketList.prepend(basketListItem);
-                    console.log("basketList", basketList);
+				const newTransaction = transaction;
+				newTransaction.price = records[recordG][transaction.key];
+				this.updateBasketListItem(newTransaction, transaction);
+				transactions.splice(transactionIndex, 1);
+			}
+			this.renderBasketListTotalPrice(balanceTrackResult, token);
 
-                   
-                }
-                console.log("records[key]", records[key]);
-                console.log("summe", sum);
-                console.log("count", count);
-
-                const basketListTotal = this.shadowRoot.querySelector(".basket-list-total .price");
-                console.log(basketListTotal);
-                basketListTotal.innerHTML = sum + " HBT";
-                // transactionSummary.innerHTML = count + "(=" + sum + " HBT)";
-                const token = fetchProposalStatsData.token;
-                console.log("token123",token);
-                const { total, available } = await BalanceTracker.stat(token, delegationMode);
-				const transactionSummary = this.shadowRoot.querySelector("#transactionSummary");
-                transactionSummary.innerHTML = `${renderAmount(total - available, 0, 1)} ${token.symbol}`;
-                this.shadowRoot.querySelector("#tokenBalance").textContent = `${available} ${token.symbol}`;
-                continue;
-				// const transactions = records.find((obj) => obj.)
+			if (balanceTrackResult.total - balanceTrackResult.available === 0) {
+				this.renderTransactionsCount([]);
+			} else {
+				this.renderTransactionsCount(evt.data.value);
 			}
 
-			if (!this._closedManually) {
-				// const wrapper = this.shadowRoot.querySelector("#outer");
-				// if (evt.data.value.length) {
-				// 	wrapper.classList.add("expanded");
-				// } else {
-				// 	wrapper.classList.remove("expanded");
-				// }
-			}
+			this.disableActionButtonConfirm();
+			const e = this.shadowRoot.querySelector(".actionButton");
 
 			return;
 		}
 
 		if (evt.data.type === "hbt-balance-tracker-update") {
-            const obj = evt.data.value;
-            
-            // const key = obj.tokenAddress + (obj.delegationMode ? "1" : "0");
-			// const transactions = obj.records[key];
-			// console.log("transactions", transactions);
-            // var key1 = null;
-            // Object.keys(transactions).forEach(function (key) {
-            //     if (transactions[key] > 0) {
-            //         key1 = key;
-            //         console.log("key", key);
-            //         console.log("transaction123", transactions[key]);
-
-            //         // this.transactions.push(
-            //         //     {
-            //         //         key: key,
-            //         //         value: transactions[key],
-            //         //     }
-            //         // )
-            //     }
-            // });
-			// const token = await getTokenV2(obj.tokenAddress);
-            // const { available } = await BalanceTracker.stat(token, obj.delegationMode);
+			// const obj = evt.data.value;
+			const obj = evt.data.value;
+			const token = await getTokenV2(obj.tokenAddress);
+			const { total, available } = await BalanceTracker.stat(token, delegationMode);
+			delegationMode = obj.delegationMode;
+			this.renderTransactionsSummary(total, available, token);
 			return;
 		}
 	}
 
-	attributeChangedCallback(name, oldValue, newValue) {
-		alert("test");
-		console.console.log("werde ich aufgerufen");
-		if (name === ATTR_SWITCH) {
-			const e = this.shadowRoot.querySelector("#inner");
-			if (newValue === "1") {
-				e.classList.add("on");
-			} else {
-				e.classList.remove("on");
-			}
+	renderTransactionsSummary(total, available, token) {
+		// var transactionsCount = this.getTransactionCount();
+		const transactionsTokenAmountSelector = this.shadowRoot.querySelector("#transactionsTokenAmount");
+		transactionsTokenAmountSelector.textContent = `(=${renderAmount(total - available, 0, 1)} ${token.symbol})`;
+	}
+
+	renderTransactionsCount(transactions) {
+		const transactionsCountSelector = this.shadowRoot.querySelector("#transactionsCount");
+		transactionsCountSelector.textContent = transactions.length;
+	}
+
+    renderBasketListTotalPrice(balanceTrackResult, token) {
+        if (!token) {
+            token = "HBT";
+        }
+        const priceTotal = balanceTrackResult.total - balanceTrackResult.available;
+		const basketListTotal = this.shadowRoot.querySelector(".basket-list-total .price");
+        basketListTotal.innerHTML = `${priceTotal} ${token.symbol}`;
+	}
+
+	updateBasketListItem(newTransaction, oldTransaction, token) {
+		const proposalId = newTransaction.key;
+		const price = newTransaction.price;
+		const basketList = this.shadowRoot.querySelector(".basket-list");
+		const basketListItem = basketList.querySelector(`[hash="${proposalId}"]`);
+		if (!basketListItem) {
+			return;
 		}
-		this.render();
+
+		if (newTransaction.price === 0) {
+			basketListItem.parentElement.removeChild(basketListItem);
+		} else {
+			oldTransaction.price = newTransaction.price;
+			basketListItem.querySelector(".price").innerHTML = `${price} ${token.symbol}`;
+		}
 	}
 
-	firstClick() {
-		alert("First Clicked");
-		$("#actionButton").off("click").on("click", secondClick);
+    createBasketListItem(transaction, token) {
+		const basketList = this.shadowRoot.querySelector(".basket-list");
+		const proposalId = transaction.key;
+		const price = transaction.price;
+		const title = "Vote on " + transaction.name;
+		const basketListItem = document.createElement("div");
+		basketListItem.setAttribute("hash", proposalId);
+		basketListItem.className = "basket-list-item";
+		const namePointer = document.createElement("div");
+		namePointer.className = "name";
+		namePointer.innerHTML = title;
+		const pricePointer = document.createElement("div");
+		pricePointer.className = "price";
+		pricePointer.innerHTML = `${price} ${token.symbol}`;
+		basketListItem.prepend(pricePointer);
+		basketListItem.prepend(namePointer);
+		basketList.prepend(basketListItem);
 	}
 
-	secondClick() {
-		alert("Second Clicked");
-		$("#actionButton").off("click").on("click", firstClick);
+	setActionButtonSign() {
+        const e = this.shadowRoot.querySelector(".actionButton");
+        e.id = "sign";
+		this.shadowRoot.querySelector("#wrapper").classList.add("detail-expanded");
+		const count = this.getTransactionCount();
+		e.textContent = `SIGN(${count})`;
+	}
+
+	setActionButtonConfirm() {
+        const e = this.shadowRoot.querySelector(".actionButton");
+        e.id = "confirm";
+		e.textContent = "CONFIRM";
+	}
+
+	closeBasketDetail() {
+		this.shadowRoot.querySelector("#wrapper").classList.remove("detail-expanded");
+		this.setActionButtonConfirm();
+	}
+
+	disableActionButtonConfirm() {
+		const e = this.shadowRoot.querySelector(".actionButton");
+		if (transactions.length === 0) {
+			this.setActionButtonConfirm();
+			e.classList.add("disabled");
+		} else {
+			e.classList.remove("disabled");
+		}
+	}
+
+	toggleDelegationMode() {
+		delegationMode = !delegationMode;
 	}
 
 	// calculateCollapsedScale () {
@@ -439,54 +486,15 @@ class HabitatVotingBasket extends HTMLElement {
 	//         y: collapsed.height / expanded.height
 	//     };
 	// }
-	async chainUpdateCallback() {
-		const signer = await getSigner();
-		const account = await signer.getAddress();
-		const { habitat } = await getProviders();
-		const token = await getTokenV2(HBT);
-		console.log("test");
-		console.log(token);
-		const value = await token.contract.balanceOf(account);
-		console.log(value);
-		// balances
-		{
-			let account;
-			if (walletIsConnected()) {
-				const signer = await getSigner();
-				account = await signer.getAddress();
-			}
-
-			let usedUserBalance = "-";
-			let userBalance = usedUserBalance;
-			let usedDelegatedBalance = usedUserBalance;
-			let delegatedBalance = usedUserBalance;
-
-			if (account) {
-				const delegated = await getTotalDelegatedAmountForToken(token.address, account);
-				const totalUserBalance = (await habitat.callStatic.getBalance(token.address, account)).sub(delegated);
-                const voted = await habitat.callStatic.getActiveVotingStake(token.address, account);
-                console.log("voted123",voted);
-				userBalance = renderAmount(totalUserBalance, token.decimals);
-				usedUserBalance = renderAmount(voted, token.decimals);
-
-				const { total, used } = await getDelegatedAmountsForToken(token.address, account);
-				delegatedBalance = renderAmount(total, token.decimals);
-				usedDelegatedBalance = renderAmount(used, token.decimals);
-			}
-
-			this.shadowRoot.querySelector("#tokenBalance").textContent = `${userBalance} ${token.symbol}`;
-		}
-	}
 
 	async render() {
-		// const right = this.shadowRoot.querySelector("#inner").classList.contains("on");
-		// const text = this.getAttribute(right ? ATTR_RIGHT : ATTR_LEFT);
-		// this.shadowRoot.querySelector("#mode").textContent = text;
-
-		// const tooltipText = this.getAttribute(right ? ATTR_TOOLTIP_RIGHT : ATTR_TOOLTIP_LEFT);
-		// this.shadowRoot.querySelector("#tooltip").style.visibility = tooltipText ? "initial" : "hidden";
-		// this.shadowRoot.querySelector("#content").innerHTML = tooltipText;
-		// return this.chainUpdateCallback();
+		const token = await getTokenV2(HBT);
+		this.renderTransactionsSummary(0, 0, token);
+		const { available } = await BalanceTracker.stat(token, delegationMode);
+		const tokenBalanceSelector = this.shadowRoot.querySelector("#tokenBalance");
+		tokenBalanceSelector.innerHTML = `${available} ${token.symbol}`;
+		this.shadowRoot.querySelector("img").src = token.logoURI;
+		this.renderTransactionsCount([]);
 	}
 }
 customElements.define("habitat-voting-basket", HabitatVotingBasket);
