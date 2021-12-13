@@ -224,29 +224,53 @@ class HabitatCommunities extends HabitatPanel {
   constructor() {
     super();
 
+    //YourCommunities
     this.tokens = []; //compare w each community token
-    //if user has a community's token, toggle once
     this.userSection = this.shadowRoot.querySelector('#user-section');
-
-    // sorting arrays
-    this.communities = [];
     this.userCommunities = [];
-
-    //append to containers & _loadeds
-    this.container = this.shadowRoot.querySelector('#communities');
     this.userContainer = this.shadowRoot.querySelector('#user-communities');
-    this._loaded = {};
     this._userLoaded = {};
 
-    //for all flipcards, flip to front on window resize
-    window.addEventListener('resize', () => {
-      for (const flipcard of this.shadowRoot.querySelectorAll('habitat-flip-card')) {
-        const wrapper = flipcard.shadowRoot.querySelector('.flip-wrapper')
-        wrapper.classList.remove('flip');
+    // Communities on Habitat
+    this.communities = [];
+    this.container = this.shadowRoot.querySelector('#communities');
+    this.container.insertAdjacentHTML('beforeend', '<span></span><div></div><div></div><div></div>')
+    this._loaded = {};
+    checkScroll(
+      this.shadowRoot.querySelector('#content'),
+      async () => {
+        for await (const community of this.communities) {
+          if (!this._loaded[community.transactionHash]) {
+            this._loaded[community.transactionHash] = true;
+            this.renderCommunity(this.container, community);
+          }
+        }
       }
-    });
+    );
 
-    this.sorting;
+    // handle create button
+    wrapListener(
+      this.shadowRoot.querySelector('#create-community'),
+      () => {
+        if (walletIsConnected()) {
+
+          let createCommunityCard = this.shadowRoot.querySelector('habitat-community-preview-creator');
+          if (createCommunityCard) {
+            throw new Error('Only one card allowed at a time');
+          }
+          else {
+            this.shadowRoot.querySelector('button#create-community').classList.toggle('active');
+            this.shadowRoot.querySelector('#creating-community').prepend(document.createElement('habitat-community-preview-creator'));
+          }
+
+        } else {
+          throw new Error('Please connect a wallet');
+        }
+      }
+    );
+
+    // handle sort button
+    this.sorting = 'sort-recent'; //default sorting
     this.sortBtn = this.shadowRoot.querySelector('button#sort');
     this.dropdown = this.shadowRoot.querySelector('#sort-dropdown');
     this.selector = this.shadowRoot.querySelector('#sort-options');
@@ -265,34 +289,27 @@ class HabitatCommunities extends HabitatPanel {
           }, false);
         }
     });
-    
-    checkScroll(
-      this.shadowRoot.querySelector('#content'),
-      async () => {
-        for await (const community of this.communities) {
-          if (!this._loaded[community.transactionHash]) {
-            this._loaded[community.transactionHash] = true;
-            this.renderCommunity(this.container, community);
-          }
-        }   
+
+    //for all flipcards, flip to front on window resize
+    window.addEventListener('resize', () => {
+      for (const flipcard of this.shadowRoot.querySelectorAll('habitat-flip-card')) {
+        const wrapper = flipcard.shadowRoot.querySelector('.flip-wrapper')
+        wrapper.classList.remove('flip');
       }
-    );
-
-    this.container.insertAdjacentHTML('beforeend', '<span></span><div></div><div></div><div></div>')
+    });
   }
-
-    //TODO: 
-    //test community creation- does the fetchLatest function display community in user communities?
 
   get title () {
     return 'Communites';
   }
 
   async sort(sorting) {
+    this.userContainer.innerHTML = ''
+    this.userContainer.insertAdjacentHTML('beforeend', '<span></span><div></div><div></div><div></div>')
+    this._userLoaded = {}
+
     if (sorting.startsWith('sort-') && !sorting.match('sort-options')) {
-      this.userContainer.innerHTML = ''
-      this.userContainer.insertAdjacentHTML('beforeend', '<span></span><div></div><div></div><div></div>')
-      this._userLoaded = {}
+
       this.container.innerHTML = ''
       this.container.insertAdjacentHTML('beforeend', '<span></span><div></div><div></div><div></div>')
       this._loaded = {}
@@ -313,12 +330,9 @@ class HabitatCommunities extends HabitatPanel {
     this.sorting = sorting;
   }
 
-// ----------------------------------------------------
-  //render elements
+  // load communities
   async render () {
 
-    this.chainUpdateCallback();
-    
     const { habitat } = await getProviders();
     const filter = habitat.filters.CommunityCreated();
     filter.toBlock = await habitat.provider.getBlockNumber();
@@ -342,7 +356,7 @@ class HabitatCommunities extends HabitatPanel {
         }
     }
 
-    this.chainUpdateCallback();
+    return this.chainUpdateCallback();
   }
 // ----------------------------------
   //updater
@@ -364,54 +378,19 @@ class HabitatCommunities extends HabitatPanel {
 
     let account;
     if (!walletIsConnected()) {
-
-      //clear create button's former event listener
-      this.shadowRoot.querySelector('#create-community').replaceWith(this.shadowRoot.querySelector('#create-community').cloneNode(true))
-
-      //issue: this.chainUpdateCallback calling too late- button should be usable immediately on page load
-
-      wrapListener(this.shadowRoot.querySelector('#create-community'), async () => {
-        throw new Error('Please connect a wallet');
-      });
+      this.tokens = [];
     }
     if (walletIsConnected()) {
-      //clear create button's former event listener
-      this.shadowRoot.querySelector('#create-community').replaceWith(this.shadowRoot.querySelector('#create-community').cloneNode(true))
-
       account = await (await getSigner()).getAddress();
-
-      wrapListener(
-        this.shadowRoot.querySelector('#create-community'),
-        (evt) => {
-          let createCommunityCard = this.shadowRoot.querySelector('habitat-community-preview-creator');
-          if (createCommunityCard) {
-            throw new Error('Only one card allowed at a time');
-          }
-          else {
-            this.shadowRoot.querySelector('button#create-community').classList.toggle('active');
-            this.shadowRoot.querySelector('#creating-community').prepend(document.createElement('habitat-community-preview-creator'));
-          }
-        }
-      );
-    }
-
-    // ????
-    // if render() returns promise ...
-    // or split function from here ...
-    // issue: communities not fully loading before user communities
-    // MORE RESEARCH ON ONCHAINUPDATE();
-    // move (walletIsConnected) to HabitatPanel.js ???
-
-    if (account) {
-
-      const { HBT } = getConfig();
       let tokens = (await queryTransfers(account)).tokens;
-  
+        
       if (tokens.length === 0 || tokens !== this.tokens) {
-  
+
+        const { HBT } = getConfig();
+    
         this.userCommunities = [];
         this.userSection.classList.remove('visible');
-  
+    
         for (const community of this.communities) {
           // following condition left out for demonstration purposes
           // && !community.token.includes(HBT)
@@ -419,28 +398,24 @@ class HabitatCommunities extends HabitatPanel {
             if (!this.userSection.classList.contains('visible')) {
               this.userSection.classList.toggle('visible');
             }
-            this.userCommunities.push(community);
+            if (!this.userCommunities[community.transactionHash]) {
+              this.userCommunities.push(community);
+            }
           }
         }
   
-        if (this.sorting) {
-          this.sort(this.sorting);
-        }
-        else {
-          this.userContainer.innerHTML = '';
-          this.userContainer.insertAdjacentHTML('beforeend', '<span></span><div></div><div></div><div></div>')
-          this._userLoaded = {};
-        }
-          
+        this.sort(this.sorting);
+  
         this.tokens = tokens;
-      }
+  
+        }
     }
-
+    
     await this.fetchLatest();
     
   }
 
-  // ---------------------------------------------------
+  // render community cards
   async renderCommunity (container, community, prepend = false) {
     const ele = document.createElement('div');
     ele.innerHTML = COMMUNITY_PREVIEW_TEMPLATE;
