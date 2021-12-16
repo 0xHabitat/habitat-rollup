@@ -146,7 +146,7 @@ class HabitatCommunities extends HabitatPanel {
   #buttons * {
     margin-right: 0;
   }
-  #create-community.active {
+  #create-community.pressed {
     background: var(--color-bg-invert);
     color: var(--color-text-invert);
     transition: all .2s linear;
@@ -249,45 +249,52 @@ class HabitatCommunities extends HabitatPanel {
     );
 
     // handle create button
+    this.creatingCommunity = this.shadowRoot.querySelector('#creating-community')
+    let createCommunityCard;
     wrapListener(
       this.shadowRoot.querySelector('#create-community'),
       () => {
         if (walletIsConnected()) {
-
-          let createCommunityCard = this.shadowRoot.querySelector('habitat-community-preview-creator');
+          createCommunityCard = this.shadowRoot.querySelector('habitat-community-preview-creator');
           if (createCommunityCard) {
             throw new Error('Only one card allowed at a time');
           }
           else {
-            this.shadowRoot.querySelector('button#create-community').classList.toggle('active');
-            this.shadowRoot.querySelector('#creating-community').prepend(document.createElement('habitat-community-preview-creator'));
+            this.creatingCommunity.prepend(document.createElement('habitat-community-preview-creator'));
           }
-
         } else {
           throw new Error('Please connect a wallet');
         }
       }
     );
+    // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationObserverInit
+    const observer = new MutationObserver(() => {
+      this.shadowRoot.querySelector('button#create-community').classList.toggle('pressed');
+    });
+    observer.observe(this.creatingCommunity, {
+      childList: true
+    });
 
     // handle sort button
-    this.sorting = 'sort-recent'; //default sorting
+    this.sorting = 'sort-recent'; //sorting global var
+    this.sort(this.sorting);
     this.sortBtn = this.shadowRoot.querySelector('button#sort');
     this.dropdown = this.shadowRoot.querySelector('#sort-dropdown');
     this.selector = this.shadowRoot.querySelector('#sort-options');
     this.sortBtn.addEventListener('click', evt => {
-        evt.stopPropagation();
-        this.dropdown.classList.toggle('active');
-        if (this.dropdown.classList.contains('active')) {
-          this.selector.addEventListener('click', evt => {
-            this.sort(evt.target.id);
-          }, false);
-          //click anywhere in communities tab to close
-          this.shadowRoot.addEventListener('click', evt => {
-            if (!evt.target.id.startsWith('sort-')) {
-              this.dropdown.classList.remove('active');
-            }
-          }, false);
-        }
+      evt.stopPropagation();
+      this.dropdown.classList.toggle('active');
+      if (this.dropdown.classList.contains('active')) {
+        this.selector.addEventListener('click', evt => {
+          this.sort(evt.target.id);
+        }, false);
+        //click anywhere in communities tab to close
+        this.shadowRoot.addEventListener('click', evt => {
+          if (!evt.target.id.startsWith('sort-')) {
+            this.dropdown.classList.remove('active');
+          }
+        }, false);
+      }
     });
 
     //for all flipcards, flip to front on window resize
@@ -362,6 +369,8 @@ class HabitatCommunities extends HabitatPanel {
   //updater
   async chainUpdateCallback () {
 
+    await this.fetchLatest();
+
     const userLoad = () => {
       for (const community of this.userCommunities) {
         if (!this._userLoaded[community.transactionHash]) {
@@ -404,15 +413,9 @@ class HabitatCommunities extends HabitatPanel {
           }
         }
   
-        this.sort(this.sorting);
-  
         this.tokens = tokens;
-  
-        }
+      }
     }
-    
-    await this.fetchLatest();
-    
   }
 
   // render community cards
@@ -454,9 +457,30 @@ class HabitatCommunities extends HabitatPanel {
     filter.toBlock = await habitat.provider.getBlockNumber();
 
     for await (const evt of pullEvents(habitat, filter, 1)) {
-      if (!this._loaded[evt.transactionHash]) {
-        this._loaded[evt.transactionHash] = true;
-        this.renderCommunity(this.container, evt, true);
+
+      const { communityId, governanceToken } = evt.args;
+      const metadata = await getMetadataForTopic(communityId);
+      // const memberCount = await habitat.callStatic.getTotalMemberCount(communityId);
+      const community = {
+        transactionHash: evt.transactionHash,
+        name: metadata.title,
+        link: `#habitat-community,${evt.transactionHash}`,
+        token: governanceToken,
+        // members: memberCount,
+        block: evt.block,
+        details: metadata.details,
+        banner: metadata.bannerCid
+      }
+
+      if (!this.communities[evt.transactionHash] && !this._loaded[community.transactionHash]) {
+        this.communities.push(community);
+        this._loaded[community.transactionHash] = true;
+        this.renderCommunity(this.container, community, true);
+        if (this.tokens.includes(community.token)) {
+          this.userCommunities.push(community);
+          this._userLoaded[community.transactionHash] = true;
+          this.renderCommunity(this.userContainer, community, true);
+        }
       }
     }
   }

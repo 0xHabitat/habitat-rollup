@@ -142,13 +142,6 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
 
     wrapListener(this.shadowRoot.querySelector('#create'), this.create.bind(this));
     wrapListener(this.shadowRoot.querySelector('#boxleg'), () => {
-      //remove css active / inverted color from create-community button
-      const parentShadowRoot = this.parentElement.getRootNode();
-      const createCommunity = parentShadowRoot.querySelector('#create-community');
-      if (createCommunity) {
-        createCommunity.classList.toggle('active');
-      }
-
       this.remove();
     });
 
@@ -169,9 +162,6 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
 
     const celebration = this.vERCCreator.innerHTML
     console.log(celebration)
-    // if (celebration) {
-    //   console.log('celebration')
-    // }
   }
 
   _loadFile (evt) {
@@ -181,8 +171,13 @@ export default class HabitatCommunityPreviewCreator extends HTMLElement {
     const img = document.createElement('img');
 
     img.onload = () => {
+      //fit image
+      const scale = Math.max(this._ctx.canvas.width / img.width, this._ctx.canvas.height / img.height);
+      const x = (img.width * scale) + (this._ctx.canvas.width * scale) / this._ctx.canvas.width;
+      const y = (img.height * scale) + (this._ctx.canvas.height * scale) / this._ctx.canvas.height;
+
       this._ctx.clearRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.height);
-      this._ctx.drawImage(img, 0, 0);
+      this._ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, x, y);
       this._ctx.canvas.classList.toggle('editor');
       console.log('image loaded')
     };
