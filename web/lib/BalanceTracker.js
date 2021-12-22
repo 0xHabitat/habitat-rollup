@@ -52,6 +52,18 @@ export default class BalanceTracker {
     }
 
     return pending;
+    }
+    
+  static async getRecords (token, delegationMode) {
+    const key = token.address + (delegationMode ? '1' : '0');
+    const records = this.records[key] || [];
+      let recordsArray = [];
+
+    for (const k in records) {
+      recordsArray[k] = records[k];
+    }
+
+    return recordsArray;
   }
 
   static async stat (token, delegationMode) {

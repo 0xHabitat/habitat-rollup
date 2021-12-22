@@ -192,7 +192,7 @@ button, .button {
 }
 #sticky {
   position: sticky;
-  top: .5em;
+  top: 65vh;
   max-width: max-content;
   padding: .5em 1em;
   z-index: 9;

@@ -14,7 +14,7 @@ import {
 import BalanceTracker from "./BalanceTracker.js";
 
 const { HBT } = getConfig();
-var transactions = [];
+var initRecords = null;
 var delegationMode = false;
 
 const TEMPLATE = document.createElement("template");
@@ -272,95 +272,77 @@ class HabitatVotingBasket extends HTMLElement {
 			"click",
 			async () => {
 				if (this.shadowRoot.querySelector("#sign.actionButton")) {
-                    var result = await signBatch(this._txBundle);
-                    this.transactions = [];
+					var result = await signBatch(this._txBundle);
+					this.transactions = [];
 				} else {
 					this.setActionButtonSign();
 				}
 			},
 			false
 		);
-        
-
 		this.render();
 		window.addEventListener("message", this);
 	}
 
 	getTransactionCount() {
-		return transactions.length;
+		return this.transactions.length;
 	}
 
 	async handleEvent(evt) {
-        if (evt.data.type === "hbt-tx-bundle") {
-            this._txBundle = evt.data.value;
-            
-            var balanceTrackResult = {};
-            var token = null;
+		if (evt.data.type === "hbt-tx-bundle") {
+			this._txBundle = evt.data.value;
+			var balanceTrackResult = {};
+			var token = null;
 			this.closeBasketDetail();
-			const records = BalanceTracker.records;
+            const records = BalanceTracker.records;
 			if (evt.data.value.length > 0) {
+				//value ist nicht gleich null, also kann müssen alle transactionen, die in value drin sind verwendet werden, alle anderen entfallen
+				this.removeTransactions(evt.data.value);
+                this.transactions = evt.data.value;
 				for (const tx of evt.data.value) {
 					const proposalId = tx.message.proposalId;
+
 					const txHash = await queryTransactionHashForProposal(proposalId);
 					let getProposalInformationData = await getProposalInformation(txHash);
 					const communityId = getProposalInformationData.communityId;
-                    const fetchProposalStatsData = await fetchProposalStats({ proposalId, communityId });
-                    token = fetchProposalStatsData.token;
+					const fetchProposalStatsData = await fetchProposalStats({ proposalId, communityId });
+					token = fetchProposalStatsData.token;
 					const key = token.address + (delegationMode ? "1" : "0");
-				    balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
+					// const calculatedRecords = this.getTransactionRecords(key);
 
-					var transactionItem = transactions.find((obj) => {
-						return obj.key === proposalId;
-					});
-					const transaction = {
-						key: proposalId,
-						name: getProposalInformationData.title,
-						price: records[key][proposalId],
-					};
-					if (transactionItem) {
-						//create new Basketlist-Item
-						this.updateBasketListItem(transaction, transactionItem, token);
+					balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
+
+					const transactionItem = this.transactions.find((obj) => {
+						return obj.message.proposalId === proposalId;
+                    });
+
+                    if (!transactionItem) {
+                        continue;
+                    }
+                    
+                    transactionItem.price =
+						records[key][proposalId] -this.initRecords[delegationMode][proposalId];
+                    transactionItem.name = getProposalInformationData.title;
+                    transactionItem.key = proposalId;
+
+                    //craete or update
+                    const basketList = this.shadowRoot.querySelector(".basket-list");
+                    const basketListItem = basketList.querySelector(`[hash="${proposalId}"]`);
+                    if (basketListItem) {
+						this.updateBasketListItem(transactionItem);
+						//update price
 					} else {
-						transactions.push(transaction);
-						this.createBasketListItem(transaction, token);
-					}
+                        this.createBasketListItem(transactionItem, token);
+                    }
 
 					continue;
 				}
-			} else {
-				//hbt-tx-bundle event when the count is reduced to 0, but without proposal-ID.Search transactions array and update all prices
-				var recordG = null;
-				var transactionIndex = transactions.findIndex((transaction) => {
-					var record123 = Object.keys(records).find((record) => {
-						if (records[record][transaction.key] === 0) {
-							return record;
-						}
-					});
-					recordG = record123;
-					if (record123) {
-						return true;
-					}
-				});
-				const transaction = transactions[transactionIndex];
-				if (!transaction) {
-					return;
-				}
-
-				const proposalId = transaction.key;
-				const txHash = await queryTransactionHashForProposal(proposalId);
-				let getProposalInformationData = await getProposalInformation(txHash);
-				const communityId = getProposalInformationData.communityId;
-				const fetchProposalStatsData = await fetchProposalStats({ proposalId, communityId });
-				const token = fetchProposalStatsData.token;
-				// const key = token.address + (delegationMode ? "1" : "0");
-				balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
-
-				const newTransaction = transaction;
-				newTransaction.price = records[recordG][transaction.key];
-				this.updateBasketListItem(newTransaction, transaction);
-				transactions.splice(transactionIndex, 1);
-			}
-			this.renderBasketListTotalPrice(balanceTrackResult, token);
+            } else {
+                this.clearTransactions();
+            }
+            this.removeTransactions(evt.data.value);
+			this.renderBasketListTotalPrice();
+			this.renderTransactionsSummary();
 
 			if (balanceTrackResult.total - balanceTrackResult.available === 0) {
 				this.renderTransactionsCount([]);
@@ -371,58 +353,94 @@ class HabitatVotingBasket extends HTMLElement {
 			this.disableActionButtonConfirm();
 			const e = this.shadowRoot.querySelector(".actionButton");
 
+            //bei schnellen doppelten Klicken, gibts ein Bug, weil die Events sich überlagern
 			return;
 		}
 
 		if (evt.data.type === "hbt-balance-tracker-update") {
 			// const obj = evt.data.value;
 			const obj = evt.data.value;
-			const token = await getTokenV2(obj.tokenAddress);
-			const { total, available } = await BalanceTracker.stat(token, delegationMode);
 			delegationMode = obj.delegationMode;
-			this.renderTransactionsSummary(total, available, token);
+			const token = await getTokenV2(obj.tokenAddress);
+			const key = token.address + (delegationMode ? "1" : "0");
+			//BalanceTracker.records werden schrittweise geladen. Ich benötige die alte Liste von Records, um neue Transactions darstellen zu können
+			//initrecords für delegation und nicht delegationmode initialisieren
+            if (BalanceTracker.records[key]) {
+                if (this.initRecords === undefined) {
+                    this.initRecords = {};
+                }
+				if (
+                    this.initRecords[delegationMode] === undefined ||
+					Object.keys(this.initRecords[delegationMode]).length !==
+						Object.keys(BalanceTracker.records[key]).length
+                ) {
+					this.initRecords[delegationMode] = await BalanceTracker.getRecords(token, delegationMode);
+				}
+			}
+			const balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
+			this.renderTokenBalance(balanceTrackResult);
+
 			return;
 		}
 	}
 
-	renderTransactionsSummary(total, available, token) {
+	renderTransactionsSummary() {
 		// var transactionsCount = this.getTransactionCount();
 		const transactionsTokenAmountSelector = this.shadowRoot.querySelector("#transactionsTokenAmount");
-		transactionsTokenAmountSelector.textContent = `(=${renderAmount(total - available, 0, 1)} ${token.symbol})`;
+		transactionsTokenAmountSelector.textContent = `(=${this.getTransactionsTotalPrice()} ${this.token.symbol})`;
+		// transactionsTokenAmountSelector.textContent = `(=${renderAmount(
+		// 	balanceTrackResult.total - balanceTrackResult.available,
+		// 	0,
+		// 	1
+		// )} ${token.symbol})`;
 	}
 
-	renderTransactionsCount(transactions) {
+    renderTransactionsCount(transactions) {
 		const transactionsCountSelector = this.shadowRoot.querySelector("#transactionsCount");
-		transactionsCountSelector.textContent = transactions.length;
+		transactionsCountSelector.textContent = this.transactions.length;
 	}
 
-    renderBasketListTotalPrice(balanceTrackResult, token) {
-        if (!token) {
-            token = "HBT";
-        }
-        const priceTotal = balanceTrackResult.total - balanceTrackResult.available;
+	renderBasketListTotalPrice() {
+		const priceTotal = this.getTransactionsTotalPrice();
 		const basketListTotal = this.shadowRoot.querySelector(".basket-list-total .price");
-        basketListTotal.innerHTML = `${priceTotal} ${token.symbol}`;
+		basketListTotal.innerHTML = `${priceTotal} ${this.token.symbol}`;
 	}
 
-	updateBasketListItem(newTransaction, oldTransaction, token) {
+	renderTokenBalance(balanceTrackResult) {
+		const tokenBalanceSelector = this.shadowRoot.querySelector("#tokenBalance");
+		tokenBalanceSelector.innerHTML = `${balanceTrackResult.available} ${this.token.symbol}`;
+	}
+
+    clearTransactions() {
+		this.transactions = [];
+		const basketList = this.shadowRoot.querySelector(".basket-list");
+		basketList.innerHTML = "";
+    }
+    
+    removeTransactions(eventTransactions) {
+        const basketList = this.shadowRoot.querySelector(".basket-list");
+            for (let basketListItem of basketList.children) {
+                var hash = basketListItem.getAttribute("hash");
+                const entryHtml = eventTransactions.find((obj) => {
+					return obj.message.proposalId === hash;
+				});
+                //schnelles Klicken führt zu Verschiebung der Events(Reihenfolge kann sich verändern), daher auch den Preis überprüfen
+                if (!entryHtml || entryHtml.price === 0) {
+                    const basketListItem = basketList.querySelector(`[hash="${hash}"]`);
+                    basketListItem.parentElement.removeChild(basketListItem);
+                }
+			};
+	}
+    
+	updateBasketListItem(newTransaction) {
 		const proposalId = newTransaction.key;
 		const price = newTransaction.price;
 		const basketList = this.shadowRoot.querySelector(".basket-list");
 		const basketListItem = basketList.querySelector(`[hash="${proposalId}"]`);
-		if (!basketListItem) {
-			return;
-		}
-
-		if (newTransaction.price === 0) {
-			basketListItem.parentElement.removeChild(basketListItem);
-		} else {
-			oldTransaction.price = newTransaction.price;
-			basketListItem.querySelector(".price").innerHTML = `${price} ${token.symbol}`;
-		}
+        basketListItem.querySelector(".price").innerHTML = `${price} ${this.token.symbol}`;
 	}
 
-    createBasketListItem(transaction, token) {
+	createBasketListItem(transaction, token) {
 		const basketList = this.shadowRoot.querySelector(".basket-list");
 		const proposalId = transaction.key;
 		const price = transaction.price;
@@ -442,16 +460,16 @@ class HabitatVotingBasket extends HTMLElement {
 	}
 
 	setActionButtonSign() {
-        const e = this.shadowRoot.querySelector(".actionButton");
-        e.id = "sign";
+		const e = this.shadowRoot.querySelector(".actionButton");
+		e.id = "sign";
 		this.shadowRoot.querySelector("#wrapper").classList.add("detail-expanded");
 		const count = this.getTransactionCount();
 		e.textContent = `SIGN(${count})`;
 	}
 
 	setActionButtonConfirm() {
-        const e = this.shadowRoot.querySelector(".actionButton");
-        e.id = "confirm";
+		const e = this.shadowRoot.querySelector(".actionButton");
+		e.id = "confirm";
 		e.textContent = "CONFIRM";
 	}
 
@@ -462,7 +480,7 @@ class HabitatVotingBasket extends HTMLElement {
 
 	disableActionButtonConfirm() {
 		const e = this.shadowRoot.querySelector(".actionButton");
-		if (transactions.length === 0) {
+		if (this.transactions.length === 0) {
 			this.setActionButtonConfirm();
 			e.classList.add("disabled");
 		} else {
@@ -474,26 +492,33 @@ class HabitatVotingBasket extends HTMLElement {
 		delegationMode = !delegationMode;
 	}
 
-	// calculateCollapsedScale () {
-	//     // The menu title can act as the marker for the collapsed state.
-	//     const collapsed = menuTitle.getBoundingClientRect();
 
-	//     // Whereas the menu as a whole (title plus items) can act as
-	//     // a proxy for the expanded state.
-	//     const expanded = menu.getBoundingClientRect();
-	//     return {
-	//         x: collapsed.width / expanded.width,
-	//         y: collapsed.height / expanded.height
-	//     };
+	// getTransactionRecords(recordKey) {
+	// 	const records = BalanceTracker.records;
+	// 	var calculatedRecords = [];
+	// 	Object.keys(records[recordKey]).forEach((key) => {
+	// 		const oldRecord = this.initRecords[delegationMode][key];
+	// 		const newRecord = records[recordKey][key];
+	// 		calculatedRecords[key] = Math.abs(newRecord - oldRecord);
+	// 	});
+	// 	return calculatedRecords;
 	// }
 
-	async render() {
-		const token = await getTokenV2(HBT);
-		this.renderTransactionsSummary(0, 0, token);
-		const { available } = await BalanceTracker.stat(token, delegationMode);
-		const tokenBalanceSelector = this.shadowRoot.querySelector("#tokenBalance");
-		tokenBalanceSelector.innerHTML = `${available} ${token.symbol}`;
-		this.shadowRoot.querySelector("img").src = token.logoURI;
+    getTransactionsTotalPrice() {
+		var priceTotal = 0;
+		if (this.transactions.length > 0) {
+			priceTotal = this.transactions.reduce((a, b) => a + (b.price || 0), 0);
+        }
+		return priceTotal;
+	}
+
+    async render() {
+        this.transactions = [];
+		this.token = await getTokenV2(HBT);
+		const balanceTrackResult = await BalanceTracker.stat(this.token, delegationMode);
+		this.renderTokenBalance(balanceTrackResult);
+		this.renderTransactionsSummary();
+		this.shadowRoot.querySelector("img").src = this.token.logoURI;
 		this.renderTransactionsCount([]);
 	}
 }
