@@ -3,6 +3,9 @@ name: Publish Landing Page
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: '*/60 * * * *'
+
 jobs:
   build:
     timeout-minutes: 45
