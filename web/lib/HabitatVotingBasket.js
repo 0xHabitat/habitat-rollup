@@ -14,7 +14,6 @@ import {
 import BalanceTracker from "./BalanceTracker.js";
 
 const { HBT } = getConfig();
-var initRecords = null;
 var delegationMode = false;
 
 const TEMPLATE = document.createElement("template");
@@ -284,10 +283,6 @@ class HabitatVotingBasket extends HTMLElement {
 		window.addEventListener("message", this);
 	}
 
-	getTransactionCount() {
-		return this.transactions.length;
-	}
-
 	async handleEvent(evt) {
 		if (evt.data.type === "hbt-tx-bundle") {
 			this._txBundle = evt.data.value;
@@ -296,8 +291,6 @@ class HabitatVotingBasket extends HTMLElement {
 			this.closeBasketDetail();
             const records = BalanceTracker.records;
 			if (evt.data.value.length > 0) {
-				//value ist nicht gleich null, also kann müssen alle transactionen, die in value drin sind verwendet werden, alle anderen entfallen
-				this.removeTransactions(evt.data.value);
                 this.transactions = evt.data.value;
 				for (const tx of evt.data.value) {
 					const proposalId = tx.message.proposalId;
@@ -308,7 +301,6 @@ class HabitatVotingBasket extends HTMLElement {
 					const fetchProposalStatsData = await fetchProposalStats({ proposalId, communityId });
 					token = fetchProposalStatsData.token;
 					const key = token.address + (delegationMode ? "1" : "0");
-					// const calculatedRecords = this.getTransactionRecords(key);
 
 					balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
 
@@ -325,12 +317,10 @@ class HabitatVotingBasket extends HTMLElement {
                     transactionItem.name = getProposalInformationData.title;
                     transactionItem.key = proposalId;
 
-                    //craete or update
                     const basketList = this.shadowRoot.querySelector(".basket-list");
                     const basketListItem = basketList.querySelector(`[hash="${proposalId}"]`);
                     if (basketListItem) {
 						this.updateBasketListItem(transactionItem);
-						//update price
 					} else {
                         this.createBasketListItem(transactionItem, token);
                     }
@@ -343,37 +333,35 @@ class HabitatVotingBasket extends HTMLElement {
             this.removeTransactions(evt.data.value);
 			this.renderBasketListTotalPrice();
 			this.renderTransactionsSummary();
-
-			if (balanceTrackResult.total - balanceTrackResult.available === 0) {
-				this.renderTransactionsCount([]);
-			} else {
-				this.renderTransactionsCount(evt.data.value);
-			}
+            this.renderTransactionsCount();
 
 			this.disableActionButtonConfirm();
 			const e = this.shadowRoot.querySelector(".actionButton");
 
-            //bei schnellen doppelten Klicken, gibts ein Bug, weil die Events sich überlagern
 			return;
 		}
 
 		if (evt.data.type === "hbt-balance-tracker-update") {
-			// const obj = evt.data.value;
 			const obj = evt.data.value;
 			delegationMode = obj.delegationMode;
 			const token = await getTokenV2(obj.tokenAddress);
 			const key = token.address + (delegationMode ? "1" : "0");
-			//BalanceTracker.records werden schrittweise geladen. Ich benötige die alte Liste von Records, um neue Transactions darstellen zu können
-			//initrecords für delegation und nicht delegationmode initialisieren
-            if (BalanceTracker.records[key]) {
-                if (this.initRecords === undefined) {
-                    this.initRecords = {};
-                }
+			/*
+            BalanceTracker.records are loaded step by step. 
+            I need the complete list of records to be able to determine which votes are new and which were already present.
+            The events do not help me here because:
+            - no statement about how was voted(+,-)
+            - no statement about how many points were voted
+            */
+			if (BalanceTracker.records[key]) {
+				if (this.initRecords === undefined) {
+					this.initRecords = {};
+				}
 				if (
-                    this.initRecords[delegationMode] === undefined ||
+					this.initRecords[delegationMode] === undefined ||
 					Object.keys(this.initRecords[delegationMode]).length !==
 						Object.keys(BalanceTracker.records[key]).length
-                ) {
+				) {
 					this.initRecords[delegationMode] = await BalanceTracker.getRecords(token, delegationMode);
 				}
 			}
@@ -385,17 +373,11 @@ class HabitatVotingBasket extends HTMLElement {
 	}
 
 	renderTransactionsSummary() {
-		// var transactionsCount = this.getTransactionCount();
 		const transactionsTokenAmountSelector = this.shadowRoot.querySelector("#transactionsTokenAmount");
 		transactionsTokenAmountSelector.textContent = `(=${this.getTransactionsTotalPrice()} ${this.token.symbol})`;
-		// transactionsTokenAmountSelector.textContent = `(=${renderAmount(
-		// 	balanceTrackResult.total - balanceTrackResult.available,
-		// 	0,
-		// 	1
-		// )} ${token.symbol})`;
 	}
 
-    renderTransactionsCount(transactions) {
+    renderTransactionsCount() {
 		const transactionsCountSelector = this.shadowRoot.querySelector("#transactionsCount");
 		transactionsCountSelector.textContent = this.transactions.length;
 	}
@@ -420,15 +402,15 @@ class HabitatVotingBasket extends HTMLElement {
     removeTransactions(eventTransactions) {
         const basketList = this.shadowRoot.querySelector(".basket-list");
             for (let basketListItem of basketList.children) {
-                var hash = basketListItem.getAttribute("hash");
-                const entryHtml = eventTransactions.find((obj) => {
+				var hash = basketListItem.getAttribute("hash");
+				const entryHtml = eventTransactions.find((obj) => {
 					return obj.message.proposalId === hash;
 				});
-                //schnelles Klicken führt zu Verschiebung der Events(Reihenfolge kann sich verändern), daher auch den Preis überprüfen
-                if (!entryHtml || entryHtml.price === 0) {
-                    const basketListItem = basketList.querySelector(`[hash="${hash}"]`);
-                    basketListItem.parentElement.removeChild(basketListItem);
-                }
+				//fast clicking leads to shifting of events(order may change), therefore also check the price
+				if (!entryHtml || entryHtml.price === 0) {
+					const basketListItem = basketList.querySelector(`[hash="${hash}"]`);
+					basketListItem.parentElement.removeChild(basketListItem);
+				}
 			};
 	}
     
@@ -463,8 +445,8 @@ class HabitatVotingBasket extends HTMLElement {
 		const e = this.shadowRoot.querySelector(".actionButton");
 		e.id = "sign";
 		this.shadowRoot.querySelector("#wrapper").classList.add("detail-expanded");
-		const count = this.getTransactionCount();
-		e.textContent = `SIGN(${count})`;
+        const count = this.transactions.length;
+        e.textContent = `SIGN(${count})`;
 	}
 
 	setActionButtonConfirm() {
@@ -493,17 +475,6 @@ class HabitatVotingBasket extends HTMLElement {
 	}
 
 
-	// getTransactionRecords(recordKey) {
-	// 	const records = BalanceTracker.records;
-	// 	var calculatedRecords = [];
-	// 	Object.keys(records[recordKey]).forEach((key) => {
-	// 		const oldRecord = this.initRecords[delegationMode][key];
-	// 		const newRecord = records[recordKey][key];
-	// 		calculatedRecords[key] = Math.abs(newRecord - oldRecord);
-	// 	});
-	// 	return calculatedRecords;
-	// }
-
     getTransactionsTotalPrice() {
 		var priceTotal = 0;
 		if (this.transactions.length > 0) {
@@ -519,7 +490,7 @@ class HabitatVotingBasket extends HTMLElement {
 		this.renderTokenBalance(balanceTrackResult);
 		this.renderTransactionsSummary();
 		this.shadowRoot.querySelector("img").src = this.token.logoURI;
-		this.renderTransactionsCount([]);
+		this.renderTransactionsCount();
 	}
 }
 customElements.define("habitat-voting-basket", HabitatVotingBasket);
