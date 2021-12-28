@@ -332,7 +332,7 @@ button, .button {
 </div>
 `;
 
-constructor() {
+  constructor() {
     super();
 
     this.shadowRoot.querySelector('#delegateModeToggle').addEventListener('toggle', this.onToggle.bind(this), false);
