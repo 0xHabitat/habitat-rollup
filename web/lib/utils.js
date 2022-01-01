@@ -35,8 +35,6 @@ const PERMIT_STRUCT_DAI = [
 
 const Web3Modal = window.Web3Modal.default;
 const WalletConnectProvider = window.WalletConnectProvider.default;
-const Fortmatic = window.Fortmatic;
-const evmChains = window.evmChains;
 
 // Web3modal instance
 let web3Modal
@@ -44,28 +42,21 @@ let web3Modal
 // Chosen wallet provider given by the dialog window
 let provider;
 
+const INFURA_ID = "1dd34ee9e5e2492b80994f6c1aafb49a";
+
 const providerOptions = {
   walletconnect: {
     package: WalletConnectProvider,
     options: {
-      // Mikko's test key - don't copy as your mileage may vary
-      infuraId: "1dd34ee9e5e2492b80994f6c1aafb49a",
-    }
-  },
-
-  fortmatic: {
-    package: Fortmatic,
-    options: {
-      // Mikko's TESTNET api key
-      key: "pk_test_391E26A3B43A3350"
+      infuraId: INFURA_ID,
     }
   }
 };
 
 web3Modal = new Web3Modal({
-  cacheProvider: true, // optional
-  providerOptions, // required
-  disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
+  cacheProvider: true,
+  providerOptions, 
+  disableInjectedProvider: false,
 });
 
 console.log("Web3Modal instance is", web3Modal);
@@ -141,6 +132,7 @@ export async function getSigner (throwIfWrongChain = true) {
   }
 
   // TODO: check for errors
+
   const provider = await web3Modal.connect();
   window.provider = provider;
   const signer = (new ethers.providers.Web3Provider(provider)).getSigner();
