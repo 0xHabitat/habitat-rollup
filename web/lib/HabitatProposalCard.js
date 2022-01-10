@@ -983,6 +983,7 @@ export default class HabitatProposalCard extends HTMLElement {
 
   async buildTransactions (delegatedFor) {
     const txs = [];
+    
     if (this.changePending) {
       const signalStrength = this.userVotedShares === 0 ? 0 : this.userSignal;
       const title = this.shadowRoot.querySelector('#title').textContent.substring(0, 10) + '...';
