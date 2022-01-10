@@ -289,7 +289,6 @@ class HabitatVotingBasket extends HTMLElement {
 			var balanceTrackResult = {};
 			var token = null;
 			this.closeBasketDetail();
-            const records = BalanceTracker.records;
 			if (evt.data.value.length > 0) {
                 this.transactions = evt.data.value;
 				for (const tx of evt.data.value) {
@@ -300,7 +299,6 @@ class HabitatVotingBasket extends HTMLElement {
 					const communityId = getProposalInformationData.communityId;
 					const fetchProposalStatsData = await fetchProposalStats({ proposalId, communityId });
 					token = fetchProposalStatsData.token;
-					const key = token.address + (delegationMode ? "1" : "0");
 
 					balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
 
@@ -311,8 +309,8 @@ class HabitatVotingBasket extends HTMLElement {
                     if (!transactionItem) {
                         continue;
                     }
-                    transactionItem.price =
-						records[key][proposalId] -this.initRecords[delegationMode][proposalId];
+                    transactionItem.price = tx.totalVoted;
+						
                     transactionItem.name = getProposalInformationData.title;
                     transactionItem.key = proposalId;
 
@@ -345,25 +343,6 @@ class HabitatVotingBasket extends HTMLElement {
 			delegationMode = obj.delegationMode;
 			const token = await getTokenV2(obj.tokenAddress);
 			const key = token.address + (delegationMode ? "1" : "0");
-			/*
-            BalanceTracker.records are loaded step by step. 
-            I need the complete list of records to be able to determine which votes are new and which were already present.
-            The events do not help me here because:
-            - no statement about how was voted(+,-)
-            - no statement about how many points were voted
-            */
-			if (BalanceTracker.records[key]) {
-				if (this.initRecords === undefined) {
-					this.initRecords = {};
-				}
-				if (
-					this.initRecords[delegationMode] === undefined ||
-					Object.keys(this.initRecords[delegationMode]).length !==
-						Object.keys(BalanceTracker.records[key]).length
-				) {
-					this.initRecords[delegationMode] = await BalanceTracker.getRecords(token, delegationMode);
-				}
-			}
 			const balanceTrackResult = await BalanceTracker.stat(token, delegationMode);
 			this.renderTokenBalance(balanceTrackResult);
 
