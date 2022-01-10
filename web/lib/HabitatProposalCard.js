@@ -106,12 +106,15 @@ TEMPLATE.innerHTML = `
   min-width: 2em;
   max-width: none;
   height: 2em;
-  width: 8em;
+  width: 6em;
   border-radius: 2em;
   padding: .5em 2em;
   text-align: center;
   border: none;
   background-color: var(--color-bg);
+  border-color: var(--color-box-border-light);
+  border-style: double;
+  border-width: 1px;
 }
 .expand {
   place-content: flex-end;
@@ -146,7 +149,7 @@ TEMPLATE.innerHTML = `
   display: block;
   width: calc(100% - 11em);
   position: relative;
-  top: 1.5em;
+  top: 2.5em;
   margin-top: -1em;
   min-height: 1em;
   min-width: 9em;
@@ -157,7 +160,6 @@ TEMPLATE.innerHTML = `
   height: 2em;
   border: none;
   border-radius: 2em;
-  background-color: #f0f0f0;
   overflow: hidden;
 }
 .indicator #inner,
@@ -233,17 +235,33 @@ TEMPLATE.innerHTML = `
 }
 #drafts,
 #subProposals {
-  display: grid;
+  display: flex;
+  flex-direction: column-reverse;
   grid-template-columns: minmax(100%, 1fr);
   gap: 1em;
-  padding: 1em 0 0 3em;
 }
 #drafts > *,
 #subProposals > * {
   display: block;
 }
+#subProposals.expanded {
+  padding: 3em 1.5em 1em 5em;
+}
+#subProposals .header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+}
+#subProposals .header span {
+  font-weight: 400;
+}
+#subProposals .header button {
+  font-size: 0.75em;
+}
 a#expand {
   text-decoration: underline;
+  margin-top: 20px;
 }
 button, .button, button *, .button * {
   background-color: var(--color-bg-button);
@@ -305,14 +323,28 @@ input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   -moz-appearance: textfield;
 }
+.proposal-card {
+  border-color: var(--color-box-border-light);
+}
+.proposal-card-container {
+  background-color: var(--color-white);
+  border-radius: 2em;
+}
+#subtopicsToggle {
+  font-size: 0.7em;
+  padding-bottom: 2em;
+}
+
+#subtopicsToggle.rotate .arrow {
+  transform: rotate(180deg);
+}
 </style>
-<div class='box' style='padding:.5em 2em;'>
+<div class="proposal-card-container">
+<div class='box proposal-card' style='padding:0.75em 2em 1.5em;'>
   <div id='infotags'></div>
-  <!---
-  <div class='flex row expand'>
-    <span>&#x25bc;</span>
+  <div class='flex row end expand' id="subtopicsToggle" style="display: none;">
+    <span>Subtopics <span class="arrow">&#x25bc;</span></span>
   </div>
-  -->
   <div class='flex row between'>
     <div class='flex col align-left' style='min-width:50%;max-width:40ch;'>
       <div class='lessmore'>
@@ -321,14 +353,10 @@ input[type=number]::-webkit-inner-spin-button {
       <a href='' id='expand' class='lbl s'>MORE INFO</a>
     </div>
 
-    <a id='id' class='s lbl' style='align-self:start;'> </a>
-
     <div id='controls' class='flex col' style='padding-top:.2em;'>
       <div id='changeSignal' class='flex col flavor-signal'>
         <div class='flex row'>
-          <button id='sub' class='shareBtn left'><span style='vertical-align:text-top;'>-</span></button>
           <input id='inputShares' type='number' placeholder='0'>
-          <button id='add' class='shareBtn right'><span style='vertical-align:text-top;'>+</span></button>
         </div>
         <div class='flex col' style='width: 100%; padding-top:.2em;'>
           <habitat-sentiment-slider></habitat-sentiment-slider>
@@ -444,10 +472,17 @@ input[type=number]::-webkit-inner-spin-button {
   </div>
 </div>
 <div class='flex col'>
-  <button id='boxleg' style='display:none;'>+ subtopic</button>
+  <button id='boxleg' style='display:none;border-color:var(--color-box-border-light)'>+ subtopic</button>
 </div>
 <div id='drafts'></div>
-<div id='subProposals'></div>
+<div id='subProposals' class="expandable">
+  <div class="header">
+    <span>Subtopics</span>
+    <div>
+    <button id="addSubtopic">+ Subtopic</button>
+  </div>
+</div>
+</div>
 `;
 
 class CustomButtonHandler {
@@ -529,6 +564,7 @@ export default class HabitatProposalCard extends HTMLElement {
     // title, more info
     wrapListener(this.shadowRoot.querySelector('#title'), this.toggleExpand.bind(this));
     wrapListener(this.shadowRoot.querySelector('a#expand'), this.toggleExpand.bind(this));
+    wrapListener(this.shadowRoot.querySelector('#subtopicsToggle'), this.toggleSubtopics.bind(this));
 
     for (const node of this.shadowRoot.querySelectorAll('#inputShares')) {
       node.addEventListener('change', this.onSignalChange.bind(this), false);
@@ -548,8 +584,8 @@ export default class HabitatProposalCard extends HTMLElement {
         }
         node.dispatchEvent(new Event('change'));
       }
-      new CustomButtonHandler(node.parentElement.querySelector('.right'), (v) => change(this, 1 * v));
-      new CustomButtonHandler(node.parentElement.querySelector('.left'), (v) => change(this, -1 * v));
+      // new CustomButtonHandler(node.parentElement.querySelector('.right'), (v) => change(this, 1 * v));
+      // new CustomButtonHandler(node.parentElement.querySelector('.left'), (v) => change(this, -1 * v));
     }
     for (const node of this.shadowRoot.querySelectorAll('habitat-sentiment-slider')) {
       node.addEventListener('change', async (evt) => {
@@ -563,6 +599,18 @@ export default class HabitatProposalCard extends HTMLElement {
 
     wrapListener(
       this.shadowRoot.querySelector('#boxleg'),
+      () => {
+        const e = new HabitatProposeCard();
+        e.setAttribute('topic', this.getAttribute(ATTR_HASH));
+        e.setAttribute(ATTR_SIGNAL_VAULT, this.getAttribute(ATTR_SIGNAL_VAULT));
+        e.setAttribute(ATTR_ACTION_VAULT, this.getAttribute(ATTR_ACTION_VAULT));
+        e.setAttribute('proposal-type', this.getAttribute(ATTR_FLAVOR) === 'signal' ? 'Signal' : 'Action');
+        this.drafts.append(e);
+      }
+    );
+
+    wrapListener(
+      this.shadowRoot.querySelector('#addSubtopic'),
       () => {
         const e = new HabitatProposeCard();
         e.setAttribute('topic', this.getAttribute(ATTR_HASH));
@@ -822,10 +870,6 @@ export default class HabitatProposalCard extends HTMLElement {
       const titleElement = this.shadowRoot.querySelector('#title');
       titleElement.textContent = data.title;
       this.shadowRoot.querySelector('.expandable #title').textContent = data.title;
-      const linkElement = this.shadowRoot.querySelector('#id');
-      linkElement.href = data.link;
-      linkElement.textContent = 'ID#' +
-        data.proposalId.substring(2, 6) + '...' + data.proposalId.substring(data.proposalId.length, data.proposalId.length - 4);
 
       const html = data.metadata.details || 'no description';
       const article = document.createElement('article');
@@ -833,6 +877,12 @@ export default class HabitatProposalCard extends HTMLElement {
       this.shadowRoot.querySelector('.expandable #body').replaceChildren(article);
 
       renderLabels(data.metadata.labels || [], this.shadowRoot.querySelector('#labels'));
+    }
+
+    if(this.childProposals.length > 0)  {
+      this.shadowRoot.querySelector('#subtopicsToggle').style.display = 'flex';
+    } else {
+      this.subtopicSupport = true;
     }
 
     data = Object.assign(data, await fetchProposalStats(data));
@@ -1045,6 +1095,9 @@ export default class HabitatProposalCard extends HTMLElement {
       this.shadowRoot.querySelector('#binaryIndicator #inner').style.paddingRight = left;
       this.shadowRoot.querySelector('#binaryIndicator #innerRight').style.paddingLeft = right;
     } else if (flavor === 'signal') {
+      // For some reason the check for this on line 909 doesn't work
+      // TODO: check why the previous check doesn't work
+      this.infoTags.style.display = 'none';
       for (const node of this.controls.querySelectorAll('button')) {
         node.classList.remove('bold');
       }
@@ -1093,6 +1146,16 @@ export default class HabitatProposalCard extends HTMLElement {
     e.textContent = e.textContent === LESS ? MORE : LESS;
     for (const node of this.shadowRoot.querySelectorAll('.expandable')) {
       node.classList.toggle('expanded');
+    }
+  }
+
+  toggleSubtopics() {
+    if(this.subSignals.classList.contains('expanded')) {
+      this.shadowRoot.querySelector('#subtopicsToggle .arrow').textContent = '▼';
+      this.subSignals.classList.remove('expanded')
+    } else {
+      this.shadowRoot.querySelector('#subtopicsToggle .arrow').textContent = '▲';
+      this.subSignals.classList.add('expanded');
     }
   }
 

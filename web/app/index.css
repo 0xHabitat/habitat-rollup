@@ -10,6 +10,7 @@
   --color-accent-grey: #f0f0f0;
   --color-box: #fafafa;
   --color-box-border: #404040;
+  --color-box-border-light: #f2f2f2;
   --color-box-selected: #000000;
   --color-box-selected-text: #ffffff;
 }
@@ -165,6 +166,9 @@ select:focus {
 }
 .box.selected * {
   color: var(--color-box-selected-text);
+}
+.box.community {
+  border-radius: 3em;
 }
 
 .boxBtn {
