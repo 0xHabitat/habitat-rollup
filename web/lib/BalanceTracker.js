@@ -52,8 +52,8 @@ export default class BalanceTracker {
     }
 
     return pending;
-    }
-    
+  }
+
   static async stat (token, delegationMode) {
     const account = await this.getAccount();
     const key = token + account + (delegationMode ? '1' : '0');
