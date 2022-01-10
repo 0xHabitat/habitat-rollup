@@ -309,7 +309,7 @@ class HabitatVotingBasket extends HTMLElement {
                     if (!transactionItem) {
                         continue;
                     }
-                    transactionItem.price = tx.totalVoted;
+                    transactionItem.price = tx.voteAmount;
 						
                     transactionItem.name = getProposalInformationData.title;
                     transactionItem.key = proposalId;
