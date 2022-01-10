@@ -262,7 +262,7 @@ class HabitatVotingBasket extends HTMLElement {
 			"toggle",
 			() => {
 				this.toggleDelegationMode();
-				this.dispatchEvent(new Event("habitatToggle"));
+				this.dispatchEvent(new Event("toggle"));
 			},
 			false
 		);

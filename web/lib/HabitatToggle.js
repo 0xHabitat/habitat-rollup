@@ -159,10 +159,7 @@ class HabitatToggle extends HTMLElement {
   }
 
     render() {
-        console.log("this.getAttribute(ATTR_COLUMN_MODE)", this.getAttribute(ATTR_COLUMN_MODE));
-        console.log(this.getAttribute(ATTR_COLUMN_MODE) === "true");
         if (this.getAttribute(ATTR_COLUMN_MODE) === "true") {
-            console.log("hier gehe ich rein");
             const wrapperSelector = this.shadowRoot.querySelector("#wrapper");
             wrapperSelector.classList.add("column-mode")
         }
@@ -170,7 +167,6 @@ class HabitatToggle extends HTMLElement {
     const right = this.shadowRoot.querySelector('#inner').classList.contains('on');
     const text = this.getAttribute(right ? ATTR_RIGHT : ATTR_LEFT);
       var tooltipContent = this.shadowRoot.querySelector("#tooltip").outerHTML;
-      console.log(tooltipContent);
       var modeSelector = this.shadowRoot.querySelector("#mode").innerHTML = text + tooltipContent;
     const tooltipText = this.getAttribute(right ? ATTR_TOOLTIP_RIGHT : ATTR_TOOLTIP_LEFT);
     this.shadowRoot.querySelector('#tooltip').style.visibility = tooltipText ? 'initial' : 'hidden';

@@ -983,13 +983,13 @@ export default class HabitatProposalCard extends HTMLElement {
 
   async buildTransactions (delegatedFor) {
     const txs = [];
-
     if (this.changePending) {
       const signalStrength = this.userVotedShares === 0 ? 0 : this.userSignal;
       const title = this.shadowRoot.querySelector('#title').textContent.substring(0, 10) + '...';
       txs.push(
         {
           primaryType: 'VoteOnProposal',
+          totalVoted: this.totalVoted,
           message: {
             proposalId: this.data.proposalId,
             signalStrength,
@@ -1048,6 +1048,7 @@ export default class HabitatProposalCard extends HTMLElement {
       for (const node of this.controls.querySelectorAll('button')) {
         node.classList.remove('bold');
       }
+      this.totalVoted = this.userVotedShares - this.lastVotedShares;
       if (this.userVotedShares > this.lastVotedShares) {
         this.shadowRoot.querySelector('#add').classList.add('bold');
       } else if (this.userVotedShares < this.lastVotedShares) {
