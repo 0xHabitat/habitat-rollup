@@ -190,15 +190,13 @@ button, .button {
   display: none;
   padding-bottom: 1em;
 }
-#sticky {
-  position: sticky;
-  top: .5em;
-  max-width: max-content;
-  padding: .5em 1em;
-  border-radius: 2em;
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-bg-invert);
-  z-index: 9;
+#t_cart {
+  bottom: 26px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  position: absolute;
+  display: flex;
 }
 #tabs * {
   outline: none;
@@ -320,27 +318,20 @@ button, .button {
           <div id='tabnav' class='flex row evenly'></div>
           <space></space>
         </div>
-
-        <space></space>
-
-        <div id='sticky' class='flex row center evenly'>
-          <div class='flex row'>
-            <habitat-toggle
-              id='delegateModeToggle'
-              left='Personal Mode'
-              tooltip-left='Your personal voting power'
-              right='Delegation Mode'
-              tooltip-right='Voting power delegated to you'
-            ></habitat-toggle>
-            <habitat-transaction-cart></habitat-transaction-cart>
-          </div>
-        </div>
-
         <div id='tabs'></div>
 
       </div>
       <space></space>
     </section>
+    <habitat-transaction-cart id='t_cart'>
+    <habitat-toggle
+      id='delegateModeToggle'
+      left='Personal Mode'
+      tooltip-left='Your personal voting power'
+      right='Delegation Mode'
+      tooltip-right='Voting power delegated to you'
+    ></habitat-toggle>
+  </habitat-transaction-cart>
   </div>
 </div>
 `;

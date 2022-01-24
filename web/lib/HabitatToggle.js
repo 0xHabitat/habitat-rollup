@@ -2,9 +2,6 @@ const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
 * {
-  color: var(--color-text);
-  line-height: 1;
-  vertical-align: bottom;
   box-sizing: border-box;
 }
 #inner,
@@ -41,14 +38,19 @@ pin {
   background-color: var(--color-bg);
   transition: margin .2s ease-in;
 }
-#inner.on {
-  background-color: var(--color-bg-invert);
-}
+// #inner.on {
+//   background-color: var(--color-bg-invert);
+// }
 #inner.on > pin {
   margin-left: 1em;
 }
 #mode {
-  margin: 0 .2em 0 .5em;
+  margin: 0 .2em 2px 0;
+  color: white;
+  font-family: arial;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 18px;
 }
 #tooltip {
   display: block;
@@ -60,11 +62,11 @@ pin {
   align-self: start;
   background-color: var(--color-bg-invert);
   visibility: hidden;
+  margin-top: -4px;
 }
 #tooltip > span {
   display: block;
   line-height: .9;
-  color: var(--color-bg);
 }
 #tooltip > #content {
   display: none;
@@ -94,16 +96,26 @@ pin {
 }
 #wrapper {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
 }
+#top{
+  display: flex;
+  flex-direction: row;
+}
 </style>
+<div id='top'>
 <div id='wrapper'>
+  <span id='mode'></span>
   <div id='inner'>
     <pin></pin>
   </div>
-  <span id='mode'></span>
-  <div id='tooltip'><span>ℹ</span><p id='content'> </p></div>
+</div>
+<div id='tooltip'>
+<svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1.77778 0.00537109C0.791111 0.00537109 0 0.796482 0 1.78315V8.00537H1.77778H6.22222C7.20889 8.00537 8 7.21426 8 6.22759V1.78315C8 0.796482 7.20889 0.00537109 6.22222 0.00537109H1.77778ZM4 1.3387C4.48889 1.3387 4.88889 1.7387 4.88889 2.22759C4.88889 2.71648 4.48889 3.11648 4 3.11648C3.51111 3.11648 3.11111 2.71648 3.11111 2.22759C3.11111 1.7387 3.51111 1.3387 4 1.3387ZM3.55556 3.56093H4.44444C4.69333 3.56093 4.88889 3.75648 4.88889 4.00537V6.22759C4.88889 6.47648 4.69333 6.67204 4.44444 6.67204H3.55556C3.30667 6.67204 3.11111 6.47648 3.11111 6.22759V4.00537C3.11111 3.75648 3.30667 3.56093 3.55556 3.56093Z" fill="white"/>
+</svg>
+<p id='content'> </p></div>
 </div>
 `;
 
