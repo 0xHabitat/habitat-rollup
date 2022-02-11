@@ -49,9 +49,13 @@ pin {
 }
 #mode {
   margin: 0 .2em 0 .5em;
+  position: relative;
 }
 #tooltip {
   display: block;
+  position: absolute;
+  top: -2px;
+  right: -13px;
   font-size: .7em;
   width: 1em;
   height: 1em;
@@ -96,14 +100,25 @@ pin {
   display: flex;
   flex-direction: row;
   align-items: center;
+  padding-right: 10px;
+}
+
+#wrapper.column-mode {
+    flex-direction: column-reverse;
+}
+
+#wrapper.column-mode #mode {
+    margin-bottom: 8px;
 }
 </style>
 <div id='wrapper'>
   <div id='inner'>
     <pin></pin>
   </div>
-  <span id='mode'></span>
-  <div id='tooltip'><span>ℹ</span><p id='content'> </p></div>
+  <span id='mode'>
+    <div id='tooltip'><span>ℹ</span><p id='content'> </p></div>
+  </span>
+  
 </div>
 `;
 
@@ -112,10 +127,11 @@ const ATTR_RIGHT = 'right';
 const ATTR_TOOLTIP_LEFT = 'tooltip-left';
 const ATTR_TOOLTIP_RIGHT = 'tooltip-right';
 const ATTR_SWITCH = 'on';
+const ATTR_COLUMN_MODE = 'column-mode';
 
 class HabitatToggle extends HTMLElement {
   static get observedAttributes() {
-    return [ATTR_LEFT, ATTR_RIGHT, ATTR_TOOLTIP_LEFT, ATTR_TOOLTIP_RIGHT, ATTR_SWITCH];
+    return [ATTR_LEFT, ATTR_RIGHT, ATTR_TOOLTIP_LEFT, ATTR_TOOLTIP_RIGHT, ATTR_SWITCH, ATTR_COLUMN_MODE];
   }
 
   constructor() {
@@ -142,11 +158,16 @@ class HabitatToggle extends HTMLElement {
     this.render();
   }
 
-  render () {
+    render() {
+        if (this.getAttribute(ATTR_COLUMN_MODE) === "true") {
+            const wrapperSelector = this.shadowRoot.querySelector("#wrapper");
+            wrapperSelector.classList.add("column-mode")
+        }
+
     const right = this.shadowRoot.querySelector('#inner').classList.contains('on');
     const text = this.getAttribute(right ? ATTR_RIGHT : ATTR_LEFT);
-    this.shadowRoot.querySelector('#mode').textContent = text;
-
+      var tooltipContent = this.shadowRoot.querySelector("#tooltip").outerHTML;
+      var modeSelector = this.shadowRoot.querySelector("#mode").innerHTML = text + tooltipContent;
     const tooltipText = this.getAttribute(right ? ATTR_TOOLTIP_RIGHT : ATTR_TOOLTIP_LEFT);
     this.shadowRoot.querySelector('#tooltip').style.visibility = tooltipText ? 'initial' : 'hidden';
     this.shadowRoot.querySelector('#content').innerHTML = tooltipText;

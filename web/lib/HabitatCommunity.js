@@ -23,6 +23,7 @@ import {
 } from '/lib/rollup.js';
 import HabitatPanel from '/lib/HabitatPanel.js';
 import './HabitatToggle.js';
+import './HabitatVotingBasket';
 import './HabitatProposalCard.js';
 import './HabitatTransactionCart.js';
 import './HabitatVotingModulePreview.js';
@@ -192,12 +193,9 @@ button, .button {
 }
 #sticky {
   position: sticky;
-  top: .5em;
+  top: 65vh;
   max-width: max-content;
   padding: .5em 1em;
-  border-radius: 2em;
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-bg-invert);
   z-index: 9;
 }
 #tabs * {
@@ -321,19 +319,8 @@ button, .button {
           <space></space>
         </div>
 
-        <space></space>
-
         <div id='sticky' class='flex row center evenly'>
-          <div class='flex row'>
-            <habitat-toggle
-              id='delegateModeToggle'
-              left='Personal Mode'
-              tooltip-left='Your personal voting power'
-              right='Delegation Mode'
-              tooltip-right='Voting power delegated to you'
-            ></habitat-toggle>
-            <habitat-transaction-cart></habitat-transaction-cart>
-          </div>
+                <habitat-voting-basket id="delegateModeToggle"></habitat-voting-basket>
         </div>
 
         <div id='tabs'></div>

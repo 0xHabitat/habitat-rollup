@@ -990,6 +990,7 @@ export default class HabitatProposalCard extends HTMLElement {
       txs.push(
         {
           primaryType: 'VoteOnProposal',
+          voteAmount: this.voteAmount,
           message: {
             proposalId: this.data.proposalId,
             signalStrength,
@@ -1048,6 +1049,7 @@ export default class HabitatProposalCard extends HTMLElement {
       for (const node of this.controls.querySelectorAll('button')) {
         node.classList.remove('bold');
       }
+      this.voteAmount = this.userVotedShares - this.lastVotedShares;
       if (this.userVotedShares > this.lastVotedShares) {
         this.shadowRoot.querySelector('#add').classList.add('bold');
       } else if (this.userVotedShares < this.lastVotedShares) {
