@@ -257,27 +257,18 @@ button, .button {
             <p class='s'>RESERVE</p>
             <p id='totalReserve' class='xl light'> </p>
           </div>
-
-          <habitat-flip-card>
-            <div slot='front' class='flex col center'>
+          <div class='box flex col center mtb'>
+            <div class='flex col center'>
               <p class='s'>MEMBERS</p>
               <p id='memberCount' class='xl light'> </p>
             </div>
-            <div slot='back'>
-              <p style='color:var(--color-text-invert);'>Only people who interacted with this community e.g. voting or proposing are considered members.</p>
-            </div>
-          </habitat-flip-card>
-
-          <habitat-flip-card>
-            <div slot='front' class='flex col center'>
+          </div>
+          <div class='box flex col center mtb'>
+            <div class='flex col center'>
               <p class='s'>Total Value Locked</p>
               <p id='tvl' class='xl light'> </p>
             </div>
-            <div slot='back'>
-              <p style='color:var(--color-text-invert);'>Total Value Locked (TVL) = All community governance tokens on the Rollup. Except tokens locked in treasuries. Important for quorum calculations.</p>
-            </div>
-          </habitat-flip-card>
-
+          </div>
           <div class='flex col left mtb'>
             <div class='box flex col center'>
               <p class='s'>PERSONAL VOTES</p>
