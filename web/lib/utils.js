@@ -33,6 +33,34 @@ const PERMIT_STRUCT_DAI = [
   { name: 'allowed', type: 'bool' },
 ];
 
+const Web3Modal = window.Web3Modal.default;
+const WalletConnectProvider = window.WalletConnectProvider.default;
+
+// Web3modal instance
+let web3Modal
+
+// Chosen wallet provider given by the dialog window
+let provider;
+
+const INFURA_ID = "1dd34ee9e5e2492b80994f6c1aafb49a";
+
+const providerOptions = {
+  walletconnect: {
+    package: WalletConnectProvider,
+    options: {
+      infuraId: INFURA_ID,
+    }
+  }
+};
+
+web3Modal = new Web3Modal({
+  cacheProvider: true,
+  providerOptions, 
+  disableInjectedProvider: false,
+});
+
+console.log("Web3Modal instance is", web3Modal);
+
 const FAKE_WALLET = new ethers.Wallet('0x88426e5c8987b3ec0b7cb58bfedc420f229a548d1e6c9d7d0ad0066c3f69e87f');
 const PERMIT_DAI = new ethers.utils.Interface(
   ['function permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed,uint8 v,bytes32 r,bytes32 s)']
@@ -92,7 +120,7 @@ export async function getErc20 (addr) {
 const WALLET_AUTH_KEY = '_utils_wallet_auth';
 
 export function walletIsConnected () {
-  return !!document._signer || (window.ethereum && window.ethereum.selectedAddress);
+  return !!document._signer || localStorage.getItem(WALLET_AUTH_KEY);
 }
 
 export async function getSigner (throwIfWrongChain = true) {
@@ -103,15 +131,11 @@ export async function getSigner (throwIfWrongChain = true) {
     }
   }
 
-  if (!window.ethereum) {
-    throw new Error('Please visit this page with a dApp compatible browser');
-  }
-
   // TODO: check for errors
-  await new Promise(
-    (resolve) => window.ethereum.sendAsync({ jsonrpc: '2.0', id: 1, method: 'eth_requestAccounts', params: [] }, resolve)
-  );
-  const signer = (new ethers.providers.Web3Provider(window.ethereum, 'any')).getSigner();
+
+  const provider = await web3Modal.connect();
+  window.provider = provider;
+  const signer = (new ethers.providers.Web3Provider(provider)).getSigner();
   const network = await signer.provider.getNetwork();
 
   if (throwIfWrongChain && network.chainId !== ROOT_CHAIN_ID) {
