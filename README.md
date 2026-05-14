@@ -1,5 +1,17 @@
 [![Coverage Status](https://coveralls.io/repos/github/0xHabitat/habitat/badge.svg?branch=master)](https://coveralls.io/github/0xHabitat/habitat?branch=master)
 
+# Habitat Rollup
+
+An optimistic rollup Layer 2 solution for community governance, built on Ethereum with [NutBerry](https://github.com/NutBerry/NutBerry).
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture Guide](docs/architecture.md) | System design, components, and transaction flow |
+| [Getting Started](docs/getting-started.md) | Setup, development, testing, and deployment guide |
+| [API Reference](docs/API.md) | EIP-712 transaction types, contract interfaces, and parameters |
+
 # Development
 
 Use `docker-compose up --no-deps dev` to bootstrap the environment,
