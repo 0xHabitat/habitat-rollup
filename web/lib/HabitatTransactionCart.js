@@ -127,6 +127,10 @@ class HabitatTransactionCart extends HTMLElement {
         grid.append(e);
       }
 
+      if (!evt.data.value.length) {
+        this._closedManually = false;
+      }
+
       if (!this._closedManually) {
         const wrapper = this.shadowRoot.querySelector('#outer');
         if (evt.data.value.length) {
