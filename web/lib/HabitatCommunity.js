@@ -295,7 +295,7 @@ button, .button {
       <space></space>
       <space></space>
 
-      <div id='wrapper' class='box'>
+      <div id='wrapper' class='box community'>
         <div class='flex col' style='width:100%'>
 
           <div class='flex row between' style='width:100%;'>
@@ -392,7 +392,6 @@ button, .button {
 
       getMetadataForTopic(communityId).then(
         (metadata) => {
-          console.log(metadata);
           this.setTitle(metadata.title || '?');
 
           if (metadata.bannerCid) {
@@ -530,7 +529,6 @@ button, .button {
         e.setAttribute('signal-vault', this.signalVault || vault);
         e.setAttribute('action-vault', this.actionVault || vault);
         e.setAttribute('delegate-mode', delegateMode || '');
-        e.subtopicSupport = !topic;
         e.addEventListener('signalChange', (evt) => {
           this.submitChanges();
         }, false);
