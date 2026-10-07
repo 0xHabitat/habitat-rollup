@@ -21,3 +21,4 @@
 !LICENSE
 web/lib/config.js
 web/lib/rollup-config.js
+node_modules
